@@ -57,59 +57,260 @@ When we reference official Microsoft NuGet packages, we use `OFFICIAL_` flags:
 
 ### Designing Feature Flags
 
-Use feature flags to describe **runtime/API capability**, not “where the code lives”. A few rules:
+Use feature flags to describe **runtime/API capability**, not "where the code lives". Two patterns:
 
-- **All-or-nothing features**: use a single flag like `SUPPORTS_MATHF`. Either the runtime provides the full type/API or it doesn’t.
-- **Layered / partially supported features**: split the feature into meaningful levels:
-  - `SUPPORTS_<FEATURE>_BASE` – the minimal type or API shape that exists on some runtimes.
-  - `SUPPORTS_<FEATURE>_FULL` – the full API as it existed in the first “complete” runtime.
-  - `SUPPORTS_<FEATURE>_ADVANCED` (or more specific suffixes) – new members added in later runtimes.
-- **Flags are monotonic**: newer runtimes define *all* relevant flags for a feature (BASE + FULL + ADVANCED), never just the latest one.
+- **All-or-nothing features**: use a single flag like `SUPPORTS_MATHF`. Either the runtime provides the full type/API or it doesn't.
+- **Layered features**: use **waves** (`FEATURE_<NAME>_WAVE1`, `FEATURE_<NAME>_WAVE2`, ...) for features that evolve across multiple .NET versions. See [Feature Waves](#feature-waves) below.
+
+Key rules:
+
+- **Flags are monotonic**: newer runtimes define *all* relevant flags for a feature (WAVE1 + WAVE2 + ...), never just the latest one.
 - **Polyfill logic**:
-  - Base type polyfill files are guarded by `#if !SUPPORTS_<FEATURE>_BASE`.
-  - Extension layers for missing members are guarded by `#if !SUPPORTS_<FEATURE>_FULL`, `#if !SUPPORTS_<FEATURE>_ADVANCED`, etc.
-- **Official packages**: use `OFFICIAL_<FEATURE>` flags only to express “the API is provided by a package instead of the runtime”; they follow the same BASE/FULL/ADVANCED idea where needed.
+  - Base type polyfill is guarded by `#if !FEATURE_<NAME>_WAVE1`.
+  - Extension layers for additional members are guarded by `#if !FEATURE_<NAME>_WAVE2`, `#if !FEATURE_<NAME>_WAVE3`, etc.
+- **Official packages**: use `OFFICIAL_<FEATURE>` flags only to express "the API is provided by a package instead of the runtime".
+
+### Feature Waves
+
+For features that evolve significantly across multiple .NET versions (like SIMD intrinsics), use the **wave pattern**. Waves provide a clean, numbered progression where each wave adds functionality on top of previous waves.
+
+#### Wave Naming Convention
+
+- **Flag format**: `FEATURE_<TYPE>_WAVE<k>` where `<k>` is a positive integer (1, 2, 3, ...)
+- **One type = one wave series**: Each wave series is tied to exactly one type. A generic struct like `Vector128<T>` and its companion static class `Vector128` are **separate** wave series.
+- **One wave series = one folder = one file**: Each type gets its own folder containing exactly one file with all waves.
+- **File organization**: All waves reside in the **same file**, ordered from top to bottom (Wave 1 first, then Wave 2, etc.)
+
+#### Wave Rules
+
+1. **Wave 1 is the baseline**: Contains the core type and minimal API that was introduced after .NET 2.0. This is the lowest common denominator across all targets where the feature first appeared.
+
+2. **Waves are monotonic**: If a target defines `FEATURE_<TYPE>_WAVE3`, it **must** also define `FEATURE_<TYPE>_WAVE1` and `FEATURE_<TYPE>_WAVE2`. Each wave implies all previous waves are available.
+
+3. **Each wave layers functionality**: Higher waves add methods, properties, operators, or overloads using extension syntax. The base type is defined only in Wave 1.
+
+4. **One type per wave series**: Do not mix multiple types in a single wave series. For example:
+   - `Vector128<T>` (the struct) → `FEATURE_VECTOR128_WAVE<k>`
+   - `Vector128` (the static class) → `FEATURE_VECTOR128STATIC_WAVE<k>`
+
+   ```
+   Features/
+   └── Vector128/
+       └── System/Runtime/Intrinsics/
+           ├── Vector128.Struct.cs          # Vector128<T> struct, all waves
+           └── Vector128.Class.cs          # Vector128 static class, all waves
+   ```
+
+#### Wave Example
+
+**File: `Features/Vector128/System/Runtime/Intrinsics/Vector128.cs`** (the struct)
+
+```csharp
+#region (c)2010-2042 Hawkynt
+// License header...
+#endregion
+
+namespace System.Runtime.Intrinsics;
+
+// Wave 1: Core struct (e.g., .NET Core 3.0)
+#if !FEATURE_VECTOR128_WAVE1
+
+public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct {
+  internal readonly ulong _v0, _v1;
+
+  public static int Count => 16 / Unsafe.SizeOf<T>();
+  public static Vector128<T> Zero => default;
+  public T this[int index] => /* implementation */;
+  // ... minimal members
+}
+
+#endif
+
+// Wave 2: Instance members added later (e.g., .NET 7.0)
+#if !FEATURE_VECTOR128_WAVE2
+
+public static partial class Vector128Polyfills {
+
+  extension<T>(Vector128<T> vector) where T : struct {
+    public Vector128<T> IsNegative => /* ... */;
+    public Vector128<T> IsPositive => /* ... */;
+  }
+}
+
+#endif
+
+// Wave 3: More instance members (e.g., .NET 9.0)
+#if !FEATURE_VECTOR128_WAVE3
+
+public static partial class Vector128Polyfills {
+
+  extension<T>(Vector128<T> vector) where T : struct {
+    public Vector128<T> IsNaN => /* ... */;
+    public Vector128<T> IsZero => /* ... */;
+  }
+}
+
+#endif
+```
+
+**File: `Features/Vector128Static/System/Runtime/Intrinsics/Vector128.cs`** (the static class)
+
+```csharp
+#region (c)2010-2042 Hawkynt
+// License header...
+#endregion
+
+namespace System.Runtime.Intrinsics;
+
+// Wave 1: Core static methods (e.g., .NET Core 3.0)
+#if !FEATURE_VECTOR128STATIC_WAVE1
+
+public static class Vector128 {
+  public static Vector128<byte> Create(byte value) => /* ... */;
+  public static T GetElement<T>(Vector128<T> vector, int index) => /* ... */;
+  public static Vector128<T> WithElement<T>(Vector128<T> vector, int index, T value) => /* ... */;
+}
+
+#endif
+
+// Wave 2: Conversions and System.Numerics interop (e.g., .NET 5.0)
+#if !FEATURE_VECTOR128STATIC_WAVE2
+
+public static partial class Vector128Polyfills {
+
+  extension(Vector128) {
+    public static Numerics.Vector<T> AsVector<T>(Vector128<T> value) => /* ... */;
+    public static Vector128<float> AsVector128(Numerics.Vector2 value) => /* ... */;
+    public static Numerics.Vector2 AsVector2(Vector128<float> value) => /* ... */;
+  }
+}
+
+#endif
+
+// Wave 3: Arithmetic and comparison (e.g., .NET 7.0)
+#if !FEATURE_VECTOR128STATIC_WAVE3
+
+public static partial class Vector128Polyfills {
+
+  extension(Vector128) {
+    public static Vector128<T> Abs<T>(Vector128<T> vector) => /* ... */;
+    public static Vector128<T> Add<T>(Vector128<T> left, Vector128<T> right) => /* ... */;
+    public static Vector128<T> Max<T>(Vector128<T> left, Vector128<T> right) => /* ... */;
+    public static Vector128<T> Min<T>(Vector128<T> left, Vector128<T> right) => /* ... */;
+  }
+}
+
+#endif
+
+// Wave 4: Generic factory methods (e.g., .NET 8.0)
+#if !FEATURE_VECTOR128STATIC_WAVE4
+
+public static partial class Vector128Polyfills {
+
+  extension(Vector128) {
+    public static Vector128<T> CreateScalar<T>(T value) => /* ... */;
+    public static Vector128<T> Create<T>(Vector64<T> lower, Vector64<T> upper) => /* ... */;
+    public static Vector128<UInt16> WidenLower(Vector128<byte> source) => /* ... */;
+  }
+}
+
+#endif
+
+// Wave 5: Math functions (e.g., .NET 9.0)
+#if !FEATURE_VECTOR128STATIC_WAVE5
+
+public static partial class Vector128Polyfills {
+
+  extension(Vector128) {
+    public static Vector128<T> Clamp<T>(Vector128<T> value, Vector128<T> min, Vector128<T> max) => /* ... */;
+    public static Vector128<double> Cos(Vector128<double> vector) => /* ... */;
+    public static Vector128<double> Sin(Vector128<double> vector) => /* ... */;
+  }
+}
+
+#endif
+
+// Wave 6: Newest APIs (e.g., .NET 10.0)
+#if !FEATURE_VECTOR128STATIC_WAVE6
+
+public static partial class Vector128Polyfills {
+
+  extension(Vector128) {
+    public static Vector128<T> AddSaturate<T>(Vector128<T> left, Vector128<T> right) => /* ... */;
+    public static bool All<T>(Vector128<T> vector, T value) => /* ... */;
+    public static int IndexOf<T>(Vector128<T> vector, T value) => /* ... */;
+  }
+}
+
+#endif
+```
+
+#### Wave Flag Definitions in VersionSpecificSymbols.Common.prop
+
+Configure wave flags monotonically per target framework. Each type has its own wave series:
+
+```xml
+<!-- .NET Core 3.0/3.1: Wave 1 for both struct and static -->
+<DefineConstants Condition="...netcoreapp3...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE1;                    </DefineConstants>
+
+<!-- .NET 5.0: Add Wave 2 for static (Numerics interop) -->
+<DefineConstants Condition="...net5.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    </DefineConstants>
+
+<!-- .NET 7.0: Add Wave 2 for struct, Wave 3 for static -->
+<DefineConstants Condition="...net7.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    </DefineConstants>
+
+<!-- .NET 9.0: Add Wave 3 for struct, Waves 4-5 for static -->
+<DefineConstants Condition="...net9.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE4;                    FEATURE_VECTOR128STATIC_WAVE5;                    </DefineConstants>
+
+<!-- .NET 10.0: All waves for both -->
+<DefineConstants Condition="...net10.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE4;                    FEATURE_VECTOR128STATIC_WAVE5;                    FEATURE_VECTOR128STATIC_WAVE6;                    </DefineConstants>
+```
+
+Note: The struct and static class may have different numbers of waves since they evolve independently.
+
+#### When to Use Waves vs Single Flags
+
+| Pattern | Use When |
+|---------|----------|
+| **Waves** | Feature evolves across multiple .NET versions with API additions in each release |
+| **Single flag** | Feature is all-or-nothing with no meaningful partial states |
+
+Waves are particularly suited for:
+- SIMD intrinsics: `Vector64<T>`, `Vector64`, `Vector128<T>`, `Vector128`, `Vector256<T>`, `Vector256`, `Vector512<T>`, `Vector512` (each as separate wave series)
+- Types that gain new members in every major .NET release
+- Any type where the API surface grows incrementally across framework versions
 
 ### Practical Feature Flag Naming
 
-In practice, feature flags are named after **logical capability blocks**, not after some global, perfectly consistent taxonomy. The unit you care about is: “what set of APIs do I want to treat as one on/off switch?”. That leads to three common patterns:
+In practice, feature flags are named after **logical capability blocks**. The unit you care about is: "what set of APIs do I want to treat as one on/off switch?". That leads to two common patterns:
 
-1. **Group flags (most common)**  
-   A flag covers a *cluster* of related members and sometimes multiple types that conceptually belong together and should either all exist or all be missing.  
-   - Example: `SUPPORTS_VECTOR_BASIC` might cover the core `Vector128<T>`/`Vector256<T>` types, a small set of factory methods, and basic arithmetic.
-   - Example: `SUPPORTS_TASK_RUN` could mean “we have `Task.Run(...)` in the shape we rely on”, even if that pulls in a couple of overloads.
+1. **Single flags (all-or-nothing)**
+   A flag covers a *cluster* of related members that conceptually belong together and should either all exist or all be missing.
+   - Example: `SUPPORTS_MATHF` means "we have the full `MathF` class".
+   - Example: `SUPPORTS_STRING_ISNULLORWHITESPACE` means "this particular API is present".
 
-   Rule of thumb: if consumers would reasonably say “either I have this feature or I don’t”, it gets a single group flag named after that feature.
+   Rule of thumb: if consumers would reasonably say "either I have this feature or I don't", it gets a single flag.
 
-2. **Single-API flags (fine-grained shims)**  
-   Sometimes the smallest useful unit really is a single method or tiny surface, usually when it was added later or is optional even on newer runtimes.  
-   - Example: `SUPPORTS_STRING_ISNULLORWHITESPACE`
-   - Example: `SUPPORTS_SPAN_FILL`
+2. **Wave flags (layered features)**
+   Features that grow across .NET versions use numbered waves. Each wave represents a generation of API additions.
+   - Example: `FEATURE_VECTOR128_WAVE1` through `FEATURE_VECTOR128_WAVE6`
+   - Example: `FEATURE_SPAN_WAVE1`, `FEATURE_SPAN_WAVE2`, etc.
 
-   In that case, name the flag after the method (or property/operator group) exactly. The flag then means: “this particular API is present and behaves like the official one”.
+   Older runtimes define no wave flags (get full polyfill), mid-tier runtimes define early waves only, newest runtimes define all waves.
 
-3. **Layered / second-iteration flags**  
-   Some features grow in layers: v1 has the type and a few members, later versions add more operators, helpers, or whole extra behavior. The first layer gets the “base” name; later layers get their own flags named after the layer’s *role*, not its internal history.  
-   - Example:  
-     - `SUPPORTS_VECTOR_BASE` – minimal usable vector API.  
-     - `SUPPORTS_VECTOR_OPERATORS` – adds arithmetic/comparison operators.  
-     - `SUPPORTS_VECTOR_ADVANCED` – adds newer helpers like `Clamp`, `Max`, etc.
+General rules:
 
-   Older runtimes define none of these, mid-tier runtimes might define only `SUPPORTS_VECTOR_BASE`, and the newest ones define all of them.
-
-General rules to keep you from inventing nonsense:
-
-- Name flags after **what you conceptually get**, not how it’s implemented.
-- One flag should always mean “this *logical block* of API is fully usable” – whether that’s one method or ten.
-- If you find yourself needing `SUPPORTS_FOO` and `SUPPORTS_FOO_BUT_NOT_BAR`, you’ve already lost. Split them into two clean blocks: `SUPPORTS_FOO` and `SUPPORTS_FOO_BAR`, wire them monotonically, and layer the polyfills accordingly.
+- Name flags after **what you conceptually get**, not how it's implemented.
+- One flag should always mean "this *logical block* of API is fully usable" – whether that's one method or ten.
+- For evolving features, use waves instead of inventing semantic suffixes.
 
 ### Handling Partial Framework Support
 
-When a type exists only in a reduced form on some targets and is missing entirely on others, don’t duplicate entire type definitions per framework or bury the codebase under `#if` branches. Define a single feature flag for the minimal API shared by all partial implementations, implement that minimal layer once, and then add missing members—instance methods, properties, static members, and even operators—through separate extension blocks guarded by additional feature flags. Frameworks with no implementation get the base polyfill plus every extension layer; frameworks with partial support define only the base flag and automatically pick up the missing APIs; fully modern frameworks define all flags and skip all polyfills. This incremental layering keeps the code organized, avoids redundancy, and ensures each framework gets exactly the pieces it needs.
+When a type exists only in a reduced form on some targets and is missing entirely on others, use the wave pattern. Define Wave 1 for the minimal API, then add missing members through extension blocks in subsequent waves. Frameworks with no implementation get the base polyfill plus every extension layer; frameworks with partial support define only early waves and automatically pick up the missing APIs; fully modern frameworks define all waves and skip all polyfills.
 
 ```csharp
-// Layer 0: minimal type for targets lacking any implementation.
-#if !SUPPORTS_EXAMPLE_BASE
+// Wave 1: minimal type for targets lacking any implementation.
+#if !FEATURE_EXAMPLE_WAVE1
 
 namespace System;
 
@@ -121,10 +322,10 @@ public readonly struct Example(int value) : IEquatable<Example> {
 
 #endif
 
-// Layer 1: APIs missing from partial runtimes.
-#if !SUPPORTS_EXAMPLE_FULL
+// Wave 2: APIs added in a later .NET version.
+#if !FEATURE_EXAMPLE_WAVE2
 
-public static class ExampleBaseExtensions {
+public static class ExamplePolyfills {
 
   extension(Example instance) {
     public bool IsZero => instance.Value == 0;
@@ -143,10 +344,10 @@ public static class ExampleBaseExtensions {
 
 #endif
 
-// Layer 2: newest APIs, added by extension if the runtime lacks them.
-#if !SUPPORTS_EXAMPLE_ADVANCED
+// Wave 3: newest APIs, added in the most recent .NET version.
+#if !FEATURE_EXAMPLE_WAVE3
 
-public static class ExampleAdvancedExtensions {
+public static partial class ExamplePolyfills {
 
   extension(Example instance) {
     public Example Clamp(Example min, Example max)
@@ -164,42 +365,54 @@ public static class ExampleAdvancedExtensions {
 #endif
 ```
 
-This pattern scales cleanly, keeps each feature layer isolated, and allows complete reconstruction of the modern API surface—including instance members, static members, properties, and operators—without fragmenting the codebase with multi-branch conditionals.
+This pattern scales cleanly, keeps each wave isolated, and allows complete reconstruction of the modern API surface—including instance members, static members, properties, and operators—without fragmenting the codebase with multi-branch conditionals.
 
-In `VersionSpecificSymbols.Common.prop` you then wire the flags so that:
+In `VersionSpecificSymbols.Common.prop` you wire the flags monotonically:
 
 - Old targets: no flags → get the base struct + all extension layers.
-- Targets with partial runtime support: `SUPPORTS_EXAMPLE_BASE` only → skip the struct, but still get extension layers.
-- Targets with full runtime support: `SUPPORTS_EXAMPLE_BASE` and `SUPPORTS_EXAMPLE_FULL` and `SUPPORTS_EXAMPLE_ADVANCED` → skip all polyfill layers entirely.
+- Targets with partial runtime support: `FEATURE_EXAMPLE_WAVE1` only → skip the struct, but still get Wave 2 and Wave 3 extensions.
+- Targets with full runtime support: `FEATURE_EXAMPLE_WAVE1`, `FEATURE_EXAMPLE_WAVE2`, and `FEATURE_EXAMPLE_WAVE3` → skip all polyfill layers entirely.
 
 ## Folder Structure
 
-Each feature lives in its own folder under `Features/`:
+Each feature lives in its own folder under `Features/`. For wave-based features, **each type gets its own folder** containing exactly one file with all its waves.
 
 ```
 Backports/
 ├── Features/
-│   ├── FeatureName/
-│   │   └── System/
-│   │       └── ClassName.cs
 │   ├── Memory/
 │   │   └── System/
-│   │       ├── Memory.cs
-│   │       ├── ReadOnlyMemory.cs
+│   │       └── Memory.cs              # Memory<T> struct, all waves
+│   ├── ReadOnlyMemory/
+│   │   └── System/
+│   │       └── ReadOnlyMemory.cs      # ReadOnlyMemory<T> struct, all waves
+│   ├── MemoryPool/
+│   │   └── System/
 │   │       └── Buffers/
-│   │           ├── MemoryPool.cs
-│   │           └── IMemoryOwner.cs
+│   │           └── MemoryPool.cs      # MemoryPool<T>, all waves
 │   ├── ThrowIfNull/
 │   │   └── System/
 │   │       └── ArgumentNullException.cs
-│   └── Vector/
+│   ├── Vector128/
+│   │   └── System/
+│   │       └── Runtime/
+│   │           └── Intrinsics/
+│   │               └── Vector128.cs   # Vector128<T> struct, all waves
+│   ├── Vector128Static/
+│   │   └── System/
+│   │       └── Runtime/
+│   │           └── Intrinsics/
+│   │               └── Vector128.cs   # Vector128 static class, all waves
+│   ├── Vector256/
+│   │   └── System/
+│   │       └── Runtime/
+│   │           └── Intrinsics/
+│   │               └── Vector256.cs   # Vector256<T> struct, all waves
+│   └── Vector256Static/
 │       └── System/
 │           └── Runtime/
 │               └── Intrinsics/
-│                   ├── Vector128.cs
-│                   ├── Vector128.Struct.cs
-│                   ├── Vector256.cs
-│                   └── Vector256.Struct.cs
+│                   └── Vector256.cs   # Vector256 static class, all waves
 ├── Utilities/
 │   ├── AlwaysThrow.cs
 │   └── Scalar.cs
@@ -207,19 +420,21 @@ Backports/
 └── ReadMe.md
 ```
 
-In practice this does **not** mean you must always use a single giant `BASE/FULL/ADVANCED` file. The pattern is:
+For wave-based features, all waves live in a **single file** to maintain logical structure and make the API evolution visible at a glance:
 
-- One flag that describes the **existence of the base type or minimal API** (e.g. `SUPPORTS_EXAMPLE` or `SUPPORTS_EXAMPLE_BASE`).
-- Additional flags for each **independent capability block** you care about, which may be a layer (`SUPPORTS_EXAMPLE_FULL`, `SUPPORTS_EXAMPLE_ADVANCED`) or a fine-grained shim (`SUPPORTS_STRING_ISNULLORWHITESPACE`, `SUPPORTS_EXAMPLE_CLAMP`, etc.).
+- Wave 1 defines the **base type or minimal API** (e.g., `#if !FEATURE_VECTOR128_WAVE1`).
+- Subsequent waves add **extension blocks** for additional members (e.g., `#if !FEATURE_VECTOR128_WAVE2`, etc.).
 
-Each such flag is treated as its **own feature**: it gets its own small extension file (or very tight group of files) under the feature folder. That way you can selectively light up well-defined API pieces depending on what a given target already provides, without ever needing huge “full vs advanced” monoliths or files with multiple unrelated `#if` blocks.
+This approach keeps the complete API evolution for one type in one place, ordered chronologically from oldest to newest.
 
 ### Folder Naming Rules
 
-1. **Feature folder name** should match the feature concept (e.g., `Memory`, `Span`, `ThrowIfNull`)
-2. **Internal folder structure** mirrors the namespace hierarchy (e.g., `System/Buffers/` for `System.Buffers`)
-3. **One feature per folder** - if a file contains multiple unrelated features, split them into separate folders
-4. **Struct vs Static separation** - for types with both struct and static helper class (like `Vector128<T>` and `Vector128`), use suffixes like `.Struct.cs` and `.cs`
+1. **One type = one folder**: Each type gets its own feature folder, even if types are closely related
+2. **Struct and static class are separate**: `Vector128<T>` → `Vector128/`, `Vector128` (static) → `Vector128Static/`
+3. **Folder name matches type**: Use the type name (e.g., `Memory`, `Vector128`, `Vector128Static`)
+4. **Internal folder structure** mirrors the namespace hierarchy (e.g., `System/Runtime/Intrinsics/`)
+5. **One file per folder**: Each folder contains exactly one `.cs` file with all waves for that type
+6. **Wave ordering**: Waves are ordered top to bottom by wave number within the file
 
 ## Adding a New Backport
 
@@ -453,7 +668,7 @@ That means:
 Bad test example (do **not** do this):
 
 ```csharp
-#if SUPPORTS_EXAMPLE_BASE
+#if FEATURE_EXAMPLE_WAVE1
 [Test]
 public void Example_Zero_IsZero() {
   Assert.That(Example.Zero.IsZero, Is.True);
@@ -601,8 +816,13 @@ public readonly struct YourStruct<T> : IEquatable<YourStruct<T>> where T : struc
 
 ## Checklist for New Features
 
-- [ ] Feature flags added to `VersionSpecificSymbols.Common.prop` (`SUPPORTS_FEATURE` for all-or-nothing, or `SUPPORTS_FEATURE_BASE/FULL/...` for layered features)
-- [ ] Polyfill files guarded with the appropriate `#if !SUPPORTS_...` conditions (BASE/FULL/ADVANCED as described above)
+- [ ] Feature flags added to `VersionSpecificSymbols.Common.prop`:
+  - `SUPPORTS_<FEATURE>` for all-or-nothing features
+  - `FEATURE_<NAME>_WAVE1/WAVE2/...` for layered features (monotonically defined)
+- [ ] Polyfill files guarded with appropriate conditions:
+  - `#if !SUPPORTS_<FEATURE>` for single-flag features
+  - `#if !FEATURE_<NAME>_WAVE<k>` for wave-based features
+- [ ] Wave-based features: all waves in single file, ordered top to bottom
 - [ ] File header with license included
 - [ ] Namespace matches official .NET namespace
 - [ ] API matches official API exactly (names, signatures, behavior)

@@ -17,15 +17,15 @@
 
 #endregion
 
-#if SUPPORTS_VECTOR_512 && !SUPPORTS_VECTOR_512_BASE
-
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-namespace System.Runtime.Intrinsics;
+#if !FEATURE_VECTOR512_WAVE1
+
+namespace System.Runtime.Intrinsics {
 
 public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct {
 
@@ -114,6 +114,58 @@ public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct 
     this._v5 = v;
     this._v6 = v;
     this._v7 = v;
+  }
+
+  public static Vector512<T> Indices {
+    get {
+      ulong v0 = 0, v1 = 0, v2 = 0, v3 = 0, v4 = 0, v5 = 0, v6 = 0, v7 = 0;
+      var size = Unsafe.SizeOf<T>();
+      var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
+      var elementsPerUlong = 8 / size;
+
+      for (var i = 0; i < elementsPerUlong && i < Count; ++i) {
+        var tval = Scalar<T>.From(i);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v0 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v1 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 2) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 2);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v2 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 3) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 3);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v3 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 4) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 4);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v4 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 5) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 5);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v5 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 6) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 6);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v6 |= chunk << (i * size * 8);
+      }
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 7) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 7);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v7 |= chunk << (i * size * 8);
+      }
+
+      return new(v0, v1, v2, v3, v4, v5, v6, v7);
+    }
   }
 
   public T this[int index] {
@@ -312,4 +364,27 @@ public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct 
   #endregion
 }
 
+}
+#endif
+
+#if !FEATURE_VECTOR512_WAVE2
+
+namespace System.Runtime.Intrinsics {
+
+public static partial class Vector512Polyfills {
+  extension<T>(Vector512<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector512{T}"/> with the elements set to their index.</summary>
+    public static Vector512<T> Indices {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get {
+        var result = Vector512<T>.Zero;
+        for (var i = 0; i < Vector512<T>.Count; ++i)
+          result = result.WithElement(i, Scalar<T>.From<int>(i));
+        return result;
+      }
+    }
+  }
+}
+
+}
 #endif

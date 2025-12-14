@@ -275,6 +275,19 @@ result = !input;
 * now methods
 * if a field is only needed for a single method (e.g. backing field, memoization cache), put it directly in front of the method
 * partial classes are OK, especially when class-files grow big and have logically-connected blocks - name them **ClassName.BlockName.cs**
+* for types that have both a static class and a struct with the same name (like `Vector64`, `Vector128`, `Vector256`, `Vector512`), keep them in a single feature folder:
+  * **TypeName.Class.cs** for the static class containing factory methods and operations
+  * **TypeName.Struct.cs** for the struct definition
+
+``` plaintext
+Features/
+  Vector64/
+    System/
+      Runtime/
+        Intrinsics/
+          Vector64.Class.cs   # static class Vector64 { Create(), Add(), ... }
+          Vector64.Struct.cs  # struct Vector64<T> { ... }
+```
 * when having static stuff, move that before the instance members of the same type
 * when attributing stuff, make sure each attribute gets its own line and brackets - merge with parameters if single attribute
 

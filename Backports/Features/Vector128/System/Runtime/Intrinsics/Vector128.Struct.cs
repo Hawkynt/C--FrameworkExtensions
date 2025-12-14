@@ -17,15 +17,18 @@
 
 #endregion
 
-#if SUPPORTS_VECTOR_128_TYPE && !SUPPORTS_VECTOR_128_BASE
-
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Runtime.CompilerServices;
 using Guard;
+using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Runtime.Intrinsics;
+
+// Wave 1: Vector128<T> struct definition
+#if !FEATURE_VECTOR128_WAVE1
 
 public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct {
 
@@ -106,32 +109,6 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
 
     this._lower = lower;
     this._upper = upper;
-  }
-
-  public static Vector128<T> Indices {
-    get {
-      _ThrowIfNotSupported();
-      var size = Unsafe.SizeOf<T>();
-      var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
-      var elementsPerUlong = 8 / size;
-
-      ulong lower = 0;
-      ulong upper = 0;
-
-      for (var i = 0; i < elementsPerUlong && i < Count; ++i) {
-        var tval = Scalar<T>.From(i);
-        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
-        lower |= chunk << (i * size * 8);
-      }
-
-      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong) < Count; ++i) {
-        var tval = Scalar<T>.From(i + elementsPerUlong);
-        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
-        upper |= chunk << (i * size * 8);
-      }
-
-      return new(lower, upper);
-    }
   }
 
   public T this[int index] {
@@ -326,6 +303,71 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
   }
 
   #endregion
+}
+
+#endif
+
+// Wave 2: AllBitsSet property polyfill
+#if !FEATURE_VECTOR128_WAVE2
+
+/// <summary>
+/// Polyfill for Vector128 AllBitsSet property (added in .NET 5.0).
+/// </summary>
+public static partial class Vector128Polyfills {
+
+  extension<T>(Vector128<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector128{T}"/> with all bits set to 1.</summary>
+    public static Vector128<T> AllBitsSet {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => Unsafe.As<Vector128<byte>, Vector128<T>>(ref Unsafe.AsRef(Vector128.Create((byte)byte.MaxValue)));
+    }
+  }
+
+}
+
+#endif
+
+// Wave 4: One property polyfill
+#if !FEATURE_VECTOR128_WAVE4
+
+public static partial class Vector128Polyfills {
+  extension<T>(Vector128<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector128{T}"/> with all elements initialized to one.</summary>
+    public static Vector128<T> One {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get {
+        var one = Scalar<T>.One;
+        var count = 16 / Unsafe.SizeOf<T>();
+        unsafe {
+          var buffer = stackalloc byte[16];
+          var ptr = (T*)buffer;
+          for (var i = 0; i < count; ++i)
+            ptr[i] = one;
+          return Unsafe.ReadUnaligned<Vector128<T>>(buffer);
+        }
+      }
+    }
+  }
+}
+
+#endif
+
+// Wave 5: Indices property polyfill
+#if !FEATURE_VECTOR128_WAVE5
+
+public static partial class Vector128Polyfills {
+  extension<T>(Vector128<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector128{T}"/> with the elements set to their index.</summary>
+    public static Vector128<T> Indices {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get {
+        var result = Vector128<T>.Zero;
+        for (var i = 0; i < Vector128<T>.Count; ++i)
+          result = result.WithElement(i, Scalar<T>.From<int>(i));
+        return result;
+      }
+    }
+  }
 }
 
 #endif

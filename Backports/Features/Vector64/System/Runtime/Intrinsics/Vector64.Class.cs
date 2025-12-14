@@ -1,15 +1,14 @@
-﻿#if SUPPORTS_VECTOR_64_TYPE && !SUPPORTS_VECTOR_64_BASE
-// This file is part of Hawkynt's .NET Framework extensions.
-// 
+﻿// This file is part of Hawkynt's .NET Framework extensions.
+//
 // Hawkynt's .NET Framework extensions are free software:
 // you can redistribute and/or modify it under the terms
 // given in the LICENSE file.
-// 
+//
 // Hawkynt's .NET Framework extensions is distributed in the hope that
 // it will be useful, but WITHOUT ANY WARRANTY without even the implied
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the LICENSE file for more details.
-// 
+//
 // You should have received a copy of the License along with Hawkynt's
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
@@ -20,6 +19,7 @@ using Guard;
 using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+#if !FEATURE_VECTOR64STATIC_WAVE1
 namespace System.Runtime.Intrinsics {
 
 /// <summary>
@@ -2008,6 +2008,62 @@ public static partial class Vector64 {
     return result;
   }
 
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<byte> ShuffleNative(Vector64<byte> vector, Vector64<byte> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<sbyte> ShuffleNative(Vector64<sbyte> vector, Vector64<sbyte> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<short> ShuffleNative(Vector64<short> vector, Vector64<short> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<ushort> ShuffleNative(Vector64<ushort> vector, Vector64<ushort> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<int> ShuffleNative(Vector64<int> vector, Vector64<int> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<uint> ShuffleNative(Vector64<uint> vector, Vector64<uint> indices) => Shuffle(vector, indices);
+
+  /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+  /// <param name="vector">The input vector from which values are selected.</param>
+  /// <param name="indices">The per-element indices used to select a value from <paramref name="vector" />.</param>
+  /// <returns>A new vector containing the values from <paramref name="vector" /> selected by the given <paramref name="indices" />.</returns>
+
+  [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
+  public static Vector64<float> ShuffleNative(Vector64<float> vector, Vector64<int> indices) => Shuffle(vector, indices);
+
   /// <summary>Computes the square root of a vector on a per-element basis.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector whose square root is to be computed.</param>
@@ -2127,7 +2183,6 @@ public static partial class Vector64 {
     return vector.GetElementUnsafe(0);
   }
 
-  /*
   /// <summary>Converts the given vector to a new <see cref="Vector128{T}" /> with the lower 64-bits set to the value of the given vector and the upper 64-bits initialized to zero.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
   /// <param name="vector">The vector to extend.</param>
@@ -2135,12 +2190,10 @@ public static partial class Vector64 {
   /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector128<T> ToVector128<T>(this Vector64<T> vector) {
+  public static Vector128<T> ToVector128<T>(this Vector64<T> vector) where T : struct {
     Vector64<T>.ThrowIfNotSupported();
-
-
-    Vector128<T> result = default;
-    result.SetLowerUnsafe(vector);
+    var result = Vector128<T>.Zero;
+    Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
     return result;
   }
 
@@ -2151,18 +2204,16 @@ public static partial class Vector64 {
   /// <exception cref="NotSupportedException">The type of <paramref name="vector" /> (<typeparamref name="T" />) is not supported.</exception>
 
   [MethodImpl(Utilities.MethodImplOptions.AggressiveInlining)]
-  public static Vector128<T> ToVector128Unsafe<T>(this Vector64<T> vector) {
+  public static Vector128<T> ToVector128Unsafe<T>(this Vector64<T> vector) where T : struct {
     Vector64<T>.ThrowIfNotSupported();
-
 
     // This relies on us stripping the "init" flag from the ".locals"
     // declaration to let the upper bits be uninitialized.
 
     SkipInit(out Vector128<T> result);
-    result.SetLowerUnsafe(vector);
+    Unsafe.As<Vector128<T>, Vector64<T>>(ref result) = vector;
     return result;
   }
-  */
 
   /// <summary>Tries to copy a <see cref="Vector{T}" /> to a given span.</summary>
   /// <typeparam name="T">The type of the input vector.</typeparam>
@@ -2481,5 +2532,1039 @@ public static partial class Vector64 {
   }
 
 }
+}
+#endif
+
+#if !FEATURE_VECTOR64STATIC_WAVE3
+
+namespace System.Runtime.Intrinsics {
+
+/// <summary>
+/// Polyfill for Vector64 full API (operators, advanced methods) added in .NET 7.0.
+/// </summary>
+#if !FEATURE_VECTOR64STATIC_WAVE1
+public static partial class Vector64 {
+#else
+public static partial class Vector64Polyfills {
+  extension(Vector64) {
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+    // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
+    // Only needed as extensions for WAVE1 frameworks
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<T> Load<T>(T* source) where T : struct
+      => Unsafe.ReadUnaligned<Vector64<T>>(source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<T> LoadUnsafe<T>(ref T source) where T : struct
+      => Unsafe.ReadUnaligned<Vector64<T>>(ref Unsafe.As<T, byte>(ref source));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void Store<T>(Vector64<T> source, T* destination) where T : struct
+      => Unsafe.WriteUnaligned(destination, source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void StoreUnsafe<T>(Vector64<T> source, ref T destination) where T : struct
+      => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void StoreAligned<T>(Vector64<T> source, T* destination) where T : struct
+      => Unsafe.WriteUnaligned(destination, source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void StoreAlignedNonTemporal<T>(Vector64<T> source, T* destination) where T : struct
+      => Unsafe.WriteUnaligned(destination, source);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Create<T>(T value) where T : struct {
+      var count = 8 / Unsafe.SizeOf<T>();
+      unsafe {
+        var buffer = stackalloc byte[8];
+        var ptr = (T*)buffer;
+        for (var i = 0; i < count; ++i)
+          ptr[i] = value;
+        return Unsafe.ReadUnaligned<Vector64<T>>(buffer);
+      }
+    }
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+  }
+
+  // Extension operators for Vector64<T> - only needed on newer frameworks
+  // (older frameworks have operators in the struct polyfill)
+  extension<T>(Vector64<T>) where T : struct {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator +(Vector64<T> left, Vector64<T> right) => _PerformBinaryOp(left, right, Scalar<T>.Add);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator -(Vector64<T> left, Vector64<T> right) => _PerformBinaryOp(left, right, Scalar<T>.Subtract);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator *(Vector64<T> left, Vector64<T> right) => _PerformBinaryOp(left, right, Scalar<T>.Multiply);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator /(Vector64<T> left, Vector64<T> right) => _PerformBinaryOp(left, right, Scalar<T>.Divide);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator -(Vector64<T> vector) => _PerformUnaryOp(vector, Scalar<T>.Negate);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator &(Vector64<T> left, Vector64<T> right) {
+      var l = Unsafe.As<Vector64<T>, ulong>(ref left);
+      var r = Unsafe.As<Vector64<T>, ulong>(ref right);
+      var result = l & r;
+      return Unsafe.As<ulong, Vector64<T>>(ref result);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator |(Vector64<T> left, Vector64<T> right) {
+      var l = Unsafe.As<Vector64<T>, ulong>(ref left);
+      var r = Unsafe.As<Vector64<T>, ulong>(ref right);
+      var result = l | r;
+      return Unsafe.As<ulong, Vector64<T>>(ref result);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator ^(Vector64<T> left, Vector64<T> right) {
+      var l = Unsafe.As<Vector64<T>, ulong>(ref left);
+      var r = Unsafe.As<Vector64<T>, ulong>(ref right);
+      var result = l ^ r;
+      return Unsafe.As<ulong, Vector64<T>>(ref result);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> operator ~(Vector64<T> vector) {
+      var v = Unsafe.As<Vector64<T>, ulong>(ref vector);
+      var result = ~v;
+      return Unsafe.As<ulong, Vector64<T>>(ref result);
+    }
+
+    private static Vector64<T> _PerformBinaryOp(Vector64<T> left, Vector64<T> right, Func<T, T, T> op) {
+      var count = 8 / Unsafe.SizeOf<T>();
+      var result = default(Vector64<T>);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = op(Unsafe.Add(ref rLeft, i), Unsafe.Add(ref rRight, i));
+      return result;
+    }
+
+    private static Vector64<T> _PerformUnaryOp(Vector64<T> vector, Func<T, T> op) {
+      var count = 8 / Unsafe.SizeOf<T>();
+      var result = default(Vector64<T>);
+      ref var rVec = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = op(Unsafe.Add(ref rVec, i));
+      return result;
+    }
+  }
+
+  // Wave 3 extension methods: Shuffle, ExtractMostSignificantBits
+  extension(Vector64) {
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+    // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
+    // Only needed as extensions for WAVE1 frameworks
+
+    private static void _SkipInit<T>(out T result) => result = default!;
+
+    /// <summary>Computes the absolute value of each element in a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Abs<T>(Vector64<T> vector) where T : struct {
+      if (Scalar<T>.IsUnsigned)
+        return vector;
+      _SkipInit(out Vector64<T> result);
+      ref var rVec = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Abs(Unsafe.Add(ref rVec, i));
+      return result;
+    }
+
+    /// <summary>Computes the square root of each element in a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Sqrt<T>(Vector64<T> vector) where T : struct {
+      _SkipInit(out Vector64<T> result);
+      ref var rVec = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Sqrt(Unsafe.Add(ref rVec, i));
+      return result;
+    }
+
+    /// <summary>Computes the sum of all elements in a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Sum<T>(Vector64<T> vector) where T : struct {
+      var result = default(T)!;
+      ref var rVec = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i)
+        result = Scalar<T>.Add(result, Unsafe.Add(ref rVec, i));
+      return result;
+    }
+
+    /// <summary>Computes the dot product of two vectors.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Dot<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var result = default(T)!;
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i)
+        result = Scalar<T>.Add(result, Scalar<T>.Multiply(Unsafe.Add(ref rLeft, i), Unsafe.Add(ref rRight, i)));
+      return result;
+    }
+
+    /// <summary>Computes the bitwise-and of a given vector and the ones complement of another vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> AndNot<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var l = Unsafe.As<Vector64<T>, ulong>(ref left);
+      var r = Unsafe.As<Vector64<T>, ulong>(ref right);
+      var result = l & ~r;
+      return Unsafe.As<ulong, Vector64<T>>(ref result);
+    }
+
+    /// <summary>Compares two vectors to determine which is greater on a per-element basis.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> GreaterThan<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      _SkipInit(out Vector64<T> result);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i) {
+        var l = Unsafe.Add(ref rLeft, i);
+        var r = Unsafe.Add(ref rRight, i);
+        Unsafe.Add(ref rRes, i) = Scalar<T>.GreaterThan(l, r) ? Scalar<T>.AllBitsSet : default!;
+      }
+      return result;
+    }
+
+    /// <summary>Compares two vectors to determine which is less on a per-element basis.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> LessThan<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      _SkipInit(out Vector64<T> result);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i) {
+        var l = Unsafe.Add(ref rLeft, i);
+        var r = Unsafe.Add(ref rRight, i);
+        Unsafe.Add(ref rRes, i) = Scalar<T>.LessThan(l, r) ? Scalar<T>.AllBitsSet : default!;
+      }
+      return result;
+    }
+
+    /// <summary>Compares two vectors to determine if they are equal on a per-element basis.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Equals<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      _SkipInit(out Vector64<T> result);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i) {
+        var l = Unsafe.Add(ref rLeft, i);
+        var r = Unsafe.Add(ref rRight, i);
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Equals(l, r) ? Scalar<T>.AllBitsSet : default!;
+      }
+      return result;
+    }
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+    // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
+    // Only needed as extensions for WAVE1 frameworks
+
+    private static void _SkipInit3<T>(out T result) => result = default!;
+
+    /// <summary>Extracts the most significant bit from each element in a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint ExtractMostSignificantBits<T>(Vector64<T> vector) where T : struct {
+      uint result = 0;
+      ref var rVec = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in vector));
+      var count = 8 / Unsafe.SizeOf<T>();
+      for (var i = 0; i < count; ++i)
+        if (Scalar<T>.ExtractMostSignificantBit(Unsafe.Add(ref rVec, i)))
+          result |= 1u << i;
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<byte> Shuffle(Vector64<byte> vector, Vector64<byte> indices) {
+      _SkipInit3(out Vector64<byte> result);
+      for (var i = 0; i < Vector64<byte>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx < Vector64<byte>.Count ? Vector64.GetElement(vector, idx) : (byte)0;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<sbyte> Shuffle(Vector64<sbyte> vector, Vector64<sbyte> indices) {
+      _SkipInit3(out Vector64<sbyte> result);
+      for (var i = 0; i < Vector64<sbyte>.Count; ++i) {
+        var idx = (byte)Vector64.GetElement(indices, i);
+        var val = idx < Vector64<sbyte>.Count ? Vector64.GetElement(vector, idx) : (sbyte)0;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<short> Shuffle(Vector64<short> vector, Vector64<short> indices) {
+      _SkipInit3(out Vector64<short> result);
+      for (var i = 0; i < Vector64<short>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx >= 0 && idx < Vector64<short>.Count ? Vector64.GetElement(vector, idx) : (short)0;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<ushort> Shuffle(Vector64<ushort> vector, Vector64<ushort> indices) {
+      _SkipInit3(out Vector64<ushort> result);
+      for (var i = 0; i < Vector64<ushort>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx < Vector64<ushort>.Count ? Vector64.GetElement(vector, idx) : (ushort)0;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<int> Shuffle(Vector64<int> vector, Vector64<int> indices) {
+      _SkipInit3(out Vector64<int> result);
+      for (var i = 0; i < Vector64<int>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx >= 0 && idx < Vector64<int>.Count ? Vector64.GetElement(vector, idx) : 0;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<uint> Shuffle(Vector64<uint> vector, Vector64<uint> indices) {
+      _SkipInit3(out Vector64<uint> result);
+      for (var i = 0; i < Vector64<uint>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx < Vector64<uint>.Count ? Vector64.GetElement(vector, (int)idx) : 0u;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+
+    /// <summary>Creates a new vector by selecting values from an input vector using a set of indices.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> Shuffle(Vector64<float> vector, Vector64<int> indices) {
+      _SkipInit3(out Vector64<float> result);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var idx = Vector64.GetElement(indices, i);
+        var val = idx >= 0 && idx < Vector64<float>.Count ? Vector64.GetElement(vector, idx) : 0f;
+        result = Vector64.WithElement(result, i, val);
+      }
+      return result;
+    }
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+    // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
+    // Only needed as extensions for WAVE1 frameworks
+
+    /// <summary>Adds two vectors to compute their sum.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Add<T>(Vector64<T> left, Vector64<T> right) where T : struct => left + right;
+
+    /// <summary>Subtracts two vectors to compute their difference.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Subtract<T>(Vector64<T> left, Vector64<T> right) where T : struct => left - right;
+
+    /// <summary>Multiplies two vectors to compute their element-wise product.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Multiply<T>(Vector64<T> left, Vector64<T> right) where T : struct => left * right;
+
+    /// <summary>Divides two vectors to compute their quotient.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Divide<T>(Vector64<T> left, Vector64<T> right) where T : struct => left / right;
+
+    /// <summary>Computes the bitwise-and of two vectors.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> BitwiseAnd<T>(Vector64<T> left, Vector64<T> right) where T : struct => left & right;
+
+    /// <summary>Computes the bitwise-or of two vectors.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> BitwiseOr<T>(Vector64<T> left, Vector64<T> right) where T : struct => left | right;
+
+    /// <summary>Computes the exclusive-or of two vectors.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Xor<T>(Vector64<T> left, Vector64<T> right) where T : struct => left ^ right;
+
+    /// <summary>Computes the ones-complement of a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> OnesComplement<T>(Vector64<T> vector) where T : struct => ~vector;
+
+    /// <summary>Computes the unary negation of a vector.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Negate<T>(Vector64<T> vector) where T : struct => -vector;
+
+    /// <summary>Computes the minimum of two vectors on a per-element basis.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Min<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var count = 8 / Unsafe.SizeOf<T>();
+      var result = default(Vector64<T>);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Min(Unsafe.Add(ref rLeft, i), Unsafe.Add(ref rRight, i));
+      return result;
+    }
+
+    /// <summary>Computes the maximum of two vectors on a per-element basis.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Max<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var count = 8 / Unsafe.SizeOf<T>();
+      var result = default(Vector64<T>);
+      ref var rLeft = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in left));
+      ref var rRight = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in right));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      for (var i = 0; i < count; ++i)
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Max(Unsafe.Add(ref rLeft, i), Unsafe.Add(ref rRight, i));
+      return result;
+    }
+#endif
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+  }
+}
+#else
+}
+#endif
+
+}
+#endif
+
+#if !FEATURE_VECTOR64STATIC_WAVE5
+
+namespace System.Runtime.Intrinsics {
+
+#if !FEATURE_VECTOR64STATIC_WAVE1
+public static partial class Vector64 {
+#else
+public static partial class Vector64Polyfills {
+  extension(Vector64) {
+#endif
+
+    /// <summary>
+    /// Restricts a vector between a minimum and a maximum value.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> Clamp<T>(Vector64<T> value, Vector64<T> min, Vector64<T> max) where T : struct {
+      var count = 8 / Unsafe.SizeOf<T>();
+      var result = default(Vector64<T>);
+      ref var rVal = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in value));
+      ref var rMin = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in min));
+      ref var rMax = ref Unsafe.As<Vector64<T>, T>(ref Unsafe.AsRef(in max));
+      ref var rRes = ref Unsafe.As<Vector64<T>, T>(ref result);
+      for (var i = 0; i < count; ++i) {
+        var v = Unsafe.Add(ref rVal, i);
+        var lo = Unsafe.Add(ref rMin, i);
+        var hi = Unsafe.Add(ref rMax, i);
+        Unsafe.Add(ref rRes, i) = Scalar<T>.Max(Scalar<T>.Min(v, hi), lo);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Rounds each element of a vector to the nearest integral value.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<float> Round(Vector64<float> vector) {
+      const int count = 8 / sizeof(float); // 2 floats in 8 bytes
+      Span<float> buffer = stackalloc float[count];
+      Unsafe.WriteUnaligned(ref Unsafe.As<float, byte>(ref buffer[0]), vector);
+
+      for (var i = 0; i < count; ++i)
+        buffer[i] = MathF.Round(buffer[i]);
+
+      return Unsafe.ReadUnaligned<Vector64<float>>(ref Unsafe.As<float, byte>(ref buffer[0]));
+    }
+
+    /// <summary>
+    /// Truncates each element of a vector to the integral part.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<float> Truncate(Vector64<float> vector) {
+      const int count = 8 / sizeof(float); // 2 floats in 8 bytes
+      Span<float> buffer = stackalloc float[count];
+      Unsafe.WriteUnaligned(ref Unsafe.As<float, byte>(ref buffer[0]), vector);
+
+      for (var i = 0; i < count; ++i)
+        buffer[i] = MathF.Truncate(buffer[i]);
+
+      return Unsafe.ReadUnaligned<Vector64<float>>(ref Unsafe.As<float, byte>(ref buffer[0]));
+    }
+
+    /// <summary>
+    /// Computes (a * b) + c using fused multiply-add for each element.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe Vector64<float> FusedMultiplyAdd(Vector64<float> a, Vector64<float> b, Vector64<float> c) {
+      const int count = 8 / sizeof(float); // 2 floats in 8 bytes
+      Span<float> bufferA = stackalloc float[count];
+      Span<float> bufferB = stackalloc float[count];
+      Span<float> bufferC = stackalloc float[count];
+      Span<float> result = stackalloc float[count];
+
+      Unsafe.WriteUnaligned(ref Unsafe.As<float, byte>(ref bufferA[0]), a);
+      Unsafe.WriteUnaligned(ref Unsafe.As<float, byte>(ref bufferB[0]), b);
+      Unsafe.WriteUnaligned(ref Unsafe.As<float, byte>(ref bufferC[0]), c);
+
+      for (var i = 0; i < count; ++i)
+        result[i] = bufferA[i] * bufferB[i] + bufferC[i];
+
+      return Unsafe.ReadUnaligned<Vector64<float>>(ref Unsafe.As<float, byte>(ref result[0]));
+    }
+
+    // ===== SATURATION ARITHMETIC =====
+
+    /// <summary>
+    /// Adds two vectors with saturation.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> AddSaturate<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var result = Vector64<T>.Zero;
+      for (var i = 0; i < Vector64<T>.Count; ++i) {
+        var l = Vector64.GetElement(left, i);
+        var r = Vector64.GetElement(right, i);
+        result = Vector64.WithElement(result, i, Scalar<T>.AddSaturate(l, r));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Subtracts two vectors with saturation.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> SubtractSaturate<T>(Vector64<T> left, Vector64<T> right) where T : struct {
+      var result = Vector64<T>.Zero;
+      for (var i = 0; i < Vector64<T>.Count; ++i) {
+        var l = Vector64.GetElement(left, i);
+        var r = Vector64.GetElement(right, i);
+        result = Vector64.WithElement(result, i, Scalar<T>.SubtractSaturate(l, r));
+      }
+      return result;
+    }
+
+    // ===== MIN/MAX MAGNITUDE =====
+
+    /// <summary>
+    /// Returns the element-wise minimum magnitude.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MinMagnitude(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise minimum magnitude for double.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MinMagnitude(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum magnitude.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MaxMagnitude(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum magnitude for double.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MaxMagnitude(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise minimum magnitude number (NaN-propagating).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MinMagnitudeNumber(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        if (float.IsNaN(xv) || float.IsNaN(yv))
+          result = Vector64.WithElement(result, i, float.NaN);
+        else
+          result = Vector64.WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise minimum magnitude number for double (NaN-propagating).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MinMagnitudeNumber(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        if (double.IsNaN(xv) || double.IsNaN(yv))
+          result = Vector64.WithElement(result, i, double.NaN);
+        else
+          result = Vector64.WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum magnitude number (NaN-propagating).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MaxMagnitudeNumber(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        if (float.IsNaN(xv) || float.IsNaN(yv))
+          result = Vector64.WithElement(result, i, float.NaN);
+        else
+          result = Vector64.WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum magnitude number for double (NaN-propagating).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MaxMagnitudeNumber(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        if (double.IsNaN(xv) || double.IsNaN(yv))
+          result = Vector64.WithElement(result, i, double.NaN);
+        else
+          result = Vector64.WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise minimum number (returns the number when one is NaN).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MinNumber(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Min(xv, yv)));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise minimum number for double (returns the number when one is NaN).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MinNumber(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Min(xv, yv)));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum number (returns the number when one is NaN).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> MaxNumber(Vector64<float> x, Vector64<float> y) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Max(xv, yv)));
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns the element-wise maximum number for double (returns the number when one is NaN).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> MaxNumber(Vector64<double> x, Vector64<double> y) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Max(xv, yv)));
+      }
+      return result;
+    }
+
+    // ===== NATIVE CLAMP/MIN/MAX =====
+
+    /// <summary>
+    /// Clamps each element using native Min/Max operations.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> ClampNative<T>(Vector64<T> value, Vector64<T> min, Vector64<T> max) where T : struct
+      => Vector64.Min(Vector64.Max(value, min), max);
+
+    /// <summary>
+    /// Returns element-wise minimum using native operations.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> MinNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Vector64.Min(x, y);
+
+    /// <summary>
+    /// Returns element-wise maximum using native operations.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> MaxNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Vector64.Max(x, y);
+
+    // ===== FLOAT PREDICATES =====
+
+    /// <summary>
+    /// Returns a mask indicating which elements are finite.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsFinite(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsFinite(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are finite (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsFinite(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, !double.IsNaN(v) && !double.IsInfinity(v) ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are infinity.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsInfinity(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsInfinity(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are infinity (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsInfinity(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsInfinity(v) ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are negative infinity.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsNegativeInfinity(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsNegativeInfinity(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are negative infinity (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsNegativeInfinity(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsNegativeInfinity(v) ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are positive infinity.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsPositiveInfinity(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsPositiveInfinity(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are positive infinity (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsPositiveInfinity(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsPositiveInfinity(v) ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are normal numbers.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsNormal(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsNormal(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are normal numbers (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsNormal(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        var bits = BitConverter.DoubleToInt64Bits(v);
+        var exponent = (int)((bits >> 52) & 0x7FF);
+        var isNormal = exponent != 0 && exponent != 0x7FF && v != 0d;
+        result = Vector64.WithElement(result, i, isNormal ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are subnormal numbers.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> IsSubnormal(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      var allBitsSet = BitConverter.Int32BitsToSingle(-1);
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsSubnormal(v) ? allBitsSet : 0f);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are subnormal numbers (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> IsSubnormal(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        var bits = BitConverter.DoubleToInt64Bits(v);
+        var exponent = (int)((bits >> 52) & 0x7FF);
+        var mantissa = bits & 0xFFFFFFFFFFFFF;
+        var isSubnormal = exponent == 0 && mantissa != 0;
+        result = Vector64.WithElement(result, i, isSubnormal ? allBitsSet : 0d);
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are odd integers.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> IsOddInteger<T>(Vector64<T> vector) where T : struct {
+      var result = Vector64<T>.Zero;
+      var allBitsSet = Scalar<T>.AllBitsSet;
+      for (var i = 0; i < Vector64<T>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        var isOdd = (Convert.ToInt64(v) & 1) == 1;
+        result = Vector64.WithElement(result, i, isOdd ? allBitsSet : Scalar<T>.Zero());
+      }
+      return result;
+    }
+
+    /// <summary>
+    /// Returns a mask indicating which elements are even integers.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<T> IsEvenInteger<T>(Vector64<T> vector) where T : struct {
+      var result = Vector64<T>.Zero;
+      var allBitsSet = Scalar<T>.AllBitsSet;
+      for (var i = 0; i < Vector64<T>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        var isEven = (Convert.ToInt64(v) & 1) == 0;
+        result = Vector64.WithElement(result, i, isEven ? allBitsSet : Scalar<T>.Zero());
+      }
+      return result;
+    }
+
+    // ===== TRANSCENDENTAL FUNCTIONS =====
+
+    /// <summary>
+    /// Computes the sine of each element.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> Sin(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i)
+        result = Vector64.WithElement(result, i, MathF.Sin(Vector64.GetElement(vector, i)));
+      return result;
+    }
+
+    /// <summary>
+    /// Computes the sine of each element (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> Sin(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i)
+        result = Vector64.WithElement(result, i, Math.Sin(Vector64.GetElement(vector, i)));
+      return result;
+    }
+
+    /// <summary>
+    /// Computes the cosine of each element.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<float> Cos(Vector64<float> vector) {
+      var result = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i)
+        result = Vector64.WithElement(result, i, MathF.Cos(Vector64.GetElement(vector, i)));
+      return result;
+    }
+
+    /// <summary>
+    /// Computes the cosine of each element (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector64<double> Cos(Vector64<double> vector) {
+      var result = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i)
+        result = Vector64.WithElement(result, i, Math.Cos(Vector64.GetElement(vector, i)));
+      return result;
+    }
+
+    /// <summary>
+    /// Computes the sine and cosine of each element.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (Vector64<float> Sin, Vector64<float> Cos) SinCos(Vector64<float> vector) {
+      var sin = Vector64<float>.Zero;
+      var cos = Vector64<float>.Zero;
+      for (var i = 0; i < Vector64<float>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        sin = Vector64.WithElement(sin, i, MathF.Sin(v));
+        cos = Vector64.WithElement(cos, i, MathF.Cos(v));
+      }
+      return (sin, cos);
+    }
+
+    /// <summary>
+    /// Computes the sine and cosine of each element (double).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (Vector64<double> Sin, Vector64<double> Cos) SinCos(Vector64<double> vector) {
+      var sin = Vector64<double>.Zero;
+      var cos = Vector64<double>.Zero;
+      for (var i = 0; i < Vector64<double>.Count; ++i) {
+        var v = Vector64.GetElement(vector, i);
+        sin = Vector64.WithElement(sin, i, Math.Sin(v));
+        cos = Vector64.WithElement(cos, i, Math.Cos(v));
+      }
+      return (sin, cos);
+    }
+
+#if FEATURE_VECTOR64STATIC_WAVE1
+  }
+}
+#else
+}
+#endif
+
 }
 #endif

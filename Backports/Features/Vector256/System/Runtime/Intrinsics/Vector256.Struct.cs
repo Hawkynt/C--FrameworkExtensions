@@ -17,15 +17,18 @@
 
 #endregion
 
-#if SUPPORTS_VECTOR_256_TYPE && !SUPPORTS_VECTOR_256_BASE
-
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Guard;
+using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-namespace System.Runtime.Intrinsics;
+// ========== WAVE 1 ==========
+
+#if !FEATURE_VECTOR256_WAVE1
+
+namespace System.Runtime.Intrinsics {
 
 public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct {
 
@@ -108,6 +111,41 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
     this._v1 = v1;
     this._v2 = v2;
     this._v3 = v3;
+  }
+
+  public static Vector256<T> Indices {
+    get {
+      ulong v0 = 0, v1 = 0, v2 = 0, v3 = 0;
+      var size = Unsafe.SizeOf<T>();
+      var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
+      var elementsPerUlong = 8 / size;
+
+      for (var i = 0; i < elementsPerUlong && i < Count; ++i) {
+        var tval = Scalar<T>.From(i);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v0 |= chunk << (i * size * 8);
+      }
+
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v1 |= chunk << (i * size * 8);
+      }
+
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 2) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 2);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v2 |= chunk << (i * size * 8);
+      }
+
+      for (var i = 0; i < elementsPerUlong && (i + elementsPerUlong * 3) < Count; ++i) {
+        var tval = Scalar<T>.From(i + elementsPerUlong * 3);
+        var chunk = Unsafe.As<T, ulong>(ref tval) & mask;
+        v3 |= chunk << (i * size * 8);
+      }
+
+      return new(v0, v1, v2, v3);
+    }
   }
 
   public T this[int index] {
@@ -293,4 +331,82 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
   #endregion
 }
 
+}
+#endif
+
+// ========== WAVE 2 ==========
+
+#if !FEATURE_VECTOR256_WAVE2
+
+namespace System.Runtime.Intrinsics {
+
+/// <summary>
+/// Polyfill for Vector256 AllBitsSet property (added in .NET 5.0).
+/// </summary>
+public static class Vector256AllBitsSetPolyfills {
+
+  extension<T>(Vector256<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector256{T}"/> with all bits set to 1.</summary>
+    public static Vector256<T> AllBitsSet {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => Unsafe.As<Vector256<byte>, Vector256<T>>(ref Unsafe.AsRef(Vector256.Create(byte.MaxValue)));
+    }
+  }
+
+}
+
+}
+#endif
+
+// ========== WAVE 4 ==========
+
+#if FEATURE_VECTOR256_WAVE1 && !FEATURE_VECTOR256_WAVE4
+
+namespace System.Runtime.Intrinsics {
+
+public static partial class Vector256Polyfills {
+  extension<T>(Vector256<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector256{T}"/> with all elements initialized to one.</summary>
+    public static Vector256<T> One {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get {
+        var one = Scalar<T>.One;
+        var count = 32 / Unsafe.SizeOf<T>();
+        unsafe {
+          var buffer = stackalloc byte[32];
+          var ptr = (T*)buffer;
+          for (var i = 0; i < count; ++i)
+            ptr[i] = one;
+          return Unsafe.ReadUnaligned<Vector256<T>>(buffer);
+        }
+      }
+    }
+  }
+}
+
+}
+#endif
+
+// ========== WAVE 5 ==========
+
+#if !FEATURE_VECTOR256_WAVE5
+
+namespace System.Runtime.Intrinsics {
+
+public static partial class Vector256Polyfills {
+  extension<T>(Vector256<T>) where T : struct {
+    /// <summary>Gets a new <see cref="Vector256{T}"/> with the elements set to their index.</summary>
+    public static Vector256<T> Indices {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get {
+        var result = Vector256<T>.Zero;
+        for (var i = 0; i < Vector256<T>.Count; ++i)
+          result = result.WithElement(i, Scalar<T>.From<int>(i));
+        return result;
+      }
+    }
+  }
+}
+
+}
 #endif
