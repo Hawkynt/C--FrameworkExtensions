@@ -38,7 +38,7 @@ public static partial class FileInfoExtensions {
       this._lineBreakMode = lineBreakMode;
     }
 
-    public sealed class Initialized : CustomTextReader {
+    public sealed class Initialized : CustomTextReader, IDisposable {
       private sealed class LineEndingNode {
         private Dictionary<char, LineEndingNode> _children;
         private LineEndingNode(int pathLength) => this.PathLength = pathLength;
@@ -85,40 +85,48 @@ public static partial class FileInfoExtensions {
 
       private readonly Func<int> _singleCharacterReader;
       private readonly Func<string> _fullLineReader;
-      private readonly Func<long> _positionGetter;
+      private readonly BufferedStreamEx _stream;
+      private long _position;
 
-      public long Position => this._positionGetter();
+      public long Position => this._position;
 
-      private Initialized(FileStream ustream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
-        var stream = new BufferedStreamEx(ustream);
+      private Initialized(Stream ustream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
+        this._stream = new(ustream, dontDisposeUnderlyingStream: true);
+        this._position = ustream.Position;
 
-        this._positionGetter = () => stream.Position;
-        long startPosition;
-
-        SaveStartPosition();
+        var startPosition = this._position;
 
         var usedEncoding = this._encoding;
         if (this._detectEncodingFromByteOrderMark) {
-          usedEncoding = DetectFromByteOrderMark(stream);
-          Reset();
+          usedEncoding = DetectFromByteOrderMark(this._stream);
+          this._stream.Position = startPosition;
+          this._position = startPosition;
         }
 
         usedEncoding ??= Encoding.GetEncoding("ISO-8859-1");
         var decoder = usedEncoding.GetDecoder();
-        var largestBufferForOneCharacter = new byte[usedEncoding.GetMaxByteCount(1)];
+        var byteBuffer = new byte[usedEncoding.GetMaxByteCount(1)];
         var lineBuilder = new StringBuilder(1024);
         var oneCharacterOnly = new char[1];
         this._singleCharacterReader = ReadOneChar;
 
-        if (!HasValidPreamble(stream, usedEncoding))
-          Reset();
+        if (!HasValidPreamble(this._stream, usedEncoding)) {
+          this._stream.Position = startPosition;
+          this._position = startPosition;
+        } else {
+          this._position = this._stream.Position;
+        }
 
-        SaveStartPosition();
+        startPosition = this._position;
         this.PreambleSize = startPosition;
 
         var possibleLineEndings = BuildLineEndingStateMachine(this, this._lineBreakMode);
-        if (this._lineBreakMode == StringExtensions.LineBreakMode.AutoDetect)
-          Reset();
+        if (this._lineBreakMode == StringExtensions.LineBreakMode.AutoDetect) {
+          this._stream.Position = startPosition;
+          this._position = startPosition;
+          // CRITICAL: Reset the decoder state after detection, otherwise it's corrupted
+          decoder.Reset();
+        }
 
         this._fullLineReader = possibleLineEndings == null
             ? ReadToEnd
@@ -128,12 +136,6 @@ public static partial class FileInfoExtensions {
           ;
 
         return;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SaveStartPosition() => startPosition = stream.Position;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Reset() => stream.Position = startPosition;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static bool HasValidPreamble(Stream stream, Encoding usedEncoding) {
@@ -180,15 +182,14 @@ public static partial class FileInfoExtensions {
 
         int ReadOneChar() {
           // Attempt to read enough bytes for at least one character
-          var bytesRead = stream.Read(largestBufferForOneCharacter, 0, largestBufferForOneCharacter.Length);
-
+          var bytesRead = this._stream.Read(byteBuffer, 0, byteBuffer.Length);
           // End of stream
           if (bytesRead <= 0)
             return -1;
 
           // Use the decoder to decode the bytes into the char buffer
           decoder.Convert(
-            largestBufferForOneCharacter,
+            byteBuffer,
             0,
             bytesRead,
             oneCharacterOnly,
@@ -204,11 +205,14 @@ public static partial class FileInfoExtensions {
           if (charsUsed <= 0)
             return -1;
 
-          // Successfully decoded at least one character
+          // Successfully decoded at least one character - update position
+          this._position += bytesUsed;
+
+          // Rewind the stream for any bytes we read but didn't use
           var bytesReadPastCharacter = bytesRead - bytesUsed;
           if (bytesReadPastCharacter > 0)
-            stream.Position -= bytesReadPastCharacter;
-          
+            this._stream.Position -= bytesReadPastCharacter;
+
           return oneCharacterOnly[0];
         }
 
@@ -252,7 +256,7 @@ public static partial class FileInfoExtensions {
           lineBuilder.Clear();
           var result = lineBuilder;
           var hadContent = false;
-          long lastTerminalPosition = -1; // Position of the last terminal node encountered
+          long lastTerminalPosition = -1; // Position after the last terminal node
           LineEndingNode lastTerminalNode = null; // Last terminal node encountered
           var currentNode = possibleLineEndings;
 
@@ -263,7 +267,9 @@ public static partial class FileInfoExtensions {
             if (read < 0) {
               // If there was a pending terminal node, rollback to its position
               if (lastTerminalNode != null) {
-                stream.Position = lastTerminalPosition;
+                // Rewind to position after the line ending
+                this._position = lastTerminalPosition;
+                this._stream.Position = lastTerminalPosition;
 
                 // we need to strip parts of the result to not include the current line ending
                 result.Remove(result.Length - lastTerminalNode.PathLength, lastTerminalNode.PathLength);
@@ -275,7 +281,6 @@ public static partial class FileInfoExtensions {
             }
 
             hadContent = true;
-            var currentPosition = stream.Position;
             var currentChar = (char)read;
             result.Append(currentChar);
 
@@ -283,10 +288,12 @@ public static partial class FileInfoExtensions {
             if (currentNode == null) {
               // If a terminal node was previously encountered but the current character does not continue a valid line ending
               if (lastTerminalNode != null) {
-                stream.Position = lastTerminalPosition;
+                // Rewind to position after the line ending (before the lookahead character)
+                this._position = lastTerminalPosition;
+                this._stream.Position = lastTerminalPosition;
 
-                // we need to strip parts of the result to not include the current line ending
-                result.Remove(result.Length - lastTerminalNode.PathLength - 1 /* because the last added char is not part of the tree */, lastTerminalNode.PathLength);
+                // we need to strip the line ending AND the lookahead char that's not part of the line
+                result.Remove(result.Length - lastTerminalNode.PathLength - 1, lastTerminalNode.PathLength + 1);
                 return result.ToString();
               }
 
@@ -298,14 +305,14 @@ public static partial class FileInfoExtensions {
               continue;
 
             lastTerminalNode = currentNode;
-            lastTerminalPosition = currentPosition;
+            lastTerminalPosition = this._position;
           }
         }
       }
 
-      public Initialized(FileStream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
+      public Initialized(Stream stream, bool detectEncodingFromByteOrderMark, StringExtensions.LineBreakMode lineBreakMode) : this(stream, detectEncodingFromByteOrderMark, null, lineBreakMode) { }
 
-      public Initialized(FileStream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
+      public Initialized(Stream stream, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode = StringExtensions.LineBreakMode.AutoDetect)
         : this(stream, false, encoding, lineBreakMode)
         => Against.ArgumentIsNull(encoding);
 
@@ -314,6 +321,8 @@ public static partial class FileInfoExtensions {
       public int Read() => this._singleCharacterReader();
 
       public string ReadLine() => this._fullLineReader();
+
+      public void Dispose() => this._stream.Dispose();
     }
 
 

@@ -2044,7 +2044,7 @@ public static partial class FileInfoExtensions {
     Against.UnknownEnumValues(newLine);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-    CustomTextReader.Initialized reader =
+    using CustomTextReader.Initialized reader =
         encoding == null
           ? new(stream, true, newLine)
           : new(stream, encoding, newLine)
@@ -2352,40 +2352,49 @@ public static partial class FileInfoExtensions {
     Against.UnknownEnumValues(newLine);
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-    CustomTextReader.Initialized reader = encoding == null
-        ? new(stream, true, newLine)
-        : new(stream, encoding, newLine)
-      ;
 
     var readPosition = 0L;
-    var lineCounter = 0;
+    var preambleSize = 0L;
 
-    while (lineCounter < count) {
-      var line = reader.ReadLine();
-      if (line == null)
-        break;
+    // Use using to ensure reader is properly disposed and stream position is synced
+    using (CustomTextReader.Initialized reader = encoding == null
+          ? new(stream, true, newLine)
+          : new(stream, encoding, newLine)) {
 
-      readPosition = reader.Position;
-      ++lineCounter;
+      var lineCounter = 0;
+
+      while (lineCounter < count) {
+        var line = reader.ReadLine();
+        if (line == null)
+          break;
+
+        readPosition = reader.Position;
+        ++lineCounter;
+      }
+
+      preambleSize = reader.PreambleSize;
+
+      if (lineCounter < count) {
+        stream.SetLength(preambleSize);
+        return;
+      }
     }
 
-    if (lineCounter < count) {
-      stream.SetLength(reader.PreambleSize);
-      return;
-    }
+    // After disposing reader, the underlying stream position is now synced to readPosition
+    // No need for additional Seek
 
-    var writePosition = reader.PreambleSize;
+    var writePosition = preambleSize;
 
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
 
     for (;;) {
-      stream.Position = readPosition;
+      stream.Seek(readPosition, SeekOrigin.Begin);
       var bytesRead = stream.Read(buffer, 0, bufferSize);
       if (bytesRead <= 0)
         break;
 
-      stream.Position = writePosition;
+      stream.Seek(writePosition, SeekOrigin.Begin);
       stream.Write(buffer, 0, bytesRead);
 
       readPosition += bytesRead;
@@ -2517,7 +2526,6 @@ public static partial class FileInfoExtensions {
     const char PS = (char)LineBreakMode.ParagraphSeparator;
     const char NL = (char)LineBreakMode.NegativeAcknowledge;
     const char EOL = (char)LineBreakMode.EndOfLine;
-    const char ZX = (char)LineBreakMode.Zx;
     const char NUL = (char)LineBreakMode.Null;
 
     var previousCharacter = stream.Read();
@@ -2531,7 +2539,6 @@ public static partial class FileInfoExtensions {
       case PS: return LineBreakMode.ParagraphSeparator;
       case NL: return LineBreakMode.NegativeAcknowledge;
       case EOL: return LineBreakMode.EndOfLine;
-      case ZX: return LineBreakMode.Zx;
       case NUL: return LineBreakMode.Null;
     }
 
@@ -2551,7 +2558,6 @@ public static partial class FileInfoExtensions {
         case PS: return LineBreakMode.ParagraphSeparator;
         case NL: return LineBreakMode.NegativeAcknowledge;
         case EOL: return LineBreakMode.EndOfLine;
-        case ZX: return LineBreakMode.Zx;
         case NUL: return LineBreakMode.Null;
       }
 

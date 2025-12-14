@@ -343,6 +343,8 @@ public sealed class BufferedStreamEx(Stream underlyingStream, int bufferSize = 8
         this.Flush();
         if (!dontDisposeUnderlyingStream)
           underlyingStream.Dispose();
+        else if (underlyingStream.CanSeek)
+          underlyingStream.Position = this._position;
       } finally {
         ArrayPool<byte>.Shared.Return(this._buffer);
       }
