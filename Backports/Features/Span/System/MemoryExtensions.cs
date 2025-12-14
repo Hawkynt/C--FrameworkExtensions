@@ -222,15 +222,6 @@ public static partial class MemoryPolyfills {
     return -1;
   }
 
-  /// <summary>
-  /// Reports the zero-based index of the last occurrence of the specified <paramref name="value"/> in the current <paramref name="span"/>.
-  /// </summary>
-  /// <param name="span">The source span.</param>
-  /// <param name="value">The value to seek within the source span.</param>
-  /// <param name="comparisonType">One of the enumeration values that determines how the <paramref name="span"/> and <paramref name="value"/> are compared.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int LastIndexOf(this ReadOnlySpan<char> span, ReadOnlySpan<char> value, StringComparison comparisonType) => span.ToString().LastIndexOf(value.ToString(), comparisonType);
-
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool StartsWith<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> value) where T : IEquatable<T> => value.Length <= span.Length && span[..value.Length].SequenceEqual(value);
 

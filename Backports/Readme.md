@@ -81,13 +81,18 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 ### Types
 
 * System
-  * [Index](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
+  * [DateOnly](https://learn.microsoft.com/dotnet/api/system.dateonly)
+  * [Half](https://learn.microsoft.com/dotnet/api/system.half)
+  * [Index](https://learn.microsoft.com/dotnet/api/system.index)
+  * [Int128](https://learn.microsoft.com/dotnet/api/system.int128)
   * [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
   * [MathF](https://learn.microsoft.com/dotnet/api/system.mathf)
   * [Range](https://learn.microsoft.com/dotnet/api/system.range)
   * [ReadOnlySpan](https://learn.microsoft.com/dotnet/api/system.readonlyspan-1)&lt;T&gt;
   * [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
+  * [TimeOnly](https://learn.microsoft.com/dotnet/api/system.timeonly)
   * [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
+  * [UInt128](https://learn.microsoft.com/dotnet/api/system.uint128)
   * [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
 
 * System
@@ -117,6 +122,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Numerics
   * [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
+  * [Matrix3x2](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2)
+  * [Matrix4x4](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4)
+  * [Plane](https://learn.microsoft.com/dotnet/api/system.numerics.plane)
+  * [Quaternion](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion)
 
 * System.Runtime.CompilerServices
   * [AsyncIteratorMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratormethodbuilder)
@@ -221,6 +230,23 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Math
   * T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
 
+* System.DateTime
+  * DateTime [UnixEpoch](https://learn.microsoft.com/dotnet/api/system.datetime.unixepoch)
+  * DateTime [Parse](https://learn.microsoft.com/dotnet/api/system.datetime.parse#system-datetime-parse%28system-readonlyspan%28%28system-char%29%29-system-iformatprovider-system-globalization-datetimestyles%29)
+  * DateTime [ParseExact](https://learn.microsoft.com/dotnet/api/system.datetime.parseexact)
+  * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.datetime.tryparse)
+  * bool [TryParseExact](https://learn.microsoft.com/dotnet/api/system.datetime.tryparseexact)
+  * DateTime [FromDateAndTime](https://learn.microsoft.com/dotnet/api/system.datetime.-ctor#system-datetime-ctor%28system-dateonly-system-timeonly%29)
+
+* System.Single (float)
+  * bool [IsFinite](https://learn.microsoft.com/dotnet/api/system.single.isfinite)
+  * bool [IsNegative](https://learn.microsoft.com/dotnet/api/system.single.isnegative)
+  * bool [IsNormal](https://learn.microsoft.com/dotnet/api/system.single.isnormal)
+  * bool [IsSubnormal](https://learn.microsoft.com/dotnet/api/system.single.issubnormal)
+  * float [Lerp](https://learn.microsoft.com/dotnet/api/system.single.lerp)
+  * float [DegreesToRadians](https://learn.microsoft.com/dotnet/api/system.single.degreestoradians)
+  * float [RadiansToDegrees](https://learn.microsoft.com/dotnet/api/system.single.radianstodegrees)
+
 * System.Random
   * Random [Shared](https://learn.microsoft.com/dotnet/api/system.random.shared) (static property)
 
@@ -295,6 +321,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Collections.Generic.Stack
   * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
+
+* System.DateTime
+  * int [Microsecond](https://learn.microsoft.com/dotnet/api/system.datetime.microsecond)(this DateTime @this)
+  * int [Nanosecond](https://learn.microsoft.com/dotnet/api/system.datetime.nanosecond)(this DateTime @this)
+  * DateTime [AddMicroseconds](https://learn.microsoft.com/dotnet/api/system.datetime.addmicroseconds)(this DateTime @this, double value)
+  * bool [TryFormat](https://learn.microsoft.com/dotnet/api/system.datetime.tryformat)(this DateTime @this, Span&lt;char&gt; destination, out int charsWritten, ...)
+  * void [Deconstruct](https://learn.microsoft.com/dotnet/api/system.datetime.deconstruct)(this DateTime @this, out DateOnly date, out TimeOnly time)
+  * void [Deconstruct](https://learn.microsoft.com/dotnet/api/system.datetime.deconstruct)(this DateTime @this, out int year, out int month, out int day)
 
 * System.DateTimeOffset
   * long [ToUnixTimeMilliseconds](https://learn.microsoft.com/dotnet/api/system.datetimeoffset.tounixtimemilliseconds)(this DateTimeOffset @this)
@@ -439,6 +473,15 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-string-system-stringcomparison%29)(this string @this, string value, StringComparison comparisonType)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-char%29)(this string @this, char value)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-char-system-stringcomparison%29)(this string @this, char value, StringComparison comparisonType)
+  * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.string.startswith#system-string-startswith%28system-char%29)(this string @this, char value)
+  * bool [EndsWith](https://learn.microsoft.com/dotnet/api/system.string.endswith#system-string-endswith%28system-char%29)(this string @this, char value)
+  * string [Trim](https://learn.microsoft.com/dotnet/api/system.string.trim#system-string-trim%28system-char%29)(this string @this, char trimChar)
+  * string [TrimStart](https://learn.microsoft.com/dotnet/api/system.string.trimstart#system-string-trimstart%28system-char%29)(this string @this, char trimChar)
+  * string [TrimEnd](https://learn.microsoft.com/dotnet/api/system.string.trimend#system-string-trimend%28system-char%29)(this string @this, char trimChar)
+  * string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings)(this string @this)
+  * string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings%28system-string%29)(this string @this, string replacementText)
+  * void [CopyTo](https://learn.microsoft.com/dotnet/api/system.string.copyto#system-string-copyto%28system-span%28%28system-char%29%29%29)(this string @this, Span&lt;char&gt; destination)
+  * bool [TryCopyTo](https://learn.microsoft.com/dotnet/api/system.string.trycopyto)(this string @this, Span&lt;char&gt; destination)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-char-system-stringsplitoptions%29)(this string @this, char separator, StringSplitOptions options = StringSplitOptions.None)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-char-system-int32-system-stringsplitoptions%29)(this string @this, char separator, int count, StringSplitOptions options = StringSplitOptions.None)
   * string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-string-system-stringsplitoptions%29)(this string @this, string separator, StringSplitOptions options = StringSplitOptions.None)
@@ -449,6 +492,44 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
   * ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
+
+* System.Numerics.Matrix3x2
+  * float [GetElement](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.getelement)(this Matrix3x2 @this, int row, int column)
+  * Matrix3x2 [WithElement](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.withelement)(this Matrix3x2 @this, int row, int column, float value)
+  * Vector2 [GetRow](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.getrow)(this Matrix3x2 @this, int index)
+  * Matrix3x2 [WithRow](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.withrow)(this Matrix3x2 @this, int index, Vector2 value)
+  * Vector2 [X](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.x) / [Y](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.y) / [Z](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.z) (extension properties)
+  * Matrix3x2 [WithX](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.withx)(this Matrix3x2 @this, Vector2 value) / WithY / WithZ
+  * Matrix3x2 [Create](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.create)(...) - multiple overloads
+
+* System.Numerics.Matrix4x4
+  * Vector4 [GetRow](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.getrow)(this Matrix4x4 @this, int index)
+  * Matrix4x4 [WithRow](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.withrow)(this Matrix4x4 @this, int index, Vector4 value)
+  * Vector4 [X](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.x) / [Y](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.y) / [Z](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.z) / [W](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.w) (extension properties)
+  * Matrix4x4 [WithX](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.withx)(this Matrix4x4 @this, Vector4 value) / WithY / WithZ / WithW
+  * Matrix4x4 [Create](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.create)(...) - multiple overloads
+  * Matrix4x4 [CreateBillboardLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createbillboardlefthanded)(...)
+  * Matrix4x4 [CreateConstrainedBillboardLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createconstrainedbillboardlefthanded)(...)
+  * Matrix4x4 [CreateLookAtLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createlookatlefthanded)(...)
+  * Matrix4x4 [CreateLookToLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createlooktolefthanded)(...)
+  * Matrix4x4 [CreateOrthographicLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createorthographiclefthanded)(...)
+  * Matrix4x4 [CreateOrthographicOffCenterLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createorthographicoffcenterlefthanded)(...)
+  * Matrix4x4 [CreatePerspectiveLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createperspectivelefthanded)(...)
+  * Matrix4x4 [CreatePerspectiveFieldOfViewLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createperspectivefieldofviewlefthanded)(...)
+  * Matrix4x4 [CreatePerspectiveOffCenterLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createperspectiveoffcenterlefthanded)(...)
+  * Matrix4x4 [CreateViewportLeftHanded](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4.createviewportlefthanded)(...)
+
+* System.Numerics.Plane
+  * Plane [Create](https://learn.microsoft.com/dotnet/api/system.numerics.plane.create)(Vector4 value)
+  * Plane [Create](https://learn.microsoft.com/dotnet/api/system.numerics.plane.create)(Vector3 normal, float d)
+  * Plane [Create](https://learn.microsoft.com/dotnet/api/system.numerics.plane.create)(float x, float y, float z, float d)
+
+* System.Numerics.Quaternion
+  * Quaternion [Zero](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion.zero) (static property)
+  * float [GetElement](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion.item)(this Quaternion @this, int index)
+  * Quaternion [WithElement](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion.item)(this Quaternion @this, int index, float value)
+  * Quaternion [Create](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion.create)(Vector3 vectorPart, float scalarPart)
+  * Quaternion [Create](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion.create)(float x, float y, float z, float w)
 
 * System.RuntimeServices.CompilerServices.RuntimeHelpers
   * T[] [GetSubArray](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.runtimehelpers.getsubarray)&lt;T&gt;(T[] array, Range range)

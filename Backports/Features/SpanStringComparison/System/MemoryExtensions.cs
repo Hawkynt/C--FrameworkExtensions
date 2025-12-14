@@ -18,7 +18,7 @@
 // System.Memory package provides IndexOf with StringComparison but NOT LastIndexOf
 // Note: IndexOf is already provided by System.Memory, so we only add LastIndexOf here
 
-#if !NETCOREAPP3_0_OR_GREATER && (SUPPORTS_SPAN || OFFICIAL_SPAN)
+#if !NETCOREAPP3_0_OR_GREATER
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;

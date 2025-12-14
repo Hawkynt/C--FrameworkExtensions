@@ -37,7 +37,6 @@ public static partial class StringPolyfills {
   /// <returns>The created string.</returns>
   /// <exception cref="ArgumentNullException"><paramref name="action"/> is <see langword="null"/>.</exception>
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is negative.</exception>
-#if SUPPORTS_SPAN || OFFICIAL_SPAN
   public static string Create<TState>(int length, TState state, SpanAction<char, TState> action) {
     if (action == null)
       AlwaysThrow.ArgumentNullException(nameof(action));
@@ -54,14 +53,12 @@ public static partial class StringPolyfills {
 
     return result;
   }
-#endif
 
   /// <summary>
   /// Creates a new string from a <see cref="ReadOnlySpan{T}"/> of characters.
   /// </summary>
   /// <param name="value">A read-only span of characters.</param>
   /// <returns>A string that contains the characters from the span.</returns>
-#if SUPPORTS_SPAN || OFFICIAL_SPAN
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Create(ReadOnlySpan<char> value) {
     if (value.IsEmpty)
@@ -72,11 +69,9 @@ public static partial class StringPolyfills {
         return new string(ptr, 0, value.Length);
     }
   }
-#endif
   }
 }
 
-#if SUPPORTS_SPAN || OFFICIAL_SPAN
 /// <summary>
 /// Encapsulates a method that receives a span of objects of type <typeparamref name="T"/> and a state object of type <typeparamref name="TArg"/>.
 /// </summary>
@@ -94,6 +89,5 @@ public delegate void SpanAction<T, in TArg>(Span<T> span, TArg arg);
 /// <param name="span">A <see cref="ReadOnlySpan{T}"/> object.</param>
 /// <param name="arg">A state object of type <typeparamref name="TArg"/>.</param>
 public delegate void ReadOnlySpanAction<T, in TArg>(ReadOnlySpan<T> span, TArg arg);
-#endif
 
 #endif
