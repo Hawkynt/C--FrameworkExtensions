@@ -32,29 +32,23 @@ public class VectorTests {
 
   [Test]
   [Category("HappyPath")]
-  public void Vector64_Count_Byte_Returns8() {
-    Assert.That(Vector64<byte>.Count, Is.EqualTo(8));
-  }
+  public void Vector64_Count_Byte_Returns8() => Assert.That(Vector64<byte>.Count, Is.EqualTo(8));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector64_Count_Int_Returns2() {
-    Assert.That(Vector64<int>.Count, Is.EqualTo(2));
-  }
+  public void Vector64_Count_Int_Returns2() => Assert.That(Vector64<int>.Count, Is.EqualTo(2));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector64_Count_Long_Returns1() {
-    Assert.That(Vector64<long>.Count, Is.EqualTo(1));
-  }
+  public void Vector64_Count_Long_Returns1() => Assert.That(Vector64<long>.Count, Is.EqualTo(1));
 
   [Test]
   [Category("HappyPath")]
   public void Vector64_Zero_AllElementsZero() {
     var vector = Vector64<int>.Zero;
 
-    Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(0));
-    Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(0));
+    Assert.That(vector.GetElement(0), Is.EqualTo(0));
+    Assert.That(vector.GetElement(1), Is.EqualTo(0));
   }
 
   [Test]
@@ -62,8 +56,8 @@ public class VectorTests {
   public void Vector64_One_AllElementsOne() {
     var vector = Vector64.Create(1);
 
-    Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(1));
-    Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(1));
+    Assert.That(vector.GetElement(0), Is.EqualTo(1));
+    Assert.That(vector.GetElement(1), Is.EqualTo(1));
   }
 
   [Test]
@@ -71,8 +65,8 @@ public class VectorTests {
   public void Vector64_AllBitsSet_AllBitsAreSet() {
     var vector = Vector64<int>.AllBitsSet;
 
-    Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(-1));
-    Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(-1));
+    Assert.That(vector.GetElement(0), Is.EqualTo(-1));
+    Assert.That(vector.GetElement(1), Is.EqualTo(-1));
   }
 
   #endregion
@@ -84,8 +78,8 @@ public class VectorTests {
   public void Vector64_Create_SetsAllElements() {
     var vector = Vector64.Create(42);
 
-    Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(42));
-    Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(42));
+    Assert.That(vector.GetElement(0), Is.EqualTo(42));
+    Assert.That(vector.GetElement(1), Is.EqualTo(42));
   }
 
   #endregion
@@ -97,10 +91,10 @@ public class VectorTests {
   public void Vector64_Add_AddsElements() {
     var left = Vector64.Create(10);
     var right = Vector64.Create(5);
-    var result = Vector64.Add(left, right);
+    var result = Vector64.Add<int>(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(15));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(15));
+    Assert.That(result.GetElement(0), Is.EqualTo(15));
+    Assert.That(result.GetElement(1), Is.EqualTo(15));
   }
 
   [Test]
@@ -110,8 +104,8 @@ public class VectorTests {
     var right = Vector64.Create(3);
     var result = Vector64.Subtract(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(7));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(7));
+    Assert.That(result.GetElement(0), Is.EqualTo(7));
+    Assert.That(result.GetElement(1), Is.EqualTo(7));
   }
 
   [Test]
@@ -121,8 +115,8 @@ public class VectorTests {
     var right = Vector64.Create(3);
     var result = Vector64.Multiply(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(12));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(12));
+    Assert.That(result.GetElement(0), Is.EqualTo(12));
+    Assert.That(result.GetElement(1), Is.EqualTo(12));
   }
 
   [Test]
@@ -132,8 +126,8 @@ public class VectorTests {
     var right = Vector64.Create(3.0f);
     var result = Vector64.Divide(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(4.0f));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(4.0f));
+    Assert.That(result.GetElement(0), Is.EqualTo(4.0f));
+    Assert.That(result.GetElement(1), Is.EqualTo(4.0f));
   }
 
   [Test]
@@ -142,8 +136,8 @@ public class VectorTests {
     var vector = Vector64.Create(5);
     var result = Vector64.Negate(vector);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-5));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(-5));
+    Assert.That(result.GetElement(0), Is.EqualTo(-5));
+    Assert.That(result.GetElement(1), Is.EqualTo(-5));
   }
 
   [Test]
@@ -152,8 +146,8 @@ public class VectorTests {
     var vector = Vector64.Create(-5);
     var result = Vector64.Abs(vector);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(5));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(5));
+    Assert.That(result.GetElement(0), Is.EqualTo(5));
+    Assert.That(result.GetElement(1), Is.EqualTo(5));
   }
 
   [Test]
@@ -162,8 +156,8 @@ public class VectorTests {
     var vector = Vector64.Create(16.0f);
     var result = Vector64.Sqrt(vector);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(4.0f));
-    Assert.That(Vector64.GetElement(result, 1), Is.EqualTo(4.0f));
+    Assert.That(result.GetElement(0), Is.EqualTo(4.0f));
+    Assert.That(result.GetElement(1), Is.EqualTo(4.0f));
   }
 
   #endregion
@@ -200,7 +194,7 @@ public class VectorTests {
     var right = Vector64.Create(0b1010);
     var result = Vector64.BitwiseAnd(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(0b1010));
+    Assert.That(result.GetElement(0), Is.EqualTo(0b1010));
   }
 
   [Test]
@@ -210,7 +204,7 @@ public class VectorTests {
     var right = Vector64.Create(0b1010);
     var result = Vector64.BitwiseOr(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(0b1110));
+    Assert.That(result.GetElement(0), Is.EqualTo(0b1110));
   }
 
   [Test]
@@ -220,7 +214,7 @@ public class VectorTests {
     var right = Vector64.Create(0b1010);
     var result = Vector64.Xor(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(0b0101));
+    Assert.That(result.GetElement(0), Is.EqualTo(0b0101));
   }
 
   [Test]
@@ -229,7 +223,7 @@ public class VectorTests {
     var vector = Vector64.Create(0);
     var result = Vector64.OnesComplement(vector);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-1));
+    Assert.That(result.GetElement(0), Is.EqualTo(-1));
   }
 
   [Test]
@@ -240,7 +234,7 @@ public class VectorTests {
     var result = Vector64.AndNot(left, right);
 
     // AndNot = left & ~right = 0b1111 & ~0b1010 = 0b1111 & 0b0101 = 0b0101
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(0b0101));
+    Assert.That(result.GetElement(0), Is.EqualTo(0b0101));
   }
 
   #endregion
@@ -254,7 +248,7 @@ public class VectorTests {
     var right = Vector64.Create(5);
     var result = Vector64.Equals<int>(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-1));
+    Assert.That(result.GetElement(0), Is.EqualTo(-1));
   }
 
   [Test]
@@ -264,7 +258,7 @@ public class VectorTests {
     var right = Vector64.Create(5);
     var result = Vector64.GreaterThan(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-1));
+    Assert.That(result.GetElement(0), Is.EqualTo(-1));
   }
 
   [Test]
@@ -274,7 +268,7 @@ public class VectorTests {
     var right = Vector64.Create(10);
     var result = Vector64.LessThan(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(-1));
+    Assert.That(result.GetElement(0), Is.EqualTo(-1));
   }
 
   [Test]
@@ -284,7 +278,7 @@ public class VectorTests {
     var right = Vector64.Create(10);
     var result = Vector64.Min(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(5));
+    Assert.That(result.GetElement(0), Is.EqualTo(5));
   }
 
   [Test]
@@ -294,7 +288,7 @@ public class VectorTests {
     var right = Vector64.Create(10);
     var result = Vector64.Max(left, right);
 
-    Assert.That(Vector64.GetElement(result, 0), Is.EqualTo(10));
+    Assert.That(result.GetElement(0), Is.EqualTo(10));
   }
 
   #endregion
@@ -306,18 +300,18 @@ public class VectorTests {
   public void Vector64_GetElement_ReturnsCorrectElement() {
     var vector = Vector64.Create(42);
 
-    Assert.That(Vector64.GetElement(vector, 0), Is.EqualTo(42));
-    Assert.That(Vector64.GetElement(vector, 1), Is.EqualTo(42));
+    Assert.That(vector.GetElement(0), Is.EqualTo(42));
+    Assert.That(vector.GetElement(1), Is.EqualTo(42));
   }
 
   [Test]
   [Category("HappyPath")]
   public void Vector64_WithElement_SetsElement() {
     var vector = Vector64.Create(0);
-    var modified = Vector64.WithElement(vector, 1, 42);
+    var modified = vector.WithElement(1, 42);
 
-    Assert.That(Vector64.GetElement(modified, 0), Is.EqualTo(0));
-    Assert.That(Vector64.GetElement(modified, 1), Is.EqualTo(42));
+    Assert.That(modified.GetElement(0), Is.EqualTo(0));
+    Assert.That(modified.GetElement(1), Is.EqualTo(42));
   }
 
   [Test]
@@ -325,7 +319,7 @@ public class VectorTests {
   public void Vector64_ToScalar_ReturnsFirstElement() {
     var vector = Vector64.Create(42);
 
-    Assert.That(Vector64.ToScalar(vector), Is.EqualTo(42));
+    Assert.That(vector.ToScalar(), Is.EqualTo(42));
   }
 
   #endregion
@@ -334,33 +328,23 @@ public class VectorTests {
 
   [Test]
   [Category("HappyPath")]
-  public void Vector128_Count_Byte_Returns16() {
-    Assert.That(Vector128<byte>.Count, Is.EqualTo(16));
-  }
+  public void Vector128_Count_Byte_Returns16() => Assert.That(Vector128<byte>.Count, Is.EqualTo(16));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector128_Count_Int_Returns4() {
-    Assert.That(Vector128<int>.Count, Is.EqualTo(4));
-  }
+  public void Vector128_Count_Int_Returns4() => Assert.That(Vector128<int>.Count, Is.EqualTo(4));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector128_Count_Long_Returns2() {
-    Assert.That(Vector128<long>.Count, Is.EqualTo(2));
-  }
+  public void Vector128_Count_Long_Returns2() => Assert.That(Vector128<long>.Count, Is.EqualTo(2));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector128_Count_Float_Returns4() {
-    Assert.That(Vector128<float>.Count, Is.EqualTo(4));
-  }
+  public void Vector128_Count_Float_Returns4() => Assert.That(Vector128<float>.Count, Is.EqualTo(4));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector128_Count_Double_Returns2() {
-    Assert.That(Vector128<double>.Count, Is.EqualTo(2));
-  }
+  public void Vector128_Count_Double_Returns2() => Assert.That(Vector128<double>.Count, Is.EqualTo(2));
 
   [Test]
   [Category("HappyPath")]
@@ -368,7 +352,7 @@ public class VectorTests {
     var vector = Vector128<int>.Zero;
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(0));
+      Assert.That(vector.GetElement(i), Is.EqualTo(0));
   }
 
   [Test]
@@ -377,7 +361,7 @@ public class VectorTests {
     var vector = Vector128<int>.One;
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(1));
   }
 
   [Test]
@@ -386,7 +370,7 @@ public class VectorTests {
     var vector = Vector128<int>.AllBitsSet;
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(-1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(-1));
   }
 
   #endregion
@@ -399,7 +383,7 @@ public class VectorTests {
     var vector = Vector128.Create(42);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(42));
+      Assert.That(vector.GetElement(i), Is.EqualTo(42));
   }
 
   [Test]
@@ -408,7 +392,7 @@ public class VectorTests {
     var vector = Vector128.Create((byte)255);
 
     for (var i = 0; i < Vector128<byte>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(255));
+      Assert.That(vector.GetElement(i), Is.EqualTo(255));
   }
 
   [Test]
@@ -417,7 +401,7 @@ public class VectorTests {
     var vector = Vector128.Create(3.14f);
 
     for (var i = 0; i < Vector128<float>.Count; ++i)
-      Assert.That(Vector128.GetElement(vector, i), Is.EqualTo(3.14f));
+      Assert.That(vector.GetElement(i), Is.EqualTo(3.14f));
   }
 
   [Test]
@@ -427,10 +411,10 @@ public class VectorTests {
     var upper = Vector64.Create(2);
     var result = Vector128.Create(lower, upper);
 
-    Assert.That(Vector128.GetElement(result, 0), Is.EqualTo(1));
-    Assert.That(Vector128.GetElement(result, 1), Is.EqualTo(1));
-    Assert.That(Vector128.GetElement(result, 2), Is.EqualTo(2));
-    Assert.That(Vector128.GetElement(result, 3), Is.EqualTo(2));
+    Assert.That(result.GetElement(0), Is.EqualTo(1));
+    Assert.That(result.GetElement(1), Is.EqualTo(1));
+    Assert.That(result.GetElement(2), Is.EqualTo(2));
+    Assert.That(result.GetElement(3), Is.EqualTo(2));
   }
 
   #endregion
@@ -445,7 +429,7 @@ public class VectorTests {
     var result = Vector128.Add(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(15));
+      Assert.That(result.GetElement(i), Is.EqualTo(15));
   }
 
   [Test]
@@ -456,7 +440,7 @@ public class VectorTests {
     var result = Vector128.Subtract(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(7));
+      Assert.That(result.GetElement(i), Is.EqualTo(7));
   }
 
   [Test]
@@ -467,7 +451,7 @@ public class VectorTests {
     var result = Vector128.Multiply(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(12));
+      Assert.That(result.GetElement(i), Is.EqualTo(12));
   }
 
   [Test]
@@ -478,7 +462,7 @@ public class VectorTests {
     var result = Vector128.Divide(left, right);
 
     for (var i = 0; i < Vector128<float>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   [Test]
@@ -488,7 +472,7 @@ public class VectorTests {
     var result = Vector128.Negate(vector);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-5));
+      Assert.That(result.GetElement(i), Is.EqualTo(-5));
   }
 
   [Test]
@@ -498,7 +482,7 @@ public class VectorTests {
     var result = Vector128.Abs(vector);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   [Test]
@@ -508,7 +492,7 @@ public class VectorTests {
     var result = Vector128.Sqrt(vector);
 
     for (var i = 0; i < Vector128<float>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   [Test]
@@ -518,7 +502,7 @@ public class VectorTests {
     var result = Vector128.Floor(vector);
 
     for (var i = 0; i < Vector128<float>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(3.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(3.0f));
   }
 
   [Test]
@@ -528,7 +512,7 @@ public class VectorTests {
     var result = Vector128.Ceiling(vector);
 
     for (var i = 0; i < Vector128<float>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   #endregion
@@ -543,7 +527,7 @@ public class VectorTests {
     var result = Vector128.BitwiseAnd(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0b1010));
+      Assert.That(result.GetElement(i), Is.EqualTo(0b1010));
   }
 
   [Test]
@@ -554,7 +538,7 @@ public class VectorTests {
     var result = Vector128.BitwiseOr(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0b1110));
+      Assert.That(result.GetElement(i), Is.EqualTo(0b1110));
   }
 
   [Test]
@@ -565,7 +549,7 @@ public class VectorTests {
     var result = Vector128.Xor(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0b0101));
+      Assert.That(result.GetElement(i), Is.EqualTo(0b0101));
   }
 
   [Test]
@@ -575,7 +559,7 @@ public class VectorTests {
     var result = Vector128.OnesComplement(vector);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -586,7 +570,7 @@ public class VectorTests {
     var result = Vector128.AndNot(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0b0101));
+      Assert.That(result.GetElement(i), Is.EqualTo(0b0101));
   }
 
   #endregion
@@ -624,7 +608,7 @@ public class VectorTests {
     var result = Vector128.Equals<int>(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -635,7 +619,7 @@ public class VectorTests {
     var result = Vector128.Equals<int>(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(0));
+      Assert.That(result.GetElement(i), Is.EqualTo(0));
   }
 
   [Test]
@@ -646,7 +630,7 @@ public class VectorTests {
     var result = Vector128.GreaterThan(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -657,7 +641,7 @@ public class VectorTests {
     var result = Vector128.LessThan(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -668,7 +652,7 @@ public class VectorTests {
     var result = Vector128.Max(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(10));
+      Assert.That(result.GetElement(i), Is.EqualTo(10));
   }
 
   [Test]
@@ -679,7 +663,7 @@ public class VectorTests {
     var result = Vector128.Min(left, right);
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   #endregion
@@ -691,19 +675,19 @@ public class VectorTests {
   public void Vector128_GetElement_ReturnsCorrectElement() {
     var vector = Vector128.Create(42);
 
-    Assert.That(Vector128.GetElement(vector, 0), Is.EqualTo(42));
-    Assert.That(Vector128.GetElement(vector, 3), Is.EqualTo(42));
+    Assert.That(vector.GetElement(0), Is.EqualTo(42));
+    Assert.That(vector.GetElement(3), Is.EqualTo(42));
   }
 
   [Test]
   [Category("HappyPath")]
   public void Vector128_WithElement_SetsElement() {
     var vector = Vector128.Create(0);
-    var modified = Vector128.WithElement(vector, 1, 42);
+    var modified = vector.WithElement(1, 42);
 
-    Assert.That(Vector128.GetElement(modified, 0), Is.EqualTo(0));
-    Assert.That(Vector128.GetElement(modified, 1), Is.EqualTo(42));
-    Assert.That(Vector128.GetElement(modified, 2), Is.EqualTo(0));
+    Assert.That(modified.GetElement(0), Is.EqualTo(0));
+    Assert.That(modified.GetElement(1), Is.EqualTo(42));
+    Assert.That(modified.GetElement(2), Is.EqualTo(0));
   }
 
   [Test]
@@ -711,7 +695,7 @@ public class VectorTests {
   public void Vector128_ToScalar_ReturnsFirstElement() {
     var vector = Vector128.Create(42);
 
-    Assert.That(Vector128.ToScalar(vector), Is.EqualTo(42));
+    Assert.That(vector.ToScalar(), Is.EqualTo(42));
   }
 
   #endregion
@@ -722,7 +706,7 @@ public class VectorTests {
   [Category("HappyPath")]
   public void Vector128_AsByte_ReinterpretsAsBytes() {
     var vector = Vector128.Create(0x01020304);
-    var bytes = Vector128.AsByte(vector);
+    var bytes = vector.AsByte();
 
     Assert.That(Vector128<byte>.Count, Is.EqualTo(16));
   }
@@ -731,10 +715,10 @@ public class VectorTests {
   [Category("HappyPath")]
   public void Vector128_AsInt32_ReinterpretsAsInts() {
     var vector = Vector128.Create((byte)255);
-    var ints = Vector128.AsInt32(vector);
+    var ints = vector.AsInt32();
 
     Assert.That(Vector128<int>.Count, Is.EqualTo(4));
-    Assert.That(Vector128.GetElement(ints, 0), Is.EqualTo(-1)); // 0xFFFFFFFF as signed int
+    Assert.That(ints.GetElement(0), Is.EqualTo(-1)); // 0xFFFFFFFF as signed int
   }
 
   #endregion
@@ -747,8 +731,8 @@ public class VectorTests {
     var vector = Vector128.Create(42);
     var lower = vector.GetLower();
 
-    Assert.That(Vector64.GetElement(lower, 0), Is.EqualTo(42));
-    Assert.That(Vector64.GetElement(lower, 1), Is.EqualTo(42));
+    Assert.That(lower.GetElement(0), Is.EqualTo(42));
+    Assert.That(lower.GetElement(1), Is.EqualTo(42));
   }
 
   [Test]
@@ -757,8 +741,8 @@ public class VectorTests {
     var vector = Vector128.Create(42);
     var upper = vector.GetUpper();
 
-    Assert.That(Vector64.GetElement(upper, 0), Is.EqualTo(42));
-    Assert.That(Vector64.GetElement(upper, 1), Is.EqualTo(42));
+    Assert.That(upper.GetElement(0), Is.EqualTo(42));
+    Assert.That(upper.GetElement(1), Is.EqualTo(42));
   }
 
   #endregion
@@ -767,21 +751,15 @@ public class VectorTests {
 
   [Test]
   [Category("HappyPath")]
-  public void Vector256_Count_Byte_Returns32() {
-    Assert.That(Vector256<byte>.Count, Is.EqualTo(32));
-  }
+  public void Vector256_Count_Byte_Returns32() => Assert.That(Vector256<byte>.Count, Is.EqualTo(32));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector256_Count_Int_Returns8() {
-    Assert.That(Vector256<int>.Count, Is.EqualTo(8));
-  }
+  public void Vector256_Count_Int_Returns8() => Assert.That(Vector256<int>.Count, Is.EqualTo(8));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector256_Count_Long_Returns4() {
-    Assert.That(Vector256<long>.Count, Is.EqualTo(4));
-  }
+  public void Vector256_Count_Long_Returns4() => Assert.That(Vector256<long>.Count, Is.EqualTo(4));
 
   [Test]
   [Category("HappyPath")]
@@ -789,7 +767,7 @@ public class VectorTests {
     var vector = Vector256<int>.Zero;
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(vector, i), Is.EqualTo(0));
+      Assert.That(vector.GetElement(i), Is.EqualTo(0));
   }
 
   [Test]
@@ -798,7 +776,7 @@ public class VectorTests {
     var vector = Vector256<int>.One;
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(vector, i), Is.EqualTo(1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(1));
   }
 
   [Test]
@@ -807,7 +785,7 @@ public class VectorTests {
     var vector = Vector256<int>.AllBitsSet;
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(vector, i), Is.EqualTo(-1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(-1));
   }
 
   #endregion
@@ -820,7 +798,7 @@ public class VectorTests {
     var vector = Vector256.Create(42);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(vector, i), Is.EqualTo(42));
+      Assert.That(vector.GetElement(i), Is.EqualTo(42));
   }
 
   [Test]
@@ -831,9 +809,9 @@ public class VectorTests {
     var result = Vector256.Create(lower, upper);
 
     for (var i = 0; i < 4; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(1));
+      Assert.That(result.GetElement(i), Is.EqualTo(1));
     for (var i = 4; i < 8; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(2));
+      Assert.That(result.GetElement(i), Is.EqualTo(2));
   }
 
   #endregion
@@ -848,7 +826,7 @@ public class VectorTests {
     var result = Vector256.Add(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(15));
+      Assert.That(result.GetElement(i), Is.EqualTo(15));
   }
 
   [Test]
@@ -859,7 +837,7 @@ public class VectorTests {
     var result = Vector256.Subtract(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(7));
+      Assert.That(result.GetElement(i), Is.EqualTo(7));
   }
 
   [Test]
@@ -870,7 +848,7 @@ public class VectorTests {
     var result = Vector256.Multiply(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(12));
+      Assert.That(result.GetElement(i), Is.EqualTo(12));
   }
 
   [Test]
@@ -881,7 +859,7 @@ public class VectorTests {
     var result = Vector256.Divide(left, right);
 
     for (var i = 0; i < Vector256<float>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   [Test]
@@ -891,7 +869,7 @@ public class VectorTests {
     var result = Vector256.Negate(vector);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(-5));
+      Assert.That(result.GetElement(i), Is.EqualTo(-5));
   }
 
   [Test]
@@ -901,7 +879,7 @@ public class VectorTests {
     var result = Vector256.Abs(vector);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   [Test]
@@ -911,7 +889,7 @@ public class VectorTests {
     var result = Vector256.Sqrt(vector);
 
     for (var i = 0; i < Vector256<float>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   #endregion
@@ -949,7 +927,7 @@ public class VectorTests {
     var result = Vector256.Equals<int>(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -960,7 +938,7 @@ public class VectorTests {
     var result = Vector256.GreaterThan(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -971,7 +949,7 @@ public class VectorTests {
     var result = Vector256.LessThan(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -982,7 +960,7 @@ public class VectorTests {
     var result = Vector256.Max(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(10));
+      Assert.That(result.GetElement(i), Is.EqualTo(10));
   }
 
   [Test]
@@ -993,7 +971,7 @@ public class VectorTests {
     var result = Vector256.Min(left, right);
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   #endregion
@@ -1007,7 +985,7 @@ public class VectorTests {
     var lower = vector.GetLower();
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(lower, i), Is.EqualTo(42));
+      Assert.That(lower.GetElement(i), Is.EqualTo(42));
   }
 
   [Test]
@@ -1017,7 +995,7 @@ public class VectorTests {
     var upper = vector.GetUpper();
 
     for (var i = 0; i < Vector128<int>.Count; ++i)
-      Assert.That(Vector128.GetElement(upper, i), Is.EqualTo(42));
+      Assert.That(upper.GetElement(i), Is.EqualTo(42));
   }
 
   #endregion
@@ -1026,21 +1004,15 @@ public class VectorTests {
 
   [Test]
   [Category("HappyPath")]
-  public void Vector512_Count_Byte_Returns64() {
-    Assert.That(Vector512<byte>.Count, Is.EqualTo(64));
-  }
+  public void Vector512_Count_Byte_Returns64() => Assert.That(Vector512<byte>.Count, Is.EqualTo(64));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector512_Count_Int_Returns16() {
-    Assert.That(Vector512<int>.Count, Is.EqualTo(16));
-  }
+  public void Vector512_Count_Int_Returns16() => Assert.That(Vector512<int>.Count, Is.EqualTo(16));
 
   [Test]
   [Category("HappyPath")]
-  public void Vector512_Count_Long_Returns8() {
-    Assert.That(Vector512<long>.Count, Is.EqualTo(8));
-  }
+  public void Vector512_Count_Long_Returns8() => Assert.That(Vector512<long>.Count, Is.EqualTo(8));
 
   [Test]
   [Category("HappyPath")]
@@ -1048,7 +1020,7 @@ public class VectorTests {
     var vector = Vector512<int>.Zero;
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(vector, i), Is.EqualTo(0));
+      Assert.That(vector.GetElement(i), Is.EqualTo(0));
   }
 
   [Test]
@@ -1057,7 +1029,7 @@ public class VectorTests {
     var vector = Vector512<int>.One;
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(vector, i), Is.EqualTo(1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(1));
   }
 
   [Test]
@@ -1066,7 +1038,7 @@ public class VectorTests {
     var vector = Vector512<int>.AllBitsSet;
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(vector, i), Is.EqualTo(-1));
+      Assert.That(vector.GetElement(i), Is.EqualTo(-1));
   }
 
   #endregion
@@ -1079,7 +1051,7 @@ public class VectorTests {
     var vector = Vector512.Create(42);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(vector, i), Is.EqualTo(42));
+      Assert.That(vector.GetElement(i), Is.EqualTo(42));
   }
 
   [Test]
@@ -1090,9 +1062,9 @@ public class VectorTests {
     var result = Vector512.Create(lower, upper);
 
     for (var i = 0; i < 8; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(1));
+      Assert.That(result.GetElement(i), Is.EqualTo(1));
     for (var i = 8; i < 16; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(2));
+      Assert.That(result.GetElement(i), Is.EqualTo(2));
   }
 
   #endregion
@@ -1107,7 +1079,7 @@ public class VectorTests {
     var result = Vector512.Add(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(15));
+      Assert.That(result.GetElement(i), Is.EqualTo(15));
   }
 
   [Test]
@@ -1118,7 +1090,7 @@ public class VectorTests {
     var result = Vector512.Subtract(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(7));
+      Assert.That(result.GetElement(i), Is.EqualTo(7));
   }
 
   [Test]
@@ -1129,7 +1101,7 @@ public class VectorTests {
     var result = Vector512.Multiply(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(12));
+      Assert.That(result.GetElement(i), Is.EqualTo(12));
   }
 
   [Test]
@@ -1140,7 +1112,7 @@ public class VectorTests {
     var result = Vector512.Divide(left, right);
 
     for (var i = 0; i < Vector512<float>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   [Test]
@@ -1150,7 +1122,7 @@ public class VectorTests {
     var result = Vector512.Negate(vector);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(-5));
+      Assert.That(result.GetElement(i), Is.EqualTo(-5));
   }
 
   [Test]
@@ -1160,7 +1132,7 @@ public class VectorTests {
     var result = Vector512.Abs(vector);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   [Test]
@@ -1170,7 +1142,7 @@ public class VectorTests {
     var result = Vector512.Sqrt(vector);
 
     for (var i = 0; i < Vector512<float>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(4.0f));
+      Assert.That(result.GetElement(i), Is.EqualTo(4.0f));
   }
 
   #endregion
@@ -1208,7 +1180,7 @@ public class VectorTests {
     var result = Vector512.Equals(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -1219,7 +1191,7 @@ public class VectorTests {
     var result = Vector512.GreaterThan(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -1230,7 +1202,7 @@ public class VectorTests {
     var result = Vector512.LessThan(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(-1));
+      Assert.That(result.GetElement(i), Is.EqualTo(-1));
   }
 
   [Test]
@@ -1241,7 +1213,7 @@ public class VectorTests {
     var result = Vector512.Max(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(10));
+      Assert.That(result.GetElement(i), Is.EqualTo(10));
   }
 
   [Test]
@@ -1252,7 +1224,7 @@ public class VectorTests {
     var result = Vector512.Min(left, right);
 
     for (var i = 0; i < Vector512<int>.Count; ++i)
-      Assert.That(Vector512.GetElement(result, i), Is.EqualTo(5));
+      Assert.That(result.GetElement(i), Is.EqualTo(5));
   }
 
   #endregion
@@ -1266,7 +1238,7 @@ public class VectorTests {
     var lower = vector.GetLower();
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(lower, i), Is.EqualTo(42));
+      Assert.That(lower.GetElement(i), Is.EqualTo(42));
   }
 
   [Test]
@@ -1276,7 +1248,7 @@ public class VectorTests {
     var upper = vector.GetUpper();
 
     for (var i = 0; i < Vector256<int>.Count; ++i)
-      Assert.That(Vector256.GetElement(upper, i), Is.EqualTo(42));
+      Assert.That(upper.GetElement(i), Is.EqualTo(42));
   }
 
   #endregion
