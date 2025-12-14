@@ -21,22 +21,38 @@
   <!-- NUnit Test Framework -->
   <ItemGroup>
     <!-- Microsoft.NET.Test.Sdk - version depends on target framework -->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net9.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net8.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net7.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net6.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net5.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netstandard2.1'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net48'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" Condition="$(TargetFramework) == 'net462'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net40'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net10.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net5.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp3.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp2.2'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp2.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp2.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp1.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'netcoreapp1.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" Condition="$(TargetFramework) == 'netstandard2.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" Condition="$(TargetFramework) == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net481'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net472'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net471'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net47'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net463'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net462'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net461'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net46'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net452'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net451'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net45'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net40'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net35'" />
 
-    <PackageReference Include="NUnit" Version="3.*" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.*" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.2" />
 
     <!-- Reference assemblies for older .NET Framework versions -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />

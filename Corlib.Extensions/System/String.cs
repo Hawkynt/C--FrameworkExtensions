@@ -133,10 +133,6 @@ public static partial class StringExtensions {
       ;
   }
 
-#if SUPPORTS_SPAN && !SUPPORTS_STRING_COPYTO_SPAN
-  public static void CopyTo(this string @this, Span<char> target) => @this.AsSpan().CopyTo(target);
-#endif
-
   /// <summary>
   ///   Exchanges a certain character of the string with the given character.
   /// </summary>
