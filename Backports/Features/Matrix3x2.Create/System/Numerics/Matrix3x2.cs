@@ -85,13 +85,16 @@ public static partial class Matrix3x2Polyfills {
     /// <paramref name="index"/> is less than 0 or greater than 2.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 GetRow(int index)
-      => index switch {
+    public Vector2 GetRow(int index) {
+      ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
+
+      return index switch {
         0 => new(@this.M11, @this.M12),
         1 => new(@this.M21, @this.M22),
-        2 => new(@this.M31, @this.M32),
-        _ => throw new ArgumentOutOfRangeException(nameof(index))
+        _ => new(@this.M31, @this.M32)
       };
+    }
 
     /// <summary>
     /// Creates a new Matrix3x2 with the specified row replaced.
@@ -104,6 +107,9 @@ public static partial class Matrix3x2Polyfills {
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3x2 WithRow(int index, Vector2 value) {
+      ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
+
       var result = @this;
       switch (index) {
         case 0:
@@ -114,12 +120,10 @@ public static partial class Matrix3x2Polyfills {
           result.M21 = value.X;
           result.M22 = value.Y;
           break;
-        case 2:
+        default:
           result.M31 = value.X;
           result.M32 = value.Y;
           break;
-        default:
-          throw new ArgumentOutOfRangeException(nameof(index));
       }
       return result;
     }

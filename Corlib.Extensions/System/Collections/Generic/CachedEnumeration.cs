@@ -77,7 +77,8 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
       if (this._TryGetItemAtPosition(index, out var item))
         return item;
 
-      throw new ArgumentOutOfRangeException(nameof(index), "Position out of enumeration");
+      Against.IndexOutOfRange(index, this.CachedItemCount - 1);
+      return default;
     }
   }
 
@@ -170,7 +171,7 @@ public class CachedEnumeration<TItem> : IEnumerable<TItem>, IDisposable {
   public IEnumerator<TItem> GetEnumerator() => this._enumerationEnded ? ((IEnumerable<TItem>)this._cachedItems).GetEnumerator() : new CachedEnumerator(this);
 
   /// <summary>
-  ///   Gibt einen Enumerator zurück, der eine Auflistung durchläuft.
+  ///   Gibt einen Enumerator zurÃ¼ck, der eine Auflistung durchlÃ¤uft.
   /// </summary>
   /// <returns>
   ///   Ein <see cref="T:System.Collections.IEnumerator" />-Objekt, das zum Durchlaufen der Auflistung verwendet werden kann.

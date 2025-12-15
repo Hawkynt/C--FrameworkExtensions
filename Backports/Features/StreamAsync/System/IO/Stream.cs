@@ -35,8 +35,7 @@ public static partial class StreamPolyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (!@this.CanRead)
         AlwaysThrow.InvalidOperationException("Can not read source");
       if (offset < 0)
@@ -88,8 +87,7 @@ public static partial class StreamPolyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (!@this.CanWrite)
         AlwaysThrow.InvalidOperationException("Can not write destination");
       if (offset < 0)
@@ -138,8 +136,7 @@ public static partial class StreamPolyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (destination == null)
         AlwaysThrow.ArgumentNullException(nameof(destination));
       if (bufferSize <= 0)

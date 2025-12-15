@@ -34,8 +34,7 @@ public static partial class StreamPolyfills {
     /// </summary>
     /// <param name="target">Target <see cref="Stream" />.</param>
     public void CopyTo(Stream target) {
-      if (@this == null)
-        AlwaysThrow.ArgumentNullException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (target == null)
         AlwaysThrow.ArgumentNullException(nameof(target));
       if (!@this.CanRead)

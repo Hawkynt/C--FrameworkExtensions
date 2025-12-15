@@ -28,7 +28,7 @@ internal static class Scalar<T> {
   public static bool IsUnsigned {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get => TypeCodeCache<T>.Code switch {
-      CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or CachedTypeCode.UPointer => true,
+      CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or CachedTypeCode.UPointer or CachedTypeCode.UInt128 => true,
       _ => false
     };
   }
@@ -39,12 +39,35 @@ internal static class Scalar<T> {
     2 => (As<ushort>(value) & 0x8000) != 0,
     4 => (As<uint>(value) & 0x80000000) != 0,
     8 => (As<ulong>(value) & 0x8000000000000000) != 0,
+    16 => (_GetUpper(As<UInt128>(value)) & 0x8000000000000000) != 0,
     _ => ThrowNotSupported<bool>()
   };
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T ExtractMostSignificantBitValue(T value) {
     var size = Unsafe.SizeOf<T>();
+
+    if (size == 16) {
+      var v128 = As<UInt128>(value);
+      var upper = _GetUpper(v128);
+      var lower = _GetLower(v128);
+      if (upper != 0) {
+        for (var i = 63; i >= 0; --i) {
+          var bit = 1UL << i;
+          if ((upper & bit) != 0)
+            return Promote(new UInt128(bit, 0));
+        }
+      }
+      if (lower != 0) {
+        for (var i = 63; i >= 0; --i) {
+          var bit = 1UL << i;
+          if ((lower & bit) != 0)
+            return Promote(new UInt128(0, bit));
+        }
+      }
+      return Zero();
+    }
+
     var unsignedValue = size switch {
       1 => As<byte>(value),
       2 => As<ushort>(value),
@@ -88,6 +111,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(As<float>(left) + As<float>(right)),
     CachedTypeCode.Double => Promote(As<double>(left) + As<double>(right)),
     CachedTypeCode.Decimal => Promote(As<decimal>(left) + As<decimal>(right)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(left) + (float)As<Half>(right))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(left) + As<UInt128>(right)),
+    CachedTypeCode.Int128 => Promote(As<Int128>(left) + As<Int128>(right)),
     _ => ThrowNotSupported<T>()
   };
 
@@ -107,6 +133,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(As<float>(left) - As<float>(right)),
     CachedTypeCode.Double => Promote(As<double>(left) - As<double>(right)),
     CachedTypeCode.Decimal => Promote(As<decimal>(left) - As<decimal>(right)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(left) - (float)As<Half>(right))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(left) - As<UInt128>(right)),
+    CachedTypeCode.Int128 => Promote(As<Int128>(left) - As<Int128>(right)),
     _ => ThrowNotSupported<T>()
   };
 
@@ -123,6 +152,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(As<float>(left) * As<float>(right)),
     CachedTypeCode.Double => Promote(As<double>(left) * As<double>(right)),
     CachedTypeCode.Decimal => Promote(As<decimal>(left) * As<decimal>(right)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(left) * (float)As<Half>(right))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(left) * As<UInt128>(right)),
+    CachedTypeCode.Int128 => Promote(As<Int128>(left) * As<Int128>(right)),
     _ => ThrowNotSupported<T>()
   };
 
@@ -139,6 +171,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(As<float>(left) / As<float>(right)),
     CachedTypeCode.Double => Promote(As<double>(left) / As<double>(right)),
     CachedTypeCode.Decimal => Promote(As<decimal>(left) / As<decimal>(right)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(left) / (float)As<Half>(right))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(left) / As<UInt128>(right)),
+    CachedTypeCode.Int128 => Promote(As<Int128>(left) / As<Int128>(right)),
     _ => ThrowNotSupported<T>()
   };
 
@@ -153,7 +188,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(Math.Abs(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Abs(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Abs(As<decimal>(value))),
-    CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or CachedTypeCode.UPointer => value, // Already positive
+    CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or CachedTypeCode.UPointer or CachedTypeCode.UInt128 => value, // Already positive
+    CachedTypeCode.Half => Promote((Half)Math.Abs((float)As<Half>(value))),
+    CachedTypeCode.Int128 => Promote(Int128.IsNegative(As<Int128>(value)) ? -As<Int128>(value) : As<Int128>(value)),
     _ => ThrowNotSupported<T>()
   };
 
@@ -172,6 +209,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(1.0f),
     CachedTypeCode.Double => Promote(1.0),
     CachedTypeCode.Decimal => Promote(1m),
+    CachedTypeCode.Half => Promote((Half)1.0f),
+    CachedTypeCode.UInt128 => Promote(UInt128.One),
+    CachedTypeCode.Int128 => Promote(Int128.One),
     _ => ThrowNotSupported<T>()
   };
 
@@ -191,6 +231,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(0.0f),
     CachedTypeCode.Double => Promote(0.0),
     CachedTypeCode.Decimal => Promote(0m),
+    CachedTypeCode.Half => Promote((Half)0.0f),
+    CachedTypeCode.UInt128 => Promote(UInt128.Zero),
+    CachedTypeCode.Int128 => Promote(Int128.Zero),
     _ => ThrowNotSupported<T>()
   };
 
@@ -199,10 +242,12 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Ceiling(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Ceiling(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Ceiling(As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Ceiling((float)As<Half>(value))),
     // For integer types, ceiling is identity
     CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 => value,
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
     _ => ThrowNotSupported<T>()
   };
 
@@ -211,10 +256,12 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Floor(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Floor(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Floor(As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Floor((float)As<Half>(value))),
     // For integer types, floor is identity
     CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 => value,
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
     _ => ThrowNotSupported<T>()
   };
 
@@ -223,10 +270,12 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Round(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Round(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Round(As<decimal>(value))),
-    // For integer types, floor is identity
+    CachedTypeCode.Half => Promote((Half)MathF.Round((float)As<Half>(value))),
+    // For integer types, round is identity
     CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 => value,
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
     _ => ThrowNotSupported<T>()
   };
 
@@ -235,10 +284,12 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Truncate(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Truncate(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Truncate(As<decimal>(value))),
-    // For integer types, floor is identity
+    CachedTypeCode.Half => Promote((Half)MathF.Truncate((float)As<Half>(value))),
+    // For integer types, truncate is identity
     CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 => value,
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
     _ => ThrowNotSupported<T>()
   };
 
@@ -247,10 +298,13 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Sqrt(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Sqrt(As<double>(value))),
     CachedTypeCode.Decimal => Promote((decimal)Math.Sqrt((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Sqrt((float)As<Half>(value))),
     // For integer types, convert to double, take sqrt, and convert back
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
     CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 =>
       From(Math.Sqrt(To<double>(value))),
+    CachedTypeCode.UInt128 => Promote(_SqrtUInt128(As<UInt128>(value))),
+    CachedTypeCode.Int128 => Promote(_SqrtInt128(As<Int128>(value))),
     _ => ThrowNotSupported<T>()
   };
 
@@ -259,9 +313,11 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Exp(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Exp(As<double>(value))),
     CachedTypeCode.Decimal => Promote((decimal)Math.Exp((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Exp((float)As<Half>(value))),
     // For integer types, convert to double, calculate, and convert back
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 =>
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
       From(Math.Exp(To<double>(value))),
     _ => ThrowNotSupported<T>()
   };
@@ -271,9 +327,11 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Log(As<float>(value))),
     CachedTypeCode.Double => Promote(Math.Log(As<double>(value))),
     CachedTypeCode.Decimal => Promote((decimal)Math.Log((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Log((float)As<Half>(value))),
     // For integer types, convert to double, calculate, and convert back
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 =>
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
       From(Math.Log(To<double>(value))),
     _ => ThrowNotSupported<T>()
   };
@@ -283,9 +341,11 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Promote(MathF.Log(As<float>(value), 2f)),
     CachedTypeCode.Double => Promote(Math.Log(As<double>(value), 2)),
     CachedTypeCode.Decimal => Promote((decimal)Math.Log((double)As<decimal>(value), 2)),
+    CachedTypeCode.Half => Promote((Half)MathF.Log((float)As<Half>(value), 2f)),
     // For integer types, convert to double, calculate, and convert back
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 =>
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
       From(Math.Log(To<double>(value), 2)),
     _ => ThrowNotSupported<T>()
   };
@@ -313,6 +373,7 @@ internal static class Scalar<T> {
         }
       }
     ),
+    CachedTypeCode.UInt128 => Promote(_AddSaturateUInt128(As<UInt128>(left), As<UInt128>(right))),
     // can overflow and underflow
     CachedTypeCode.Char => Promote((char)Math.Min(char.MaxValue, Math.Max(char.MinValue, As<char>(left) + As<char>(right)))),
     CachedTypeCode.Pointer => Promote((As<nint>(left), As<nint>(right)) switch {
@@ -332,8 +393,9 @@ internal static class Scalar<T> {
         var result => result
       }
     }),
-    // For floating point, regular addition (no saturation)  
-    CachedTypeCode.Single or CachedTypeCode.Double or CachedTypeCode.Decimal => Add(left, right),
+    CachedTypeCode.Int128 => Promote(_AddSaturateInt128(As<Int128>(left), As<Int128>(right))),
+    // For floating point, regular addition (no saturation)
+    CachedTypeCode.Single or CachedTypeCode.Double or CachedTypeCode.Decimal or CachedTypeCode.Half => Add(left, right),
     _ => ThrowNotSupported<T>()
   };
   
@@ -353,6 +415,7 @@ internal static class Scalar<T> {
         }
       }
     ),
+    CachedTypeCode.UInt128 => Promote(_SubtractSaturateUInt128(As<UInt128>(left), As<UInt128>(right))),
     // can overflow and underflow
     CachedTypeCode.Char => Promote((char)Math.Min(char.MaxValue, Math.Max(char.MinValue, As<char>(left) - As<char>(right)))),
     CachedTypeCode.Pointer => Promote((As<nint>(left), As<nint>(right)) switch {
@@ -372,8 +435,9 @@ internal static class Scalar<T> {
         _ => l - r
       }
     }),
+    CachedTypeCode.Int128 => Promote(_SubtractSaturateInt128(As<Int128>(left), As<Int128>(right))),
     // For floating point, regular subtraction (no saturation)
-    CachedTypeCode.Single or CachedTypeCode.Double or CachedTypeCode.Decimal => Subtract(left, right),
+    CachedTypeCode.Single or CachedTypeCode.Double or CachedTypeCode.Decimal or CachedTypeCode.Half => Subtract(left, right),
     _ => ThrowNotSupported<T>()
   };
 
@@ -389,6 +453,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Int64 => Promote(As<long>(value) << count),
     CachedTypeCode.Single => Promote(As<float>(value) * MathF.Pow(2, count)),
     CachedTypeCode.Double => Promote((As<double>(value) * Math.Pow(2, count))),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(value) * MathF.Pow(2, count))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(value) << count),
+    CachedTypeCode.Int128 => Promote(As<Int128>(value) << count),
     _ => ThrowNotSupported<T>()
   };
 
@@ -404,6 +471,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Int64 => Promote(As<long>(value) >> count),
     CachedTypeCode.Single => Promote(As<float>(value) / MathF.Pow(2, count)),
     CachedTypeCode.Double => Promote(As<double>(value) / Math.Pow(2, count)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(value) / MathF.Pow(2, count))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(value) >> count),
+    CachedTypeCode.Int128 => Promote(As<Int128>(value) >> count),
     _ => ThrowNotSupported<T>()
   };
 
@@ -413,6 +483,7 @@ internal static class Scalar<T> {
     CachedTypeCode.Int16 => Promote((short)((ushort)As<short>(value) >> count)),
     CachedTypeCode.Int32 => Promote(As<int>(value) >>> count),
     CachedTypeCode.Int64 => Promote(As<long>(value) >>> count),
+    CachedTypeCode.Int128 => Promote(As<Int128>(value) >>> count),
     _ => ShiftRightArithmetic(value, count)
   };
 
@@ -432,6 +503,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Char => Promote(unchecked((char)~0)),
     CachedTypeCode.Pointer => Promote((nint)(-1L)),
     CachedTypeCode.UPointer => Promote(MaxUPointer),
+    CachedTypeCode.Half => Promote(As<Half, ushort>(ushort.MaxValue)),
+    CachedTypeCode.UInt128 => Promote(UInt128.MaxValue),
+    CachedTypeCode.Int128 => Promote(Int128.NegativeOne),
     _ => ThrowNotSupported<T>()
   };
 
@@ -451,6 +525,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => As<float>(left) > As<float>(right),
     CachedTypeCode.Double => As<double>(left) > As<double>(right),
     CachedTypeCode.Decimal => As<decimal>(left) > As<decimal>(right),
+    CachedTypeCode.Half => (float)As<Half>(left) > (float)As<Half>(right),
+    CachedTypeCode.UInt128 => As<UInt128>(left) > As<UInt128>(right),
+    CachedTypeCode.Int128 => As<Int128>(left) > As<Int128>(right),
     _ => ThrowNotSupported<bool>()
   };
 
@@ -470,6 +547,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => As<float>(left) >= As<float>(right),
     CachedTypeCode.Double => As<double>(left) >= As<double>(right),
     CachedTypeCode.Decimal => As<decimal>(left) >= As<decimal>(right),
+    CachedTypeCode.Half => (float)As<Half>(left) >= (float)As<Half>(right),
+    CachedTypeCode.UInt128 => As<UInt128>(left) >= As<UInt128>(right),
+    CachedTypeCode.Int128 => As<Int128>(left) >= As<Int128>(right),
     _ => ThrowNotSupported<bool>()
   };
 
@@ -489,6 +569,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => As<float>(left) < As<float>(right),
     CachedTypeCode.Double => As<double>(left) < As<double>(right),
     CachedTypeCode.Decimal => As<decimal>(left) < As<decimal>(right),
+    CachedTypeCode.Half => (float)As<Half>(left) < (float)As<Half>(right),
+    CachedTypeCode.UInt128 => As<UInt128>(left) < As<UInt128>(right),
+    CachedTypeCode.Int128 => As<Int128>(left) < As<Int128>(right),
     _ => ThrowNotSupported<bool>()
   };
 
@@ -508,6 +591,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => As<float>(left) <= As<float>(right),
     CachedTypeCode.Double => As<double>(left) <= As<double>(right),
     CachedTypeCode.Decimal => As<decimal>(left) <= As<decimal>(right),
+    CachedTypeCode.Half => (float)As<Half>(left) <= (float)As<Half>(right),
+    CachedTypeCode.UInt128 => As<UInt128>(left) <= As<UInt128>(right),
+    CachedTypeCode.Int128 => As<Int128>(left) <= As<Int128>(right),
     _ => ThrowNotSupported<bool>()
   };
 
@@ -542,6 +628,9 @@ internal static class Scalar<T> {
     CachedTypeCode.UInt16 => Promote((ushort)(As<ushort>(value) == 0 ? 0 : 1)),
     CachedTypeCode.UInt32 => Promote(As<uint>(value) == 0 ? 0u : 1u),
     CachedTypeCode.UInt64 => Promote(As<ulong>(value) == 0 ? 0ul : 1ul),
+    CachedTypeCode.Half => Promote((Half)Math.Sign((float)As<Half>(value))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(value) == UInt128.Zero ? UInt128.Zero : UInt128.One),
+    CachedTypeCode.Int128 => Promote(_SignInt128(As<Int128>(value))),
     _ => ThrowNotSupported<T>()
   };
 
@@ -708,7 +797,50 @@ internal static class Scalar<T> {
         CachedTypeCode.Int64 => Scalar<TFrom>.As<long>(value),
         CachedTypeCode.Single => (decimal)Scalar<TFrom>.As<float>(value),
         CachedTypeCode.Double => (decimal)Scalar<TFrom>.As<double>(value),
+        CachedTypeCode.Half => (decimal)(float)Scalar<TFrom>.As<Half>(value),
         _ => ThrowNotSupported<decimal>()
+      }),
+      CachedTypeCode.Half => Promote(TypeCodeCache<TFrom>.Code switch {
+        CachedTypeCode.Byte => (Half)Scalar<TFrom>.As<byte>(value),
+        CachedTypeCode.SByte => (Half)Scalar<TFrom>.As<sbyte>(value),
+        CachedTypeCode.UInt16 => (Half)Scalar<TFrom>.As<ushort>(value),
+        CachedTypeCode.Int16 => (Half)Scalar<TFrom>.As<short>(value),
+        CachedTypeCode.UInt32 => (Half)Scalar<TFrom>.As<uint>(value),
+        CachedTypeCode.Int32 => (Half)Scalar<TFrom>.As<int>(value),
+        CachedTypeCode.UInt64 => (Half)Scalar<TFrom>.As<ulong>(value),
+        CachedTypeCode.Int64 => (Half)Scalar<TFrom>.As<long>(value),
+        CachedTypeCode.Single => (Half)Scalar<TFrom>.As<float>(value),
+        CachedTypeCode.Double => (Half)Scalar<TFrom>.As<double>(value),
+        CachedTypeCode.Decimal => (Half)(float)Scalar<TFrom>.As<decimal>(value),
+        _ => ThrowNotSupported<Half>()
+      }),
+      CachedTypeCode.UInt128 => Promote(TypeCodeCache<TFrom>.Code switch {
+        CachedTypeCode.Byte => (UInt128)Scalar<TFrom>.As<byte>(value),
+        CachedTypeCode.SByte => (UInt128)Scalar<TFrom>.As<sbyte>(value),
+        CachedTypeCode.UInt16 => (UInt128)Scalar<TFrom>.As<ushort>(value),
+        CachedTypeCode.Int16 => (UInt128)Scalar<TFrom>.As<short>(value),
+        CachedTypeCode.UInt32 => (UInt128)Scalar<TFrom>.As<uint>(value),
+        CachedTypeCode.Int32 => (UInt128)Scalar<TFrom>.As<int>(value),
+        CachedTypeCode.UInt64 => (UInt128)Scalar<TFrom>.As<ulong>(value),
+        CachedTypeCode.Int64 => (UInt128)Scalar<TFrom>.As<long>(value),
+        CachedTypeCode.Single => (UInt128)Scalar<TFrom>.As<float>(value),
+        CachedTypeCode.Double => (UInt128)Scalar<TFrom>.As<double>(value),
+        CachedTypeCode.Int128 => (UInt128)Scalar<TFrom>.As<Int128>(value),
+        _ => ThrowNotSupported<UInt128>()
+      }),
+      CachedTypeCode.Int128 => Promote(TypeCodeCache<TFrom>.Code switch {
+        CachedTypeCode.Byte => (Int128)Scalar<TFrom>.As<byte>(value),
+        CachedTypeCode.SByte => (Int128)Scalar<TFrom>.As<sbyte>(value),
+        CachedTypeCode.UInt16 => (Int128)Scalar<TFrom>.As<ushort>(value),
+        CachedTypeCode.Int16 => (Int128)Scalar<TFrom>.As<short>(value),
+        CachedTypeCode.UInt32 => (Int128)Scalar<TFrom>.As<uint>(value),
+        CachedTypeCode.Int32 => (Int128)Scalar<TFrom>.As<int>(value),
+        CachedTypeCode.UInt64 => (Int128)Scalar<TFrom>.As<ulong>(value),
+        CachedTypeCode.Int64 => (Int128)Scalar<TFrom>.As<long>(value),
+        CachedTypeCode.Single => (Int128)Scalar<TFrom>.As<float>(value),
+        CachedTypeCode.Double => (Int128)Scalar<TFrom>.As<double>(value),
+        CachedTypeCode.UInt128 => (Int128)Scalar<TFrom>.As<UInt128>(value),
+        _ => ThrowNotSupported<Int128>()
       }),
       _ => ThrowNotSupported<T>()
     };
@@ -730,6 +862,9 @@ internal static class Scalar<T> {
     CachedTypeCode.Single => Scalar<TTo>.From(As<float>(value)),
     CachedTypeCode.Double => Scalar<TTo>.From(As<double>(value)),
     CachedTypeCode.Decimal => Scalar<TTo>.From(As<decimal>(value)),
+    CachedTypeCode.Half => Scalar<TTo>.From(As<Half>(value)),
+    CachedTypeCode.UInt128 => Scalar<TTo>.From(As<UInt128>(value)),
+    CachedTypeCode.Int128 => Scalar<TTo>.From(As<Int128>(value)),
     _ => ThrowNotSupported<TTo>()
   };
 
@@ -766,5 +901,83 @@ internal static class Scalar<T> {
   private static nint MinPointer => IntPtr.Size == 4 ? int.MinValue : unchecked((nint)long.MinValue);
   private static nint MaxPointer => IntPtr.Size == 4 ? int.MaxValue : unchecked((nint)long.MaxValue);
   private static nuint MaxUPointer => UIntPtr.Size == 4 ? uint.MaxValue : unchecked((nuint)ulong.MaxValue);
-  
+
+  // 128-bit helper methods
+  private static UInt128 _SqrtUInt128(UInt128 value) {
+    if (value == UInt128.Zero)
+      return UInt128.Zero;
+
+    // Newton-Raphson method for integer square root
+    var x = value;
+    var y = (x + UInt128.One) >> 1;
+    while (y < x) {
+      x = y;
+      y = (x + value / x) >> 1;
+    }
+    return x;
+  }
+
+  private static Int128 _SqrtInt128(Int128 value) {
+    if (Int128.IsNegative(value))
+      throw new ArgumentOutOfRangeException(nameof(value), "Cannot take square root of negative number");
+
+    if (value == Int128.Zero)
+      return Int128.Zero;
+
+    // Newton-Raphson method for integer square root
+    var x = value;
+    var y = (x + Int128.One) >> 1;
+    while (y < x) {
+      x = y;
+      y = (x + value / x) >> 1;
+    }
+    return x;
+  }
+
+  private static UInt128 _AddSaturateUInt128(UInt128 left, UInt128 right) {
+    var result = left + right;
+    return result < left ? UInt128.MaxValue : result;
+  }
+
+  private static Int128 _AddSaturateInt128(Int128 left, Int128 right) {
+    var result = left + right;
+    if (Int128.IsPositive(left) && Int128.IsPositive(right) && Int128.IsNegative(result))
+      return Int128.MaxValue;
+    if (Int128.IsNegative(left) && Int128.IsNegative(right) && Int128.IsPositive(result))
+      return Int128.MinValue;
+    return result;
+  }
+
+  private static UInt128 _SubtractSaturateUInt128(UInt128 left, UInt128 right) =>
+    left < right ? UInt128.Zero : left - right;
+
+  private static Int128 _SubtractSaturateInt128(Int128 left, Int128 right) {
+    var result = left - right;
+    if (Int128.IsPositive(left) && Int128.IsNegative(right) && Int128.IsNegative(result))
+      return Int128.MaxValue;
+    if (Int128.IsNegative(left) && Int128.IsPositive(right) && Int128.IsPositive(result))
+      return Int128.MinValue;
+    return result;
+  }
+
+  private static Int128 _SignInt128(Int128 value) =>
+    Int128.IsNegative(value) ? Int128.NegativeOne :
+    value == Int128.Zero ? Int128.Zero :
+    Int128.One;
+
+  // UInt128 upper/lower accessors (works with both native and polyfill types)
+#if SUPPORTS_UINT128
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#pragma warning disable CS8500
+  private static unsafe ulong _GetUpper(UInt128 value) => ((ulong*)&value)[1];
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe ulong _GetLower(UInt128 value) => ((ulong*)&value)[0];
+#pragma warning restore CS8500
+#else
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static ulong _GetUpper(UInt128 value) => value.Upper;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static ulong _GetLower(UInt128 value) => value.Lower;
+#endif
+
 }

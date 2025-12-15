@@ -21,6 +21,7 @@
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using Guard;
 
 namespace System;
 
@@ -35,8 +36,7 @@ public static partial class StringPolyfills {
     /// <returns>true if value matches the beginning of this string; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool StartsWith(char value) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Against.ThisIsNull(@this);
       return @this.Length > 0 && @this[0] == value;
     }
 
@@ -47,9 +47,8 @@ public static partial class StringPolyfills {
     /// <returns>true if value matches the end of this string; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EndsWith(char value) {
-      if (@this == null)
-        throw new NullReferenceException();
-      return @this.Length > 0 && @this[@this.Length - 1] == value;
+      Against.ThisIsNull(@this);
+      return @this.Length > 0 && @this[^1] == value;
     }
   }
 }

@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 #endif
 
 using System.Runtime.CompilerServices;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -388,11 +389,8 @@ static partial class ArrayExtensions {
 
     var sourceLeft = source.Length - sourceOffset;
     var targetLeft = target.Length - targetOffset;
-    if (sourceLeft < count)
-      throw new ArgumentOutOfRangeException("Source has too few bytes left");
-
-    if (targetLeft < count)
-      throw new ArgumentOutOfRangeException("Target has too few bytes left");
+    Against.CountOutOfRange(count, sourceLeft);
+    Against.CountOutOfRange(count, targetLeft);
 
     return _SequenceEqual(source, sourceOffset, target, targetOffset, sourceLeft);
   }

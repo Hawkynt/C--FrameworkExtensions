@@ -155,8 +155,7 @@ public readonly struct UInt128 : IComparable, IComparable<UInt128>, IEquatable<U
   /// Returns the base-2 logarithm of a value.
   /// </summary>
   public static int Log2(UInt128 value) {
-    if (value == Zero)
-      throw new ArgumentOutOfRangeException(nameof(value));
+    ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, Zero, nameof(value));
     return 127 - LeadingZeroCount(value);
   }
 

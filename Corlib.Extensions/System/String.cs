@@ -1315,8 +1315,7 @@ public static partial class StringExtensions {
   public static string FormatWithEx(this string @this, Func<string, object> fieldGetter, bool passFieldFormatToGetter = false) {
     if (@this == null)
       throw new NullReferenceException();
-    if (fieldGetter == null)
-      throw new ArgumentNullException(nameof(fieldGetter));
+    Against.ArgumentIsNull(fieldGetter);
 
     var length = @this.Length;
 

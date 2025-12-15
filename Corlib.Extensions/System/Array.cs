@@ -1108,10 +1108,8 @@ public static partial class ArrayExtensions {
   /// <param name="length"></param>
   /// <param name="offset">Optional: an offset to start at</param>
   public static void ProcessInChunks<TItem>(this TItem[] @this, int chunkSize, Action<TItem[], int, int> processor, int length, int offset = 0) {
-    if (offset < 0)
-      throw new ArgumentOutOfRangeException(nameof(offset), $"Offset must be >= 0, is {offset}");
-    if (length <= 0)
-      throw new ArgumentOutOfRangeException(nameof(length));
+    Against.IndexBelowZero(offset);
+    Against.CountBelowOrEqualZero(length);
 
     while (offset < length) {
       var size = Math.Min(length - offset, chunkSize);

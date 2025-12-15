@@ -47,14 +47,17 @@ public static partial class QuaternionPolyfills {
     /// <paramref name="index"/> is less than 0 or greater than 3.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetElement(int index)
-      => index switch {
+    public float GetElement(int index) {
+      ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3, nameof(index));
+
+      return index switch {
         0 => @this.X,
         1 => @this.Y,
         2 => @this.Z,
-        3 => @this.W,
-        _ => throw new ArgumentOutOfRangeException(nameof(index))
+        _ => @this.W
       };
+    }
 
     /// <summary>
     /// Creates a new Quaternion with the element at the specified index replaced.
@@ -67,13 +70,15 @@ public static partial class QuaternionPolyfills {
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Quaternion WithElement(int index, float value) {
+      ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3, nameof(index));
+
       var result = @this;
       switch (index) {
         case 0: result.X = value; break;
         case 1: result.Y = value; break;
         case 2: result.Z = value; break;
-        case 3: result.W = value; break;
-        default: throw new ArgumentOutOfRangeException(nameof(index));
+        default: result.W = value; break;
       }
       return result;
     }

@@ -31,8 +31,7 @@ public static partial class MethodInfoPolyfills {
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Delegate CreateDelegate(Type result) {
-      if (@this == null)
-        AlwaysThrow.ArgumentNullException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (result == null)
         AlwaysThrow.ArgumentNullException(nameof(result));
 

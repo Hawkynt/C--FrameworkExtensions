@@ -27,8 +27,7 @@ public static partial class StreamPolyfills {
   extension(Stream @this)
   {
     public int Read(Span<byte> buffer) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
 
       if (buffer.IsEmpty)
         return 0;
@@ -48,8 +47,7 @@ public static partial class StreamPolyfills {
     }
 
     public void Write(ReadOnlySpan<byte> buffer) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
 
       if (buffer.IsEmpty)
         return;

@@ -21,6 +21,7 @@
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
+using Guard;
 
 namespace System;
 
@@ -35,8 +36,7 @@ public static partial class StringPolyfills {
     /// <returns>The string that remains after all instances of the trimChar character are removed from the start and end of the current string.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string Trim(char trimChar) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Against.ThisIsNull(@this);
       return @this.Trim(new[] { trimChar });
     }
 
@@ -47,8 +47,7 @@ public static partial class StringPolyfills {
     /// <returns>The string that remains after all instances of the trimChar character are removed from the start of the current string.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string TrimStart(char trimChar) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Against.ThisIsNull(@this);
       return @this.TrimStart(new[] { trimChar });
     }
 
@@ -59,8 +58,7 @@ public static partial class StringPolyfills {
     /// <returns>The string that remains after all instances of the trimChar character are removed from the end of the current string.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string TrimEnd(char trimChar) {
-      if (@this == null)
-        throw new NullReferenceException();
+      Against.ThisIsNull(@this);
       return @this.TrimEnd(new[] { trimChar });
     }
   }

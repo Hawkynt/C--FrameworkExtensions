@@ -261,7 +261,7 @@ public static partial class EnumerableExtensions {
     if (source == null)
       throw new NullReferenceException(nameof(source));
     if (selectors == null || selectors.Length == 0 || selectors.Any(s => s == null))
-      throw new ArgumentNullException(nameof(selectors));
+      Against.ArgumentIsNull(selectors);
 
     return query.IsNullOrWhiteSpace()
       ? source
@@ -818,8 +818,7 @@ public static partial class EnumerableExtensions {
   /// </returns>
   [DebuggerStepThrough]
   public static bool IsNotNullOrEmpty<TItem>([NotNullWhen(false)] this IEnumerable<TItem> @this, Func<TItem, bool> predicate) {
-    if (predicate == null)
-      throw new ArgumentNullException(nameof(predicate));
+    Against.ArgumentIsNull(predicate);
 
     switch (@this) {
       case null: return true;

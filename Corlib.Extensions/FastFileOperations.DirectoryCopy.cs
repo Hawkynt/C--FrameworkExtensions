@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Guard;
 
 namespace System.IO;
 
@@ -501,7 +502,7 @@ public static partial class FastFileOperations {
           break;
         }
         case ReportType.StartOperation: break;
-        default: throw new ArgumentOutOfRangeException();
+        default: Against.UnknownEnumValues(fileSystemReport.ReportType); break;
       }
     }
 

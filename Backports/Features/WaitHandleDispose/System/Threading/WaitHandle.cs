@@ -32,8 +32,7 @@ public static partial class WaitHandlePolyfills {
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispose() {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
 
       var method = @this.GetType().GetMethod("Dispose", BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
       method?.Invoke(@this, []);

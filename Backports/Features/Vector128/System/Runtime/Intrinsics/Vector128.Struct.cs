@@ -49,7 +49,10 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
            || typeof(T) == typeof(ushort)
            || typeof(T) == typeof(uint)
            || typeof(T) == typeof(ulong)
-           || typeof(T) == typeof(nuint);
+           || typeof(T) == typeof(nuint)
+           || typeof(T) == typeof(Half)
+           || typeof(T) == typeof(UInt128)
+           || typeof(T) == typeof(Int128);
   }
 
   /// <summary>Gets the number of <typeparamref name="T"/> that are in a <see cref="Vector128{T}"/>.</summary>
@@ -94,6 +97,16 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
   public Vector128(T value) {
     _ThrowIfNotSupported();
     var size = Unsafe.SizeOf<T>();
+
+    // Handle elements that span multiple ulongs (e.g., Int128, UInt128)
+    if (size > 8) {
+      var data = Unsafe.As<T, (ulong, ulong)>(ref value);
+      // For Vector128<Int128/UInt128>, the single element fills the entire vector
+      this._lower = data.Item1;
+      this._upper = data.Item2;
+      return;
+    }
+
     var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
     var chunk = Unsafe.As<T, ulong>(ref value) & mask;
 
@@ -117,6 +130,14 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
         AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
       var size = Unsafe.SizeOf<T>();
+
+      // Handle elements that span multiple ulongs (e.g., Int128, UInt128)
+      if (size > 8) {
+        // For Vector128<Int128/UInt128>, there's only one element using both ulongs
+        var data = (this._lower, this._upper);
+        return Unsafe.As<(ulong, ulong), T>(ref data);
+      }
+
       var elementsPerUlong = 8 / size;
       var targetValue = index < elementsPerUlong ? this._lower : this._upper;
       var localIndex = index < elementsPerUlong ? index : index - elementsPerUlong;

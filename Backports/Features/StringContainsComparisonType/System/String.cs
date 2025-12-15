@@ -41,8 +41,7 @@ public static partial class StringPolyfills {
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(string value, StringComparison comparisonType) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
+      Against.ThisIsNull(@this);
       if (value == null)
         AlwaysThrow.ArgumentNullException(nameof(value));
 

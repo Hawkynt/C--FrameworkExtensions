@@ -51,7 +51,10 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
            || typeof(T) == typeof(ushort)
            || typeof(T) == typeof(uint)
            || typeof(T) == typeof(ulong)
-           || typeof(T) == typeof(nuint);
+           || typeof(T) == typeof(nuint)
+           || typeof(T) == typeof(Half)
+           || typeof(T) == typeof(UInt128)
+           || typeof(T) == typeof(Int128);
   }
 
   /// <summary>Gets the number of <typeparamref name="T"/> that are in a <see cref="Vector256{T}"/>.</summary>
@@ -93,6 +96,18 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
   public Vector256(T value) {
     _ThrowIfNotSupported();
     var size = Unsafe.SizeOf<T>();
+
+    // Handle elements that span multiple ulongs (e.g., Int128, UInt128)
+    if (size > 8) {
+      var data = Unsafe.As<T, (ulong, ulong)>(ref value);
+      // Replicate the 16-byte value across both element slots
+      this._v0 = data.Item1;
+      this._v1 = data.Item2;
+      this._v2 = data.Item1;
+      this._v3 = data.Item2;
+      return;
+    }
+
     var mask = size >= 8 ? ~0UL : (1UL << (size * 8)) - 1;
     var chunk = Unsafe.As<T, ulong>(ref value) & mask;
     var elementsPerUlong = 8 / size;
@@ -154,6 +169,19 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
         AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
 
       var size = Unsafe.SizeOf<T>();
+
+      // Handle elements that span multiple ulongs (e.g., Int128, UInt128)
+      if (size > 8) {
+        var ulongsPerElement = size / 8;
+        var baseUlongIndex = index * ulongsPerElement;
+
+        // For 16-byte elements (Int128, UInt128)
+        var low = baseUlongIndex == 0 ? this._v0 : this._v2;
+        var high = baseUlongIndex == 0 ? this._v1 : this._v3;
+        var data = (low, high);
+        return Unsafe.As<(ulong, ulong), T>(ref data);
+      }
+
       var elementsPerUlong = 8 / size;
       var ulongIndex = index / elementsPerUlong;
       var localIndex = index % elementsPerUlong;

@@ -909,8 +909,7 @@ public static partial class Vector128Polyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T GetElement<T>(Vector128<T> vector, int index) where T : struct {
-      if ((uint)index >= 16 / Unsafe.SizeOf<T>())
-        throw new ArgumentOutOfRangeException(nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)(16 / Unsafe.SizeOf<T>()), nameof(index));
 
       ref var rVector = ref Unsafe.As<Vector128<T>, T>(ref Unsafe.AsRef(in vector));
       return Unsafe.Add(ref rVector, index);
@@ -918,8 +917,7 @@ public static partial class Vector128Polyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<T> WithElement<T>(Vector128<T> vector, int index, T value) where T : struct {
-      if ((uint)index >= 16 / Unsafe.SizeOf<T>())
-        throw new ArgumentOutOfRangeException(nameof(index));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)index, (uint)(16 / Unsafe.SizeOf<T>()), nameof(index));
 
       var result = vector;
       ref var rResult = ref Unsafe.As<Vector128<T>, T>(ref result);

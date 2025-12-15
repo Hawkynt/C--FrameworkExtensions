@@ -39,10 +39,10 @@ public static partial class Matrix3x2Polyfills {
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float get_Item(int row, int column) {
-      if ((uint)row >= 3)
-        throw new ArgumentOutOfRangeException(nameof(row));
-      if ((uint)column >= 2)
-        throw new ArgumentOutOfRangeException(nameof(column));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(row, 3, nameof(row));
+      ArgumentOutOfRangeException.ThrowIfNegative(row, nameof(row));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(column, 2, nameof(column));
+      ArgumentOutOfRangeException.ThrowIfNegative(column, nameof(column));
 
       return row switch {
         0 => column == 0 ? @this.M11 : @this.M12,

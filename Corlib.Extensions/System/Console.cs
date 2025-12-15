@@ -17,6 +17,8 @@
 
 #endregion
 
+using Guard;
+
 namespace System;
 
 /// <summary>
@@ -269,8 +271,7 @@ public static partial class ConsoleExtensions {
   ];
 
   private static ConsoleColor _GetColorByIndex(byte color) {
-    if (color >= _COLORS.Length)
-      throw new ArgumentOutOfRangeException("Color index must be between 0 and 15 inclusive.");
+    Against.IndexOutOfRange(color, _COLORS.Length - 1);
 
     return _COLORS[color];
   }

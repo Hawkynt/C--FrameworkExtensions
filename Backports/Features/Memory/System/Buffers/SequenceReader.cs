@@ -184,8 +184,7 @@ public ref struct SequenceReader<T> where T : unmanaged, IEquatable<T> {
     if (count == 0)
       return;
 
-    if (count > this._consumed)
-      throw new ArgumentOutOfRangeException(nameof(count));
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(count, this._consumed, nameof(count));
 
     this._consumed -= count;
 

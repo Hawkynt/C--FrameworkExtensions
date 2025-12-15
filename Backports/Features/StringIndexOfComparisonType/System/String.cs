@@ -31,9 +31,8 @@ public static partial class StringPolyfills {
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int IndexOf(char value, StringComparison comparisonType) {
-      if (@this == null)
-        AlwaysThrow.NullReferenceException(nameof(@this));
-    
+      Against.ThisIsNull(@this);
+
       return @this.IndexOf(value.ToString(), comparisonType);
     }
   }

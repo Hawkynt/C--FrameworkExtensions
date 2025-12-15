@@ -44,8 +44,7 @@ public static partial class StackPolyfills {
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPop(out TItem result) {
-      if (@this == null)
-        AlwaysThrow.ArgumentNullException(nameof(@this));
+      Against.ThisIsNull(@this);
 
       if (@this.Count < 1) {
         result = default;

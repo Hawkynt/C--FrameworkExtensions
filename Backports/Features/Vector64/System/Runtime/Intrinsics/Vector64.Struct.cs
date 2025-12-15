@@ -42,7 +42,8 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
            || typeof(T) == typeof(ushort)
            || typeof(T) == typeof(uint)
            || typeof(T) == typeof(ulong)
-           || typeof(T) == typeof(nuint);
+           || typeof(T) == typeof(nuint)
+           || typeof(T) == typeof(Half);
   }
 
   /// <summary>Gets the number of <typeparamref name="T"/> that are in a <see cref="Vector64{T}"/>.</summary>

@@ -31,8 +31,7 @@ public static partial class StringBuilderPolyfills {
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() {
-      if (@this == null)
-        AlwaysThrow.ArgumentNullException(nameof(@this));
+      Against.ThisIsNull(@this);
 
       @this.Length = 0;
     }

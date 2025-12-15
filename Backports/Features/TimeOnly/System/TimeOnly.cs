@@ -47,8 +47,8 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// Initializes a new instance of the TimeOnly structure using the specified number of ticks.
   /// </summary>
   public TimeOnly(long ticks) {
-    if (ticks < MinTicks || ticks > MaxTicks)
-      throw new ArgumentOutOfRangeException(nameof(ticks));
+    ArgumentOutOfRangeException.ThrowIfNegative(ticks);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(ticks, MaxTicks);
     _ticks = ticks;
   }
 
@@ -66,14 +66,14 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// Initializes a new instance of the TimeOnly structure to the specified hour, minute, second, and millisecond.
   /// </summary>
   public TimeOnly(int hour, int minute, int second, int millisecond) {
-    if (hour < 0 || hour > 23)
-      throw new ArgumentOutOfRangeException(nameof(hour));
-    if (minute < 0 || minute > 59)
-      throw new ArgumentOutOfRangeException(nameof(minute));
-    if (second < 0 || second > 59)
-      throw new ArgumentOutOfRangeException(nameof(second));
-    if (millisecond < 0 || millisecond > 999)
-      throw new ArgumentOutOfRangeException(nameof(millisecond));
+    ArgumentOutOfRangeException.ThrowIfNegative(hour);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(hour, 23);
+    ArgumentOutOfRangeException.ThrowIfNegative(minute);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(minute, 59);
+    ArgumentOutOfRangeException.ThrowIfNegative(second);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(second, 59);
+    ArgumentOutOfRangeException.ThrowIfNegative(millisecond);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(millisecond, 999);
 
     _ticks = hour * TimeSpan.TicksPerHour +
              minute * TimeSpan.TicksPerMinute +

@@ -14,6 +14,7 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Utilities;
@@ -34,7 +35,10 @@ internal enum CachedTypeCode {
   Decimal,
   Pointer,
   UPointer,
-  Boolean
+  Boolean,
+  Half,
+  UInt128,
+  Int128
 }
 
 internal static class TypeCodeCache<T> {
@@ -56,6 +60,9 @@ internal static class TypeCodeCache<T> {
       typeof(T) == typeof(nint) ? CachedTypeCode.Pointer :
       typeof(T) == typeof(nuint) ? CachedTypeCode.UPointer :
       typeof(T) == typeof(bool) ? CachedTypeCode.Boolean :
+      typeof(T) == typeof(Half) ? CachedTypeCode.Half :
+      typeof(T) == typeof(UInt128) ? CachedTypeCode.UInt128 :
+      typeof(T) == typeof(Int128) ? CachedTypeCode.Int128 :
       CachedTypeCode.Unknown;
   }
 }

@@ -16,14 +16,15 @@
 
 #if !SUPPORTS_CONCURRENT_COLLECTIONS_CLEAR
 
+using Guard;
+
 namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentBagPolyfills {
   extension<T>(ConcurrentBag<T> @this)
   {
     public void Clear() {
-      if (@this == null)
-        throw new NullReferenceException();
+      Against.ThisIsNull(@this);
 
       while (@this.TryTake(out _))
         ;
