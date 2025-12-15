@@ -20,8 +20,7 @@ namespace System.Runtime.CompilerServices;
 
 public static class RuntimeHelpers {
   public static T[] GetSubArray<T>(T[] array, Range range) {
-    if (array is null)
-      throw new ArgumentNullException(nameof(array));
+    ArgumentNullException.ThrowIfNull(array);
 
     var (offset, length) = range.GetOffsetAndLength(array.Length);
     var result = new T[length];

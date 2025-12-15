@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Corlib.Extensions\Guard\Against.cs" Link="Guard\Against.cs" />
     <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
     <Compile Include="..\Corlib.Extensions\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
   </ItemGroup>
@@ -178,6 +179,11 @@
   <ItemGroup>
     <Folder Include="Features\Unsafe\System\Runtime\CompilerServices\" />
     <Folder Include="Guard\" />
+  </ItemGroup>
+
+  <!-- Include build targets for NuGet package consumers (auto-imported) -->
+  <ItemGroup>
+    <None Include="build\**\*.targets" Pack="true" PackagePath="build\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

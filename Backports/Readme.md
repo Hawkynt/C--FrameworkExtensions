@@ -56,6 +56,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System
   * [IGrouping](https://learn.microsoft.com/dotnet/api/system.linq.igrouping-2)&lt;out TKey, TElement&gt;
+  * [ILookup](https://learn.microsoft.com/dotnet/api/system.linq.ilookup-2)&lt;TKey, TElement&gt;
   * [IParsable](https://learn.microsoft.com/dotnet/api/system.iparsable-1)
   * [ISpanFormattable](https://learn.microsoft.com/dotnet/api/system.ispanformattable)
   * [ISpanParsable](https://learn.microsoft.com/dotnet/api/system.ispanparsable-1)
@@ -126,6 +127,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Matrix4x4](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4)
   * [Plane](https://learn.microsoft.com/dotnet/api/system.numerics.plane)
   * [Quaternion](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion)
+  * [Vector2](https://learn.microsoft.com/dotnet/api/system.numerics.vector2)
+  * [Vector3](https://learn.microsoft.com/dotnet/api/system.numerics.vector3)
+  * [Vector4](https://learn.microsoft.com/dotnet/api/system.numerics.vector4)
 
 * System.Runtime.CompilerServices
   * [AsyncIteratorMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratormethodbuilder)
@@ -226,6 +230,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string-system-string%29)(string path1, string path2, string path3, string path4)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string%28%29%29)(params string[] paths)
   * string [GetRelativePath](https://learn.microsoft.com/dotnet/api/system.io.path.getrelativepath)(string relativeTo, string path)
+  * bool [Exists](https://learn.microsoft.com/dotnet/api/system.io.path.exists)(string? path)
+  * bool [EndsInDirectorySeparator](https://learn.microsoft.com/dotnet/api/system.io.path.endsindirectoryseparator)(string? path)
+  * bool [EndsInDirectorySeparator](https://learn.microsoft.com/dotnet/api/system.io.path.endsindirectoryseparator)(ReadOnlySpan&lt;char&gt; path)
+  * string [TrimEndingDirectorySeparator](https://learn.microsoft.com/dotnet/api/system.io.path.trimendingdirectoryseparator)(string? path)
+  * ReadOnlySpan&lt;char&gt; [TrimEndingDirectorySeparator](https://learn.microsoft.com/dotnet/api/system.io.path.trimendingdirectoryseparator)(ReadOnlySpan&lt;char&gt; path)
 
 * System.Math
   * T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
@@ -316,6 +325,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * HashSet&lt;TItem&gt; [ToHashSet](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tohashset#system-linq-enumerable-tohashset-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-collections-generic-iequalitycomparer%28%28-0%29%29%29)&lt;TItem&gt;(this IEnumerable&lt;TItem&gt; @this, IEqualityComparer&lt;TItem&gt; comparer)
 
 * System.Collections.Generic.KeyValuePair
+  * KeyValuePair&lt;TKey, TValue&gt; [Create](https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair.create)&lt;TKey, TValue&gt;(TKey key, TValue value)
   * void [Deconstruct](https://learn.microsoft.com/dotnet/api/system.collections.generic.keyvaluepair-2.deconstruct)&lt;TKey, TValue&gt;(this KeyValuePair&lt;TKey, TValue&gt; @this, out TKey key, out TValue value)
 
 * System.Collections.Generic.Stack
@@ -334,8 +344,15 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * long [ToUnixTimeMilliseconds](https://learn.microsoft.com/dotnet/api/system.datetimeoffset.tounixtimemilliseconds)(this DateTimeOffset @this)
   * long [ToUnixTimeSeconds](https://learn.microsoft.com/dotnet/api/system.datetimeoffset.tounixtimeseconds)(this DateTimeOffset @this)
 
-* System.Diagnostics
+* System.Diagnostics.Stopwatch
   * void [Restart](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.restart)(this Stopwatch @this)
+  * TimeSpan [GetElapsedTime](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.getelapsedtime#system-diagnostics-stopwatch-getelapsedtime%28system-int64%29)(long startingTimestamp)
+  * TimeSpan [GetElapsedTime](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.getelapsedtime#system-diagnostics-stopwatch-getelapsedtime%28system-int64-system-int64%29)(long startingTimestamp, long endingTimestamp)
+
+* System.Environment
+  * long [TickCount64](https://learn.microsoft.com/dotnet/api/system.environment.tickcount64)
+  * int [ProcessId](https://learn.microsoft.com/dotnet/api/system.environment.processid)
+  * string? [ProcessPath](https://learn.microsoft.com/dotnet/api/system.environment.processpath)
 
 * System.Enum
   * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
@@ -363,6 +380,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Linq
   * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
+  * List&lt;TResult&gt; [ToList](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tolist)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
+  * ILookup&lt;TKey, TSource&gt; [ToLookup](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tolookup)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector)
+  * ILookup&lt;TKey, TElement&gt; [ToLookup](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.tolookup)&lt;TSource, TKey, TElement&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TKey&gt; keySelector, Func&lt;TSource, TElement&gt; elementSelector)
   * IEnumerable&lt;TResult&gt; [Cast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.cast)&lt;TResult&gt;(this IEnumerable @this)
   * IEnumerable&lt;TSource&gt; [Where](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.where#system-linq-enumerable-where-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-func%28%28-0-system-boolean%29%29%29)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
   * IEnumerable&lt;TSource&gt; [Where](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.where#system-linq-enumerable-where-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-func%28%28-0-system-int32-system-boolean%29%29%29)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, int, bool&gt; predicate)
@@ -394,6 +414,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * TItem [MinBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.minby#system-linq-queryable-minby-2%28system-linq-iqueryable%28%28-0%29%29-system-linq-expressions-expression%28%28system-func%28%28-0-1%29%29%29%29%29)&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
   * TItem [MinBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.minby#system-linq-queryable-minby-2%28system-linq-iqueryable%28%28-0%29%29-system-linq-expressions-expression%28%28system-func%28%28-0-1%29%29%29%29-system-collections-generic-icomparer%28%28-0%29%29%29)&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
   * TSource [Max](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.max)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
+  * bool [Any](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.any)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
+  * bool [Any](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.any)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
+  * bool [All](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.all)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
+  * int [Count](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.count)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this)
+  * int [Count](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.count)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, bool&gt; predicate)
+  * TAccumulate [Aggregate](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.aggregate)&lt;TSource, TAccumulate&gt;(this IEnumerable&lt;TSource&gt; @this, TAccumulate seed, Func&lt;TAccumulate, TSource, TAccumulate&gt; func)
+  * TResult [Aggregate](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.aggregate)&lt;TSource, TAccumulate, TResult&gt;(this IEnumerable&lt;TSource&gt; @this, TAccumulate seed, Func&lt;TAccumulate, TSource, TAccumulate&gt; func, Func&lt;TAccumulate, TResult&gt; resultSelector)
+  * TSource [Aggregate](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.aggregate)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; @this, Func&lt;TSource, TSource, TSource&gt; func)
   * TItem [MaxBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.maxby#system-linq-queryable-maxby-2%28system-linq-iqueryable%28%28-0%29%29-system-linq-expressions-expression%28%28system-func%28%28-0-1%29%29%29%29%29)&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector)
   * TItem [MaxBy](https://learn.microsoft.com/dotnet/api/system.linq.queryable.maxby#system-linq-queryable-maxby-2%28system-linq-iqueryable%28%28-0%29%29-system-linq-expressions-expression%28%28system-func%28%28-0-1%29%29%29%29-system-collections-generic-icomparer%28%28-0%29%29%29)&lt;TItem, TKey&gt;(this IEnumerable&lt;TItem&gt; @this, Func&lt;TItem, TKey&gt; keySelector, IComparer&lt;TKey&gt; comparer)
   * IEnumerable&lt;IGrouping&lt;TKey, TSource&gt;&gt; [GroupBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.groupby#system-linq-enumerable-groupby-2%28system-collections-generic-ienumerable%28%28-0%29%29-system-func%28%28-0-1%29%29%29)&lt;TSource, TKey&gt;(IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
@@ -411,6 +439,12 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * IEnumerable&lt;(int Index, TSource Item)&gt; [Index](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.index)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
   * IEnumerable&lt;KeyValuePair&lt;TKey, int&gt;&gt; [CountBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.countby)&lt;TSource, TKey&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
   * IEnumerable&lt;KeyValuePair&lt;TKey, TAccumulate&gt;&gt; [AggregateBy](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.aggregateby)&lt;TSource, TKey, TAccumulate&gt;(this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector, Func&lt;TKey, TAccumulate&gt; seed, Func&lt;TAccumulate, TSource, TAccumulate&gt; func)
+  * IEnumerable&lt;TSource&gt; [Shuffle](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.shuffle)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source)
+  * IEnumerable&lt;TResult&gt; [LeftJoin](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.leftjoin)&lt;TOuter, TInner, TKey, TResult&gt;(this IEnumerable&lt;TOuter&gt; outer, IEnumerable&lt;TInner&gt; inner, Func&lt;TOuter, TKey&gt; outerKeySelector, Func&lt;TInner, TKey&gt; innerKeySelector, Func&lt;TOuter, TInner, TResult&gt; resultSelector)
+  * IEnumerable&lt;TResult&gt; [RightJoin](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.rightjoin)&lt;TOuter, TInner, TKey, TResult&gt;(this IEnumerable&lt;TOuter&gt; outer, IEnumerable&lt;TInner&gt; inner, Func&lt;TOuter, TKey&gt; outerKeySelector, Func&lt;TInner, TKey&gt; innerKeySelector, Func&lt;TOuter, TInner, TResult&gt; resultSelector)
+  * IEnumerable&lt;TSource&gt; [Reverse](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.reverse)&lt;TSource&gt;(this TSource[] source)
+  * IEnumerable&lt;T&gt; [Sequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.sequence)&lt;T&gt;(T start, T endInclusive, T step)
+  * IEnumerable&lt;T&gt; [InfiniteSequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.infinitesequence)&lt;T&gt;(T start, T step)
 
 * System.Random
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)

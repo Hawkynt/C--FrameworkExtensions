@@ -143,8 +143,7 @@ public ref struct SequenceReader<T> where T : unmanaged, IEquatable<T> {
   /// Advances the reader by the specified count.
   /// </summary>
   public void Advance(long count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException(nameof(count));
+    ArgumentOutOfRangeException.ThrowIfNegative(count);
 
     if (count == 0)
       return;
@@ -180,8 +179,7 @@ public ref struct SequenceReader<T> where T : unmanaged, IEquatable<T> {
   /// Rewinds the reader by the specified count.
   /// </summary>
   public void Rewind(long count) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException(nameof(count));
+    ArgumentOutOfRangeException.ThrowIfNegative(count);
 
     if (count == 0)
       return;
@@ -249,8 +247,7 @@ public ref struct SequenceReader<T> where T : unmanaged, IEquatable<T> {
   /// Tries to read an exact number of elements.
   /// </summary>
   public bool TryReadExact(int count, out ReadOnlySequence<T> sequence) {
-    if (count < 0)
-      throw new ArgumentOutOfRangeException(nameof(count));
+    ArgumentOutOfRangeException.ThrowIfNegative(count);
 
     if (this.Remaining < count) {
       sequence = default;

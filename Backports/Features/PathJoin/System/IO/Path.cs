@@ -40,7 +40,7 @@ public static partial class PathPolyfills {
     if (string.IsNullOrEmpty(path2))
       return path1;
 
-    var c = path1[path1.Length - 1];
+    var c = path1[^1];
     return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar || c == Path.VolumeSeparatorChar
       ? path1 + path2
       : path1 + Path.DirectorySeparatorChar + path2;
@@ -75,8 +75,7 @@ public static partial class PathPolyfills {
   /// <param name="paths">An array of paths.</param>
   /// <returns>The concatenated path.</returns>
   public static string Join(params string[] paths) {
-    if (paths == null)
-      throw new ArgumentNullException(nameof(paths));
+    ArgumentNullException.ThrowIfNull(paths);
     if (paths.Length == 0)
       return string.Empty;
 
@@ -119,6 +118,105 @@ public static partial class PathPolyfills {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static string Join(ReadOnlySpan<char> path1, ReadOnlySpan<char> path2, ReadOnlySpan<char> path3, ReadOnlySpan<char> path4)
     => Join(path1.ToString(), path2.ToString(), path3.ToString(), path4.ToString());
+
+#endif
+
+#if !SUPPORTS_PATH_EXISTS
+
+  /// <summary>
+  /// Determines whether the specified path exists as a file or directory.
+  /// </summary>
+  /// <param name="path">The path to check.</param>
+  /// <returns><see langword="true"/> if the path exists as a file or directory; otherwise, <see langword="false"/>.</returns>
+  /// <remarks>
+  /// This method returns <see langword="false"/> if <paramref name="path"/> is <see langword="null"/> or empty.
+  /// Unlike <see cref="File.Exists"/> and <see cref="Directory.Exists"/>, this method checks for both files and directories.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Exists(string? path)
+    => !string.IsNullOrEmpty(path) && (File.Exists(path) || Directory.Exists(path));
+
+#endif
+
+#if !SUPPORTS_PATH_ENDSINDIRECTORYSEPARATOR
+
+  /// <summary>
+  /// Returns a value that indicates whether the specified path ends in a directory separator.
+  /// </summary>
+  /// <param name="path">The path to check.</param>
+  /// <returns><see langword="true"/> if the path ends in a directory separator; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool EndsInDirectorySeparator(string? path) {
+    if (string.IsNullOrEmpty(path))
+      return false;
+    var c = path[^1];
+    return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
+  }
+
+  /// <summary>
+  /// Returns a value that indicates whether the specified path ends in a directory separator.
+  /// </summary>
+  /// <param name="path">The path to check.</param>
+  /// <returns><see langword="true"/> if the path ends in a directory separator; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool EndsInDirectorySeparator(ReadOnlySpan<char> path) {
+    if (path.IsEmpty)
+      return false;
+    var c = path[^1];
+    return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
+  }
+
+#endif
+
+#if !SUPPORTS_PATH_TRIMENDINGDIRECTORYSEPARATOR
+
+  /// <summary>
+  /// Trims one trailing directory separator character from the specified path.
+  /// </summary>
+  /// <param name="path">The path to trim.</param>
+  /// <returns>The path with any trailing directory separator removed.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static string TrimEndingDirectorySeparator(string? path) {
+    if (string.IsNullOrEmpty(path))
+      return path ?? string.Empty;
+    return EndsInDirectorySeparator(path) && !IsPathRoot(path)
+      ? path[..^1]
+      : path;
+  }
+
+  /// <summary>
+  /// Trims one trailing directory separator character from the specified path.
+  /// </summary>
+  /// <param name="path">The path to trim.</param>
+  /// <returns>The path with any trailing directory separator removed.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static ReadOnlySpan<char> TrimEndingDirectorySeparator(ReadOnlySpan<char> path) {
+    if (path.IsEmpty)
+      return path;
+    return EndsInDirectorySeparator(path) && !IsPathRoot(path)
+      ? path[..^1]
+      : path;
+  }
+
+  private static bool IsPathRoot(string path) {
+    // Root paths like "C:\" or "/" should not have their separator trimmed
+    if (path.Length <= 1)
+      return true;
+    // Windows drive root like "C:\" or "C:/"
+    if (path.Length == 3 && path[1] == Path.VolumeSeparatorChar)
+      return true;
+    // UNC root like "\\" or "//"
+    if (path.Length == 2 && (path[0] == Path.DirectorySeparatorChar || path[0] == Path.AltDirectorySeparatorChar))
+      return path[1] == path[0];
+    return false;
+  }
+
+  private static bool IsPathRoot(ReadOnlySpan<char> path) => path.Length switch {
+    <= 1 => true,
+    3 when path[1] == Path.VolumeSeparatorChar => true,
+    2 when (path[0] == Path.DirectorySeparatorChar || path[0] == Path.AltDirectorySeparatorChar) => path[1] == path[0],
+    _ => false
+  };
 
 #endif
 

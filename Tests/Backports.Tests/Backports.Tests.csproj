@@ -62,18 +62,16 @@
 
   </ItemGroup>
 
+  <!--
+    For ProjectReference scenarios, import Backports build targets if they exist for the target framework.
+    (NuGet package consumers get this automatically via the package's build folder)
+  -->
+  <Import Project="..\..\Backports\build\$(TargetFramework)\FrameworkExtensions.Backports.targets"
+          Condition="Exists('..\..\Backports\build\$(TargetFramework)\FrameworkExtensions.Backports.targets')" />
+
   <ItemGroup>
     <!-- That's exactly how we want it, only one reference, the rest is auto-magic-voodoo -->
     <ProjectReference Include="..\..\Backports\Backports.csproj" />
   </ItemGroup>
-
-  <!-- Exclude test files that conflict with NUnit's polyfills for net35 -->
-  <ItemGroup Condition="$(TargetFramework) == 'net35'">
-    <Compile Remove="LazyTests.cs" />
-    <Compile Remove="LinqTests.cs" />
-    <Compile Remove="LinqExtendedTests.cs" />
-    <Compile Remove="CollectionTests.cs" />
-  </ItemGroup>
-
 
 </Project>

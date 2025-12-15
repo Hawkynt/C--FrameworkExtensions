@@ -177,14 +177,16 @@ public static partial class Matrix4x4Polyfills {
     /// <paramref name="index"/> is less than 0 or greater than 3.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector4 GetRow(int index)
-      => index switch {
+    public Vector4 GetRow(int index) {
+      ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3);
+      return index switch {
         0 => new(@this.M11, @this.M12, @this.M13, @this.M14),
         1 => new(@this.M21, @this.M22, @this.M23, @this.M24),
         2 => new(@this.M31, @this.M32, @this.M33, @this.M34),
-        3 => new(@this.M41, @this.M42, @this.M43, @this.M44),
-        _ => throw new ArgumentOutOfRangeException(nameof(index))
+        _ => new(@this.M41, @this.M42, @this.M43, @this.M44),
       };
+    }
 
     /// <summary>
     /// Creates a new Matrix4x4 with the specified row replaced.
@@ -196,6 +198,9 @@ public static partial class Matrix4x4Polyfills {
     /// <paramref name="index"/> is less than 0 or greater than 3.
     /// </exception>
     public Matrix4x4 WithRow(int index, Vector4 value) {
+      ArgumentOutOfRangeException.ThrowIfLessThan(index, 0);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3);
+
       var result = @this;
       switch (index) {
         case 0:
@@ -222,8 +227,6 @@ public static partial class Matrix4x4Polyfills {
           result.M43 = value.Z;
           result.M44 = value.W;
           break;
-        default:
-          throw new ArgumentOutOfRangeException(nameof(index));
       }
       return result;
     }

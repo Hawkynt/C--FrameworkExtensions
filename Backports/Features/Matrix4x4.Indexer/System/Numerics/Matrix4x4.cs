@@ -40,10 +40,8 @@ public static partial class Matrix4x4Polyfills {
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float get_Item(int row, int column) {
-      if ((uint)row >= 4)
-        throw new ArgumentOutOfRangeException(nameof(row));
-      if ((uint)column >= 4)
-        throw new ArgumentOutOfRangeException(nameof(column));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)row, 4u, nameof(row));
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((uint)column, 4u, nameof(column));
 
       return row switch {
         0 => column switch { 0 => @this.M11, 1 => @this.M12, 2 => @this.M13, _ => @this.M14 },

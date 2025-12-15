@@ -157,14 +157,11 @@ public static partial class Matrix4x4Polyfills {
     /// <returns>The left-handed perspective projection matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4x4 CreatePerspectiveFieldOfViewLeftHanded(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance) {
-      if (fieldOfView <= 0 || fieldOfView >= MathF.PI)
-        throw new ArgumentOutOfRangeException(nameof(fieldOfView));
-      if (nearPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-      if (farPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-      if (nearPlaneDistance >= farPlaneDistance)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+      ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fieldOfView, 0);
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fieldOfView, MathF.PI);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
       var yScale = 1.0f / MathF.Tan(fieldOfView * 0.5f);
       var xScale = yScale / aspectRatio;
@@ -200,12 +197,9 @@ public static partial class Matrix4x4Polyfills {
     /// <returns>The left-handed perspective projection matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4x4 CreatePerspectiveLeftHanded(float width, float height, float nearPlaneDistance, float farPlaneDistance) {
-      if (nearPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-      if (farPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-      if (nearPlaneDistance >= farPlaneDistance)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
       var range = farPlaneDistance / (farPlaneDistance - nearPlaneDistance);
 
@@ -241,12 +235,9 @@ public static partial class Matrix4x4Polyfills {
     /// <returns>The left-handed perspective projection matrix.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4x4 CreatePerspectiveOffCenterLeftHanded(float left, float right, float bottom, float top, float nearPlaneDistance, float farPlaneDistance) {
-      if (nearPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-      if (farPlaneDistance <= 0)
-        throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-      if (nearPlaneDistance >= farPlaneDistance)
-        throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
       var rangeZ = farPlaneDistance / (farPlaneDistance - nearPlaneDistance);
       var twoNear = 2.0f * nearPlaneDistance;

@@ -76,8 +76,8 @@ public abstract class MemoryPool<T> : IDisposable {
     public override IMemoryOwner<T> Rent(int minBufferSize = -1) {
       if (minBufferSize == -1)
         minBufferSize = 1 + (4095 / Unsafe.SizeOf<T>());
-      else if (minBufferSize < 0)
-        throw new ArgumentOutOfRangeException(nameof(minBufferSize));
+      else
+        ArgumentOutOfRangeException.ThrowIfNegative(minBufferSize);
 
       return new ArrayMemoryPoolBuffer(minBufferSize);
     }

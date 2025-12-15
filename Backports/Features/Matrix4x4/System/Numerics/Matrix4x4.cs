@@ -298,14 +298,11 @@ public struct Matrix4x4 : IEquatable<Matrix4x4>
   /// <summary>Creates a right-handed perspective projection matrix based on a field of view.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Matrix4x4 CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance) {
-    if (fieldOfView <= 0f || fieldOfView >= (float)Math.PI)
-      throw new ArgumentOutOfRangeException(nameof(fieldOfView));
-    if (nearPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-    if (farPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-    if (nearPlaneDistance >= farPlaneDistance)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+    ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fieldOfView, 0f);
+    ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(fieldOfView, (float)Math.PI);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
     var yScale = 1f / (float)Math.Tan(fieldOfView * 0.5f);
     var xScale = yScale / aspectRatio;
@@ -322,12 +319,9 @@ public struct Matrix4x4 : IEquatable<Matrix4x4>
   /// <summary>Creates a right-handed perspective projection matrix.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Matrix4x4 CreatePerspective(float width, float height, float nearPlaneDistance, float farPlaneDistance) {
-    if (nearPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-    if (farPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-    if (nearPlaneDistance >= farPlaneDistance)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
     var range = farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
 
@@ -342,12 +336,9 @@ public struct Matrix4x4 : IEquatable<Matrix4x4>
   /// <summary>Creates a right-handed customized perspective projection matrix.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Matrix4x4 CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float nearPlaneDistance, float farPlaneDistance) {
-    if (nearPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
-    if (farPlaneDistance <= 0f)
-      throw new ArgumentOutOfRangeException(nameof(farPlaneDistance));
-    if (nearPlaneDistance >= farPlaneDistance)
-      throw new ArgumentOutOfRangeException(nameof(nearPlaneDistance));
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(nearPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(farPlaneDistance);
+    ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(nearPlaneDistance, farPlaneDistance);
 
     var range = farPlaneDistance / (nearPlaneDistance - farPlaneDistance);
     var twoNear = 2f * nearPlaneDistance;

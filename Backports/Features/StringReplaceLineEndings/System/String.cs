@@ -21,6 +21,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Text;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -42,10 +43,8 @@ public static partial class StringPolyfills {
     /// <param name="replacementText">The text to use as a replacement.</param>
     /// <returns>A string whose contents match this string, but with all newline sequences replaced with <paramref name="replacementText"/>.</returns>
     public string ReplaceLineEndings(string replacementText) {
-      if (@this == null)
-        throw new NullReferenceException();
-      if (replacementText == null)
-        throw new ArgumentNullException(nameof(replacementText));
+      Against.ThisIsNull(@this);
+      ArgumentNullException.ThrowIfNull(replacementText);
 
       if (@this.Length == 0)
         return @this;

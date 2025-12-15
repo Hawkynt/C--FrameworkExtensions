@@ -40,13 +40,20 @@ public class Lazy<TValue> {
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;" /> class.
+  ///   Uses the default constructor of TValue to create the value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public Lazy() : this(Activator.CreateInstance<TValue>) { }
+
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="Lazy&lt;TValue&gt;" /> class.
   /// </summary>
   /// <param name="function">The function that should create the value.</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Lazy(Func<TValue> function) {
     if (function == null)
       AlwaysThrow.ArgumentNullException(nameof(function));
-    
+
     this._function = function;
   }
 
@@ -59,6 +66,17 @@ public class Lazy<TValue> {
   ///   <c>true</c> if this instance has value; otherwise, <c>false</c>.
   /// </value>
   public bool HasValue {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._valueIsReady.IsSet;
+  }
+
+  /// <summary>
+  ///   Gets a value indicating whether a value has been created for this Lazy instance.
+  /// </summary>
+  /// <value>
+  ///   <c>true</c> if a value has been created; otherwise, <c>false</c>.
+  /// </value>
+  public bool IsValueCreated {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get => this._valueIsReady.IsSet;
   }

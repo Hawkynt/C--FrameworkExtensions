@@ -21,6 +21,7 @@
 
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -36,19 +37,19 @@ public readonly struct Int128 : IComparable, IComparable<Int128>, IEquatable<Int
   /// <summary>
   /// Gets the lower 64 bits of the 128-bit value.
   /// </summary>
-  internal ulong Lower => _lower;
+  internal ulong Lower => this._lower;
 
   /// <summary>
   /// Gets the upper 64 bits of the 128-bit value.
   /// </summary>
-  internal ulong Upper => _upper;
+  internal ulong Upper => this._upper;
 
   /// <summary>
   /// Initializes a new instance of Int128 with the specified upper and lower 64-bit values.
   /// </summary>
   public Int128(ulong upper, ulong lower) {
-    _upper = upper;
-    _lower = lower;
+    this._upper = upper;
+    this._lower = lower;
   }
 
   /// <summary>
@@ -211,8 +212,7 @@ public readonly struct Int128 : IComparable, IComparable<Int128>, IEquatable<Int
   /// Returns the base-2 logarithm of a value.
   /// </summary>
   public static int Log2(Int128 value) {
-    if (IsNegative(value) || value == Zero)
-      throw new ArgumentOutOfRangeException(nameof(value));
+    ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, Zero);
     return 127 - LeadingZeroCount(value);
   }
 
@@ -243,25 +243,25 @@ public readonly struct Int128 : IComparable, IComparable<Int128>, IEquatable<Int
     if (!IsNegative(this) && IsNegative(other))
       return 1;
 
-    var upperCmp = _upper.CompareTo(other._upper);
-    return upperCmp != 0 ? upperCmp : _lower.CompareTo(other._lower);
+    var upperCmp = this._upper.CompareTo(other._upper);
+    return upperCmp != 0 ? upperCmp : this._lower.CompareTo(other._lower);
   }
 
   public int CompareTo(object? obj) {
     if (obj is null)
       return 1;
-    if (obj is not Int128 other)
-      throw new ArgumentException("Object must be of type Int128.");
-    return CompareTo(other);
+    
+    Against.ArgumentIsNotOfType<Int128>(obj);
+    return this.CompareTo((Int128)obj);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(Int128 other) => _upper == other._upper && _lower == other._lower;
+  public bool Equals(Int128 other) => this._upper == other._upper && this._lower == other._lower;
 
-  public override bool Equals(object? obj) => obj is Int128 other && Equals(other);
+  public override bool Equals(object? obj) => obj is Int128 other && this.Equals(other);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override int GetHashCode() => unchecked((int)(_upper ^ _lower ^ (_upper >> 32) ^ (_lower >> 32)));
+  public override int GetHashCode() => unchecked((int)(this._upper ^ this._lower ^ (this._upper >> 32) ^ (this._lower >> 32)));
 
   // ToString methods
   public override string ToString() => _ToDecimalString(this);

@@ -20,6 +20,7 @@
 #if !SUPPORTS_DATEONLY
 
 using System.Globalization;
+using Guard;
 
 namespace System;
 
@@ -118,8 +119,9 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   /// Creates a new instance of the DateOnly structure to the specified number of days.
   /// </summary>
   public static DateOnly FromDayNumber(int dayNumber) {
-    if (dayNumber < MinDayNumber || dayNumber > MaxDayNumber)
-      throw new ArgumentOutOfRangeException(nameof(dayNumber));
+    ArgumentOutOfRangeException.ThrowIfLessThan(dayNumber,MinDayNumber);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(dayNumber,MaxDayNumber);
+    
     return new(dayNumber);
   }
 

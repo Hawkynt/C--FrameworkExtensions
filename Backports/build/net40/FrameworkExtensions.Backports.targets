@@ -1,0 +1,41 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Workaround for net40 assembly resolution with Microsoft.Bcl facade dependencies.
+
+    Problem: Backports.dll depends on System.Runtime/System.Threading.Tasks facades from Microsoft.Bcl.
+    MSBuild's ResolveAssemblyReferences rejects references that depend on "framework assemblies"
+    it cannot find in net40, causing Backports.dll to be dropped from the reference list.
+
+    Solution: Inject Backports.dll into ReferencePath after ResolveAssemblyReferences completes.
+  -->
+
+  <PropertyGroup>
+    <BackportsTargetsImported>true</BackportsTargetsImported>
+  </PropertyGroup>
+
+  <!-- Inject Backports.dll reference before compilation -->
+  <Target Name="BackportsInjectReferences"
+          BeforeTargets="CoreCompile"
+          AfterTargets="ResolveAssemblyReferences"
+          Condition="'$(BackportsTargetsImported)' == 'true'">
+
+    <!-- Find Backports.dll from ProjectReference output -->
+    <PropertyGroup>
+      <_BackportsDllPath Condition="'$(_BackportsDllPath)' == ''">@(_ResolvedProjectReferencePaths->WithMetadataValue('Filename', 'Backports'))</_BackportsDllPath>
+    </PropertyGroup>
+
+    <!-- Only inject if we found the path and it's not already in ReferencePath -->
+    <ItemGroup Condition="'$(_BackportsDllPath)' != '' AND '@(ReferencePath->WithMetadataValue('Filename','Backports'))' == ''">
+      <ReferencePath Include="$(_BackportsDllPath)">
+        <CopyLocal>true</CopyLocal>
+        <Private>true</Private>
+        <FusionName>Backports</FusionName>
+      </ReferencePath>
+      <ReferenceCopyLocalPaths Include="$(_BackportsDllPath)">
+        <DestinationSubDirectory></DestinationSubDirectory>
+      </ReferenceCopyLocalPaths>
+    </ItemGroup>
+
+    <Message Condition="'$(_BackportsDllPath)' != ''" Importance="normal" Text="Backports: Injected reference to $(_BackportsDllPath)" />
+  </Target>
+</Project>
