@@ -650,6 +650,7 @@ Comprehensive date and time operations
 - **Year Boundaries** - `FirstDayOfYear()`, `LastDayOfYear()` - Get first/last day of year
 - **Comparison** - `Max()`, `Min()` - Compare and return min/max dates
 - **Date Ranges** - `DaysTill()` - Enumerate days between dates
+- **Sequence Generation** - `Sequence(start, end, step)`, `InfiniteSequence(start, step)` - Generate finite or infinite sequences of DateTime values with a TimeSpan step
 - **Subtraction Methods** - `SubstractTicks()`, `SubstractMilliseconds()`, `SubstractSeconds()`, `SubstractMinutes()`, `SubstractHours()`, `SubstractDays()` - Subtraction alternatives to Add with negative values
 - **Formatting** - Culture-aware formatting and parsing
 
