@@ -22,6 +22,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -37,6 +39,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is zero.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfZero<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : struct, IComparable<T> {
+      // Fast path for known numeric types using JIT-optimizable type dispatch
+      if (TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.ObjectEquals(value, Scalar<T>.Zero()))
+          _Throw(paramName, value, " must be a non-zero value.");
+        return;
+      }
+      // Slow path fallback for other IComparable<T> types
       if (value.CompareTo(default) == 0)
         _Throw(paramName, value, " must be a non-zero value.");
     }
@@ -49,6 +58,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is negative.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNegative<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : struct, IComparable<T> {
+      // Fast path for known numeric types using JIT-optimizable type dispatch
+      if (TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.LessThan(value, Scalar<T>.Zero()))
+          _Throw(paramName, value, " must be a non-negative value.");
+        return;
+      }
+      // Slow path fallback for other IComparable<T> types
       if (value.CompareTo(default) < 0)
         _Throw(paramName, value, " must be a non-negative value.");
     }
@@ -61,6 +77,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is negative or zero.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNegativeOrZero<T>(T value, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : struct, IComparable<T> {
+      // Fast path for known numeric types using JIT-optimizable type dispatch
+      if (TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.LessThanOrEqual(value, Scalar<T>.Zero()))
+          _Throw(paramName, value, " must be a non-negative and non-zero value.");
+        return;
+      }
+      // Slow path fallback for other IComparable<T> types
       if (value.CompareTo(default) <= 0)
         _Throw(paramName, value, " must be a non-negative and non-zero value.");
     }
@@ -74,6 +97,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is greater than <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfGreaterThan<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T> {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.GreaterThan(value, other))
+          _Throw(paramName, value, $" must be less than or equal to '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IComparable<T> types
       if (value.CompareTo(other) > 0)
         _Throw(paramName, value, $" must be less than or equal to '{other}'.");
     }
@@ -87,6 +117,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is greater than or equal to <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfGreaterThanOrEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T> {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.GreaterThanOrEqual(value, other))
+          _Throw(paramName, value, $" must be less than '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IComparable<T> types
       if (value.CompareTo(other) >= 0)
         _Throw(paramName, value, $" must be less than '{other}'.");
     }
@@ -100,6 +137,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfLessThan<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T> {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.LessThan(value, other))
+          _Throw(paramName, value, $" must be greater than or equal to '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IComparable<T> types
       if (value.CompareTo(other) < 0)
         _Throw(paramName, value, $" must be greater than or equal to '{other}'.");
     }
@@ -113,6 +157,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is less than or equal to <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfLessThanOrEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IComparable<T> {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.LessThanOrEqual(value, other))
+          _Throw(paramName, value, $" must be greater than '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IComparable<T> types
       if (value.CompareTo(other) <= 0)
         _Throw(paramName, value, $" must be greater than '{other}'.");
     }
@@ -126,6 +177,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is equal to <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IEquatable<T>? {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (Scalar<T>.ObjectEquals(value, other))
+          _Throw(paramName, value, $" must not be equal to '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IEquatable<T> types
       if (EqualityComparer<T>.Default.Equals(value, other))
         _Throw(paramName, value, $" must not be equal to '{other}'.");
     }
@@ -139,6 +197,13 @@ public static partial class ArgumentOutOfRangeExceptionPolyfills {
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> is not equal to <paramref name="other"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNotEqual<T>(T value, T other, [CallerArgumentExpression(nameof(value))] string? paramName = null) where T : IEquatable<T>? {
+      // Fast path for known numeric struct types using JIT-optimizable type dispatch
+      if (typeof(T).IsValueType && TypeCodeCache<T>.Code != CachedTypeCode.Unknown) {
+        if (!Scalar<T>.ObjectEquals(value, other))
+          _Throw(paramName, value, $" must be equal to '{other}'.");
+        return;
+      }
+      // Slow path fallback for reference types and other IEquatable<T> types
       if (!EqualityComparer<T>.Default.Equals(value, other))
         _Throw(paramName, value, $" must be equal to '{other}'.");
     }
