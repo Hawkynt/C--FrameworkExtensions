@@ -78,9 +78,23 @@ static partial class FileInfoExtensions {
       GC.SuppressFinalize(this);
 
       if (!this.CancelChanges)
-        this.OriginalFile.ReplaceWith(this._TemporaryFile);
+        _ReplaceWithRetry(this.OriginalFile, this._TemporaryFile);
 
       this._token.Dispose();
+    }
+
+    private static void _ReplaceWithRetry(FileInfo target, FileInfo source, int maxRetries = 3, int delayMs = 100) {
+      for (var attempt = 1; ; ++attempt) {
+        try {
+          target.ReplaceWith(source);
+          return;
+        } catch (IOException) when (attempt < maxRetries) {
+          // File might be temporarily locked due to lingering handles, force cleanup and retry
+          GC.Collect();
+          GC.WaitForPendingFinalizers();
+          Threading.Thread.Sleep(delayMs);
+        }
+      }
     }
 
     #endregion

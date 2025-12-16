@@ -14,31 +14,37 @@ internal class FileInfoTest {
     private const string _TEST_CONTENT = "Test content";
     private const string _NEW_CONTENT = "New content";
     private FileInfo? _sourceFile;
+    private string? _tempFilePattern;
 
     [SetUp]
     public void Setup() {
+      // Use unique filename to avoid conflicts between parallel tests
+      var uniqueName = $"test_{Guid.NewGuid():N}.txt";
+      this._sourceFile = new(uniqueName);
+      this._tempFilePattern = this._sourceFile.FullName + ".$$$";
+
+      // Clean up any leftover files from previous runs
+      _CleanupTempFiles();
+
       // Create a source file for testing
-      this._sourceFile = new("test.txt");
       this._sourceFile.WriteAllText(_TEST_CONTENT);
     }
 
     [Test]
     public void ShouldCreateTemporaryFile() {
       using var fileInProgress = this._sourceFile.StartWorkInProgress();
-      Assert.IsTrue(File.Exists(this._sourceFile!.FullName + ".$$$"));
+      Assert.IsTrue(File.Exists(this._tempFilePattern));
     }
 
     [Test]
     public void ShouldApplyChangesOnDisposeIfNotCancelled() {
-      string? tempFileName;
       using (var fileInProgress = this._sourceFile.StartWorkInProgress()) {
         fileInProgress.WriteAllText(_NEW_CONTENT);
-        tempFileName = this._sourceFile!.FullName + ".$$$";
         fileInProgress.CancelChanges = false;
       }
 
-      // Assuming ReplaceWith correctly replaces the source file with temporary file
-      Assert.IsFalse(File.Exists(tempFileName));
+      // Temp file should be gone after successful replace
+      Assert.IsFalse(File.Exists(this._tempFilePattern));
       Assert.AreEqual(_NEW_CONTENT, this._sourceFile.ReadAllText());
     }
 
@@ -49,7 +55,7 @@ internal class FileInfoTest {
         fileInProgress.CancelChanges = true;
       }
 
-      // Assuming ReplaceWith correctly replaces the source file with temporary file
+      // Original content should remain unchanged
       Assert.AreEqual(_TEST_CONTENT, this._sourceFile.ReadAllText());
     }
 
@@ -66,7 +72,23 @@ internal class FileInfoTest {
     }
 
     [TearDown]
-    public void TearDown() => this._sourceFile.TryDelete();
+    public void TearDown() {
+      this._sourceFile.TryDelete();
+      _CleanupTempFiles();
+    }
+
+    private void _CleanupTempFiles() {
+      // Clean up temp file and any numbered variants
+      if (this._tempFilePattern == null)
+        return;
+
+      try {
+        if (File.Exists(this._tempFilePattern))
+          File.Delete(this._tempFilePattern);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
   }
 
   [TestFixture]
