@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Match System.Drawing.Extensions target frameworks + net8.0-windows for modern testing -->
+    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net8.0-windows</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
+    <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
+    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
+    <Nullable>enable</Nullable>
+    <SelfContained>false</SelfContained>
+    <IsPackable>false</IsPackable>
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <SuppressTfmSupportBuildErrors>True</SuppressTfmSupportBuildErrors>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
+    <NoWarn>MSB3270</NoWarn>
+    <!-- Suppresses the processor architecture mismatch warning -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+    <NoWarn>MSB3268;MSB3270</NoWarn>
+    <!-- Suppresses assembly resolution and processor architecture warnings for net40 with Microsoft.Bcl.Async -->
+  </PropertyGroup>
+
+  <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
+
+  <!-- Required for net40 to properly resolve types from Backports/Corlib.Extensions -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+    <PackageReference Include="Microsoft.Bcl" Version="1.1.10" />
+    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
+  </ItemGroup>
+
+  <!-- NUnit Test Framework -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0-windows'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0-windows'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net5.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net48'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net40'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net35'" />
+
+    <PackageReference Include="NUnit" Version="3.*" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.*" />
+
+    <!-- Reference assemblies for older .NET Framework versions -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+
+    <!-- Explicit dependencies for test host compatibility -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\System.Drawing.Extensions\System.Drawing.Extensions.csproj" />
+  </ItemGroup>
+
+</Project>
