@@ -91,6 +91,13 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public ReadOnlySpan<T> Slice(int start) {
+    ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)start,(uint)this.Length);
+    
+    return new(this.memoryHandler.SliceFrom(start), this.Length - start);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ReadOnlySpan<T> Slice(int start, int length) {
     if ((uint)start > (uint)this.Length || (uint)length > (uint)(this.Length - start))
       AlwaysThrow.ArgumentOutOfRangeException(nameof(length));

@@ -141,4 +141,14 @@ public class ArrayTests {
 
   #endregion
 
+  #region Array.MaxLength
+
+  [Test]
+  [Category("HappyPath")]
+  public void MaxLength_ReturnsCorrectValue() {
+    Assert.That(Array.MaxLength, Is.EqualTo(0x7FFFFFC7));
+  }
+
+  #endregion
+
 }

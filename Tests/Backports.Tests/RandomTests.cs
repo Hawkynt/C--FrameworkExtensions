@@ -197,4 +197,41 @@ public class RandomTests {
 
   #endregion
 
+  #region Random.NextBytes(Span<byte>)
+
+  [Test]
+  [Category("HappyPath")]
+  public void NextBytes_Span_FillsBuffer() {
+    var random = new Random(42);
+    Span<byte> buffer = stackalloc byte[10];
+    random.NextBytes(buffer);
+    Assert.That(buffer.ToArray().Length, Is.EqualTo(10));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void NextBytes_Span_ProducesNonZeroBytes() {
+    var random = new Random(42);
+    Span<byte> buffer = stackalloc byte[100];
+    random.NextBytes(buffer);
+    var hasNonZero = false;
+    for (var i = 0; i < buffer.Length; ++i)
+      if (buffer[i] != 0) {
+        hasNonZero = true;
+        break;
+      }
+    Assert.That(hasNonZero, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void NextBytes_EmptySpan_DoesNotThrow() {
+    var random = new Random(42);
+    Span<byte> buffer = stackalloc byte[0];
+    random.NextBytes(buffer);
+    Assert.Pass();
+  }
+
+  #endregion
+
 }

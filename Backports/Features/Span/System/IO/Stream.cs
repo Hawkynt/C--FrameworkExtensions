@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_SPAN && !OFFICIAL_SPAN
+#if !SUPPORTS_STREAM_READ_SPAN
 using Guard;
 using System.Buffers;
 
@@ -35,6 +35,8 @@ public static partial class StreamPolyfills {
       var size = buffer.Length;
       byte[] token = null;
       try {
+        
+        // TODO: size may exceed MaxChunkSize (1MB), in those cases - loop
         token = ArrayPool<byte>.Shared.Rent(size);
         var bytesRead = @this.Read(token, 0, size);
         token.AsSpan()[..bytesRead].CopyTo(buffer[..bytesRead]);

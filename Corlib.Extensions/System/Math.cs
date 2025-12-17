@@ -27,9 +27,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 #if SUPPORTS_INTRINSICS
 using System.Runtime.Intrinsics.X86;
 #endif
-#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
-#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantCast
@@ -2951,8 +2949,6 @@ public static partial class MathEx {
           // Start from the square of the last known prime plus 2 (to ensure it's odd)
           var candidate = largestKnownPrime * largestKnownPrime + 2;
 
-#if SUPPORTS_ASYNC
-
           var task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
           for (;;) {
             task.Wait();
@@ -2964,25 +2960,15 @@ public static partial class MathEx {
             // Ensure we only check odd numbers
             var next = candidate + 2;
             if (next < candidate)
-              yield break; // we’re at the end of the ulong range
+              yield break; // we're at the end of the ulong range
 
             candidate = next;
             task = Task.Factory.StartNew(IsPrimeWithBufferAndBeyondT, candidate);
           }
 
-#else
-
-          // Loop until overflow wraps you below 3
-          for (; candidate > 2; candidate += 2)
-            if (IsPrimeWithBufferAndBeyond(candidate))
-              yield return candidate;
-#endif
-
         }
 
-#if SUPPORTS_ASYNC
         bool IsPrimeWithBufferAndBeyondT(object state) => IsPrimeWithBufferAndBeyond((ulong)state);
-#endif
 
         bool IsPrimeWithBufferAndBeyond(ulong candidate) {
           // 1. Check divisibility with all primes in the buffer
@@ -3022,21 +3008,14 @@ public static partial class MathEx {
         if (values1[i] != 0)
           continue;
 
-#if SUPPORTS_ASYNC
         var task = this._FillSieveAsync(prime);
         yield return prime;
         task.Wait();
-#else
-        yield return prime;
-        this._FillSieveAction(prime);
-#endif
       }
     }
 
-#if SUPPORTS_ASYNC
     private Task _FillSieveAsync(ulong prime) => Task.Factory.StartNew(this._FillSieveAction, prime);
     private void _FillSieveAction(object state) => this._FillSieveAction((ulong)state);
-#endif
 
     private void _FillSieveAction(ulong prime) {
       var doublePrime = prime << 1;
@@ -3095,7 +3074,6 @@ public static partial class MathEx {
       // array always contains at least one prime from the sieve
       var lastKnownPrime = primes1[this._index - 1];
 
-#if SUPPORTS_ASYNC
       var task = Task.Factory.StartNew(this._FindNextPrimeWithPartiallyFilledBuffer, lastKnownPrime);
       for (;;) {
         task.Wait();
@@ -3109,18 +3087,9 @@ public static partial class MathEx {
           yield break;
         }
       }
-#else
-      while (this._IsSpaceInBufferLeft()) {
-        lastKnownPrime = this._FindNextPrimeWithPartiallyFilledBuffer(lastKnownPrime);
-        this.Add(lastKnownPrime);
-        yield return lastKnownPrime;
-      }
-#endif
     }
 
-#if SUPPORTS_ASYNC
     private ulong _FindNextPrimeWithPartiallyFilledBuffer(object state) => this._FindNextPrimeWithPartiallyFilledBuffer((ulong)state);
-#endif
 
     private ulong _FindNextPrimeWithPartiallyFilledBuffer(ulong lastKnownPrime) {
       var candidate = lastKnownPrime;
@@ -3148,7 +3117,6 @@ public static partial class MathEx {
       var lastKnownPrime = primes[^1];
       var upperPrimeSquare = lastKnownPrime * lastKnownPrime;
 
-#if SUPPORTS_ASYNC
       var task = Task.Factory.StartNew(this._FindNextPrimeWithFullBuffer, lastKnownPrime);
       for (var candidate = lastKnownPrime + 2; candidate <= upperPrimeSquare; candidate = task.Result) {
         task.Wait();
@@ -3162,17 +3130,9 @@ public static partial class MathEx {
           yield break;
         }
       }
-#else
-      for (var candidate = lastKnownPrime + 2; candidate <= upperPrimeSquare; candidate += 2) {
-        if (this._IsPrimeWithFullBuffer(candidate))
-          yield return candidate;
-      }
-#endif
     }
 
-#if SUPPORTS_ASYNC
     private ulong _FindNextPrimeWithFullBuffer(object state) => this._FindNextPrimeWithFullBuffer((ulong)state);
-#endif
 
     private ulong _FindNextPrimeWithFullBuffer(ulong lastKnownPrime) {
       var candidate = lastKnownPrime;

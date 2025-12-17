@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_STREAM_ASYNC && SUPPORTS_ASYNC
+#if !SUPPORTS_STREAM_ASYNC
 using System.Threading.Tasks;
 using System.Threading;
 using Guard;

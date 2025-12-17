@@ -88,5 +88,29 @@ public class StringTests {
 
   #endregion
 
+  #region String.Join with char separator
+
+  [Test]
+  [Category("HappyPath")]
+  public void Join_CharSeparator_JoinsStrings() {
+    var result = string.Join(',', "a", "b", "c");
+    Assert.That(result, Is.EqualTo("a,b,c"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Join_CharSeparator_EmptyArray_ReturnsEmpty() {
+    var result = string.Join(',', new string[0]);
+    Assert.That(result, Is.EqualTo(string.Empty));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Join_CharSeparator_SingleElement_NoSeparator() {
+    var result = string.Join(',', "single");
+    Assert.That(result, Is.EqualTo("single"));
+  }
+
+  #endregion
 
 }

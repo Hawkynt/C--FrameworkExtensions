@@ -168,7 +168,26 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)
 
 * System.Threading
+  * [CancellationToken](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken)
+  * [CancellationTokenSource](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource)
   * [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
+
+* System.Threading.Tasks
+  * [Parallel](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel)
+  * [ParallelLoopResult](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallelloopresult)
+  * [ParallelLoopState](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallelloopstate)
+  * [ParallelOptions](https://learn.microsoft.com/dotnet/api/system.threading.tasks.paralleloptions)
+  * [Task](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task)
+  * [Task](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1)&lt;TResult&gt;
+  * [TaskCompletionSource](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcompletionsource-1)&lt;TResult&gt;
+  * [TaskContinuationOptions](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcontinuationoptions)
+  * [TaskCreationOptions](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcreationoptions)
+  * [TaskFactory](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskfactory)
+  * [TaskScheduler](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler)
+  * [TaskStatus](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskstatus)
+
+* System
+  * [AggregateException](https://learn.microsoft.com/dotnet/api/system.aggregateexception)
 
 ### Attributes
 
@@ -223,6 +242,35 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * T[] [Empty](https://learn.microsoft.com/dotnet/api/system.array.empty)&lt;T&gt;()
   * void [Fill](https://learn.microsoft.com/dotnet/api/system.array.fill#system-array-fill-1%28-0%28%29--0%29)&lt;T&gt;(T[] array, T value)
   * void [Fill](https://learn.microsoft.com/dotnet/api/system.array.fill#system-array-fill-1%28-0%28%29--0-system-int32-system-int32%29)&lt;T&gt;(T[] array, T value, int startIndex, int count)
+  * int [MaxLength](https://learn.microsoft.com/dotnet/api/system.array.maxlength) (static property)
+
+* System.BitConverter
+  * bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.bitconverter.trywritebytes)(Span&lt;byte&gt; destination, int value)
+  * bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.bitconverter.trywritebytes)(Span&lt;byte&gt; destination, long value)
+  * bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.bitconverter.trywritebytes)(Span&lt;byte&gt; destination, short value)
+  * bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.bitconverter.trywritebytes)(Span&lt;byte&gt; destination, float value)
+  * bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.bitconverter.trywritebytes)(Span&lt;byte&gt; destination, double value)
+
+* System.Char
+  * bool [IsAscii](https://learn.microsoft.com/dotnet/api/system.char.isascii)(char c)
+  * bool [IsAsciiDigit](https://learn.microsoft.com/dotnet/api/system.char.isasciidigit)(char c)
+  * bool [IsAsciiLetter](https://learn.microsoft.com/dotnet/api/system.char.isasciiletter)(char c)
+  * bool [IsAsciiLetterLower](https://learn.microsoft.com/dotnet/api/system.char.isasciiletterlower)(char c)
+  * bool [IsAsciiLetterUpper](https://learn.microsoft.com/dotnet/api/system.char.isasciiletterupper)(char c)
+  * bool [IsAsciiHexDigit](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigit)(char c)
+  * bool [IsAsciiHexDigitLower](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigitlower)(char c)
+  * bool [IsAsciiHexDigitUpper](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigitupper)(char c)
+
+* System.Convert
+  * string [ToHexString](https://learn.microsoft.com/dotnet/api/system.convert.tohexstring)(byte[] inArray)
+  * string [ToHexString](https://learn.microsoft.com/dotnet/api/system.convert.tohexstring)(byte[] inArray, int offset, int length)
+  * string [ToHexString](https://learn.microsoft.com/dotnet/api/system.convert.tohexstring)(ReadOnlySpan&lt;byte&gt; bytes)
+  * byte[] [FromHexString](https://learn.microsoft.com/dotnet/api/system.convert.fromhexstring)(string s)
+  * byte[] [FromHexString](https://learn.microsoft.com/dotnet/api/system.convert.fromhexstring)(ReadOnlySpan&lt;char&gt; chars)
+
+* System.Guid
+  * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.guid.tryparse#system-guid-tryparse%28system-readonlyspan%28%28system-char%29%29-system-guid%40%29)(ReadOnlySpan&lt;char&gt; input, out Guid result)
+  * Guid [Parse](https://learn.microsoft.com/dotnet/api/system.guid.parse#system-guid-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
 
 * System.IO.Path
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string%29)(string path1, string path2)
@@ -259,8 +307,23 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Random
   * Random [Shared](https://learn.microsoft.com/dotnet/api/system.random.shared) (static property)
 
+* System.TimeSpan
+  * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.timespan.tryparse#system-timespan-tryparse%28system-readonlyspan%28%28system-char%29%29-system-timespan%40%29)(ReadOnlySpan&lt;char&gt; input, out TimeSpan result)
+  * TimeSpan [Parse](https://learn.microsoft.com/dotnet/api/system.timespan.parse#system-timespan-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
+
+* System.Version
+  * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.version.tryparse#system-version-tryparse%28system-readonlyspan%28%28system-char%29%29-system-version%40%29)(ReadOnlySpan&lt;char&gt; input, out Version? result)
+  * Version [Parse](https://learn.microsoft.com/dotnet/api/system.version.parse#system-version-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
+
+* System.Int32, System.Int64, System.Double, System.Decimal
+  * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.int32.tryparse#system-int32-tryparse%28system-readonlyspan%28%28system-char%29%29-system-int32%40%29)(ReadOnlySpan&lt;char&gt; s, out T result)
+  * T [Parse](https://learn.microsoft.com/dotnet/api/system.int32.parse#system-int32-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; s)
+
 * System.String
   * string [Create](https://learn.microsoft.com/dotnet/api/system.string.create)&lt;TState&gt;(int length, TState state, SpanAction&lt;char, TState&gt; action)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-string%28%29%29)(char separator, params string[] values)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join-1%28system-char-system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;T&gt;(char separator, IEnumerable&lt;T&gt; values)
+  * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-object%28%29%29)(char separator, params object[] values)
 
 * System.ArgumentNullException
   * void [ThrowIfNull](https://learn.microsoft.com/dotnet/api/system.argumentnullexception.throwifnull)(object? argument, string? paramName = null)
@@ -307,6 +370,15 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-stringcomparison%29)(this ReadOnlySpan&lt;char&gt; span, ReadOnlySpan&lt;char&gt; value, StringComparison comparisonType)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-readonlyspan%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
   * bool [StartsWith](https://learn.microsoft.com/dotnet/api/system.memoryextensions.startswith#system-memoryextensions-startswith-1%28system-span%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; value)
+  * int [Count](https://learn.microsoft.com/dotnet/api/system.memoryextensions.count)&lt;T&gt;(this Span&lt;T&gt; span, T value)
+  * int [Count](https://learn.microsoft.com/dotnet/api/system.memoryextensions.count)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, T value)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;T&gt;(Span&lt;T&gt; span)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;T&gt;(Span&lt;T&gt; span, Comparison&lt;T&gt; comparison)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;T, TComparer&gt;(Span&lt;T&gt; span, TComparer comparer)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;TKey, TValue&gt;(Span&lt;TKey&gt; keys, Span&lt;TValue&gt; items)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;TKey, TValue&gt;(Span&lt;TKey&gt; keys, Span&lt;TValue&gt; items, Comparison&lt;TKey&gt; comparison)
+  * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;TKey, TValue, TComparer&gt;(Span&lt;TKey&gt; keys, Span&lt;TValue&gt; items, TComparer comparer)
+  * void [Reverse](https://learn.microsoft.com/dotnet/api/system.memoryextensions.reverse)&lt;T&gt;(Span&lt;T&gt; span)
 
 * System.Collections.Concurrent.ConcurrentBag
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1.clear)&lt;T&gt;(this ConcurrentBag&lt;T&gt;)
@@ -332,6 +404,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
 
+* System.Collections.Generic.Queue
+  * bool [TryDequeue](https://learn.microsoft.com/dotnet/api/system.collections.generic.queue-1.trydequeue)&lt;TItem&gt;(this Queue&lt;TItem&gt; @this, out TItem result)
+  * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.queue-1.trypeek)&lt;TItem&gt;(this Queue&lt;TItem&gt; @this, out TItem result)
+
+* System.Collections.Generic.List
+  * List&lt;T&gt; [Slice](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.slice)&lt;T&gt;(this List&lt;T&gt; @this, int start, int length)
+  * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.ensurecapacity)&lt;T&gt;(this List&lt;T&gt; @this, int capacity)
+
 * System.DateTime
   * int [Microsecond](https://learn.microsoft.com/dotnet/api/system.datetime.microsecond)(this DateTime @this)
   * int [Nanosecond](https://learn.microsoft.com/dotnet/api/system.datetime.nanosecond)(this DateTime @this)
@@ -353,9 +433,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * long [TickCount64](https://learn.microsoft.com/dotnet/api/system.environment.tickcount64)
   * int [ProcessId](https://learn.microsoft.com/dotnet/api/system.environment.processid)
   * string? [ProcessPath](https://learn.microsoft.com/dotnet/api/system.environment.processpath)
+  * bool [IsPrivilegedProcess](https://learn.microsoft.com/dotnet/api/system.environment.isprivilegedprocess)
 
 * System.Enum
   * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
+  * T[] [GetValues](https://learn.microsoft.com/dotnet/api/system.enum.getvalues)&lt;T&gt;()
+  * string[] [GetNames](https://learn.microsoft.com/dotnet/api/system.enum.getnames)&lt;T&gt;()
+  * string? [GetName](https://learn.microsoft.com/dotnet/api/system.enum.getname)&lt;T&gt;(T value)
+  * bool [IsDefined](https://learn.microsoft.com/dotnet/api/system.enum.isdefined)&lt;T&gt;(T value)
 
 * System.IO.DirectoryInfo
   * IEnumerable&lt;FileSystemInfo&gt; [EnumerateFileSystemInfos](https://learn.microsoft.com/dotnet/api/system.io.directoryinfo.enumeratefilesysteminfos#system-io-directoryinfo-enumeratefilesysteminfos)(this DirectoryInfo @this)
@@ -377,6 +462,19 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * Task [CopyToAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.copytoasync#system-io-stream-copytoasync%28system-io-stream-system-int32-system-threading-cancellationtoken%29)(this Stream @this, Stream destination, int bufferSize, CancellationToken cancellationToken)
   * int [Read](https://learn.microsoft.com/dotnet/api/system.io.stream.read#system-io-stream-read%28system-span%28%28system-byte%29%29%29)(this Stream @this, Span&lt;byte&gt; buffer)
   * void [Write](https://learn.microsoft.com/dotnet/api/system.io.stream.write#system-io-stream-write%28system-readonlyspan%28%28system-byte%29%29%29)(this Stream @this, ReadOnlySpan&lt;byte&gt; buffer)
+  * void [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactly)(this Stream @this, byte[] buffer, int offset, int count)
+  * void [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactly)(this Stream @this, Span&lt;byte&gt; buffer)
+  * int [ReadAtLeast](https://learn.microsoft.com/dotnet/api/system.io.stream.readatleast)(this Stream @this, Span&lt;byte&gt; buffer, int minimumBytes, bool throwOnEndOfStream = true)
+
+* System.IO.TextWriter
+  * void [Write](https://learn.microsoft.com/dotnet/api/system.io.textwriter.write#system-io-textwriter-write%28system-readonlyspan%28%28system-char%29%29%29)(this TextWriter @this, ReadOnlySpan&lt;char&gt; buffer)
+  * void [WriteLine](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writeline#system-io-textwriter-writeline%28system-readonlyspan%28%28system-char%29%29%29)(this TextWriter @this, ReadOnlySpan&lt;char&gt; buffer)
+
+* System.IO.TextReader
+  * int [Read](https://learn.microsoft.com/dotnet/api/system.io.textreader.read#system-io-textreader-read%28system-span%28%28system-char%29%29%29)(this TextReader @this, Span&lt;char&gt; buffer)
+
+* System.IO.Directory
+  * DirectoryInfo [CreateTempSubdirectory](https://learn.microsoft.com/dotnet/api/system.io.directory.createtempsubdirectory)(string? prefix = null)
 
 * System.Linq
   * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)
@@ -451,6 +549,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64%29)(this Random @this, long maxValue)
   * long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64-system-int64%29)(this Random @this, long minValue, long maxValue)
   * float [NextSingle](https://learn.microsoft.com/dotnet/api/system.random.nextsingle)(this Random @this)
+  * void [NextBytes](https://learn.microsoft.com/dotnet/api/system.random.nextbytes#system-random-nextbytes%28system-span%28%28system-byte%29%29%29)(this Random @this, Span&lt;byte&gt; buffer)
   * T[] [GetItems](https://learn.microsoft.com/dotnet/api/system.random.getitems)&lt;T&gt;(this Random @this, T[] choices, int length)
   * void [GetItems](https://learn.microsoft.com/dotnet/api/system.random.getitems)&lt;T&gt;(this Random @this, ReadOnlySpan&lt;T&gt; choices, Span&lt;T&gt; destination)
   * void [Shuffle](https://learn.microsoft.com/dotnet/api/system.random.shuffle)&lt;T&gt;(this Random @this, T[] values)
@@ -577,6 +676,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * TaskAwaiter&lt;TResult&gt; [GetAwaiter](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.getawaiter)&lt;TResult&gt;(this Task&lt;TResult&gt; task)
   * ConfiguredTaskAwaitable [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.configureawait#system-threading-tasks-task-configureawait%28system-boolean%29)(this Task task, bool continueOnCapturedContext)
   * ConfiguredTaskAwaitable&lt;TResult&gt; [ConfigureAwait](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1.configureawait#system-threading-tasks-task-1-configureawait%28system-boolean%29)&lt;TResult&gt;(this Task&lt;TResult&gt; task, bool continueOnCapturedContext)
+
+* System.Threading.CancellationTokenSource
+  * bool [TryReset](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.tryreset)(this CancellationTokenSource @this)
 
 * System.Threading.WaitHandle
   * void [Dispose](https://learn.microsoft.com/dotnet/api/system.threading.waithandle.dispose#system-threading-waithandle-dispose)(this WaitHandle @this)

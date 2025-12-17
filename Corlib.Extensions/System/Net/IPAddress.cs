@@ -20,9 +20,7 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Guard;
-#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
-#endif
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable once PartialTypeWithSinglePart
@@ -61,7 +59,7 @@ public static partial class IPAddressExtensions {
     }
   }
 
-#if SUPPORTS_ASYNC && NET45_OR_GREATER // this doesnt work on 4.0 but above
+#if SUPPORTS_TASK_AWAITER && NET45_OR_GREATER // Dns.GetHostEntryAsync requires .NET 4.5+
   /// <summary>
   ///   Gets the host name for the given ip-Address.
   /// </summary>

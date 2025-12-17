@@ -27,9 +27,7 @@ using System.Text;
 using Guard;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
-#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
-#endif
 #if !UNSAFE
 using System.Security.Permissions;
 #endif
@@ -744,7 +742,6 @@ public static partial class ArrayExtensions {
     Array.ForEach(@this, action);
   }
 
-#if SUPPORTS_ASYNC
   /// <summary>
   ///   Executes a callback with each element in an array in parallel.
   /// </summary>
@@ -759,8 +756,6 @@ public static partial class ArrayExtensions {
 
     Parallel.ForEach(@this, action);
   }
-
-#endif
 
   /// <summary>
   ///   Executes a callback with each element in an array.

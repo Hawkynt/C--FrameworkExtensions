@@ -23,9 +23,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Guard;
-#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
-#endif
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 

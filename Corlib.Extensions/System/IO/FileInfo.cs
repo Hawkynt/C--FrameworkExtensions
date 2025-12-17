@@ -32,11 +32,9 @@ using Encoding = System.Text.Encoding;
 #if !NETCOREAPP3_1_OR_GREATER && !NETSTANDARD
 using System.Security.AccessControl;
 #endif
-#if SUPPORTS_ASYNC
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
-#endif
 
 namespace System.IO;
 
@@ -195,8 +193,6 @@ public static partial class FileInfoExtensions {
   #endregion
 
   #region file copy/move/rename
-
-#if SUPPORTS_ASYNC
 
   /// <summary>
   ///   Asynchronously copies the current file to the specified target directory.
@@ -564,8 +560,6 @@ public static partial class FileInfoExtensions {
     // Refresh the target file's info to reflect the new state
     targetFile.Refresh();
   }
-
-#endif
 
   /// <summary>
   ///   Copies the specified <see cref="FileInfo" /> instance to the specified target <see cref="DirectoryInfo" />,
@@ -1926,7 +1920,7 @@ public static partial class FileInfoExtensions {
     await writer.WriteAsync(data).ConfigureAwait(false);
   }
 
-#elif SUPPORTS_ASYNC
+#else
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task<byte[]> ReadAllBytesAsync(this FileInfo @this, CancellationToken token = default) => Task.Factory.StartNew(() => File.ReadAllBytes(@this.FullName), token);
@@ -1947,10 +1941,10 @@ public static partial class FileInfoExtensions {
   public static Task WriteAllBytesAsync(this FileInfo @this, byte[] data, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllBytes(@this.FullName, data), token);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllLines(@this.FullName, data), token);
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllLines(@this.FullName, data.ToArray()), token);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllLines(@this.FullName, data, encoding), token);
+  public static Task WriteAllLinesAsync(this FileInfo @this, IEnumerable<string> data, Encoding encoding, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllLines(@this.FullName, data.ToArray(), encoding), token);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Task WriteAllTextAsync(this FileInfo @this, string data, CancellationToken token = default) => Task.Factory.StartNew(() => File.WriteAllText(@this.FullName, data), token);

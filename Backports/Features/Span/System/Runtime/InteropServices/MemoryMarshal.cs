@@ -71,6 +71,9 @@ public static class MemoryMarshal {
   public static Span<TTo> Cast<TFrom, TTo>(Span<TFrom> span)
     where TFrom : struct
     where TTo : struct {
+    if (span.Length == 0)
+      return Span<TTo>.Empty;
+
     var num1 = (uint)Unsafe.SizeOf<TFrom>();
     var num2 = (uint)Unsafe.SizeOf<TTo>();
     var length1 = (uint)span.Length;
@@ -90,6 +93,9 @@ public static class MemoryMarshal {
   public static ReadOnlySpan<TTo> Cast<TFrom, TTo>(ReadOnlySpan<TFrom> span)
     where TFrom : struct
     where TTo : struct {
+    if (span.Length == 0)
+      return ReadOnlySpan<TTo>.Empty;
+
     var num1 = (uint)Unsafe.SizeOf<TFrom>();
     var num2 = (uint)Unsafe.SizeOf<TTo>();
     var length1 = (uint)span.Length;

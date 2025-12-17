@@ -23,21 +23,43 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
+/// <summary>
+/// Provides extension methods for memory-related types.
+/// This class name is required by the compiler for certain wellknown members.
+/// </summary>
+public static partial class MemoryExtensions {
+
+  extension(string text)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> AsSpan() => text == null ? default : new(text);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> AsSpan(int start) => text == null ? default : new(text, start, text.Length - start);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<char> AsSpan(int start, int length) => text == null ? default : new(text, start, length);
+  }
+
+  extension<T>(T[] array)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> AsSpan() => array == null ? default : new(array);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> AsSpan(int start) => array == null ? default : new(array, start, array.Length - start);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> AsSpan(int start, int length) => array == null ? default : new(array, start, length);
+  }
+}
+
 public static partial class MemoryPolyfills {
 
   extension<T>(T[] @this)
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan() => new(@this);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start) => new(@this, start, @this.Length - start);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(int start, int length) => new(@this, start, length);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<T> AsSpan(Index startIndex) => AsSpan(@this, startIndex.GetOffset(@this.Length));
+    public Span<T> AsSpan(Index startIndex) => @this.AsSpan(startIndex.GetOffset(@this.Length));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(Range range) {
@@ -49,16 +71,7 @@ public static partial class MemoryPolyfills {
   extension(string @this)
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> AsSpan() => new(@this);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> AsSpan(int start) => new(@this, start, @this.Length - start);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> AsSpan(int start, int length) => new(@this, start, length);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<char> AsSpan(Index startIndex) => AsSpan(@this, startIndex.GetOffset(@this.Length));
+    public ReadOnlySpan<char> AsSpan(Index startIndex) => @this.AsSpan(startIndex.GetOffset(@this.Length));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<char> AsSpan(Range range) {

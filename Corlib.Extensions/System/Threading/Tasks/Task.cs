@@ -17,8 +17,6 @@
 
 #endregion
 
-#if SUPPORTS_ASYNC
-
 namespace System.Threading.Tasks;
 
 public static partial class TaskExtensions {
@@ -43,5 +41,3 @@ public static partial class TaskExtensions {
     }
   }
 }
-
-#endif

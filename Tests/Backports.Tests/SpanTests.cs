@@ -400,4 +400,68 @@ public class SpanTests {
 
   #endregion
 
+  #region Span<T> - Slice (single argument)
+
+  [Test]
+  [Category("HappyPath")]
+  public void Span_Slice_SingleArg_ReturnsRemainder() {
+    Span<int> span = stackalloc int[] { 1, 2, 3, 4, 5 };
+    var sliced = span.Slice(2);
+    Assert.That(sliced.Length, Is.EqualTo(3));
+    Assert.That(sliced[0], Is.EqualTo(3));
+    Assert.That(sliced[2], Is.EqualTo(5));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Span_Slice_SingleArg_AtEnd_ReturnsEmpty() {
+    var array = new[] { 1, 2, 3 };
+    var span = new Span<int>(array);
+    var sliced = span.Slice(3);
+    Assert.That(sliced.Length, Is.EqualTo(0));
+    Assert.That(sliced.IsEmpty, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Span_Slice_SingleArg_AtStart_ReturnsAll() {
+    var array = new[] { 1, 2, 3 };
+    var span = new Span<int>(array);
+    var sliced = span.Slice(0);
+    Assert.That(sliced.Length, Is.EqualTo(3));
+  }
+
+  #endregion
+
+  #region ReadOnlySpan<T> - Slice (single argument)
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReadOnlySpan_Slice_SingleArg_ReturnsRemainder() {
+    ReadOnlySpan<char> span = "Hello World".AsSpan();
+    var sliced = span.Slice(6);
+    Assert.That(sliced.ToString(), Is.EqualTo("World"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void ReadOnlySpan_Slice_SingleArg_AtEnd_ReturnsEmpty() {
+    var array = new[] { 1, 2, 3 };
+    var span = new ReadOnlySpan<int>(array);
+    var sliced = span.Slice(3);
+    Assert.That(sliced.Length, Is.EqualTo(0));
+    Assert.That(sliced.IsEmpty, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void ReadOnlySpan_Slice_SingleArg_AtStart_ReturnsAll() {
+    var array = new[] { 1, 2, 3 };
+    var span = new ReadOnlySpan<int>(array);
+    var sliced = span.Slice(0);
+    Assert.That(sliced.Length, Is.EqualTo(3));
+  }
+
+  #endregion
+
 }

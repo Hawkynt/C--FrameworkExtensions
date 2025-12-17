@@ -4,10 +4,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using NUnit.Framework;
-#if NET40_OR_GREATER || NETCOREAPP
 using System.Threading.Tasks;
-#endif
+using NUnit.Framework;
 
 namespace System.IO;
 
@@ -915,8 +913,6 @@ public class IOComprehensiveTest {
 
   #endregion
 
-#if NET40_OR_GREATER || NETCOREAPP
-
   #region Async Operations Tests
 
   [Test]
@@ -967,8 +963,6 @@ public class IOComprehensiveTest {
   }
 
   #endregion
-
-#endif
 
   #region Edge Cases and Error Handling Tests
 
