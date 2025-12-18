@@ -113,4 +113,56 @@ public class StringTests {
 
   #endregion
 
+  #region String.Concat with ReadOnlySpan<char>
+
+  [Test]
+  [Category("HappyPath")]
+  public void Concat_TwoSpans_ConcatenatesCorrectly() {
+    ReadOnlySpan<char> span1 = "Hello".AsSpan();
+    ReadOnlySpan<char> span2 = " World".AsSpan();
+    var result = string.Concat(span1, span2);
+    Assert.That(result, Is.EqualTo("Hello World"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Concat_ThreeSpans_ConcatenatesCorrectly() {
+    ReadOnlySpan<char> span1 = "Hello".AsSpan();
+    ReadOnlySpan<char> span2 = " ".AsSpan();
+    ReadOnlySpan<char> span3 = "World".AsSpan();
+    var result = string.Concat(span1, span2, span3);
+    Assert.That(result, Is.EqualTo("Hello World"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Concat_FourSpans_ConcatenatesCorrectly() {
+    ReadOnlySpan<char> span1 = "A".AsSpan();
+    ReadOnlySpan<char> span2 = "B".AsSpan();
+    ReadOnlySpan<char> span3 = "C".AsSpan();
+    ReadOnlySpan<char> span4 = "D".AsSpan();
+    var result = string.Concat(span1, span2, span3, span4);
+    Assert.That(result, Is.EqualTo("ABCD"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Concat_EmptySpans_ReturnsEmptyString() {
+    ReadOnlySpan<char> span1 = ReadOnlySpan<char>.Empty;
+    ReadOnlySpan<char> span2 = ReadOnlySpan<char>.Empty;
+    var result = string.Concat(span1, span2);
+    Assert.That(result, Is.EqualTo(string.Empty));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Concat_OneEmptySpan_ReturnsConcatenation() {
+    ReadOnlySpan<char> span1 = "Hello".AsSpan();
+    ReadOnlySpan<char> span2 = ReadOnlySpan<char>.Empty;
+    var result = string.Concat(span1, span2);
+    Assert.That(result, Is.EqualTo("Hello"));
+  }
+
+  #endregion
+
 }

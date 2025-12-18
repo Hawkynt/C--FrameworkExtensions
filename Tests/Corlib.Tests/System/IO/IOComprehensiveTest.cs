@@ -916,48 +916,48 @@ public class IOComprehensiveTest {
   #region Async Operations Tests
 
   [Test]
-  public async Task FileInfoExtensions_ReadAllTextAsync_ReadsCorrectly() {
+  public void FileInfoExtensions_ReadAllTextAsync_ReadsCorrectly() {
     var content = "Async read content";
     var file = this.CreateTestFile(content);
 
-    var result = await file.ReadAllTextAsync();
+    var result = file.ReadAllTextAsync().Result;
 
     Assert.That(result, Is.EqualTo(content));
   }
 
   [Test]
-  public async Task FileInfoExtensions_WriteAllTextAsync_WritesCorrectly() {
+  public void FileInfoExtensions_WriteAllTextAsync_WritesCorrectly() {
     var file = new FileInfo(Path.Combine(this._tempDirectory, "async.txt"));
     this._tempFiles.Add(file.FullName);
     var content = "Async written content";
 
-    await file.WriteAllTextAsync(content);
+    file.WriteAllTextAsync(content).Wait();
 
     Assert.That(file.Exists, Is.True);
     Assert.That(File.ReadAllText(file.FullName), Is.EqualTo(content));
   }
 
   [Test]
-  public async Task FileInfoExtensions_CopyToAsync_CopiesToDestination() {
+  public void FileInfoExtensions_CopyToAsync_CopiesToDestination() {
     var sourceFile = this.CreateTestFile("Async copy content");
     var destFile = new FileInfo(Path.Combine(this._tempDirectory, "async_dest.txt"));
     this._tempFiles.Add(destFile.FullName);
 
-    await sourceFile.CopyToAsync(destFile);
+    sourceFile.CopyToAsync(destFile).Wait();
 
     Assert.That(destFile.Exists, Is.True);
     Assert.That(File.ReadAllText(destFile.FullName), Is.EqualTo("Async copy content"));
   }
 
   [Test]
-  public async Task FileInfoExtensions_ReadAllBytesAsync_WithCancellation_SupportsCancellation() {
+  public void FileInfoExtensions_ReadAllBytesAsync_WithCancellation_SupportsCancellation() {
     var content = "Cancellation test content";
     var file = this.CreateTestFile(content);
 
     using var cts = new CancellationTokenSource();
 
     // Don't cancel immediately, let it complete
-    var result = await file.ReadAllBytesAsync(cts.Token);
+    var result = file.ReadAllBytesAsync(cts.Token).Result;
 
     Assert.That(Encoding.UTF8.GetString(result), Is.EqualTo(content));
   }

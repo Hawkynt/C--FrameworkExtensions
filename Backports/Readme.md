@@ -155,17 +155,25 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Runtime.Intrinsics.Arm
   * [AdvSimd](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.advsimd)
+  * [ArmBase](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.armbase) (with software fallbacks for LeadingZeroCount, ReverseElementBits, Yield, MultiplyHigh)
 
 * System.Runtime.Intrinsics.X86
+  * [Aes](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.aes)
   * [Avx](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx)
   * [Avx2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx2)
   * [Avx512F](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx512f)
+  * [Bmi1](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi1) (with software fallbacks for TrailingZeroCount, ExtractLowestSetBit, etc.)
+  * [Bmi2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi2) (with software fallbacks for ParallelBitExtract, ParallelBitDeposit, etc.)
+  * [Lzcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.lzcnt) (with software fallback for LeadingZeroCount)
+  * [Pclmulqdq](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.pclmulqdq)
+  * [Popcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.popcnt) (with software fallback for PopCount)
   * [Sse](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse)
   * [Sse2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse2)
   * [Sse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse3)
   * [Sse41](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse41)
   * [Sse42](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse42)
   * [Ssse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.ssse3)
+  * [X86Base](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.x86base)
 
 * System.Threading
   * [CancellationToken](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken)
@@ -286,6 +294,12 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Math
   * T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
+  * double [CopySign](https://learn.microsoft.com/dotnet/api/system.math.copysign)(double x, double y)
+  * float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
+  * double [ScaleB](https://learn.microsoft.com/dotnet/api/system.math.scaleb)(double x, int n)
+  * int [ILogB](https://learn.microsoft.com/dotnet/api/system.math.ilogb)(double x)
+  * double [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalestimate)(double x)
+  * double [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalsqrtestimate)(double x)
 
 * System.DateTime
   * DateTime [UnixEpoch](https://learn.microsoft.com/dotnet/api/system.datetime.unixepoch)
@@ -303,6 +317,12 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * float [Lerp](https://learn.microsoft.com/dotnet/api/system.single.lerp)
   * float [DegreesToRadians](https://learn.microsoft.com/dotnet/api/system.single.degreestoradians)
   * float [RadiansToDegrees](https://learn.microsoft.com/dotnet/api/system.single.radianstodegrees)
+
+* System.Double (double)
+  * bool [IsFinite](https://learn.microsoft.com/dotnet/api/system.double.isfinite)
+  * bool [IsNegative](https://learn.microsoft.com/dotnet/api/system.double.isnegative)
+  * bool [IsNormal](https://learn.microsoft.com/dotnet/api/system.double.isnormal)
+  * bool [IsSubnormal](https://learn.microsoft.com/dotnet/api/system.double.issubnormal)
 
 * System.Random
   * Random [Shared](https://learn.microsoft.com/dotnet/api/system.random.shared) (static property)
@@ -324,6 +344,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-string%28%29%29)(char separator, params string[] values)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join-1%28system-char-system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;T&gt;(char separator, IEnumerable&lt;T&gt; values)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-object%28%29%29)(char separator, params object[] values)
+  * string [Concat](https://learn.microsoft.com/dotnet/api/system.string.concat#system-string-concat%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; str0, ReadOnlySpan&lt;char&gt; str1)
+  * string [Concat](https://learn.microsoft.com/dotnet/api/system.string.concat#system-string-concat%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; str0, ReadOnlySpan&lt;char&gt; str1, ReadOnlySpan&lt;char&gt; str2)
+  * string [Concat](https://learn.microsoft.com/dotnet/api/system.string.concat#system-string-concat%28system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29-system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; str0, ReadOnlySpan&lt;char&gt; str1, ReadOnlySpan&lt;char&gt; str2, ReadOnlySpan&lt;char&gt; str3)
 
 * System.ArgumentNullException
   * void [ThrowIfNull](https://learn.microsoft.com/dotnet/api/system.argumentnullexception.throwifnull)(object? argument, string? paramName = null)
@@ -347,6 +370,16 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.ObjectDisposedException
   * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, object instance)
   * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, Type type)
+
+* System.Threading.Interlocked
+  * int [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-int32%40-system-int32%29)(ref int location1, int value)
+  * long [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-int64%40-system-int64%29)(ref long location1, long value)
+  * uint [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-uint32%40-system-uint32%29)(ref uint location1, uint value)
+  * ulong [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-uint64%40-system-uint64%29)(ref ulong location1, ulong value)
+  * int [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-int32%40-system-int32%29)(ref int location1, int value)
+  * long [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-int64%40-system-int64%29)(ref long location1, long value)
+  * uint [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-uint32%40-system-uint32%29)(ref uint location1, uint value)
+  * ulong [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-uint64%40-system-uint64%29)(ref ulong location1, ulong value)
 
 ### Methods
 
@@ -475,6 +508,13 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.IO.Directory
   * DirectoryInfo [CreateTempSubdirectory](https://learn.microsoft.com/dotnet/api/system.io.directory.createtempsubdirectory)(string? prefix = null)
+
+* System.Type
+  * bool [IsAssignableTo](https://learn.microsoft.com/dotnet/api/system.type.isassignableto)(this Type @this, Type? targetType)
+
+* System.Text.StringBuilder
+  * StringBuilder [Append](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.append#system-text-stringbuilder-append%28system-readonlyspan%28%28system-char%29%29%29)(this StringBuilder @this, ReadOnlySpan&lt;char&gt; value)
+  * StringBuilder [Insert](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.insert#system-text-stringbuilder-insert%28system-int32-system-readonlyspan%28%28system-char%29%29%29)(this StringBuilder @this, int index, ReadOnlySpan&lt;char&gt; value)
 
 * System.Linq
   * TResult[] [ToArray](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.toarray)&lt;TResult&gt;(this IEnumerable&lt;TResult&gt; @this)

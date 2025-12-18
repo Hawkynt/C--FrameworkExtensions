@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NUnit.Framework;
 
@@ -280,7 +281,7 @@ public class CompilerSugarTests {
     Assert.That(result, Is.Not.Null);
   }
 
-  private static string EnsureNotNull([System.Diagnostics.CodeAnalysis.NotNull] string value) {
+  private static string EnsureNotNull([NotNull] string value) {
     if (value == null)
       throw new ArgumentNullException(nameof(value));
     return value;

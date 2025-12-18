@@ -24,9 +24,7 @@ using Guard;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-#if SUPPORTS_INTRINSICS
 using System.Runtime.Intrinsics.X86;
-#endif
 using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Global
@@ -794,14 +792,10 @@ public static partial class MathEx {
   /// byte extracted = source.ParallelBitExtract(mask); // extracted == 0b_1101
   /// </code>
   /// </example>
-#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static byte ParallelBitExtract(this byte @this, byte mask) {
-#if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return (byte)Bmi2.ParallelBitExtract(@this, mask);
-#endif
 
     var maskedValue = @this & mask;
     if (maskedValue == 0)
@@ -834,14 +828,10 @@ public static partial class MathEx {
   /// ushort result = source.ParallelBitExtract(mask); // result == 0b_1011
   /// </code>
   /// </example>
-#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static ushort ParallelBitExtract(this ushort @this, ushort mask) {
-#if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return (ushort)Bmi2.ParallelBitExtract(@this, mask);
-#endif
 
     var maskedValue = @this & mask;
     if (maskedValue == 0)
@@ -876,14 +866,10 @@ public static partial class MathEx {
   /// uint result = value.ParallelBitExtract(mask); // result == 0b_1010
   /// </code>
   /// </example>
-#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static uint ParallelBitExtract(this uint @this, uint mask) {
-#if SUPPORTS_INTRINSICS
     if (Bmi2.IsSupported)
       return Bmi2.ParallelBitExtract(@this, mask);
-#endif
 
     var maskedValue = (int)(@this & mask);
     if (maskedValue == 0)
@@ -960,14 +946,10 @@ public static partial class MathEx {
   /// ulong result = value.ParallelBitExtract(mask); // result == 0b_1111_0000
   /// </code>
   /// </example>
-#if SUPPORTS_INTRINSICS
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
   public static ulong ParallelBitExtract(this ulong @this, ulong mask) {
-#if SUPPORTS_INTRINSICS
     if (Bmi2.X64.IsSupported)
       return Bmi2.X64.ParallelBitExtract(@this, mask);
-#endif
 
     var result = 0UL;
     if ((@this & mask) != 0) {
