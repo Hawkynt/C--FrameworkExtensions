@@ -136,21 +136,23 @@ public static partial class TaskPolyfills {
 
       var tcs = new TaskCompletionSource<object?>();
       var remaining = tasks.Length;
-      var exceptions = new System.Collections.Generic.List<Exception>();
+      var exceptions = new Collections.Generic.List<Exception>();
       var lockObj = new object();
 
       foreach (var task in tasks)
         task.ContinueWith(
           t => {
             lock (lockObj) {
-              if (t.IsFaulted && t.Exception != null)
+              if (t is { IsFaulted: true, Exception: not null })
                 exceptions.AddRange(t.Exception.InnerExceptions);
 
-              if (Interlocked.Decrement(ref remaining) == 0)
-                if (exceptions.Count > 0)
-                  tcs.TrySetException(exceptions);
-                else
-                  tcs.TrySetResult(null);
+              if (Interlocked.Decrement(ref remaining) != 0)
+                return;
+              
+              if (exceptions.Count > 0)
+                tcs.TrySetException(exceptions);
+              else
+                tcs.TrySetResult(null);
             }
           },
           CancellationToken.None,
@@ -176,7 +178,7 @@ public static partial class TaskPolyfills {
       var tcs = new TaskCompletionSource<TResult[]>();
       var results = new TResult[tasks.Length];
       var remaining = tasks.Length;
-      var exceptions = new System.Collections.Generic.List<Exception>();
+      var exceptions = new Collections.Generic.List<Exception>();
       var lockObj = new object();
 
       for (var i = 0; i < tasks.Length; ++i) {
@@ -184,16 +186,18 @@ public static partial class TaskPolyfills {
         tasks[i].ContinueWith(
           t => {
             lock (lockObj) {
-              if (t.IsFaulted && t.Exception != null)
+              if (t is { IsFaulted: true, Exception: not null })
                 exceptions.AddRange(t.Exception.InnerExceptions);
               else if (t.Status == TaskStatus.RanToCompletion)
                 results[index] = t.Result;
 
-              if (Interlocked.Decrement(ref remaining) == 0)
-                if (exceptions.Count > 0)
-                  tcs.TrySetException(exceptions);
-                else
-                  tcs.TrySetResult(results);
+              if (Interlocked.Decrement(ref remaining) != 0)
+                return;
+
+              if (exceptions.Count > 0)
+                tcs.TrySetException(exceptions);
+              else
+                tcs.TrySetResult(results);
             }
           },
           CancellationToken.None,

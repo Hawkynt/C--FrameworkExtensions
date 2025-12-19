@@ -3028,9 +3028,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<T> AddSaturate<T>(Vector64<T> left, Vector64<T> right) where T : struct {
       var result = Vector64<T>.Zero;
       for (var i = 0; i < Vector64<T>.Count; ++i) {
-        var l = GetElement(left, i);
-        var r = GetElement(right, i);
-        result = WithElement(result, i, Scalar<T>.AddSaturate(l, r));
+        var l = Vector64.GetElement(left, i);
+        var r = Vector64.GetElement(right, i);
+        result = Vector64.WithElement(result, i, Scalar<T>.AddSaturate(l, r));
       }
       return result;
     }
@@ -3042,9 +3042,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<T> SubtractSaturate<T>(Vector64<T> left, Vector64<T> right) where T : struct {
       var result = Vector64<T>.Zero;
       for (var i = 0; i < Vector64<T>.Count; ++i) {
-        var l = GetElement(left, i);
-        var r = GetElement(right, i);
-        result = WithElement(result, i, Scalar<T>.SubtractSaturate(l, r));
+        var l = Vector64.GetElement(left, i);
+        var r = Vector64.GetElement(right, i);
+        result = Vector64.WithElement(result, i, Scalar<T>.SubtractSaturate(l, r));
       }
       return result;
     }
@@ -3058,9 +3058,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MinMagnitude(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3072,9 +3072,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MinMagnitude(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3086,9 +3086,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MaxMagnitude(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3100,9 +3100,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MaxMagnitude(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3114,12 +3114,12 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MinMagnitudeNumber(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
         if (float.IsNaN(xv) || float.IsNaN(yv))
-          result = WithElement(result, i, float.NaN);
+          result = Vector64.WithElement(result, i, float.NaN);
         else
-          result = WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
+          result = Vector64.WithElement(result, i, MathF.Abs(xv) < MathF.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3131,12 +3131,12 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MinMagnitudeNumber(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
         if (double.IsNaN(xv) || double.IsNaN(yv))
-          result = WithElement(result, i, double.NaN);
+          result = Vector64.WithElement(result, i, double.NaN);
         else
-          result = WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
+          result = Vector64.WithElement(result, i, Math.Abs(xv) < Math.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3148,12 +3148,12 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MaxMagnitudeNumber(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
         if (float.IsNaN(xv) || float.IsNaN(yv))
-          result = WithElement(result, i, float.NaN);
+          result = Vector64.WithElement(result, i, float.NaN);
         else
-          result = WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
+          result = Vector64.WithElement(result, i, MathF.Abs(xv) > MathF.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3165,12 +3165,12 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MaxMagnitudeNumber(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
         if (double.IsNaN(xv) || double.IsNaN(yv))
-          result = WithElement(result, i, double.NaN);
+          result = Vector64.WithElement(result, i, double.NaN);
         else
-          result = WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
+          result = Vector64.WithElement(result, i, Math.Abs(xv) > Math.Abs(yv) ? xv : yv);
       }
       return result;
     }
@@ -3182,9 +3182,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MinNumber(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Min(xv, yv)));
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Min(xv, yv)));
       }
       return result;
     }
@@ -3196,9 +3196,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MinNumber(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Min(xv, yv)));
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Min(xv, yv)));
       }
       return result;
     }
@@ -3210,9 +3210,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> MaxNumber(Vector64<float> x, Vector64<float> y) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Max(xv, yv)));
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, float.IsNaN(xv) ? yv : (float.IsNaN(yv) ? xv : MathF.Max(xv, yv)));
       }
       return result;
     }
@@ -3224,9 +3224,9 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> MaxNumber(Vector64<double> x, Vector64<double> y) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var xv = GetElement(x, i);
-        var yv = GetElement(y, i);
-        result = WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Max(xv, yv)));
+        var xv = Vector64.GetElement(x, i);
+        var yv = Vector64.GetElement(y, i);
+        result = Vector64.WithElement(result, i, double.IsNaN(xv) ? yv : (double.IsNaN(yv) ? xv : Math.Max(xv, yv)));
       }
       return result;
     }
@@ -3238,19 +3238,19 @@ public static partial class Vector64Polyfills {
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector64<T> ClampNative<T>(Vector64<T> value, Vector64<T> min, Vector64<T> max) where T : struct
-      => Min(Max(value, min), max);
+      => Vector64.Min(Vector64.Max(value, min), max);
 
     /// <summary>
     /// Returns element-wise minimum using native operations.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector64<T> MinNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Min(x, y);
+    public static Vector64<T> MinNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Vector64.Min(x, y);
 
     /// <summary>
     /// Returns element-wise maximum using native operations.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector64<T> MaxNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Max(x, y);
+    public static Vector64<T> MaxNative<T>(Vector64<T> x, Vector64<T> y) where T : struct => Vector64.Max(x, y);
 
     // ===== FLOAT PREDICATES =====
 
@@ -3262,8 +3262,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsFinite(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsFinite(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3276,8 +3276,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, !double.IsNaN(v) && !double.IsInfinity(v) ? allBitsSet : 0d);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, !double.IsNaN(v) && !double.IsInfinity(v) ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3290,8 +3290,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsInfinity(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsInfinity(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3304,8 +3304,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, double.IsInfinity(v) ? allBitsSet : 0d);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsInfinity(v) ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3318,8 +3318,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsNegativeInfinity(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsNegativeInfinity(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3332,8 +3332,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, double.IsNegativeInfinity(v) ? allBitsSet : 0d);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsNegativeInfinity(v) ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3346,8 +3346,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsPositiveInfinity(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsPositiveInfinity(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3360,8 +3360,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, double.IsPositiveInfinity(v) ? allBitsSet : 0d);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, double.IsPositiveInfinity(v) ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3374,8 +3374,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsNormal(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsNormal(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3388,11 +3388,11 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
+        var v = Vector64.GetElement(vector, i);
         var bits = BitConverter.DoubleToInt64Bits(v);
         var exponent = (int)((bits >> 52) & 0x7FF);
         var isNormal = exponent != 0 && exponent != 0x7FF && v != 0d;
-        result = WithElement(result, i, isNormal ? allBitsSet : 0d);
+        result = Vector64.WithElement(result, i, isNormal ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3405,8 +3405,8 @@ public static partial class Vector64Polyfills {
       var result = Vector64<float>.Zero;
       var allBitsSet = BitConverter.Int32BitsToSingle(-1);
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        result = WithElement(result, i, float.IsSubnormal(v) ? allBitsSet : 0f);
+        var v = Vector64.GetElement(vector, i);
+        result = Vector64.WithElement(result, i, float.IsSubnormal(v) ? allBitsSet : 0f);
       }
       return result;
     }
@@ -3419,12 +3419,12 @@ public static partial class Vector64Polyfills {
       var result = Vector64<double>.Zero;
       var allBitsSet = BitConverter.Int64BitsToDouble(-1L);
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
+        var v = Vector64.GetElement(vector, i);
         var bits = BitConverter.DoubleToInt64Bits(v);
         var exponent = (int)((bits >> 52) & 0x7FF);
         var mantissa = bits & 0xFFFFFFFFFFFFF;
         var isSubnormal = exponent == 0 && mantissa != 0;
-        result = WithElement(result, i, isSubnormal ? allBitsSet : 0d);
+        result = Vector64.WithElement(result, i, isSubnormal ? allBitsSet : 0d);
       }
       return result;
     }
@@ -3437,9 +3437,9 @@ public static partial class Vector64Polyfills {
       var result = Vector64<T>.Zero;
       var allBitsSet = Scalar<T>.AllBitsSet;
       for (var i = 0; i < Vector64<T>.Count; ++i) {
-        var v = GetElement(vector, i);
+        var v = Vector64.GetElement(vector, i);
         var isOdd = (Convert.ToInt64(v) & 1) == 1;
-        result = WithElement(result, i, isOdd ? allBitsSet : Scalar<T>.Zero());
+        result = Vector64.WithElement(result, i, isOdd ? allBitsSet : Scalar<T>.Zero());
       }
       return result;
     }
@@ -3452,9 +3452,9 @@ public static partial class Vector64Polyfills {
       var result = Vector64<T>.Zero;
       var allBitsSet = Scalar<T>.AllBitsSet;
       for (var i = 0; i < Vector64<T>.Count; ++i) {
-        var v = GetElement(vector, i);
+        var v = Vector64.GetElement(vector, i);
         var isEven = (Convert.ToInt64(v) & 1) == 0;
-        result = WithElement(result, i, isEven ? allBitsSet : Scalar<T>.Zero());
+        result = Vector64.WithElement(result, i, isEven ? allBitsSet : Scalar<T>.Zero());
       }
       return result;
     }
@@ -3468,7 +3468,7 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> Sin(Vector64<float> vector) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i)
-        result = WithElement(result, i, MathF.Sin(GetElement(vector, i)));
+        result = Vector64.WithElement(result, i, MathF.Sin(Vector64.GetElement(vector, i)));
       return result;
     }
 
@@ -3479,7 +3479,7 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> Sin(Vector64<double> vector) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i)
-        result = WithElement(result, i, Math.Sin(GetElement(vector, i)));
+        result = Vector64.WithElement(result, i, Math.Sin(Vector64.GetElement(vector, i)));
       return result;
     }
 
@@ -3490,7 +3490,7 @@ public static partial class Vector64Polyfills {
     public static Vector64<float> Cos(Vector64<float> vector) {
       var result = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i)
-        result = WithElement(result, i, MathF.Cos(GetElement(vector, i)));
+        result = Vector64.WithElement(result, i, MathF.Cos(Vector64.GetElement(vector, i)));
       return result;
     }
 
@@ -3501,7 +3501,7 @@ public static partial class Vector64Polyfills {
     public static Vector64<double> Cos(Vector64<double> vector) {
       var result = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i)
-        result = WithElement(result, i, Math.Cos(GetElement(vector, i)));
+        result = Vector64.WithElement(result, i, Math.Cos(Vector64.GetElement(vector, i)));
       return result;
     }
 
@@ -3513,9 +3513,9 @@ public static partial class Vector64Polyfills {
       var sin = Vector64<float>.Zero;
       var cos = Vector64<float>.Zero;
       for (var i = 0; i < Vector64<float>.Count; ++i) {
-        var v = GetElement(vector, i);
-        sin = WithElement(sin, i, MathF.Sin(v));
-        cos = WithElement(cos, i, MathF.Cos(v));
+        var v = Vector64.GetElement(vector, i);
+        sin = Vector64.WithElement(sin, i, MathF.Sin(v));
+        cos = Vector64.WithElement(cos, i, MathF.Cos(v));
       }
       return (sin, cos);
     }
@@ -3528,9 +3528,9 @@ public static partial class Vector64Polyfills {
       var sin = Vector64<double>.Zero;
       var cos = Vector64<double>.Zero;
       for (var i = 0; i < Vector64<double>.Count; ++i) {
-        var v = GetElement(vector, i);
-        sin = WithElement(sin, i, Math.Sin(v));
-        cos = WithElement(cos, i, Math.Cos(v));
+        var v = Vector64.GetElement(vector, i);
+        sin = Vector64.WithElement(sin, i, Math.Sin(v));
+        cos = Vector64.WithElement(cos, i, Math.Cos(v));
       }
       return (sin, cos);
     }

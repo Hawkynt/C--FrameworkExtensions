@@ -27,9 +27,9 @@
 
 namespace System;
 
-<#for(var i=0;i<=4;++i){#>
-public delegate void Action<#=i==0?string.Empty:"<"+string.Join(", ",Enumerable.Range(1,i).Select(j=>"in T"+j))+">"#>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
-<#}#>
+<#for(var i=0;i<=4;++i){ if(i!=1){#>
+  public delegate void Action<#=i==0?string.Empty:"<"+string.Join(", ",Enumerable.Range(1,i).Select(j=>"in T"+j))+">"#>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
+<#}}#>
 
 <#for(var i=0;i<=4;++i){#>
 public delegate TResult Func<<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"in T"+j))#><#=i<1?string.Empty:", "#>out TResult>(<#=string.Join(", ",Enumerable.Range(1,i).Select(j=>"T"+j+" t"+j))#>);
