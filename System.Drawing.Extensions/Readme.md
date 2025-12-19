@@ -79,9 +79,16 @@ Extension methods for System.Drawing types (bitmaps, images, colors, graphics).
 
 #### Color Space Conversion
 
-- **`GetLuminance()`** - Calculate luminance (Y component in YUV)
-- **`GetChrominanceU()`** - Calculate U chrominance component
-- **`GetChrominanceV()`** - Calculate V chrominance component
+- **`Rgb`** / **`RgbNormalized`** - Convert to RGB color space
+- **`Hsl`** / **`HslNormalized`** - Convert to HSL (Hue, Saturation, Lightness)
+- **`Hsv`** / **`HsvNormalized`** - Convert to HSV (Hue, Saturation, Value)
+- **`Hwb`** / **`HwbNormalized`** - Convert to HWB (Hue, Whiteness, Blackness)
+- **`Cmyk`** / **`CmykNormalized`** - Convert to CMYK (Cyan, Magenta, Yellow, Key)
+- **`Xyz`** / **`XyzNormalized`** - Convert to CIE XYZ tristimulus values
+- **`Lab`** / **`LabNormalized`** - Convert to CIE L*a*b* perceptual color space
+- **`Yuv`** / **`YuvNormalized`** - Convert to YUV (Luma + chrominance)
+- **`YCbCr`** / **`YCbCrNormalized`** - Convert to YCbCr digital video encoding
+- **`Din99`** / **`Din99Normalized`** - Convert to DIN99 (DIN 6176) perceptual space
 
 #### Color Comparison
 
@@ -158,6 +165,87 @@ Format-specific bitmap pixel access implementations:
 - **UnsupportedDrawingBitmapLocker** - Fallback for unsupported formats
 
 Each locker provides optimized pixel access for its specific format.
+
+---
+
+## Color Spaces (`System.Drawing.ColorSpaces`)
+
+A comprehensive color space conversion and comparison library with zero-cost generic abstractions.
+
+### Color Space Types
+
+| Type | Components | Description |
+|------|------------|-------------|
+| `Rgb` / `RgbNormalized` | R, G, B | Standard RGB color model |
+| `Hsl` / `HslNormalized` | H, S, L | Hue, Saturation, Lightness |
+| `Hsv` / `HsvNormalized` | H, S, V | Hue, Saturation, Value |
+| `Hwb` / `HwbNormalized` | H, W, B | Hue, Whiteness, Blackness |
+| `Lab` / `LabNormalized` | L, a, b | CIE L*a*b* perceptual color space |
+| `Xyz` / `XyzNormalized` | X, Y, Z | CIE XYZ tristimulus values |
+| `Yuv` / `YuvNormalized` | Y, U, V | Luma + chrominance (PAL/NTSC) |
+| `YCbCr` / `YCbCrNormalized` | Y, Cb, Cr | Digital video color encoding |
+| `Din99` / `Din99Normalized` | L, a, b | DIN 6176 perceptual space |
+| `Cmyk` / `CmykNormalized` | C, M, Y, K | Subtractive printing model |
+
+### Distance Calculators (`System.Drawing.ColorSpaces.Distances`)
+
+| Calculator | Color Space | Description |
+|------------|-------------|-------------|
+| `EuclideanDistance<T>` | Any 3-component | √(Δc1² + Δc2² + Δc3²) |
+| `EuclideanDistance4<T>` | Any 4-component | For CMYK and similar |
+| `ManhattanDistance<T>` | Any 3-component | \|Δc1\| + \|Δc2\| + \|Δc3\| |
+| `ChebyshevDistance<T>` | Any 3-component | max(\|Δc1\|, \|Δc2\|, \|Δc3\|) |
+| `WeightedEuclideanRgbDistance` | RGB | Perception-weighted RGB |
+| `RedmeanDistance` | RGB | Compuserve algorithm |
+| `CIE76Distance` | Lab | ΔE*ab (basic Lab distance) |
+| `CIE94Distance` | Lab | Improved perceptual formula |
+| `CIEDE2000Distance` | Lab | Most accurate perceptual ΔE |
+| `CMCDistance` | Lab | Textile industry (l=1, c=1) |
+| `CMCAcceptabilityDistance` | Lab | Textile acceptability (l=2, c=1) |
+| `DIN99Distance` | DIN99 | German standard DIN 6176 |
+
+All calculators also have `*Squared` variants for faster comparisons.
+
+### Palette Search
+
+```csharp
+using System.Drawing.ColorSpaces;
+using System.Drawing.ColorSpaces.Distances;
+
+// Find closest color in palette using perceptual distance
+var palette = new[] { Color.Red, Color.Green, Color.Blue };
+var index = PaletteSearch.GetMostSimilarColorIndex<CIEDE2000Distance>(palette, targetColor);
+
+// Use any color space for comparison
+var index = PaletteSearch.GetMostSimilarColorIndex<EuclideanDistance<Yuv>>(palette, targetColor);
+
+// Cache lookups for repeated queries (e.g., image processing)
+var cached = new CachedPalette<EuclideanDistance<Yuv>>(palette);
+foreach (var pixel in imagePixels) {
+  var paletteIndex = cached.GetIndex(pixel);  // O(1) after first lookup
+}
+```
+
+### Color Interpolation (`System.Drawing.ColorSpaces.Interpolation`)
+
+| Type | Description |
+|------|-------------|
+| `ColorLerp<T>` | Linear interpolation in any 3-component color space |
+| `ColorLerp4<T>` | Linear interpolation in 4-component spaces (CMYK) |
+| `CircularHueLerp<T>` | Hue-aware interpolation for HSL/HSV/HWB |
+| `ColorGradient<T>` | Multi-stop gradient with configurable interpolation |
+
+```csharp
+using System.Drawing.ColorSpaces.Interpolation;
+
+// Interpolate in perceptual Lab space
+var lerp = new ColorLerp<Lab>();
+var midpoint = lerp.Lerp(color1, color2, 0.5f);
+
+// Create smooth gradients
+var gradient = new ColorGradient<Hsl>(Color.Red, Color.Blue);
+var colors = gradient.GetColors(10);  // 10 evenly-spaced colors
+```
 
 ---
 

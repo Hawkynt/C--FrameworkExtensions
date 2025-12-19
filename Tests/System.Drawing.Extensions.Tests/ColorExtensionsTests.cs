@@ -32,35 +32,35 @@ public class ColorExtensionsTests {
   [Test]
   [Category("HappyPath")]
   public void GetLuminance_White_Returns255() {
-    var luminance = Color.White.GetLuminance();
+    var luminance = Color.White.Yuv.Y;
     Assert.That(luminance, Is.EqualTo(255));
   }
 
   [Test]
   [Category("HappyPath")]
   public void GetLuminance_Black_Returns0() {
-    var luminance = Color.Black.GetLuminance();
+    var luminance = Color.Black.Yuv.Y;
     Assert.That(luminance, Is.EqualTo(0));
   }
 
   [Test]
   [Category("HappyPath")]
   public void GetLuminance_Red_ReturnsApprox77() {
-    var luminance = Color.Red.GetLuminance();
+    var luminance = Color.Red.Yuv.Y;
     Assert.That(luminance, Is.InRange(75, 78));
   }
 
   [Test]
   [Category("HappyPath")]
   public void GetLuminance_Green_ReturnsApprox150() {
-    var luminance = Color.FromArgb(0, 255, 0).GetLuminance();
+    var luminance = Color.FromArgb(0, 255, 0).Yuv.Y;
     Assert.That(luminance, Is.InRange(148, 152));
   }
 
   [Test]
   [Category("HappyPath")]
   public void GetLuminance_Blue_ReturnsApprox29() {
-    var luminance = Color.Blue.GetLuminance();
+    var luminance = Color.Blue.Yuv.Y;
     Assert.That(luminance, Is.InRange(27, 31));
   }
 
@@ -71,29 +71,29 @@ public class ColorExtensionsTests {
   [Test]
   [Category("HappyPath")]
   public void GetChrominanceU_Gray_ReturnsNeutral() {
-    var chromaU = Color.Gray.GetChrominanceU();
+    var chromaU = Color.Gray.Yuv.U;
     Assert.That(chromaU, Is.InRange(125, 130));
   }
 
   [Test]
   [Category("HappyPath")]
   public void GetChrominanceV_Gray_ReturnsNeutral() {
-    var chromaV = Color.Gray.GetChrominanceV();
+    var chromaV = Color.Gray.Yuv.V;
     Assert.That(chromaV, Is.InRange(125, 130));
   }
 
   [Test]
   [Category("HappyPath")]
-  public void GetChrominanceU_Red_IsHigher() {
-    var chromaU = Color.Red.GetChrominanceU();
-    Assert.That(chromaU, Is.GreaterThan(127));
+  public void GetChrominanceV_Red_IsHigher() {
+    var chromaV = Color.Red.Yuv.V;
+    Assert.That(chromaV, Is.GreaterThan(127));
   }
 
   [Test]
   [Category("HappyPath")]
-  public void GetChrominanceV_Blue_IsHigher() {
-    var chromaV = Color.Blue.GetChrominanceV();
-    Assert.That(chromaV, Is.GreaterThan(127));
+  public void GetChrominanceU_Blue_IsHigher() {
+    var chromaU = Color.Blue.Yuv.U;
+    Assert.That(chromaU, Is.GreaterThan(127));
   }
 
   #endregion
@@ -102,15 +102,11 @@ public class ColorExtensionsTests {
 
   [Test]
   [Category("HappyPath")]
-  public void IsLike_SameColor_ReturnsTrue() {
-    Assert.That(Color.Red.IsLike(Color.Red), Is.True);
-  }
+  public void IsLike_SameColor_ReturnsTrue() => Assert.That(Color.Red.IsLike(Color.Red), Is.True);
 
   [Test]
   [Category("HappyPath")]
-  public void IsLike_VeryDifferentColors_ReturnsFalse() {
-    Assert.That(Color.Red.IsLike(Color.Blue), Is.False);
-  }
+  public void IsLike_VeryDifferentColors_ReturnsFalse() => Assert.That(Color.Red.IsLike(Color.Blue), Is.False);
 
   [Test]
   [Category("HappyPath")]
@@ -298,7 +294,7 @@ public class ColorExtensionsTests {
   [Test]
   [Category("HappyPath")]
   public void GetComplementaryColor_White_ReturnsBlack() {
-    var result = Color.White.GetComplementaryColor();
+    var result = Color.White.ComplementaryColor;
     Assert.That(result.R, Is.EqualTo(0));
     Assert.That(result.G, Is.EqualTo(0));
     Assert.That(result.B, Is.EqualTo(0));
@@ -307,7 +303,7 @@ public class ColorExtensionsTests {
   [Test]
   [Category("HappyPath")]
   public void GetComplementaryColor_Black_ReturnsWhite() {
-    var result = Color.Black.GetComplementaryColor();
+    var result = Color.Black.ComplementaryColor;
     Assert.That(result.R, Is.EqualTo(255));
     Assert.That(result.G, Is.EqualTo(255));
     Assert.That(result.B, Is.EqualTo(255));
@@ -317,7 +313,7 @@ public class ColorExtensionsTests {
   [Category("HappyPath")]
   public void GetComplementaryColor_PreservesAlpha() {
     var original = Color.FromArgb(128, 100, 150, 200);
-    var result = original.GetComplementaryColor();
+    var result = original.ComplementaryColor;
     Assert.That(result.A, Is.EqualTo(128));
     Assert.That(result.R, Is.EqualTo(155));
     Assert.That(result.G, Is.EqualTo(105));
@@ -330,33 +326,23 @@ public class ColorExtensionsTests {
 
   [Test]
   [Category("HappyPath")]
-  public void ToHex_Black_Returns000000() {
-    Assert.That(Color.Black.ToHex(), Is.EqualTo("#000000"));
-  }
+  public void ToHex_Black_Returns000000() => Assert.That(Color.Black.ToHex(), Is.EqualTo("#000000"));
 
   [Test]
   [Category("HappyPath")]
-  public void ToHex_White_ReturnsFFFFFF() {
-    Assert.That(Color.White.ToHex(), Is.EqualTo("#FFFFFF"));
-  }
+  public void ToHex_White_ReturnsFFFFFF() => Assert.That(Color.White.ToHex(), Is.EqualTo("#FFFFFF"));
 
   [Test]
   [Category("HappyPath")]
-  public void ToHex_Red_ReturnsFF0000() {
-    Assert.That(Color.Red.ToHex(), Is.EqualTo("#FF0000"));
-  }
+  public void ToHex_Red_ReturnsFF0000() => Assert.That(Color.Red.ToHex(), Is.EqualTo("#FF0000"));
 
   [Test]
   [Category("HappyPath")]
-  public void ToHex_Green_Returns00FF00() {
-    Assert.That(Color.FromArgb(0, 255, 0).ToHex(), Is.EqualTo("#00FF00"));
-  }
+  public void ToHex_Green_Returns00FF00() => Assert.That(Color.FromArgb(0, 255, 0).ToHex(), Is.EqualTo("#00FF00"));
 
   [Test]
   [Category("HappyPath")]
-  public void ToHex_Blue_Returns0000FF() {
-    Assert.That(Color.Blue.ToHex(), Is.EqualTo("#0000FF"));
-  }
+  public void ToHex_Blue_Returns0000FF() => Assert.That(Color.Blue.ToHex(), Is.EqualTo("#0000FF"));
 
   [Test]
   [Category("HappyPath")]
