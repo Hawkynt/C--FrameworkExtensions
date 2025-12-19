@@ -24,8 +24,10 @@ namespace System.Runtime.Intrinsics.X86;
 /// <summary>
 /// Software fallback implementation of SSE intrinsics.
 /// </summary>
-public static class Sse {
-  public static bool IsSupported => false;
+public abstract class Sse : X86Base {
+
+  /// <summary>Gets a value indicating whether SSE instructions are supported.</summary>
+  public new static bool IsSupported => false;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static unsafe Vector128<float> LoadVector128(float* source)
@@ -35,6 +37,13 @@ public static class Sse {
   public static unsafe void Store(float* destination, Vector128<float> source) {
     for (var i = 0; i < 4; ++i)
       destination[i] = Vector128.GetElement(source, i);
+  }
+
+  /// <summary>Provides 64-bit specific SSE operations.</summary>
+  public new abstract class X64 : X86Base.X64 {
+
+    /// <summary>Gets a value indicating whether 64-bit SSE instructions are supported.</summary>
+    public new static bool IsSupported => false;
   }
 }
 

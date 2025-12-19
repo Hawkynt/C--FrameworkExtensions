@@ -26,13 +26,10 @@ namespace System.Runtime.Intrinsics.X86;
 /// Software fallback implementation of SSSE3 intrinsics for platforms without native support.
 /// Provides supplemental SSE3 operations including horizontal operations, absolute values, and byte shuffling.
 /// </summary>
-public static class Ssse3 {
+public abstract class Ssse3 : Sse3 {
 
-  /// <summary>
-  /// Gets a value that indicates whether the APIs in this class are supported.
-  /// For software fallback implementation, always returns true.
-  /// </summary>
-  public static bool IsSupported => true;
+  /// <summary>Gets a value indicating whether SSSE3 instructions are supported.</summary>
+  public new static bool IsSupported => false;
 
   #region Absolute Value Operations
 
@@ -377,6 +374,12 @@ public static class Ssse3 {
 
   #endregion
 
+  /// <summary>Provides 64-bit specific SSSE3 operations.</summary>
+  public new abstract class X64 : Sse3.X64 {
+
+    /// <summary>Gets a value indicating whether 64-bit SSSE3 instructions are supported.</summary>
+    public new static bool IsSupported => false;
+  }
 }
 
 #endif

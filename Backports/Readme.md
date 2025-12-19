@@ -155,18 +155,18 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Runtime.Intrinsics.Arm
   * [AdvSimd](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.advsimd)
-  * [ArmBase](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.armbase) (with software fallbacks for LeadingZeroCount, ReverseElementBits, Yield, MultiplyHigh)
+  * [ArmBase](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.arm.armbase)
 
 * System.Runtime.Intrinsics.X86
   * [Aes](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.aes)
   * [Avx](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx)
   * [Avx2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx2)
   * [Avx512F](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.avx512f)
-  * [Bmi1](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi1) (with software fallbacks for TrailingZeroCount, ExtractLowestSetBit, etc.)
-  * [Bmi2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi2) (with software fallbacks for ParallelBitExtract, ParallelBitDeposit, etc.)
-  * [Lzcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.lzcnt) (with software fallback for LeadingZeroCount)
+  * [Bmi1](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi1)
+  * [Bmi2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.bmi2)
+  * [Lzcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.lzcnt)
   * [Pclmulqdq](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.pclmulqdq)
-  * [Popcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.popcnt) (with software fallback for PopCount)
+  * [Popcnt](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.popcnt)
   * [Sse](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse)
   * [Sse2](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse2)
   * [Sse3](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.x86.sse3)
@@ -746,10 +746,8 @@ Below are some examples of how to use the features provided by this package. Not
 ### Range and Index
 
 ```csharp
-public class Program
-{
-    public static void Main()
-    {
+public class Program {
+    public static void Main() {
         int[] numbers = { 1, 2, 3, 4, 5 };
         var slice = numbers[1..^1];
         Console.WriteLine(string.Join(", ", slice)); // Output: 2, 3, 4
@@ -760,17 +758,14 @@ public class Program
 ### Lazy Initialization
 
 ```csharp
-public class Program
-{
+public class Program {
     private static Lazy<int> lazyValue = new Lazy<int>(() => ComputeValue());
 
-    public static void Main()
-    {
+    public static void Main() {
         Console.WriteLine(lazyValue.Value); // Output: Computed Value
     }
 
-    private static int ComputeValue()
-    {
+    private static int ComputeValue() {
         Console.WriteLine("Computed Value");
         return 42;
     }
@@ -783,10 +778,8 @@ public class Program
 using System.Collections.Generic;
 using System.Linq;
 
-public class Program
-{
-    public static void Main()
-    {
+public class Program {
+    public static void Main() {
         List<int> numbers = new List<int> { 1, 2, 3, 4, 5 };
 
         var max = numbers.Max();
@@ -803,13 +796,144 @@ public class Program
 ```csharp
 using System.Threading.Tasks;
 
-public class Program
-{
-    public static async Task Main()
-    {
+public class Program {
+    public static async Task Main() {
         Task task = Task.Delay(1000);
         await task.ConfigureAwait(false);
         Console.WriteLine("Task completed");
+    }
+}
+```
+
+### Span Extensions
+
+```csharp
+using System;
+
+public class Program {
+    public static void Main() {
+        // Create a Span from an array
+        int[] numbers = { 1, 2, 3, 4, 5 };
+        Span<int> span = numbers.AsSpan();
+        
+        // Slice operations
+        Span<int> slice = span.Slice(1, 3); // { 2, 3, 4 }
+        Console.WriteLine($"Slice length: {slice.Length}"); // Output: 3
+        
+        // Fill and Clear
+        Span<int> buffer = stackalloc int[10];
+        buffer.Fill(42);
+        Console.WriteLine($"First element: {buffer[0]}"); // Output: 42
+        
+        // ReadOnlySpan from string
+        ReadOnlySpan<char> text = "Hello World".AsSpan();
+        ReadOnlySpan<char> world = text.Slice(6); // "World"
+        Console.WriteLine(world.ToString()); // Output: World
+        
+        // Sequence comparison
+        ReadOnlySpan<int> a = new[] { 1, 2, 3 };
+        ReadOnlySpan<int> b = new[] { 1, 2, 3 };
+        Console.WriteLine(a.SequenceEqual(b)); // Output: True
+        
+        // Index and LastIndex operations
+        ReadOnlySpan<int> data = new[] { 1, 2, 3, 2, 1 };
+        Console.WriteLine(data.IndexOf(2));     // Output: 1
+        Console.WriteLine(data.LastIndexOf(2)); // Output: 3
+    }
+}
+```
+
+### Vector Extensions
+
+```csharp
+using System;
+using System.Numerics;
+
+public class Program {
+    public static void Main() {
+        // Vector2 operations
+        Vector2 position = new Vector2(3.0f, 4.0f);
+        Console.WriteLine($"Length: {position.Length()}"); // Output: 5
+        
+        Vector2 normalized = Vector2.Normalize(position);
+        Console.WriteLine($"Normalized: {normalized}"); // Output: <0.6, 0.8>
+        
+        // Vector3 operations
+        Vector3 v1 = new Vector3(1, 0, 0);
+        Vector3 v2 = new Vector3(0, 1, 0);
+        Vector3 cross = Vector3.Cross(v1, v2);
+        Console.WriteLine($"Cross product: {cross}"); // Output: <0, 0, 1>
+        
+        // Vector4 transformations
+        Vector4 point = new Vector4(1, 2, 3, 1);
+        Matrix4x4 scale = Matrix4x4.CreateScale(2.0f);
+        Vector4 transformed = Vector4.Transform(new Vector3(1, 2, 3), scale);
+        Console.WriteLine($"Scaled: {transformed}");
+        
+        // Linear interpolation
+        Vector3 start = Vector3.Zero;
+        Vector3 end = new Vector3(10, 10, 10);
+        Vector3 midpoint = Vector3.Lerp(start, end, 0.5f);
+        Console.WriteLine($"Midpoint: {midpoint}"); // Output: <5, 5, 5>
+        
+        // Matrix operations
+        Matrix4x4 rotation = Matrix4x4.CreateRotationZ(MathF.PI / 4); // 45 degrees
+        Vector4 row = rotation.GetRow(0);
+        Console.WriteLine($"First row: {row}");
+    }
+}
+```
+
+### Intrinsics Extensions
+
+```csharp
+using System;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+
+public class Program {
+    public static unsafe void Main() {
+        // Note: Hardware intrinsics provide SIMD operations.
+        // When native support is unavailable, software fallbacks are used.
+        
+        // Vector128 creation and manipulation
+        Vector128<float> vec1 = Vector128.Create(1.0f, 2.0f, 3.0f, 4.0f);
+        Vector128<float> vec2 = Vector128.Create(5.0f, 6.0f, 7.0f, 8.0f);
+        
+        // Element access
+        float first = Vector128.GetElement(vec1, 0);
+        Console.WriteLine($"First element: {first}"); // Output: 1
+        
+        // SSE operations (with software fallback)
+        // Software fallback always available
+        if (Sse.IsSupported || true) {
+            Vector128<float> sum = Sse.Add(vec1, vec2);
+            float[] result = new float[4];
+            fixed (float* ptr = result)
+                Sse.Store(ptr, sum);
+            
+            Console.WriteLine($"Sum: [{result[0]}, {result[1]}, {result[2]}, {result[3]}]");
+            // Output: Sum: [6, 8, 10, 12]
+        }
+        
+        // SSE2 integer operations
+        Vector128<int> intVec1 = Vector128.Create(10, 20, 30, 40);
+        Vector128<int> intVec2 = Vector128.Create(1, 2, 3, 4);
+        Vector128<int> intSum = Sse2.Add(intVec1, intVec2);
+        
+        // SSE41 advanced operations
+        float[] data = { 1.5f, 2.7f, 3.2f, 4.9f };
+        fixed (float* ptr = data) {
+            Vector128<float> loaded = Sse.LoadVector128(ptr);
+            Vector128<float> rounded = Sse41.Floor(loaded);
+            // Result: { 1.0, 2.0, 3.0, 4.0 }
+        }
+        
+        // Dot product calculation
+        Vector128<float> a = Vector128.Create(1.0f, 2.0f, 3.0f, 4.0f);
+        Vector128<float> b = Vector128.Create(2.0f, 3.0f, 4.0f, 5.0f);
+        Vector128<float> dot = Sse41.DotProduct(a, b, 0xFF);
+        // Result contains dot product in all elements: 40 (1*2 + 2*3 + 3*4 + 4*5)
     }
 }
 ```
