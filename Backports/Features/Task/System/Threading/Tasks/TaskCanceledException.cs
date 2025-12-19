@@ -29,7 +29,7 @@ public class TaskCanceledException : OperationCanceledException {
   /// <summary>
   /// Gets the task associated with this exception.
   /// </summary>
-  public Task Task { get; }
+  public Task? Task { get; }
 
   /// <summary>
   /// Initializes a new instance of the <see cref="TaskCanceledException"/> class.

@@ -33,7 +33,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
   private readonly int _maxArrayLength;
   
   [ThreadStatic]
-  private static ThreadLocalCache<T> _tlsBuckets;
+  private static ThreadLocalCache<T>? _tlsBuckets;
 
   public ConfigurableArrayPool(int maxArrayLength, int maxArraysPerBucket) {
     if (maxArrayLength < 1)
@@ -149,7 +149,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ThreadLocalCache(int size) => this._buckets = new TItem[size][];
 
-    internal TItem[] Rent(int bucketIndex) {
+    internal TItem[]? Rent(int bucketIndex) {
       if (bucketIndex < 0 || bucketIndex >= this._buckets.Length)
         return null;
 
@@ -157,7 +157,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
       if (array == null)
         return null;
 
-      this._buckets[bucketIndex] = null;
+      this._buckets[bucketIndex] = null!;
       return array;
     }
 
@@ -184,7 +184,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
       this._index = 0;
     }
 
-    internal T[] Rent() {
+    internal T[]? Rent() {
       // Try to atomically decrement the index
       while (true) {
         var currentIndex = this._index;
@@ -199,7 +199,7 @@ internal sealed class ConfigurableArrayPool<T> : ArrayPool<T> {
           continue;
 
         // Clear the reference in case no one else already returned another array onto this index
-        Interlocked.CompareExchange(ref this._arrays[newIndex], null, array);
+        Interlocked.CompareExchange(ref this._arrays[newIndex], null!, array);
         return array;
       }
     }

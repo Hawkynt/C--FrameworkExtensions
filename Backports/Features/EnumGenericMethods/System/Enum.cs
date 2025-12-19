@@ -53,7 +53,7 @@ public static partial class EnumPolyfills {
     /// <param name="value">The value of a particular enumerated constant in terms of its underlying type.</param>
     /// <returns>A string containing the name of the enumerated constant in <typeparamref name="TEnum"/> whose value is <paramref name="value"/>; or <see langword="null"/> if no such constant is found.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GetName<TEnum>(TEnum value) where TEnum : struct, Enum
+    public static string? GetName<TEnum>(TEnum value) where TEnum : struct, Enum
       => Enum.GetName(typeof(TEnum), value);
 
     /// <summary>

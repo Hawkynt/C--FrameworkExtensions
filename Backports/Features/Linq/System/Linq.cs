@@ -229,8 +229,14 @@ public static partial class EnumerablePolyfills {
       return default;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource FirstOrDefault() => @this.FirstOrDefault(default(TSource));
+    public TSource? FirstOrDefault() {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      foreach (var item in @this)
+        return item;
+
+      return default;
+    }
 
     public TSource Single() {
       ArgumentNullException.ThrowIfNull(@this);
@@ -248,7 +254,7 @@ public static partial class EnumerablePolyfills {
       if (!found)
         _ThrowNoElements();
 
-      return result;
+      return result!;
     }
 
     public TSource Single(Func<TSource, bool> predicate) {
@@ -271,11 +277,24 @@ public static partial class EnumerablePolyfills {
       if (!found)
         _ThrowNoElements();
 
-      return result;
+      return result!;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource SingleOrDefault() => @this.SingleOrDefault(default(TSource));
+    public TSource? SingleOrDefault() {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      var result = default(TSource);
+      var found = false;
+      foreach (var item in @this) {
+        if (found)
+          AlwaysThrow.InvalidOperationException("Sequence contains more than one element");
+
+        result = item;
+        found = true;
+      }
+
+      return result;
+    }
 
     public TSource Last() {
       ArgumentNullException.ThrowIfNull(@this);
@@ -290,7 +309,7 @@ public static partial class EnumerablePolyfills {
       if (!found)
         _ThrowNoElements();
 
-      return result;
+      return result!;
     }
 
     public TSource Last(Func<TSource, bool> predicate) {
@@ -310,11 +329,18 @@ public static partial class EnumerablePolyfills {
       if (!found)
         _ThrowNoElements();
 
-      return result;
+      return result!;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource LastOrDefault() => @this.LastOrDefault(default(TSource));
+    public TSource? LastOrDefault() {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      var result = default(TSource);
+      foreach (var item in @this)
+        result = item;
+
+      return result;
+    }
 
     public TSource Min() {
       ArgumentNullException.ThrowIfNull(@this);

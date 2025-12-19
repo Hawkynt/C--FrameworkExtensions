@@ -25,7 +25,7 @@ namespace System.Runtime.CompilerServices;
 public static unsafe class Unsafe {
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-  public static void SkipInit<T>(out T result) => result = default;
+  public static void SkipInit<T>(out T result) => result = default!;
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static int SizeOf<T>() =>

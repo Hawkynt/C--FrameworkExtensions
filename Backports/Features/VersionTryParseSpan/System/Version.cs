@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_VERSION_PARSE_SPAN
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -44,7 +45,7 @@ public static partial class VersionPolyfills {
     /// <param name="result">When this method returns, contains the <see cref="Version"/> equivalent of the number contained in <paramref name="input"/>, if the conversion succeeded. If <paramref name="input"/> is <see langword="null"/>, <see cref="string.Empty"/>, or if the conversion fails, <paramref name="result"/> is <see langword="null"/> when the method returns.</param>
     /// <returns><see langword="true"/> if the <paramref name="input"/> parameter was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> input, out Version result)
+    public static bool TryParse(ReadOnlySpan<char> input, [MaybeNullWhen(false)] out Version result)
       => Version.TryParse(input.ToString(), out result);
 
   }

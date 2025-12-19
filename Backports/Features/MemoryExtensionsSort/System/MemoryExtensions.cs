@@ -140,7 +140,7 @@ public static partial class MemoryExtensionsPolyfills {
   }
 
   private sealed class _ComparisonComparer<T>(Comparison<T> comparison) : IComparer<T> {
-    public int Compare(T x, T y) => comparison(x, y);
+    public int Compare(T? x, T? y) => comparison(x!, y!);
   }
 
 }

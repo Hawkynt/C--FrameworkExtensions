@@ -32,13 +32,13 @@ public unsafe struct MemoryHandle : IDisposable {
 
   private void* _pointer;
   private GCHandle _handle;
-  private IPinnable _pinnable;
+  private IPinnable? _pinnable;
 
   /// <summary>
   /// Creates a new memory handle for the given array.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public MemoryHandle(void* pointer, GCHandle handle = default, IPinnable pinnable = null) {
+  public MemoryHandle(void* pointer, GCHandle handle = default, IPinnable? pinnable = null) {
     this._pointer = pointer;
     this._handle = handle;
     this._pinnable = pinnable;

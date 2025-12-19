@@ -30,16 +30,16 @@ public static partial class EnumerablePolyfills {
   extension<TSource>(IEnumerable<TSource> @this) {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource FirstOrDefault(Func<TSource, bool> predicate)
-      => @this.FirstOrDefault(predicate, default);
+    public TSource? FirstOrDefault(Func<TSource, bool> predicate)
+      => @this.FirstOrDefault(predicate, default!);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource SingleOrDefault(Func<TSource, bool> predicate)
-      => @this.SingleOrDefault(predicate, default);
+    public TSource? SingleOrDefault(Func<TSource, bool> predicate)
+      => @this.SingleOrDefault(predicate, default!);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TSource LastOrDefault(Func<TSource, bool> predicate)
-      => @this.LastOrDefault(predicate, default);
+    public TSource? LastOrDefault(Func<TSource, bool> predicate)
+      => @this.LastOrDefault(predicate, default!);
 
   }
 

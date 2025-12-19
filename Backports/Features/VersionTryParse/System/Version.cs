@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_VERSION_TRYPARSE
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -68,7 +69,7 @@ public static partial class VersionPolyfills {
     /// <param name="input">A string that contains a version number to convert.</param>
     /// <param name="result">When this method returns, contains the <see cref="Version"/> equivalent of the number contained in <paramref name="input"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if the <paramref name="input"/> parameter was converted successfully; otherwise, <see langword="false"/>.</returns>
-    public static bool TryParse(string input, out Version result) {
+    public static bool TryParse(string input, [MaybeNullWhen(false)] out Version result) {
       result = null;
 
       if (string.IsNullOrEmpty(input))

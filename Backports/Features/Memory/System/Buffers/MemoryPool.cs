@@ -84,10 +84,8 @@ public abstract class MemoryPool<T> : IDisposable {
 
     protected override void Dispose(bool disposing) { }
 
-    private sealed class ArrayMemoryPoolBuffer : IMemoryOwner<T> {
-      private T[] _array;
-
-      public ArrayMemoryPoolBuffer(int size) => this._array = ArrayPool<T>.Shared.Rent(size);
+    private sealed class ArrayMemoryPoolBuffer(int size) : IMemoryOwner<T> {
+      private T[] _array = ArrayPool<T>.Shared.Rent(size);
 
       public Memory<T> Memory {
         get {
@@ -104,7 +102,7 @@ public abstract class MemoryPool<T> : IDisposable {
         if (array == null)
           return;
 
-        this._array = null;
+        this._array = null!;
         ArrayPool<T>.Shared.Return(array);
       }
     }

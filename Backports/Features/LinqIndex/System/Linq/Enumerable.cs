@@ -56,7 +56,7 @@ public static partial class EnumerablePolyfills {
     /// <returns>An enumerable containing the count of elements for each key.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="@this"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector)
+    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector) where TKey : notnull
       => @this.CountBy(keySelector, null);
 
     /// <summary>
@@ -67,13 +67,13 @@ public static partial class EnumerablePolyfills {
     /// <param name="keyComparer">An equality comparer to compare keys.</param>
     /// <returns>An enumerable containing the count of elements for each key.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="@this"/> or <paramref name="keySelector"/> is <see langword="null"/>.</exception>
-    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
+    public IEnumerable<KeyValuePair<TKey, int>> CountBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? keyComparer) where TKey : notnull {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
 
       return Invoke(@this, keySelector, keyComparer);
 
-      static IEnumerable<KeyValuePair<TKey, int>> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> keyComparer) {
+      static IEnumerable<KeyValuePair<TKey, int>> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? keyComparer) {
         var countByKey = new Dictionary<TKey, int>(keyComparer);
         foreach (var item in source) {
           var key = keySelector(item);
@@ -102,7 +102,7 @@ public static partial class EnumerablePolyfills {
       Func<TSource, TKey> keySelector,
       Func<TKey, TAccumulate> seed,
       Func<TAccumulate, TSource, TAccumulate> func
-    ) => @this.AggregateBy(keySelector, seed, func, null);
+    ) where TKey : notnull => @this.AggregateBy(keySelector, seed, func, null);
 
     /// <summary>
     /// Aggregates elements of a sequence by key.
@@ -118,8 +118,8 @@ public static partial class EnumerablePolyfills {
       Func<TSource, TKey> keySelector,
       Func<TKey, TAccumulate> seed,
       Func<TAccumulate, TSource, TAccumulate> func,
-      IEqualityComparer<TKey> keyComparer
-    ) {
+      IEqualityComparer<TKey>? keyComparer
+    ) where TKey : notnull {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
       ArgumentNullException.ThrowIfNull(seed);
@@ -132,7 +132,7 @@ public static partial class EnumerablePolyfills {
         Func<TSource, TKey> keySelector,
         Func<TKey, TAccumulate> seed,
         Func<TAccumulate, TSource, TAccumulate> func,
-        IEqualityComparer<TKey> keyComparer
+        IEqualityComparer<TKey>? keyComparer
       ) {
         var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
         foreach (var item in source) {
@@ -162,7 +162,7 @@ public static partial class EnumerablePolyfills {
       Func<TSource, TKey> keySelector,
       TAccumulate seed,
       Func<TAccumulate, TSource, TAccumulate> func
-    ) => @this.AggregateBy(keySelector, seed, func, null);
+    ) where TKey : notnull => @this.AggregateBy(keySelector, seed, func, null);
 
     /// <summary>
     /// Aggregates elements of a sequence by key.
@@ -178,8 +178,8 @@ public static partial class EnumerablePolyfills {
       Func<TSource, TKey> keySelector,
       TAccumulate seed,
       Func<TAccumulate, TSource, TAccumulate> func,
-      IEqualityComparer<TKey> keyComparer
-    ) {
+      IEqualityComparer<TKey>? keyComparer
+    ) where TKey : notnull {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
       ArgumentNullException.ThrowIfNull(func);
@@ -191,7 +191,7 @@ public static partial class EnumerablePolyfills {
         Func<TSource, TKey> keySelector,
         TAccumulate seed,
         Func<TAccumulate, TSource, TAccumulate> func,
-        IEqualityComparer<TKey> keyComparer
+        IEqualityComparer<TKey>? keyComparer
       ) {
         var dict = new Dictionary<TKey, TAccumulate>(keyComparer);
         foreach (var item in source) {

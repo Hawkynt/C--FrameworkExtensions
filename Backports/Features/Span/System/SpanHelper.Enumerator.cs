@@ -41,7 +41,7 @@ partial class SpanHelper {
     private int _index = INDEX_RESET;
 
     public void Reset() => this._index = INDEX_RESET;
-    object IEnumerator.Current => this.Current;
+    object? IEnumerator.Current => this.Current;
 
     public bool MoveNext() => ++this._index < length;
     public T Current => source.GetValue(this._index);

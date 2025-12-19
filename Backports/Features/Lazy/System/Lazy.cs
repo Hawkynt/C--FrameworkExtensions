@@ -33,7 +33,6 @@ namespace System;
 public class Lazy<TValue> {
   private readonly ManualResetEventSlim _valueIsReady = new(false);
   private readonly object _lock = new();
-  private TValue _value;
   private readonly Func<TValue> _function;
 
   #region ctor
@@ -51,9 +50,8 @@ public class Lazy<TValue> {
   /// <param name="function">The function that should create the value.</param>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public Lazy(Func<TValue> function) {
-    if (function == null)
-      AlwaysThrow.ArgumentNullException(nameof(function));
-
+    ArgumentNullException.ThrowIfNull(function);
+    
     this._function = function;
   }
 
@@ -98,17 +96,17 @@ public class Lazy<TValue> {
   public TValue Value {
     get {
       if (this.HasValue)
-        return this._value;
+        return field;
 
       lock (this._lock)
         if (!this.HasValue) {
-          this._value = this._function();
+          field = this._function();
           this._valueIsReady.Set();
         }
 
-      return this._value;
+      return field;
     }
-  }
+  } = default!;
 
   /// <summary>
   ///   Performs an implicit conversion from <see cref="Lazy" /> to <see cref="TValue" />.
@@ -132,7 +130,7 @@ public class Lazy<TValue> {
   ///   A <see cref="System.String" /> that represents this instance.
   /// </returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override string ToString() => this.HasValue ? this.Value.ToString() : "Lazy of type:" + typeof(TValue).Name;
+  public override string ToString() => this.HasValue ? this.Value?.ToString() ?? string.Empty : "Lazy of type:" + typeof(TValue).Name;
 
 }
 

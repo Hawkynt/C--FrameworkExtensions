@@ -887,7 +887,7 @@ internal static class Scalar<T> {
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   [StackTraceHidden]
-  private static G ThrowNotSupported<G>([CallerMemberName] string source = null) => throw new NotSupportedException($"Scalar: The type {typeof(T)} is not supported{(source == null ? string.Empty : $"for method '{source}'")}.");
+  private static G ThrowNotSupported<G>([CallerMemberName] string? source = null) => throw new NotSupportedException($"Scalar: The type {typeof(T)} is not supported{(source == null ? string.Empty : $"for method '{source}'")}.");
 
   #endregion
 

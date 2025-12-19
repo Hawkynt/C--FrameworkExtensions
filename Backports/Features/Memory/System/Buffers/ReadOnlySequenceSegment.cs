@@ -34,7 +34,7 @@ public abstract class ReadOnlySequenceSegment<T> {
   /// <summary>
   /// Gets or sets the next segment in the linked list.
   /// </summary>
-  public ReadOnlySequenceSegment<T> Next { get; protected set; }
+  public ReadOnlySequenceSegment<T>? Next { get; protected set; }
 
   /// <summary>
   /// Gets or sets the running index of this segment.

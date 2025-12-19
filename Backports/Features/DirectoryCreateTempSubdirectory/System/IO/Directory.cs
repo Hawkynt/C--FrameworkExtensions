@@ -34,7 +34,7 @@ public static partial class DirectoryPolyfills {
     /// <param name="prefix">The prefix of the directory name, or <see langword="null"/> to use no prefix.</param>
     /// <returns>A <see cref="DirectoryInfo"/> object that represents the newly created directory.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DirectoryInfo CreateTempSubdirectory(string prefix = null) {
+    public static DirectoryInfo CreateTempSubdirectory(string? prefix = null) {
       var tempPath = Path.GetTempPath();
       var uniqueName = (prefix ?? string.Empty) + Guid.NewGuid().ToString("N");
       var fullPath = Path.Combine(tempPath, uniqueName);

@@ -36,8 +36,8 @@ internal static class AlwaysThrow {
   [DoesNotReturn]
   public static void ArgumentOutOfRangeException(
     string parameterName,
-    string message = null,
-    [CallerMemberName] string caller = null
+    string? message = null,
+    [CallerMemberName] string? caller = null
   ) => ArgumentOutOfRangeException<Dummy>(parameterName, message, caller);
 
   [DebuggerHidden]
@@ -45,8 +45,8 @@ internal static class AlwaysThrow {
   [DoesNotReturn]
   public static TDummy ArgumentOutOfRangeException<TDummy>(
     string parameterName,
-    string message = null,
-    [CallerMemberName] string caller = null
+    string? message = null,
+    [CallerMemberName] string? caller = null
   ) => throw new ArgumentOutOfRangeException(
     parameterName,
     $"{(caller == null ? string.Empty : caller + ":")}{message}"
@@ -55,7 +55,7 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy ArgumentBelowRangeException<T, TDummy>(string parameterName, T value, T minimum, [CallerMemberName] string caller = null)
+  public static TDummy ArgumentBelowRangeException<T, TDummy>(string parameterName, T value, T minimum, [CallerMemberName] string? caller = null)
     where T : struct =>
     throw new ArgumentOutOfRangeException(
       parameterName,
@@ -65,7 +65,7 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void ArgumentBelowRangeException<T>(string parameterName, T value, T minimum, [CallerMemberName] string caller = null)
+  public static void ArgumentBelowRangeException<T>(string parameterName, T value, T minimum, [CallerMemberName] string? caller = null)
     where T : struct => ArgumentBelowRangeException<T, Dummy>(parameterName, value, minimum, caller);
 
   [DebuggerHidden]
@@ -76,7 +76,7 @@ internal static class AlwaysThrow {
       string parameterName,
       T value,
       T minimum,
-      [CallerMemberName] string caller = null
+      [CallerMemberName] string? caller = null
     ) where T : struct => throw new ArgumentOutOfRangeException(
     parameterName,
     $"""{(caller == null ? string.Empty : caller + ":")}Parameter "{parameterName}" must not be below or equal to threshold. ({value} <= {minimum})"""
@@ -90,14 +90,14 @@ internal static class AlwaysThrow {
       string parameterName,
       T value,
       T minimum,
-      [CallerMemberName] string caller = null
+      [CallerMemberName] string? caller = null
     ) where T : struct => ArgumentBelowOrEqualRangeException<T, Dummy>(parameterName, value, minimum, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static TDummy
-    ArgumentAboveRangeException<T, TDummy>(string parameterName, T value, T maximum, [CallerMemberName] string caller = null)
+    ArgumentAboveRangeException<T, TDummy>(string parameterName, T value, T maximum, [CallerMemberName] string? caller = null)
     where T : struct =>
     throw new ArgumentOutOfRangeException(
       parameterName,
@@ -108,7 +108,7 @@ internal static class AlwaysThrow {
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void
-    ArgumentAboveRangeException<T>(string parameterName, T value, T maximum, [CallerMemberName] string caller = null)
+    ArgumentAboveRangeException<T>(string parameterName, T value, T maximum, [CallerMemberName] string? caller = null)
     where T : struct => ArgumentAboveRangeException<T, Dummy>(parameterName, value, maximum, caller);
 
   [DebuggerHidden]
@@ -119,7 +119,7 @@ internal static class AlwaysThrow {
       string parameterName,
       T value,
       T maximum,
-      [CallerMemberName] string caller = null
+      [CallerMemberName] string? caller = null
     ) where T : struct => throw new ArgumentOutOfRangeException(
     parameterName,
     $"""{(caller == null ? string.Empty : caller + ":")}Parameter "{parameterName}" must not be above or equal to threshold. ({value} >= {maximum})"""
@@ -133,25 +133,25 @@ internal static class AlwaysThrow {
       string parameterName,
       T value,
       T maximum,
-      [CallerMemberName] string caller = null
+      [CallerMemberName] string? caller = null
     ) where T : struct => ArgumentAboveOrEqualRangeException<T, Dummy>(parameterName, value, maximum, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy ArgumentException<TDummy>(string parameterName, string message, [CallerMemberName] string caller = null) =>
+  public static TDummy ArgumentException<TDummy>(string parameterName, string message, [CallerMemberName] string? caller = null) =>
     throw new ArgumentException($"{(caller == null ? string.Empty : caller + ":")}{message}", parameterName);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void ArgumentException(string parameterName, string message, [CallerMemberName] string caller = null) =>
+  public static void ArgumentException(string parameterName, string message, [CallerMemberName] string? caller = null) =>
     ArgumentException<Dummy>(parameterName, message, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy ArgumentNullException<TDummy>(string parameterName, [CallerMemberName] string caller = null) =>
+  public static TDummy ArgumentNullException<TDummy>(string parameterName, [CallerMemberName] string? caller = null) =>
     throw new ArgumentNullException(
       parameterName,
       $"""{(caller == null ? string.Empty : caller + ":")}Parameter "{parameterName}" must not be <null>"""
@@ -160,89 +160,89 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void ArgumentNullException(string parameterName, [CallerMemberName] string caller = null) =>
+  public static void ArgumentNullException(string parameterName, [CallerMemberName] string? caller = null) =>
     ArgumentNullException<Dummy>(parameterName, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy NullReferenceException<TDummy>(string parameterName, [CallerMemberName] string caller = null) =>
+  public static TDummy NullReferenceException<TDummy>(string parameterName, [CallerMemberName] string? caller = null) =>
     throw new NullReferenceException($"""{(caller == null ? string.Empty : caller + ":")}Instance in "{parameterName}" must not be <null>""");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void NullReferenceException(string parameterName, [CallerMemberName] string caller = null) =>
+  public static void NullReferenceException(string parameterName, [CallerMemberName] string? caller = null) =>
     NullReferenceException<Dummy>(parameterName, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy IndexTooLowException<TDummy>(string parameterName, int value, [CallerMemberName] string caller = null) =>
+  public static TDummy IndexTooLowException<TDummy>(string parameterName, int value, [CallerMemberName] string? caller = null) =>
     throw new IndexOutOfRangeException($"{(caller == null ? string.Empty : caller + ":")}Index too low {value} < 0") { Data = { { parameterName, value } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void IndexTooLowException(string parameterName, int value, [CallerMemberName] string caller = null) =>
+  public static void IndexTooLowException(string parameterName, int value, [CallerMemberName] string? caller = null) =>
     IndexTooLowException<Dummy>(parameterName, value, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy IndexTooLowException<TDummy>(string parameterName, long value, [CallerMemberName] string caller = null) =>
+  public static TDummy IndexTooLowException<TDummy>(string parameterName, long value, [CallerMemberName] string? caller = null) =>
     throw new IndexOutOfRangeException($"{(caller == null ? string.Empty : caller + ":")}Index too low {value} < 0") { Data = { { parameterName, value } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void IndexTooLowException(string parameterName, long value, [CallerMemberName] string caller = null) =>
+  public static void IndexTooLowException(string parameterName, long value, [CallerMemberName] string? caller = null) =>
     IndexTooLowException<Dummy>(parameterName, value, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static TDummy
-    IndexTooHighException<TDummy>(string parameterName, int value, int maxValue, [CallerMemberName] string caller = null) =>
+    IndexTooHighException<TDummy>(string parameterName, int value, int maxValue, [CallerMemberName] string? caller = null) =>
     throw new IndexOutOfRangeException($"{(caller == null ? string.Empty : caller + ":")}Index too high {value} >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void
-    IndexTooHighException(string parameterName, int value, int maxValue, [CallerMemberName] string caller = null) =>
+    IndexTooHighException(string parameterName, int value, int maxValue, [CallerMemberName] string? caller = null) =>
     IndexTooHighException<Dummy>(parameterName, value, maxValue, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static TDummy
-    IndexTooHighException<TDummy>(string parameterName, long value, long maxValue, [CallerMemberName] string caller = null) =>
+    IndexTooHighException<TDummy>(string parameterName, long value, long maxValue, [CallerMemberName] string? caller = null) =>
     throw new IndexOutOfRangeException($"{(caller == null ? string.Empty : caller + ":")}Index too high {value} >= {maxValue}") { Data = { { parameterName, value }, { "Maximum", maxValue } } };
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
   public static void
-    IndexTooHighException(string parameterName, long value, long maxValue, [CallerMemberName] string caller = null) =>
+    IndexTooHighException(string parameterName, long value, long maxValue, [CallerMemberName] string? caller = null) =>
     IndexTooHighException<Dummy>(parameterName, value, maxValue, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy IndexOutOfRangeException<TDummy>([CallerMemberName] string caller = null) =>
+  public static TDummy IndexOutOfRangeException<TDummy>([CallerMemberName] string? caller = null) =>
     throw new IndexOutOfRangeException($"{(caller == null ? string.Empty : caller + ":")}Index out of range");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void IndexOutOfRangeException([CallerMemberName] string caller = null) =>
+  public static void IndexOutOfRangeException([CallerMemberName] string? caller = null) =>
     IndexOutOfRangeException<Dummy>(caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy CountTooLowException<TDummy>(string parameterName, int value, [CallerMemberName] string caller = null)
+  public static TDummy CountTooLowException<TDummy>(string parameterName, int value, [CallerMemberName] string? caller = null)
     => throw new ArgumentOutOfRangeException(
       parameterName,
       $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0"
@@ -251,13 +251,13 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooLowException(string parameterName, int value, [CallerMemberName] string caller = null)
+  public static void CountTooLowException(string parameterName, int value, [CallerMemberName] string? caller = null)
     => CountTooLowException<Dummy>(parameterName, value, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy CountTooLowException<TDummy>(string parameterName, long value, [CallerMemberName] string caller = null)
+  public static TDummy CountTooLowException<TDummy>(string parameterName, long value, [CallerMemberName] string? caller = null)
     => throw new ArgumentOutOfRangeException(
       parameterName,
       $"{(caller == null ? string.Empty : caller + ":")}Count too low {value} < 0"
@@ -266,7 +266,7 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void CountTooLowException(string parameterName, long value, [CallerMemberName] string caller = null)
+  public static void CountTooLowException(string parameterName, long value, [CallerMemberName] string? caller = null)
     => CountTooLowException<Dummy>(parameterName, value, caller);
 
   [DebuggerHidden]
@@ -276,7 +276,7 @@ internal static class AlwaysThrow {
     string parameterName,
     int value,
     int maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -290,7 +290,7 @@ internal static class AlwaysThrow {
     string parameterName,
     int value,
     int maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountTooHighException<Dummy>(parameterName, value, maxValue, caller);
 
@@ -301,7 +301,7 @@ internal static class AlwaysThrow {
     string parameterName,
     long value,
     long maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -315,7 +315,7 @@ internal static class AlwaysThrow {
     string parameterName,
     long value,
     long maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountTooHighException<Dummy>(parameterName, value, maxValue, caller);
 
@@ -327,7 +327,7 @@ internal static class AlwaysThrow {
     int value,
     int checkValue,
     int maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -342,7 +342,7 @@ internal static class AlwaysThrow {
     int value,
     int checkValue,
     int maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountTooHighException<Dummy>(parameterName, value, checkValue, maxValue, caller);
 
@@ -354,7 +354,7 @@ internal static class AlwaysThrow {
     long value,
     long checkValue,
     long maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -369,7 +369,7 @@ internal static class AlwaysThrow {
     long value,
     long checkValue,
     long maxValue,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountTooHighException<Dummy>(parameterName, value, checkValue, maxValue, caller);
 
@@ -380,7 +380,7 @@ internal static class AlwaysThrow {
     string parameterName,
     int needed,
     int value,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -394,7 +394,7 @@ internal static class AlwaysThrow {
     string parameterName,
     int needed,
     int value,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountNotMultipleOfException<Dummy>(parameterName, needed, value, caller);
 
@@ -405,7 +405,7 @@ internal static class AlwaysThrow {
     string parameterName,
     long needed,
     long value,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => throw new ArgumentOutOfRangeException(
       parameterName,
@@ -419,38 +419,38 @@ internal static class AlwaysThrow {
     string parameterName,
     long needed,
     long value,
-    [CallerMemberName] string caller = null
+    [CallerMemberName] string? caller = null
   )
     => CountNotMultipleOfException<Dummy>(parameterName, needed, value, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy InvalidOperationException<TDummy>(string message, [CallerMemberName] string caller = null) =>
+  public static TDummy InvalidOperationException<TDummy>(string message, [CallerMemberName] string? caller = null) =>
     throw new InvalidOperationException($"{(caller == null ? string.Empty : caller + ":")}{message}");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void InvalidOperationException(string message, [CallerMemberName] string caller = null) =>
+  public static void InvalidOperationException(string message, [CallerMemberName] string? caller = null) =>
     InvalidOperationException<Dummy>(message, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy NoElements<TDummy>([CallerMemberName] string caller = null) =>
+  public static TDummy NoElements<TDummy>([CallerMemberName] string? caller = null) =>
     throw new InvalidOperationException($"{(caller == null ? string.Empty : caller + ":")}The sequence contains no elements.");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void NoElements([CallerMemberName] string caller = null) =>
+  public static void NoElements([CallerMemberName] string? caller = null) =>
     NoElements<Dummy>(caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy UnknownEnumValue<TEnum, TDummy>(string parameterName, TEnum value, [CallerMemberName] string caller = null)
+  public static TDummy UnknownEnumValue<TEnum, TDummy>(string parameterName, TEnum value, [CallerMemberName] string? caller = null)
     where TEnum : Enum =>
     throw new ArgumentException(
       $"{(caller == null ? string.Empty : caller + ":")}The value {value} provided is not part of the enum {typeof(TEnum).Name}",
@@ -460,42 +460,42 @@ internal static class AlwaysThrow {
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void UnknownEnumValue<TEnum>(string parameterName, TEnum value, [CallerMemberName] string caller = null)
+  public static void UnknownEnumValue<TEnum>(string parameterName, TEnum value, [CallerMemberName] string? caller = null)
     where TEnum : Enum => UnknownEnumValue<TEnum, Dummy>(parameterName, value, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy ObjectDisposedException<TDummy>(string objectName, [CallerMemberName] string caller = null) =>
+  public static TDummy ObjectDisposedException<TDummy>(string objectName, [CallerMemberName] string? caller = null) =>
     throw new ObjectDisposedException(objectName, $"{(caller == null ? string.Empty : caller + ":")} The object {objectName} is already disposed and must no longer be used.");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void ObjectDisposedException(string objectName, [CallerMemberName] string caller = null) =>
+  public static void ObjectDisposedException(string objectName, [CallerMemberName] string? caller = null) =>
     ObjectDisposedException<Dummy>(objectName, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy NotSupportedException<TDummy>(string message = null, [CallerMemberName] string caller = null) =>
+  public static TDummy NotSupportedException<TDummy>(string? message = null, [CallerMemberName] string? caller = null) =>
     throw new NotSupportedException($"{(caller == null ? string.Empty : caller + ":")}{message ?? "This operation is not supported."}");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void NotSupportedException(string message = null, [CallerMemberName] string caller = null) =>
+  public static void NotSupportedException(string? message = null, [CallerMemberName] string? caller = null) =>
     NotSupportedException<Dummy>(message, caller);
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static TDummy NotImplementedException<TDummy>(string message = null, [CallerMemberName] string caller = null) =>
+  public static TDummy NotImplementedException<TDummy>(string? message = null, [CallerMemberName] string? caller = null) =>
     throw new NotImplementedException($"{(caller == null ? string.Empty : caller + ":")}{message ?? "This operation is not implemented."}");
 
   [DebuggerHidden]
   [MethodImpl(MethodImplOptions.NoInlining)]
   [DoesNotReturn]
-  public static void NotImplementedException(string message = null, [CallerMemberName] string caller = null) =>
+  public static void NotImplementedException(string? message = null, [CallerMemberName] string? caller = null) =>
     NotImplementedException<Dummy>(message, caller);
 }

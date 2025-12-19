@@ -202,7 +202,8 @@ public readonly struct ReadOnlySequence<T> {
     var obj = origin.GetObject();
     var index = origin.GetInteger();
 
-    if (obj is ReadOnlySequenceSegment<T> segment) {
+    if (obj is ReadOnlySequenceSegment<T> seg) {
+      var segment = seg;
       while (segment != null) {
         var length = segment.Memory.Length - index;
         if (offset < length)

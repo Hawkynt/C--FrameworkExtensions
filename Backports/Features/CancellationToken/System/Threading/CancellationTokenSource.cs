@@ -78,7 +78,7 @@ public sealed class CancellationTokenSource : IDisposable {
   public CancellationTokenSource(TimeSpan delay)
     : this((int)delay.TotalMilliseconds) { }
 
-  private Timer _timer;
+  private Timer? _timer;
 
   private void _StartTimer(int millisecondsDelay) => this._timer = new(_ => this.Cancel(), null, millisecondsDelay, Timeout.Infinite);
 
@@ -100,7 +100,7 @@ public sealed class CancellationTokenSource : IDisposable {
     this._isCancellationRequested = true;
     this._waitHandle.Set();
 
-    List<Exception> exceptions = null;
+    List<Exception>? exceptions = null;
     _CallbackInfo[] callbacksCopy;
 
     lock (this._lock)
@@ -231,9 +231,9 @@ public sealed class CancellationTokenSource : IDisposable {
   }
 
   internal sealed class _CallbackInfo {
-    private readonly Action _callback;
-    private readonly Action<object> _callbackWithState;
-    private readonly object _state;
+    private readonly Action? _callback;
+    private readonly Action<object>? _callbackWithState;
+    private readonly object? _state;
 
     public _CallbackInfo(Action callback) => this._callback = callback;
 
@@ -246,7 +246,7 @@ public sealed class CancellationTokenSource : IDisposable {
       if (this._callback != null)
         this._callback();
       else
-        this._callbackWithState?.Invoke(this._state);
+        this._callbackWithState?.Invoke(this._state!);
     }
   }
 

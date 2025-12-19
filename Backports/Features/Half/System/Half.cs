@@ -330,7 +330,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
     } else if (exp == 0xFF) {
       // Infinity or NaN
       halfBits = mantissa != 0
-        ? (ushort)((sign << 15) | 0x7C00 | (mantissa >> 13))
+        ? (ushort)((sign << 15) | 0x7C00 | (uint)(mantissa >> 13))
         : (ushort)((sign << 15) | 0x7C00);
     } else {
       // Normalized number
@@ -346,11 +346,11 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
           // Subnormal
           mantissa |= 0x800000;
           var shift = 14 - newExp;
-          halfBits = (ushort)((sign << 15) | (mantissa >> shift));
+          halfBits = (ushort)((sign << 15) | (uint)(mantissa >> shift));
         }
       } else {
         // Normal half
-        halfBits = (ushort)((sign << 15) | (newExp << 10) | (mantissa >> 13));
+        halfBits = (ushort)((sign << 15) | (uint)(newExp << 10) | (uint)(mantissa >> 13));
       }
     }
 
@@ -382,17 +382,17 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
         }
         mantissa &= 0x3FF;
         var newExp = exp - ExponentBias + 127;
-        floatBits = (int)((sign << 31) | (newExp << 23) | (mantissa << 13));
+        floatBits = (int)((sign << 31) | (uint)(newExp << 23) | (uint)(mantissa << 13));
       }
     } else if (exp == 0x1F) {
       // Infinity or NaN
       floatBits = mantissa != 0
-        ? (int)((sign << 31) | 0x7F800000 | (mantissa << 13))
+        ? (int)((sign << 31) | 0x7F800000 | (uint)(mantissa << 13))
         : (int)((sign << 31) | 0x7F800000);
     } else {
       // Normalized
       var newExp = exp - ExponentBias + 127;
-      floatBits = (int)((sign << 31) | (newExp << 23) | (mantissa << 13));
+      floatBits = (int)((sign << 31) | (uint)(newExp << 23) | (uint)(mantissa << 13));
     }
 
     return _Int32BitsToSingle(floatBits);

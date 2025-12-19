@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 namespace System.Runtime.CompilerServices; 
 
 public struct AsyncTaskMethodBuilder {
-  private TaskCompletionSource<object> _tcs;
+  private TaskCompletionSource<object?> _tcs;
 
   public Task Task => this._tcs.Task;
 

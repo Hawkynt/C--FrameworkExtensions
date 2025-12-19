@@ -48,13 +48,13 @@ public static partial class EnumerablePolyfills {
     /// <param name="keySelector">A function to extract the key for each element.</param>
     /// <param name="comparer">An <see cref="IEqualityComparer{T}"/> to compare keys.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> that contains distinct elements from the source sequence.</returns>
-    public IEnumerable<TSource> DistinctBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+    public IEnumerable<TSource> DistinctBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
 
       return Invoke(@this, keySelector, comparer);
 
-      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
         var set = new HashSet<TKey>(comparer);
         foreach (var element in source)
           if (set.Add(keySelector(element)))
@@ -81,14 +81,14 @@ public static partial class EnumerablePolyfills {
     /// <param name="keySelector">A function to extract the key for each element.</param>
     /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to compare values.</param>
     /// <returns>A sequence that contains the set difference of the elements of two sequences.</returns>
-    public IEnumerable<TSource> ExceptBy<TKey>(IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+    public IEnumerable<TSource> ExceptBy<TKey>(IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(second);
       ArgumentNullException.ThrowIfNull(keySelector);
 
       return Invoke(@this, second, keySelector, comparer);
 
-      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
         var set = new HashSet<TKey>(second, comparer);
         foreach (var element in first)
           if (set.Add(keySelector(element)))
@@ -115,14 +115,14 @@ public static partial class EnumerablePolyfills {
     /// <param name="keySelector">A function to extract the key for each element.</param>
     /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to compare values.</param>
     /// <returns>A sequence that contains the elements that form the set intersection of two sequences.</returns>
-    public IEnumerable<TSource> IntersectBy<TKey>(IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+    public IEnumerable<TSource> IntersectBy<TKey>(IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(second);
       ArgumentNullException.ThrowIfNull(keySelector);
 
       return Invoke(@this, second, keySelector, comparer);
 
-      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TKey> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
         var set = new HashSet<TKey>(second, comparer);
         foreach (var element in first)
           if (set.Remove(keySelector(element)))
@@ -149,14 +149,14 @@ public static partial class EnumerablePolyfills {
     /// <param name="keySelector">A function to extract the key for each element.</param>
     /// <param name="comparer">The <see cref="IEqualityComparer{T}"/> to compare values.</param>
     /// <returns>An <see cref="IEnumerable{T}"/> that contains the elements from both input sequences, excluding duplicates.</returns>
-    public IEnumerable<TSource> UnionBy<TKey>(IEnumerable<TSource> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+    public IEnumerable<TSource> UnionBy<TKey>(IEnumerable<TSource> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(second);
       ArgumentNullException.ThrowIfNull(keySelector);
 
       return Invoke(@this, second, keySelector, comparer);
 
-      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second, Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
         var set = new HashSet<TKey>(comparer);
         foreach (var element in first)
           if (set.Add(keySelector(element)))

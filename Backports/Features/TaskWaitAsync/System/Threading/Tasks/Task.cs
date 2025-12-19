@@ -59,7 +59,7 @@ public static partial class TaskPolyfills {
     public async Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken) {
       using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
       var delayTask = Task.Delay(timeout, cts.Token);
-      var completedTask = await Task.WhenAny(@this, delayTask).ConfigureAwait(false);
+      var completedTask = await Task.WhenAny(new Task[] { @this, delayTask }).ConfigureAwait(false);
 
       if (completedTask == delayTask) {
         cancellationToken.ThrowIfCancellationRequested();
@@ -105,7 +105,7 @@ public static partial class TaskPolyfills {
     public async Task<TResult> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken) {
       using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
       var delayTask = Task.Delay(timeout, cts.Token);
-      var completedTask = await Task.WhenAny(@this, delayTask).ConfigureAwait(false);
+      var completedTask = await Task.WhenAny(new Task[] { @this, delayTask }).ConfigureAwait(false);
 
       if (completedTask == delayTask) {
         cancellationToken.ThrowIfCancellationRequested();

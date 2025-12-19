@@ -20,6 +20,7 @@
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -48,7 +49,7 @@ public class ConcurrentBag<T> {
       this._items.Add(item);
   }
 
-  public bool TryTake(out T item) {
+  public bool TryTake([MaybeNullWhen(false)] out T item) {
     lock (this._items) {
       if (this._items.Count > 0) {
         item = this._items[0];

@@ -27,7 +27,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Collections.Generic {
   [DebuggerDisplay("Count = {Count}")]
   [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public class HashSet<T>(IEqualityComparer<T> comparer) : ICollection<T> {
+  public class HashSet<T>(IEqualityComparer<T>? comparer) : ICollection<T> {
 
     /// <summary>Gets the <see cref="IEqualityComparer" /> object that is used to determine equality for the values in the set.</summary>
     public IEqualityComparer<T> Comparer { get; } = comparer ?? EqualityComparer<T>.Default;
@@ -46,17 +46,17 @@ namespace System.Collections.Generic {
       #region Overrides of ValueType
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      public override bool Equals(object obj) => obj is Wrapper w && this.Comparer.Equals(this.value, w.value);
+      public override bool Equals(object? obj) => obj is Wrapper w && this.Comparer.Equals(this.value, w.value);
 
       #endregion
     }
 
-    private readonly Dictionary<Wrapper, T> _hashtable;
+    private readonly Dictionary<Wrapper, T> _hashtable = new();
 
     #region Constructors
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HashSet() : this((IEqualityComparer<T>)null) { }
+    public HashSet() : this((IEqualityComparer<T>?)null) { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet(int capacity) : this(capacity, null) { }
@@ -64,10 +64,9 @@ namespace System.Collections.Generic {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet(IEnumerable<T> enumerable) : this(enumerable, null) { }
 
-    public HashSet(IEnumerable<T> enumerable, IEqualityComparer<T> comparer) : this(comparer) {
-      if (enumerable == null)
-        AlwaysThrow.ArgumentNullException(nameof(enumerable));
-
+    public HashSet(IEnumerable<T> enumerable, IEqualityComparer<T>? comparer) : this(comparer) {
+      ArgumentNullException.ThrowIfNull(enumerable);
+      
       this._hashtable = new(enumerable is ICollection collection ? collection.Count : 10);
       foreach (var item in enumerable) {
         Wrapper wrapper = new(item, this);
@@ -77,7 +76,7 @@ namespace System.Collections.Generic {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HashSet(int capacity, IEqualityComparer<T> comparer) : this(comparer) {
+    public HashSet(int capacity, IEqualityComparer<T>? comparer) : this(comparer) {
       if (capacity < 0)
         AlwaysThrow.ArgumentOutOfRangeException(nameof(capacity));
 
@@ -103,11 +102,7 @@ namespace System.Collections.Generic {
 
     public bool Remove(T item) {
       Wrapper key = new(item, this);
-      if (!this._hashtable.ContainsKey(key))
-        return false;
-
-      this._hashtable.Remove(key);
-      return true;
+      return this._hashtable.Remove(key);
     }
 
     /// <summary>Gets the number of elements that are contained in the set.</summary>

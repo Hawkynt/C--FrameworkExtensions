@@ -334,7 +334,7 @@ public readonly struct Int128 : IComparable, IComparable<Int128>, IEquatable<Int
     if (string.IsNullOrWhiteSpace(s))
       return false;
 
-    s = s.Trim();
+    s = s!.Trim();
     var isNegative = false;
     var startIndex = 0;
 

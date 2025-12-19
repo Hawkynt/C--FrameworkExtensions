@@ -33,7 +33,7 @@ public static partial class StreamPolyfills {
         return 0;
 
       var size = buffer.Length;
-      byte[] token = null;
+      byte[]? token = null;
       try {
         
         // TODO: size may exceed MaxChunkSize (1MB), in those cases - loop
@@ -55,7 +55,7 @@ public static partial class StreamPolyfills {
         return;
 
       const int MaxChunkSize = 1024 * 1024; // 1MB
-      byte[] rented = null;
+      byte[]? rented = null;
       try {
         rented = ArrayPool<byte>.Shared.Rent(MaxChunkSize);
         var span = rented.AsSpan(0, MaxChunkSize);

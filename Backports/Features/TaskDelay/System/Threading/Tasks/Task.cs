@@ -74,8 +74,8 @@ public static partial class TaskPolyfills {
       if (millisecondsDelay == 0)
         return _CompletedTask;
 
-      var tcs = new TaskCompletionSource<object>();
-      Timer timer = null;
+      var tcs = new TaskCompletionSource<object?>();
+      Timer? timer = null;
       CancellationTokenRegistration registration = default;
 
       timer = new Timer(
@@ -134,7 +134,7 @@ public static partial class TaskPolyfills {
       if (tasks.Length == 0)
         return _CompletedTask;
 
-      var tcs = new TaskCompletionSource<object>();
+      var tcs = new TaskCompletionSource<object?>();
       var remaining = tasks.Length;
       var exceptions = new System.Collections.Generic.List<Exception>();
       var lockObj = new object();
@@ -265,13 +265,13 @@ public static partial class TaskPolyfills {
   private static readonly Task _CompletedTask = _CreateCompletedTask();
 
   private static Task _CreateCompletedTask() {
-    var tcs = new TaskCompletionSource<object>();
+    var tcs = new TaskCompletionSource<object?>();
     tcs.SetResult(null);
     return tcs.Task;
   }
 
   private static Task _CreateCanceledTask() {
-    var tcs = new TaskCompletionSource<object>();
+    var tcs = new TaskCompletionSource<object?>();
     tcs.SetCanceled();
     return tcs.Task;
   }

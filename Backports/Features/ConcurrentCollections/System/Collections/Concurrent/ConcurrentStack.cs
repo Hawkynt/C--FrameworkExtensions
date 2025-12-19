@@ -18,6 +18,7 @@
 #endregion
 
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -60,7 +61,7 @@ public class ConcurrentStack<T> {
       this._stack.Push(item);
   }
 
-  public bool TryPop(out T item) {
+  public bool TryPop([MaybeNullWhen(false)] out T item) {
     lock (this._stack) {
       if (this._stack.Count > 0) {
         item = this._stack.Pop();

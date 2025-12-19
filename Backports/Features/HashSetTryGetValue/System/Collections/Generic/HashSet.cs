@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_HASHSET_TRYGETVALUE
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -42,7 +43,7 @@ public static partial class HashSetPolyfills {
     /// (so that more sharing of references can occur) or to look up a value that has more complete data than the value you currently have.
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(T equalValue, out T actualValue) {
+    public bool TryGetValue(T equalValue, [MaybeNullWhen(false)] out T actualValue) {
       Against.ThisIsNull(@this);
 
       foreach (var item in @this) {

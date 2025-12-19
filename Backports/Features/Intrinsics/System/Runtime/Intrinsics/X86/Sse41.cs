@@ -388,67 +388,67 @@ public abstract class Sse41 : Ssse3 {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<short> ConvertToVector128Int16(Vector128<sbyte> value)
     => Vector128.Create(
-      (short)value[0], (short)value[1], (short)value[2], (short)value[3],
-      (short)value[4], (short)value[5], (short)value[6], (short)value[7]
+      value[0], value[1], value[2], value[3],
+      value[4], value[5], value[6], value[7]
     );
 
   /// <summary>Zero-extends packed 8-bit unsigned integers to packed 16-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<short> ConvertToVector128Int16(Vector128<byte> value)
     => Vector128.Create(
-      (short)value[0], (short)value[1], (short)value[2], (short)value[3],
-      (short)value[4], (short)value[5], (short)value[6], (short)value[7]
+      value[0], value[1], value[2], value[3],
+      value[4], value[5], value[6], value[7]
     );
 
   /// <summary>Sign-extends packed 16-bit signed integers to packed 32-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<int> ConvertToVector128Int32(Vector128<short> value)
-    => Vector128.Create((int)value[0], (int)value[1], (int)value[2], (int)value[3]);
+    => Vector128.Create(value[0], value[1], value[2], value[3]);
 
   /// <summary>Zero-extends packed 16-bit unsigned integers to packed 32-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<int> ConvertToVector128Int32(Vector128<ushort> value)
-    => Vector128.Create((int)value[0], (int)value[1], (int)value[2], (int)value[3]);
+    => Vector128.Create(value[0], value[1], value[2], value[3]);
 
   /// <summary>Sign-extends packed 8-bit signed integers to packed 32-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<int> ConvertToVector128Int32(Vector128<sbyte> value)
-    => Vector128.Create((int)value[0], (int)value[1], (int)value[2], (int)value[3]);
+    => Vector128.Create(value[0], value[1], value[2], value[3]);
 
   /// <summary>Zero-extends packed 8-bit unsigned integers to packed 32-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<int> ConvertToVector128Int32(Vector128<byte> value)
-    => Vector128.Create((int)value[0], (int)value[1], (int)value[2], (int)value[3]);
+    => Vector128.Create(value[0], value[1], value[2], value[3]);
 
   /// <summary>Sign-extends packed 32-bit signed integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<int> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   /// <summary>Zero-extends packed 32-bit unsigned integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<uint> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   /// <summary>Sign-extends packed 16-bit signed integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<short> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   /// <summary>Zero-extends packed 16-bit unsigned integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<ushort> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   /// <summary>Sign-extends packed 8-bit signed integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<sbyte> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   /// <summary>Zero-extends packed 8-bit unsigned integers to packed 64-bit signed integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Vector128<long> ConvertToVector128Int64(Vector128<byte> value)
-    => Vector128.Create((long)value[0], (long)value[1]);
+    => Vector128.Create(value[0], value[1]);
 
   #endregion
 
@@ -621,7 +621,7 @@ public abstract class Sse41 : Ssse3 {
 
   /// <summary>Computes the minimum of packed 8-bit unsigned integers.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Vector128<byte> Min(Vector128<byte> left, Vector128<byte> right) {
+  public new static Vector128<byte> Min(Vector128<byte> left, Vector128<byte> right) {
     var result = Vector128<byte>.Zero;
     for (var i = 0; i < Vector128<byte>.Count; ++i)
       result = result.WithElement(i, Math.Min(left[i], right[i]));
@@ -668,7 +668,7 @@ public abstract class Sse41 : Ssse3 {
         minIndex = i;
       }
     }
-    return Vector128.Create(minValue, (ushort)minIndex, (ushort)0, (ushort)0, (ushort)0, (ushort)0, (ushort)0, (ushort)0);
+    return Vector128.Create(minValue, (ushort)minIndex, 0, 0, 0, 0, 0, 0);
   }
 
   #endregion

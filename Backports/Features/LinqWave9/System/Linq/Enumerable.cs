@@ -70,7 +70,7 @@ public static partial class EnumerablePolyfills {
       IEnumerable<TInner> inner,
       Func<TSource, TKey> outerKeySelector,
       Func<TInner, TKey> innerKeySelector,
-      Func<TSource, TInner, TResult> resultSelector
+      Func<TSource, TInner?, TResult> resultSelector
     ) => @this.LeftJoin(inner, outerKeySelector, innerKeySelector, resultSelector, null);
 
     /// <summary>
@@ -89,8 +89,8 @@ public static partial class EnumerablePolyfills {
       IEnumerable<TInner> inner,
       Func<TSource, TKey> outerKeySelector,
       Func<TInner, TKey> innerKeySelector,
-      Func<TSource, TInner, TResult> resultSelector,
-      IEqualityComparer<TKey> comparer
+      Func<TSource, TInner?, TResult> resultSelector,
+      IEqualityComparer<TKey>? comparer
     ) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(inner);
@@ -105,10 +105,10 @@ public static partial class EnumerablePolyfills {
         IEnumerable<TInner> inner,
         Func<TSource, TKey> outerKeySelector,
         Func<TInner, TKey> innerKeySelector,
-        Func<TSource, TInner, TResult> resultSelector,
-        IEqualityComparer<TKey> comparer
+        Func<TSource, TInner?, TResult> resultSelector,
+        IEqualityComparer<TKey>? comparer
       ) {
-        var lookup = inner.ToLookup(innerKeySelector, comparer);
+        var lookup = inner.ToLookup(innerKeySelector, comparer!);
         foreach (var outerItem in outer) {
           var key = outerKeySelector(outerItem);
           var innerItems = lookup[key];
@@ -137,7 +137,7 @@ public static partial class EnumerablePolyfills {
       IEnumerable<TInner> inner,
       Func<TSource, TKey> outerKeySelector,
       Func<TInner, TKey> innerKeySelector,
-      Func<TSource, TInner, TResult> resultSelector
+      Func<TSource?, TInner, TResult> resultSelector
     ) => @this.RightJoin(inner, outerKeySelector, innerKeySelector, resultSelector, null);
 
     /// <summary>
@@ -156,8 +156,8 @@ public static partial class EnumerablePolyfills {
       IEnumerable<TInner> inner,
       Func<TSource, TKey> outerKeySelector,
       Func<TInner, TKey> innerKeySelector,
-      Func<TSource, TInner, TResult> resultSelector,
-      IEqualityComparer<TKey> comparer
+      Func<TSource?, TInner, TResult> resultSelector,
+      IEqualityComparer<TKey>? comparer
     ) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(inner);
@@ -172,10 +172,10 @@ public static partial class EnumerablePolyfills {
         IEnumerable<TInner> inner,
         Func<TSource, TKey> outerKeySelector,
         Func<TInner, TKey> innerKeySelector,
-        Func<TSource, TInner, TResult> resultSelector,
-        IEqualityComparer<TKey> comparer
+        Func<TSource?, TInner, TResult> resultSelector,
+        IEqualityComparer<TKey>? comparer
       ) {
-        var lookup = outer.ToLookup(outerKeySelector, comparer);
+        var lookup = outer.ToLookup(outerKeySelector, comparer!);
         foreach (var innerItem in inner) {
           var key = innerKeySelector(innerItem);
           var outerItems = lookup[key];

@@ -39,7 +39,7 @@ public readonly struct TaskAwaiter(Task task) : ICriticalNotifyCompletion {
   
   public void GetResult() {
     if (this._task.IsFaulted)
-      throw this._task.Exception.InnerException;
+      throw this._task.Exception!.InnerException!;
 
     if (this._task.IsCanceled)
       throw new TaskCanceledException(this._task);
@@ -59,10 +59,10 @@ public readonly struct TaskAwaiter<TResult>(Task<TResult> task) : ICriticalNotif
   }
 
   public void UnsafeOnCompleted(Action continuation) => this.OnCompleted(continuation);
-  
+
   public TResult GetResult() {
     if (this._task.IsFaulted)
-      throw this._task.Exception.InnerException;
+      throw this._task.Exception!.InnerException!;
 
     if (this._task.IsCanceled)
       throw new TaskCanceledException(this._task);

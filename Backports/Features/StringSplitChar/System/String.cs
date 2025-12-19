@@ -51,8 +51,8 @@ public static partial class StringPolyfills {
     public string[] Split(string separator, StringSplitOptions options = StringSplitOptions.None)
       => separator is { Length: not 0 }
         ? @this.Split([separator], options)
-        : (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries 
-          ? @this.Split((char[])null, options) 
+        : (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries
+          ? @this.Split((char[]?)null, options)
           : [@this]
     ;
   }

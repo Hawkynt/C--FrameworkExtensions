@@ -28,15 +28,15 @@ namespace System.Threading.Tasks;
 /// </summary>
 public class Task : IDisposable {
 
-  private readonly Action _action;
-  private readonly Action<object> _actionWithState;
-  private readonly object _state;
+  private readonly Action? _action;
+  private readonly Action<object?>? _actionWithState;
+  private readonly object? _state;
   private readonly CancellationToken _cancellationToken;
   private readonly TaskCreationOptions _creationOptions;
 
   private volatile TaskStatus _status = TaskStatus.Created;
   private readonly ManualResetEvent _completionEvent = new(false);
-  private AggregateException _exception;
+  private AggregateException? _exception;
   private readonly List<Action<Task>> _continuations = [];
   private readonly object _lock = new();
 
@@ -63,7 +63,7 @@ public class Task : IDisposable {
   /// <summary>
   /// Gets the <see cref="AggregateException"/> that caused the <see cref="Task"/> to end prematurely.
   /// </summary>
-  public AggregateException Exception => this._exception;
+  public AggregateException? Exception => this._exception;
 
   /// <summary>
   /// Gets the <see cref="TaskFactory"/> for creating tasks.
@@ -110,7 +110,7 @@ public class Task : IDisposable {
   /// </summary>
   /// <param name="action">The delegate that represents the code to execute in the task.</param>
   /// <param name="state">An object representing data to be used by the action.</param>
-  public Task(Action<object> action, object state)
+  public Task(Action<object?> action, object? state)
     : this(action, state, CancellationToken.None, TaskCreationOptions.None) { }
 
   /// <summary>
@@ -119,7 +119,7 @@ public class Task : IDisposable {
   /// <param name="action">The delegate that represents the code to execute in the task.</param>
   /// <param name="state">An object representing data to be used by the action.</param>
   /// <param name="cancellationToken">The <see cref="CancellationToken"/> that the new task will observe.</param>
-  public Task(Action<object> action, object state, CancellationToken cancellationToken)
+  public Task(Action<object?> action, object? state, CancellationToken cancellationToken)
     : this(action, state, cancellationToken, TaskCreationOptions.None) { }
 
   /// <summary>
@@ -129,7 +129,7 @@ public class Task : IDisposable {
   /// <param name="state">An object representing data to be used by the action.</param>
   /// <param name="cancellationToken">The <see cref="CancellationToken"/> that the new task will observe.</param>
   /// <param name="creationOptions">The <see cref="TaskCreationOptions"/> used to customize the task's behavior.</param>
-  public Task(Action<object> action, object state, CancellationToken cancellationToken, TaskCreationOptions creationOptions) {
+  public Task(Action<object?> action, object? state, CancellationToken cancellationToken, TaskCreationOptions creationOptions) {
     this._actionWithState = action ?? throw new ArgumentNullException(nameof(action));
     this._state = state;
     this._cancellationToken = cancellationToken;

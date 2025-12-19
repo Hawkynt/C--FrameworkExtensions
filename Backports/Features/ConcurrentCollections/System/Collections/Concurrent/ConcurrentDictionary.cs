@@ -20,6 +20,7 @@
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -86,7 +87,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool TryGetValue(TKey key, out TValue value) {
+  public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) {
     lock (this._items)
       return this._items.TryGetValue(key, out value);
   }
@@ -109,7 +110,7 @@ public class ConcurrentDictionary<TKey, TValue> : IEnumerable<KeyValuePair<TKey,
     }
   }
 
-  public bool TryRemove(TKey key, out TValue value) {
+  public bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value) {
     lock (this._items) {
       if (!this._items.TryGetValue(key, out value))
         return false;

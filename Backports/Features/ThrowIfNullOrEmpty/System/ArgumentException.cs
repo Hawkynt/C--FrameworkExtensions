@@ -37,9 +37,12 @@ public static partial class ArgumentExceptionPolyfills {
     /// <exception cref="ArgumentException"><paramref name="argument"/> is empty.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNullOrEmpty([NotNull] string? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null) {
-      if (string.IsNullOrEmpty(argument))
+      if (_IsNullOrEmpty(argument))
         _ThrowNullOrEmpty(argument, paramName);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool _IsNullOrEmpty([NotNullWhen(false)] string? value) => string.IsNullOrEmpty(value);
 
     [DoesNotReturn]
     private static void _ThrowNullOrEmpty(string? argument, string? paramName) {

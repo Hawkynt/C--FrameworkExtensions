@@ -75,7 +75,7 @@ public static partial class FileInfoPolyfills {
       throw new UnauthorizedAccessException("Target file is locked by another process");
     }
 
-    var sourceDirectoryPath = @this.Directory?.FullName;
+    var sourceDirectoryPath = @this.Directory?.FullName ?? throw new InvalidOperationException("Source file has no directory");
     var targetDirectoryPath = Path.GetDirectoryName(destFileName);
 
     var sourceFileName = @this.FullName;
@@ -92,7 +92,7 @@ public static partial class FileInfoPolyfills {
     // delete ttemp2 (we no longer need the original target content)
     // delete source (we no longer need the source)
     
-    string sourceCopyPath = null;
+    string? sourceCopyPath = null;
     try {
       sourceCopyPath = CreateTempFile(sourceDirectoryPath, "temp");
       // Race-Case: source exists, empty temp file in srcdir -> removed by finally
@@ -100,7 +100,7 @@ public static partial class FileInfoPolyfills {
       @this.CopyTo(sourceCopyPath, true);
       // Race-Case: source exists, temp file filled in srcdir -> removed by finally
 
-      string targetCopyPath = null;
+      string? targetCopyPath = null;
       try {
         targetCopyPath = CreateTempFile(targetDirectoryPath, "temp");
         // Race-Case: temp file filled in srcdir, empty temp file in tgtdir -> removed by finally
@@ -113,7 +113,7 @@ public static partial class FileInfoPolyfills {
         Thread.EndCriticalRegion();
         // Race-Case: source exists, temp file filled in tgtdir -> removed by finally
 
-        string targetCopyPath2 = null;
+        string? targetCopyPath2 = null;
         try {
           targetCopyPath2 = CreateTempFile(targetDirectoryPath, "temp");
           // Race-Case: source exists, temp file filled in tgtdir, empty temp file in tgtdir -> removed by finally
@@ -147,7 +147,7 @@ public static partial class FileInfoPolyfills {
 
     return;
 
-    static void TryFileDelete(string fileName) {
+    static void TryFileDelete(string? fileName) {
       if (fileName == null || !File.Exists(fileName))
         return;
       try {
@@ -169,6 +169,7 @@ public static partial class FileInfoPolyfills {
     }
 
 #if NET20_OR_GREATER && !NET45_OR_GREATER
+    // TODO: polyfill hresult on ioexception instances
     static int GetHResult(IOException e) {
       if (e == null)
         return 0;

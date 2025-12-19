@@ -149,7 +149,7 @@ public static partial class PathPolyfills {
   public static bool EndsInDirectorySeparator(string? path) {
     if (string.IsNullOrEmpty(path))
       return false;
-    var c = path[^1];
+    var c = path![^1];
     return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
   }
 
@@ -179,9 +179,9 @@ public static partial class PathPolyfills {
   public static string TrimEndingDirectorySeparator(string? path) {
     if (string.IsNullOrEmpty(path))
       return path ?? string.Empty;
-    return EndsInDirectorySeparator(path) && !IsPathRoot(path)
-      ? path[..^1]
-      : path;
+    return EndsInDirectorySeparator(path!) && !IsPathRoot(path!)
+      ? path![..^1]
+      : path!;
   }
 
   /// <summary>

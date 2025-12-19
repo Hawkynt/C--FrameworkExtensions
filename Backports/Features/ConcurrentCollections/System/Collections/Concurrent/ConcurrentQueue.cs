@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_CONCURRENT_COLLECTIONS
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -61,7 +62,7 @@ public class ConcurrentQueue<T> {
       this._queue.Enqueue(item);
   }
 
-  public bool TryDequeue(out T item) {
+  public bool TryDequeue([MaybeNullWhen(false)] out T item) {
     lock (this._queue) {
       if (this._queue.Count > 0) {
         item = this._queue.Dequeue();

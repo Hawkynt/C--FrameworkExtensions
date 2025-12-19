@@ -32,7 +32,7 @@ public static partial class Vector512 {
   internal const int Size = 64;
   internal const int Alignment = 64;
 
-  private static void SkipInit<T>(out T result) => result = default;
+  private static void SkipInit<T>(out T result) => result = default!;
 
   /// <summary>Gets a value that indicates whether 512-bit vector operations are subject to hardware acceleration.</summary>
   public static bool IsHardwareAccelerated => false;

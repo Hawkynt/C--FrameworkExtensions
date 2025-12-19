@@ -77,11 +77,11 @@ public static partial class StringPolyfills {
       if (values.Length == 0)
         return string.Empty;
 
-      var strings = new string[values.Length];
+      var strings = new string?[values.Length];
       for (var i = 0; i < values.Length; ++i)
         strings[i] = values[i]?.ToString();
 
-      return string.Join(separator.ToString(), strings);
+      return string.Join(separator.ToString(), strings!);
     }
 
   }

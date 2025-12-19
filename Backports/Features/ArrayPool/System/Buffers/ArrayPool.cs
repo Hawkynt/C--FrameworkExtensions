@@ -38,7 +38,6 @@ public abstract class ArrayPool<T> {
 
   // Store the shared ArrayPool in a field of its derived sealed type so the Jit can "see" the exact type
   // when the Shared property is inlined which will allow it to devirtualize calls made on it.
-  private static ArrayPool<T> _shared;
 
   /// <summary>
   /// Retrieves a shared <see cref="ArrayPool{T}"/> instance.
@@ -57,11 +56,11 @@ public abstract class ArrayPool<T> {
   public static ArrayPool<T> Shared {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
-      if (_shared != null)
-        return _shared;
+      if (field != null)
+        return field;
 
-      _shared = new ConfigurableArrayPool<T>(16 * 1024 * 1024 /* 16MB */, 50);
-      return _shared;
+      field = new ConfigurableArrayPool<T>(16 * 1024 * 1024 /* 16MB */, 50);
+      return field;
     }
   }
 

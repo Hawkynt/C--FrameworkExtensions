@@ -34,7 +34,7 @@ public static partial class Vector256 {
   internal const int Size = 32;
   internal const int Alignment = 32;
 
-  private static void SkipInit<T>(out T result) => result = default;
+  private static void SkipInit<T>(out T result) => result = default!;
 
   /// <summary>Gets a value that indicates whether 256-bit vector operations are subject to hardware acceleration.</summary>
   public static bool IsHardwareAccelerated => false;

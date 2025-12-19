@@ -47,21 +47,8 @@ public static partial class ArgumentExceptionPolyfills {
       throw new ArgumentException("The value cannot be an empty string or composed entirely of whitespace.", paramName);
     }
 
-#if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool _IsNullOrWhiteSpace(string? value) => string.IsNullOrWhiteSpace(value);
-#else
-    private static bool _IsNullOrWhiteSpace(string? value) {
-      if (value is null)
-        return true;
-
-      for (var i = 0; i < value.Length; ++i)
-        if (!char.IsWhiteSpace(value[i]))
-          return false;
-
-      return true;
-    }
-#endif
+    private static bool _IsNullOrWhiteSpace([NotNullWhen(false)] string? value) => string.IsNullOrWhiteSpace(value);
 
   }
 }

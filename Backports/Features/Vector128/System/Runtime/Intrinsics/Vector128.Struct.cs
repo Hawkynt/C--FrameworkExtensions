@@ -20,7 +20,6 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Runtime.CompilerServices;
 using Guard;
 using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;

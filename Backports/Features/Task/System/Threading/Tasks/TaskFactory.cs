@@ -133,7 +133,7 @@ public class TaskFactory {
   /// <param name="action">The action delegate to execute asynchronously.</param>
   /// <param name="state">An object containing data to be used by the action delegate.</param>
   /// <returns>The started <see cref="Task"/>.</returns>
-  public Task StartNew(Action<object> action, object state)
+  public Task StartNew(Action<object?> action, object? state)
     => this.StartNew(action, state, this.CancellationToken, this.CreationOptions, this.Scheduler);
 
   /// <summary>
@@ -145,7 +145,7 @@ public class TaskFactory {
   /// <param name="creationOptions">A <see cref="TaskCreationOptions"/> value that controls the behavior of the created <see cref="Task"/>.</param>
   /// <param name="scheduler">The <see cref="TaskScheduler"/> that is used to schedule the created <see cref="Task"/>.</param>
   /// <returns>The started <see cref="Task"/>.</returns>
-  public Task StartNew(Action<object> action, object state, CancellationToken cancellationToken, TaskCreationOptions creationOptions, TaskScheduler scheduler) {
+  public Task StartNew(Action<object?> action, object? state, CancellationToken cancellationToken, TaskCreationOptions creationOptions, TaskScheduler scheduler) {
     var task = new Task(action, state, cancellationToken, creationOptions);
     task.Start(scheduler);
     return task;
@@ -202,7 +202,7 @@ public class TaskFactory {
   /// <param name="function">A function delegate that returns the future result to be available through the <see cref="Task{TResult}"/>.</param>
   /// <param name="state">An object containing data to be used by the function delegate.</param>
   /// <returns>The started <see cref="Task{TResult}"/>.</returns>
-  public Task<TResult> StartNew<TResult>(Func<object, TResult> function, object state)
+  public Task<TResult> StartNew<TResult>(Func<object?, TResult> function, object? state)
     => this.StartNew(function, state, this.CancellationToken, this.CreationOptions, this.Scheduler);
 
   /// <summary>
@@ -215,7 +215,7 @@ public class TaskFactory {
   /// <param name="creationOptions">A <see cref="TaskCreationOptions"/> value that controls the behavior of the created <see cref="Task{TResult}"/>.</param>
   /// <param name="scheduler">The <see cref="TaskScheduler"/> that is used to schedule the created <see cref="Task{TResult}"/>.</param>
   /// <returns>The started <see cref="Task{TResult}"/>.</returns>
-  public Task<TResult> StartNew<TResult>(Func<object, TResult> function, object state, CancellationToken cancellationToken, TaskCreationOptions creationOptions, TaskScheduler scheduler) {
+  public Task<TResult> StartNew<TResult>(Func<object?, TResult> function, object? state, CancellationToken cancellationToken, TaskCreationOptions creationOptions, TaskScheduler scheduler) {
     var task = new Task<TResult>(function, state, cancellationToken, creationOptions);
     task.Start(scheduler);
     return task;

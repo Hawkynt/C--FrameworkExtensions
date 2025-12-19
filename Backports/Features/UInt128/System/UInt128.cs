@@ -267,7 +267,7 @@ public readonly struct UInt128 : IComparable, IComparable<UInt128>, IEquatable<U
     if (string.IsNullOrWhiteSpace(s))
       return false;
 
-    s = s.Trim();
+    s = s!.Trim();
     var startIndex = 0;
 
     if (s[0] == '+')

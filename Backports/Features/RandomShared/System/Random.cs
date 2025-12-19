@@ -28,7 +28,7 @@ namespace System;
 // Keep as polyfill class until compiler bug is fixed
 public static partial class RandomPolyfills {
   [ThreadStatic]
-  private static Random _threadLocalRandom;
+  private static Random? _threadLocalRandom;
 
   extension(Random) {
 

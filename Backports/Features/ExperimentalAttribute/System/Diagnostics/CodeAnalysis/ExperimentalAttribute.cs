@@ -43,7 +43,7 @@ public sealed class ExperimentalAttribute : Attribute {
   /// Gets or sets the URL for corresponding documentation. The API accepts a format string instead of an actual URL,
   /// creating a generic URL that includes the diagnostic ID.
   /// </summary>
-  public string UrlFormat { get; set; }
+  public string? UrlFormat { get; set; }
 
   /// <summary>
   /// Initializes a new instance of the <see cref="ExperimentalAttribute"/> class.

@@ -27,10 +27,10 @@ namespace System.Threading.Tasks;
 /// <typeparam name="TResult">The type of the result produced by this <see cref="Task{TResult}"/>.</typeparam>
 public class Task<TResult> : Task {
 
-  private readonly Func<TResult> _function;
-  private readonly Func<object, TResult> _functionWithState;
-  private readonly object _state;
-  private TResult _result;
+  private readonly Func<TResult>? _function;
+  private readonly Func<object?, TResult>? _functionWithState;
+  private readonly object? _state;
+  private TResult? _result;
 
   /// <summary>
   /// Gets the result value of this <see cref="Task{TResult}"/>.
@@ -40,7 +40,7 @@ public class Task<TResult> : Task {
       this.Wait();
       if (this.Exception != null)
         throw this.Exception;
-      return this._result;
+      return this._result!;
     }
   }
 
@@ -82,7 +82,7 @@ public class Task<TResult> : Task {
   /// </summary>
   /// <param name="function">The delegate that represents the code to execute in the task.</param>
   /// <param name="state">An object representing data to be used by the function.</param>
-  public Task(Func<object, TResult> function, object state)
+  public Task(Func<object?, TResult> function, object? state)
     : this(function, state, CancellationToken.None, TaskCreationOptions.None) { }
 
   /// <summary>
@@ -91,7 +91,7 @@ public class Task<TResult> : Task {
   /// <param name="function">The delegate that represents the code to execute in the task.</param>
   /// <param name="state">An object representing data to be used by the function.</param>
   /// <param name="cancellationToken">The <see cref="CancellationToken"/> that the new task will observe.</param>
-  public Task(Func<object, TResult> function, object state, CancellationToken cancellationToken)
+  public Task(Func<object?, TResult> function, object? state, CancellationToken cancellationToken)
     : this(function, state, cancellationToken, TaskCreationOptions.None) { }
 
   /// <summary>
@@ -101,7 +101,7 @@ public class Task<TResult> : Task {
   /// <param name="state">An object representing data to be used by the function.</param>
   /// <param name="cancellationToken">The <see cref="CancellationToken"/> that the new task will observe.</param>
   /// <param name="creationOptions">The <see cref="TaskCreationOptions"/> used to customize the task's behavior.</param>
-  public Task(Func<object, TResult> function, object state, CancellationToken cancellationToken, TaskCreationOptions creationOptions)
+  public Task(Func<object?, TResult> function, object? state, CancellationToken cancellationToken, TaskCreationOptions creationOptions)
     : base(() => { }, cancellationToken, creationOptions) {
     this._functionWithState = function ?? throw new ArgumentNullException(nameof(function));
     this._state = state;

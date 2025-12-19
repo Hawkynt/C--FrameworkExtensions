@@ -96,7 +96,7 @@ public class AggregateException : Exception {
   public AggregateException(string message, params Exception[] innerExceptions)
     : this(message, (IEnumerable<Exception>)innerExceptions) { }
 
-  private static Exception _GetFirstException(IEnumerable<Exception> exceptions) {
+  private static Exception? _GetFirstException(IEnumerable<Exception> exceptions) {
     ArgumentNullException.ThrowIfNull(exceptions);
 
     foreach (var ex in exceptions)

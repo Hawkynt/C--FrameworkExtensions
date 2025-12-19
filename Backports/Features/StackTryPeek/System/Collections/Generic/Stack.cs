@@ -21,6 +21,7 @@
 
 using MethodImplOptions = Utilities.MethodImplOptions;
 using Guard;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic;
@@ -44,7 +45,7 @@ public static partial class StackPolyfills {
     ///   <see langword="false" /> if the <see cref="Stack{T}" /> is empty.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryPeek(out TItem result) {
+    public bool TryPeek([MaybeNullWhen(false)] out TItem result) {
       Against.ThisIsNull(@this);
 
       if (@this.Count < 1) {

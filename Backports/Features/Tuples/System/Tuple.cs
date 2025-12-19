@@ -618,7 +618,7 @@ public class Tuple<T1, T2, T3, T4, T5, T6, T7, TRest> : IStructuralEquatable, IS
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override string ToString() {
-    var restString = this.Rest.ToString();
+    var restString = this.Rest?.ToString() ?? string.Empty;
     return $"({this.Item1}, {this.Item2}, {this.Item3}, {this.Item4}, {this.Item5}, {this.Item6}, {this.Item7}, {restString[1..^1]})";
   }
   

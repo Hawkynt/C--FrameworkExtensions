@@ -35,7 +35,7 @@ namespace System;
 [DebuggerDisplay("{ToString(),raw}")]
 public readonly struct ReadOnlyMemory<T> : IEquatable<ReadOnlyMemory<T>> {
 
-  private readonly object _object;
+  private readonly object? _object;
   private readonly int _index;
   private readonly int _length;
 
@@ -79,7 +79,7 @@ public readonly struct ReadOnlyMemory<T> : IEquatable<ReadOnlyMemory<T>> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal ReadOnlyMemory(object obj, int start, int length) {
+  internal ReadOnlyMemory(object? obj, int start, int length) {
     this._object = obj;
     this._index = start;
     this._length = length;

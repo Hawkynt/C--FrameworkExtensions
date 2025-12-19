@@ -318,7 +318,7 @@ public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct 
   public bool Equals(Vector512<T> other) => this == other;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override bool Equals(object obj) => obj is Vector512<T> other && this.Equals(other);
+  public override bool Equals(object? obj) => obj is Vector512<T> other && this.Equals(other);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public override int GetHashCode() {

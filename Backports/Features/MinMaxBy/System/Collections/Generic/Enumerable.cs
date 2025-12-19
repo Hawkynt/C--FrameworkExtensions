@@ -41,7 +41,7 @@ public static partial class EnumerablePolyfills {
     /// </exception>
     /// <returns>The value with the maximum key in the sequence.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TItem MaxBy<TKey>(Func<TItem, TKey> keySelector)
+    public TItem? MaxBy<TKey>(Func<TItem, TKey> keySelector)
       => @this.MaxBy(keySelector, null);
 
     /// <summary>Returns the maximum value in a generic sequence according to a specified key selector function.</summary>
@@ -56,7 +56,7 @@ public static partial class EnumerablePolyfills {
     ///   <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.
     /// </exception>
     /// <returns>The value with the maximum key in the sequence.</returns>
-    public TItem MaxBy<TKey>(Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
+    public TItem? MaxBy<TKey>(Func<TItem, TKey> keySelector, IComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
 
@@ -124,7 +124,7 @@ public static partial class EnumerablePolyfills {
     /// </exception>
     /// <returns>The value with the minimum key in the sequence.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TItem MinBy<TKey>(Func<TItem, TKey> keySelector)
+    public TItem? MinBy<TKey>(Func<TItem, TKey> keySelector)
       => @this.MinBy(keySelector, null);
 
     /// <summary>Returns the minimum value in a generic sequence according to a specified key selector function.</summary>
@@ -139,7 +139,7 @@ public static partial class EnumerablePolyfills {
     ///   <see cref="T:System.IComparable" /> or <see cref="T:System.IComparable{T}" /> interface.
     /// </exception>
     /// <returns>The value with the minimum key in the sequence.</returns>
-    public TItem MinBy<TKey>(Func<TItem, TKey> keySelector, IComparer<TKey> comparer) {
+    public TItem? MinBy<TKey>(Func<TItem, TKey> keySelector, IComparer<TKey>? comparer) {
       ArgumentNullException.ThrowIfNull(@this);
       ArgumentNullException.ThrowIfNull(keySelector);
 

@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_QUEUE_TRYDEQUEUE
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -38,7 +39,7 @@ public static partial class QueuePolyfills {
     /// <see langword="false"/> if the <see cref="Queue{T}"/> is empty.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryDequeue(out T result) {
+    public bool TryDequeue([MaybeNullWhen(false)] out T result) {
       Against.ThisIsNull(@this);
 
       if (@this.Count < 1) {
@@ -61,7 +62,7 @@ public static partial class QueuePolyfills {
     /// <see langword="false"/> if the <see cref="Queue{T}"/> is empty.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryPeek(out T result) {
+    public bool TryPeek([MaybeNullWhen(false)] out T result) {
       Against.ThisIsNull(@this);
 
       if (@this.Count < 1) {

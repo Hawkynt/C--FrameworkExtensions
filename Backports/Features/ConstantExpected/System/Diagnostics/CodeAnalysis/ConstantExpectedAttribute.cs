@@ -29,12 +29,12 @@ public sealed class ConstantExpectedAttribute : Attribute {
   /// <summary>
   /// Gets or sets the minimum bound of the expected constant, inclusive.
   /// </summary>
-  public object Min { get; set; }
+  public object? Min { get; set; }
 
   /// <summary>
   /// Gets or sets the maximum bound of the expected constant, inclusive.
   /// </summary>
-  public object Max { get; set; }
+  public object? Max { get; set; }
 }
 
 #endif

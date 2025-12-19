@@ -34,7 +34,7 @@ public static partial class Vector128 {
   internal const int Size = 16;
   internal const int Alignment = 16;
 
-  private static void SkipInit<T>(out T result) => result = default;
+  private static void SkipInit<T>(out T result) => result = default!;
 
   public static bool IsHardwareAccelerated => false;
 
@@ -457,7 +457,7 @@ public static partial class Vector128 {
 #else
 public static partial class Vector128Polyfills {
   extension(Vector128) {
-    private static void SkipInit<T>(out T result) => result = default;
+    private static void SkipInit<T>(out T result) => result = default!;
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
