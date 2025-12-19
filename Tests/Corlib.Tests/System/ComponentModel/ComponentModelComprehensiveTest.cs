@@ -691,11 +691,10 @@ public class ComponentModelComprehensiveTest {
   [Test]
   public void SynchronizeInvokeExtensions_SafeInvoke_WhenInvokeRequired_Synchronous_CallsInvoke() {
     var mock = new MockSynchronizeInvoke { InvokeRequired = true };
-    var actionCalled = false;
 
     mock.InvokeCallback = (method, args) => { method.DynamicInvoke(args); };
 
-    var result = mock.SafeInvoke(m => actionCalled = true, async: false);
+    var result = mock.SafeInvoke(_ => { }, async: false);
 
     Assert.That(result, Is.False); // Returns false when marshalled
     Assert.That(mock.InvokeCalled, Is.True);
@@ -705,11 +704,10 @@ public class ComponentModelComprehensiveTest {
   [Test]
   public void SynchronizeInvokeExtensions_SafeInvoke_WhenInvokeRequired_Asynchronous_CallsBeginInvoke() {
     var mock = new MockSynchronizeInvoke { InvokeRequired = true };
-    var actionCalled = false;
 
     mock.BeginInvokeCallback = (method, args) => { method.DynamicInvoke(args); };
 
-    var result = mock.SafeInvoke(m => actionCalled = true, async: true);
+    var result = mock.SafeInvoke(_ => { }, async: true);
 
     Assert.That(result, Is.False); // Returns false when marshalled
     Assert.That(mock.BeginInvokeCalled, Is.True);

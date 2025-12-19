@@ -17,6 +17,8 @@
 
 #endregion
 
+#nullable enable
+
 #if !SUPPORTS_QUEUE_ENSURECAPACITY
 
 using System.Reflection;
@@ -51,16 +53,16 @@ public static partial class QueuePolyfills {
 
   }
 
-  private static readonly FieldInfo _arrayField = typeof(Queue<>).GetField("_array", BindingFlags.NonPublic | BindingFlags.Instance)
+  private static readonly FieldInfo? _arrayField = typeof(Queue<>).GetField("_array", BindingFlags.NonPublic | BindingFlags.Instance)
                                                   ?? typeof(Queue<>).GetField("array", BindingFlags.NonPublic | BindingFlags.Instance);
 
-  private static readonly FieldInfo _headField = typeof(Queue<>).GetField("_head", BindingFlags.NonPublic | BindingFlags.Instance)
+  private static readonly FieldInfo? _headField = typeof(Queue<>).GetField("_head", BindingFlags.NonPublic | BindingFlags.Instance)
                                                  ?? typeof(Queue<>).GetField("head", BindingFlags.NonPublic | BindingFlags.Instance);
 
-  private static readonly FieldInfo _tailField = typeof(Queue<>).GetField("_tail", BindingFlags.NonPublic | BindingFlags.Instance)
+  private static readonly FieldInfo? _tailField = typeof(Queue<>).GetField("_tail", BindingFlags.NonPublic | BindingFlags.Instance)
                                                  ?? typeof(Queue<>).GetField("tail", BindingFlags.NonPublic | BindingFlags.Instance);
 
-  private static readonly FieldInfo _sizeField = typeof(Queue<>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance)
+  private static readonly FieldInfo? _sizeField = typeof(Queue<>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance)
                                                  ?? typeof(Queue<>).GetField("size", BindingFlags.NonPublic | BindingFlags.Instance);
 
   private static int _GetCapacity<T>(Queue<T> queue) {
@@ -80,9 +82,9 @@ public static partial class QueuePolyfills {
   }
 
   private static void _SetCapacity<T>(Queue<T> queue, int capacity) {
-    var arrayFieldTyped = _arrayField.DeclaringType!.MakeGenericType(typeof(T)).GetField(_arrayField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
-    var headFieldTyped = _headField.DeclaringType!.MakeGenericType(typeof(T)).GetField(_headField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
-    var tailFieldTyped = _tailField.DeclaringType!.MakeGenericType(typeof(T)).GetField(_tailField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
+    var arrayFieldTyped = _arrayField!.DeclaringType!.MakeGenericType(typeof(T)).GetField(_arrayField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
+    var headFieldTyped = _headField!.DeclaringType!.MakeGenericType(typeof(T)).GetField(_headField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
+    var tailFieldTyped = _tailField!.DeclaringType!.MakeGenericType(typeof(T)).GetField(_tailField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
     var sizeFieldTyped = _sizeField?.DeclaringType!.MakeGenericType(typeof(T)).GetField(_sizeField.Name, BindingFlags.NonPublic | BindingFlags.Instance);
 
     var oldArray = arrayFieldTyped!.GetValue(queue) as T[];

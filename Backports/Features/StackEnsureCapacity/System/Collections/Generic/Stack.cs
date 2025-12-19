@@ -17,6 +17,8 @@
 
 #endregion
 
+#nullable enable
+
 #if !SUPPORTS_STACK_ENSURECAPACITY
 
 using System.Reflection;
@@ -51,7 +53,7 @@ public static partial class StackPolyfills {
 
   }
 
-  private static readonly FieldInfo _stackArrayField = typeof(Stack<>).GetField("_array", BindingFlags.NonPublic | BindingFlags.Instance)
+  private static readonly FieldInfo? _stackArrayField = typeof(Stack<>).GetField("_array", BindingFlags.NonPublic | BindingFlags.Instance)
                                                        ?? typeof(Stack<>).GetField("array", BindingFlags.NonPublic | BindingFlags.Instance);
 
   private static int _GetCapacity<T>(Stack<T> stack) {

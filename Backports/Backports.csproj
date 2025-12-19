@@ -24,7 +24,10 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
-    <NoWarn>MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
+    <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <NoWarn>$(NoWarn);CS8785</NoWarn><!-- JsonSourceGenerator internal bug in .NET 6.0 -->
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS8500</NoWarn><!-- Pointer to managed type - required for Vector intrinsics -->
