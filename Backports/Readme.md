@@ -339,6 +339,48 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.int32.tryparse#system-int32-tryparse%28system-readonlyspan%28%28system-char%29%29-system-int32%40%29)(ReadOnlySpan&lt;char&gt; s, out T result)
   * T [Parse](https://learn.microsoft.com/dotnet/api/system.int32.parse#system-int32-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; s)
 
+* System.Int32 (int)
+  * int [Abs](https://learn.microsoft.com/dotnet/api/system.int32.abs)(int value)
+  * (int Quotient, int Remainder) [DivRem](https://learn.microsoft.com/dotnet/api/system.int32.divrem)(int left, int right)
+  * bool [IsEvenInteger](https://learn.microsoft.com/dotnet/api/system.int32.iseveninteger)(int value)
+  * bool [IsNegative](https://learn.microsoft.com/dotnet/api/system.int32.isnegative)(int value)
+  * bool [IsOddInteger](https://learn.microsoft.com/dotnet/api/system.int32.isoddinteger)(int value)
+  * bool [IsPositive](https://learn.microsoft.com/dotnet/api/system.int32.ispositive)(int value)
+  * int [LeadingZeroCount](https://learn.microsoft.com/dotnet/api/system.int32.leadingzerocount)(int value)
+  * int [Log2](https://learn.microsoft.com/dotnet/api/system.int32.log2)(int value)
+  * int [Max](https://learn.microsoft.com/dotnet/api/system.int32.max)(int x, int y)
+  * int [MaxMagnitude](https://learn.microsoft.com/dotnet/api/system.int32.maxmagnitude)(int x, int y)
+  * int [Min](https://learn.microsoft.com/dotnet/api/system.int32.min)(int x, int y)
+  * int [MinMagnitude](https://learn.microsoft.com/dotnet/api/system.int32.minmagnitude)(int x, int y)
+  * int [PopCount](https://learn.microsoft.com/dotnet/api/system.int32.popcount)(int value)
+  * int [RotateLeft](https://learn.microsoft.com/dotnet/api/system.int32.rotateleft)(int value, int rotateAmount)
+  * int [RotateRight](https://learn.microsoft.com/dotnet/api/system.int32.rotateright)(int value, int rotateAmount)
+  * int [Sign](https://learn.microsoft.com/dotnet/api/system.int32.sign)(int value)
+  * int [TrailingZeroCount](https://learn.microsoft.com/dotnet/api/system.int32.trailingzerocount)(int value)
+  * int [Clamp](https://learn.microsoft.com/dotnet/api/system.int32.clamp)(int value, int min, int max)
+  * int [CopySign](https://learn.microsoft.com/dotnet/api/system.int32.copysign)(int value, int sign)
+
+* System.Int64 (long)
+  * long [Abs](https://learn.microsoft.com/dotnet/api/system.int64.abs)(long value)
+  * (long Quotient, long Remainder) [DivRem](https://learn.microsoft.com/dotnet/api/system.int64.divrem)(long left, long right)
+  * bool [IsEvenInteger](https://learn.microsoft.com/dotnet/api/system.int64.iseveninteger)(long value)
+  * bool [IsNegative](https://learn.microsoft.com/dotnet/api/system.int64.isnegative)(long value)
+  * bool [IsOddInteger](https://learn.microsoft.com/dotnet/api/system.int64.isoddinteger)(long value)
+  * bool [IsPositive](https://learn.microsoft.com/dotnet/api/system.int64.ispositive)(long value)
+  * int [LeadingZeroCount](https://learn.microsoft.com/dotnet/api/system.int64.leadingzerocount)(long value)
+  * int [Log2](https://learn.microsoft.com/dotnet/api/system.int64.log2)(long value)
+  * long [Max](https://learn.microsoft.com/dotnet/api/system.int64.max)(long x, long y)
+  * long [MaxMagnitude](https://learn.microsoft.com/dotnet/api/system.int64.maxmagnitude)(long x, long y)
+  * long [Min](https://learn.microsoft.com/dotnet/api/system.int64.min)(long x, long y)
+  * long [MinMagnitude](https://learn.microsoft.com/dotnet/api/system.int64.minmagnitude)(long x, long y)
+  * int [PopCount](https://learn.microsoft.com/dotnet/api/system.int64.popcount)(long value)
+  * long [RotateLeft](https://learn.microsoft.com/dotnet/api/system.int64.rotateleft)(long value, int rotateAmount)
+  * long [RotateRight](https://learn.microsoft.com/dotnet/api/system.int64.rotateright)(long value, int rotateAmount)
+  * int [Sign](https://learn.microsoft.com/dotnet/api/system.int64.sign)(long value)
+  * int [TrailingZeroCount](https://learn.microsoft.com/dotnet/api/system.int64.trailingzerocount)(long value)
+  * long [Clamp](https://learn.microsoft.com/dotnet/api/system.int64.clamp)(long value, long min, long max)
+  * long [CopySign](https://learn.microsoft.com/dotnet/api/system.int64.copysign)(long value, long sign)
+
 * System.String
   * string [Create](https://learn.microsoft.com/dotnet/api/system.string.create)&lt;TState&gt;(int length, TState state, SpanAction&lt;char, TState&gt; action)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-string%28%29%29)(char separator, params string[] values)
@@ -436,10 +478,18 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Collections.Generic.Stack
   * bool [TryPop](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypop)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.trypeek)&lt;TItem&gt;(this Stack&lt;TItem&gt; @this, out TItem result)
+  * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.stack-1.ensurecapacity)&lt;T&gt;(this Stack&lt;T&gt; @this, int capacity)
 
 * System.Collections.Generic.Queue
   * bool [TryDequeue](https://learn.microsoft.com/dotnet/api/system.collections.generic.queue-1.trydequeue)&lt;TItem&gt;(this Queue&lt;TItem&gt; @this, out TItem result)
+  * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.queue-1.ensurecapacity)&lt;T&gt;(this Queue&lt;T&gt; @this, int capacity)
   * bool [TryPeek](https://learn.microsoft.com/dotnet/api/system.collections.generic.queue-1.trypeek)&lt;TItem&gt;(this Queue&lt;TItem&gt; @this, out TItem result)
+
+* System.Collections.Generic.Dictionary
+  * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2.ensurecapacity)&lt;TKey, TValue&gt;(this Dictionary&lt;TKey, TValue&gt; @this, int capacity)
+
+* System.Collections.Generic.HashSet
+  * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1.ensurecapacity)&lt;T&gt;(this HashSet&lt;T&gt; @this, int capacity)
 
 * System.Collections.Generic.List
   * List&lt;T&gt; [Slice](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.slice)&lt;T&gt;(this List&lt;T&gt; @this, int start, int length)
