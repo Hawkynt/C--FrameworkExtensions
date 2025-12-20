@@ -164,8 +164,6 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static uint UpperHalf(this ulong @this) => (uint)(@this >> 32);
 
-#if SUPPORTS_BITOPERATIONS
-
   /// <summary>
   /// Performs a bitwise left rotation on an 8-bit unsigned integer.
   /// </summary>
@@ -301,8 +299,6 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong RotateRight(this ulong @this, byte count) => BitOperations.RotateRight(@this, count);
-
-#endif
 
   /// <summary>
   /// Counts the number of trailing zero bits in the specified <see cref="byte"/> value.

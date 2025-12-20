@@ -1812,18 +1812,7 @@ public static partial class ArrayExtensions {
   /// <returns>The given buffer</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   [DebuggerStepThrough]
-  public static void RandomizeBuffer(this byte[] @this) {
-#if SUPPORTS_RNG_FILL
-    RandomNumberGenerator.Fill(@this);
-#else
-#if NEEDS_RNG_DISPOSE
-    using RNGCryptoServiceProvider provider = new();
-    provider.GetBytes(@this);
-#else
-    new RNGCryptoServiceProvider().GetBytes(@this);
-#endif
-#endif
-  }
+  public static void RandomizeBuffer(this byte[] @this) => RandomNumberGenerator.Fill(@this);
 
   /// <summary>
   ///   Gets a small portion of a byte array.

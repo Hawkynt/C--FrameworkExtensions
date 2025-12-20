@@ -2787,21 +2787,7 @@ public static partial class StringExtensions {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_STRING_IS_NULL_OR_WHITESPACE
-  public static bool IsNullOrWhiteSpace([NotNullWhen(false)]this string @this) => string.IsNullOrWhiteSpace(@this);
-#else
-  public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string @this) {
-    if (@this == null)
-      return true;
-
-    // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-    foreach (var chr in @this)
-      if (!chr.IsWhiteSpace())
-        return false;
-
-    return true;
-  }
-#endif
+  public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string @this) => string.IsNullOrWhiteSpace(@this);
 
   /// <summary>
   /// Determines whether the specified <see cref="ReadOnlySpan{char}"/> is empty or consists only of white-space characters.
