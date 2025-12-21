@@ -134,11 +134,17 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Runtime.CompilerServices
   * [AsyncIteratorMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratormethodbuilder)
   * [AsyncTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynctaskmethodbuilder)&lt;T&gt;
+  * [AsyncValueTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asyncvaluetaskmethodbuilder)
+  * [AsyncValueTaskMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asyncvaluetaskmethodbuilder-1)&lt;TResult&gt;
   * [ConfiguredCancelableAsyncEnumerable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredcancelableasyncenumerable-1)&lt;T&gt;
   * [ConfiguredTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredtaskawaitable)&lt;T&gt;
+  * [ConfiguredValueTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredvaluetaskawaitable)
+  * [ConfiguredValueTaskAwaitable](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.configuredvaluetaskawaitable-1)&lt;TResult&gt;
   * [IsExternalInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.isexternalinit)
   * [TaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.taskawaiter)&lt;T&gt;
   * [Unsafe](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.unsafe)
+  * [ValueTaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.valuetaskawaiter)
+  * [ValueTaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.valuetaskawaiter-1)&lt;TResult&gt;
 
 * System.Runtime.InteropServices
   * [MemoryMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.memorymarshal)
@@ -193,6 +199,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [TaskFactory](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskfactory)
   * [TaskScheduler](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler)
   * [TaskStatus](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskstatus)
+  * [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask)
+  * [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1)&lt;TResult&gt;
 
 * System
   * [AggregateException](https://learn.microsoft.com/dotnet/api/system.aggregateexception)
@@ -221,6 +229,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Runtime.CompilerServices
   * [AsyncIteratorStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratorstatemachineattribute)
+  * [AsyncMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asyncmethodbuilderattribute)
   * [CallerArgumentExpression](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerargumentexpressionattribute)
   * [CallerFilePath](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerfilepathattribute)
   * [CallerLineNumber](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callerlinenumberattribute)
@@ -295,11 +304,17 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Math
   * T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
   * double [CopySign](https://learn.microsoft.com/dotnet/api/system.math.copysign)(double x, double y)
-  * float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
+  * double [FusedMultiplyAdd](https://learn.microsoft.com/dotnet/api/system.math.fusedmultiplyadd)(double x, double y, double z)
   * double [ScaleB](https://learn.microsoft.com/dotnet/api/system.math.scaleb)(double x, int n)
   * int [ILogB](https://learn.microsoft.com/dotnet/api/system.math.ilogb)(double x)
   * double [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalestimate)(double x)
   * double [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalsqrtestimate)(double x)
+
+* System.MathF
+  * float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
+  * float [FusedMultiplyAdd](https://learn.microsoft.com/dotnet/api/system.mathf.fusedmultiplyadd)(float x, float y, float z)
+  * float [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalestimate)(float x)
+  * float [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalsqrtestimate)(float x)
 
 * System.DateTime
   * DateTime [UnixEpoch](https://learn.microsoft.com/dotnet/api/system.datetime.unixepoch)
@@ -552,9 +567,21 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.IO.TextWriter
   * void [Write](https://learn.microsoft.com/dotnet/api/system.io.textwriter.write#system-io-textwriter-write%28system-readonlyspan%28%28system-char%29%29%29)(this TextWriter @this, ReadOnlySpan&lt;char&gt; buffer)
   * void [WriteLine](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writeline#system-io-textwriter-writeline%28system-readonlyspan%28%28system-char%29%29%29)(this TextWriter @this, ReadOnlySpan&lt;char&gt; buffer)
+  * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writeasync#system-io-textwriter-writeasync%28system-string%29)(this TextWriter @this, string? value)
+  * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writeasync#system-io-textwriter-writeasync%28system-char%29)(this TextWriter @this, char value)
+  * Task [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writeasync#system-io-textwriter-writeasync%28system-char%28%29-system-int32-system-int32%29)(this TextWriter @this, char[] buffer, int index, int count)
+  * Task [WriteLineAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writelineasync#system-io-textwriter-writelineasync)(this TextWriter @this)
+  * Task [WriteLineAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writelineasync#system-io-textwriter-writelineasync%28system-string%29)(this TextWriter @this, string? value)
+  * Task [WriteLineAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writelineasync#system-io-textwriter-writelineasync%28system-char%29)(this TextWriter @this, char value)
+  * Task [WriteLineAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.writelineasync#system-io-textwriter-writelineasync%28system-char%28%29-system-int32-system-int32%29)(this TextWriter @this, char[] buffer, int index, int count)
+  * Task [FlushAsync](https://learn.microsoft.com/dotnet/api/system.io.textwriter.flushasync)(this TextWriter @this)
 
 * System.IO.TextReader
   * int [Read](https://learn.microsoft.com/dotnet/api/system.io.textreader.read#system-io-textreader-read%28system-span%28%28system-char%29%29%29)(this TextReader @this, Span&lt;char&gt; buffer)
+  * Task&lt;string?&gt; [ReadLineAsync](https://learn.microsoft.com/dotnet/api/system.io.textreader.readlineasync#system-io-textreader-readlineasync)(this TextReader @this)
+  * Task&lt;string&gt; [ReadToEndAsync](https://learn.microsoft.com/dotnet/api/system.io.textreader.readtoendasync#system-io-textreader-readtoendasync)(this TextReader @this)
+  * Task&lt;int&gt; [ReadAsync](https://learn.microsoft.com/dotnet/api/system.io.textreader.readasync#system-io-textreader-readasync%28system-char%28%29-system-int32-system-int32%29)(this TextReader @this, char[] buffer, int index, int count)
+  * Task&lt;int&gt; [ReadBlockAsync](https://learn.microsoft.com/dotnet/api/system.io.textreader.readblockasync#system-io-textreader-readblockasync%28system-char%28%29-system-int32-system-int32%29)(this TextReader @this, char[] buffer, int index, int count)
 
 * System.IO.Directory
   * DirectoryInfo [CreateTempSubdirectory](https://learn.microsoft.com/dotnet/api/system.io.directory.createtempsubdirectory)(string? prefix = null)

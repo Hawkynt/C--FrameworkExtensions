@@ -210,18 +210,6 @@ public static class MathF {
     return y;
   }
 
-  /// <summary>Returns an estimate of the reciprocal of a specified number.</summary>
-  /// <param name="x">The number whose reciprocal is to be estimated.</param>
-  /// <returns>An estimate of the reciprocal of <paramref name="x" />.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float ReciprocalEstimate(float x) => 1.0f / x;
-
-  /// <summary>Returns an estimate of the reciprocal square root of a specified number.</summary>
-  /// <param name="x">The number whose reciprocal square root is to be estimated.</param>
-  /// <returns>An estimate of the reciprocal square root <paramref name="x" />.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float ReciprocalSqrtEstimate(float x) => 1.0f / Sqrt(x);
-
   public static float ScaleB(float x, int n) {
     // Implementation based on https://git.musl-libc.org/cgit/musl/tree/src/math/scalblnf.c
     //

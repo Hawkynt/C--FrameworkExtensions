@@ -133,6 +133,18 @@ public readonly struct ReadOnlyMemory<T> : IEquatable<ReadOnlyMemory<T>> {
   }
 
   /// <summary>
+  /// Forms a slice out of the given memory using a range.
+  /// </summary>
+  /// <param name="range">The range used to slice the memory.</param>
+  public ReadOnlyMemory<T> this[Range range] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get {
+      var (start, length) = range.GetOffsetAndLength(this._length);
+      return this.Slice(start, length);
+    }
+  }
+
+  /// <summary>
   /// Forms a slice out of the given memory, beginning at 'start'.
   /// </summary>
   /// <param name="start">The index at which to begin this slice.</param>

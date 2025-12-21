@@ -133,4 +133,54 @@ public class MemoryExtensionsTests {
 
   #endregion
 
+  #region AsMemory
+
+  [Test]
+  [Category("HappyPath")]
+  public void AsMemory_ReturnsMemoryOfArray() {
+    var array = new[] { 1, 2, 3, 4, 5 };
+    var memory = array.AsMemory();
+    Assert.That(memory.Length, Is.EqualTo(5));
+    Assert.That(memory.Span[0], Is.EqualTo(1));
+    Assert.That(memory.Span[4], Is.EqualTo(5));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AsMemory_WithStart_ReturnsSlice() {
+    var array = new[] { 1, 2, 3, 4, 5 };
+    var memory = array.AsMemory(2);
+    Assert.That(memory.Length, Is.EqualTo(3));
+    Assert.That(memory.Span[0], Is.EqualTo(3));
+    Assert.That(memory.Span[2], Is.EqualTo(5));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AsMemory_WithStartAndLength_ReturnsSlice() {
+    var array = new[] { 1, 2, 3, 4, 5 };
+    var memory = array.AsMemory(1, 3);
+    Assert.That(memory.Length, Is.EqualTo(3));
+    Assert.That(memory.Span[0], Is.EqualTo(2));
+    Assert.That(memory.Span[2], Is.EqualTo(4));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void AsMemory_NullArray_ReturnsDefaultMemory() {
+    int[]? array = null;
+    var memory = array.AsMemory();
+    Assert.That(memory.IsEmpty, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void AsMemory_EmptyArray_ReturnsEmptyMemory() {
+    var array = Array.Empty<int>();
+    var memory = array.AsMemory();
+    Assert.That(memory.IsEmpty, Is.True);
+  }
+
+  #endregion
+
 }
