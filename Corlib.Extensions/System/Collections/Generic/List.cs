@@ -215,7 +215,7 @@ public static partial class ListExtensions {
   /// </example>
   public static void Shuffle<T>(this IList<T> @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
-    entropySource ??= Utilities.Random.Shared;
+    entropySource ??= Random.Shared;
 
     var index = @this.Count;
     while (index > 1)

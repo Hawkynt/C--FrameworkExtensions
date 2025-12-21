@@ -371,7 +371,7 @@ public static class IPHelper {
     var status = tuple.Status;
 
     if (status == NativeMethods.Win32ApiError.Success)
-      return Utilities.Array.Empty<Connection>();
+      return Array.Empty<Connection>();
 
     while (status == NativeMethods.Win32ApiError.InsufficientBuffer) {
       // allocate buffer and make sure it is de-allocated in every case

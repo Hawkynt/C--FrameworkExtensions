@@ -41,7 +41,7 @@ public static partial class ObjectExtensions {
 <# foreach (var type in new[] { "byte", "sbyte", "ushort", "short", "int" }) {#>
   public static T[] RepeatAsArray<T>(this T @this, <#=type#> count) {
     var result = new T[count];  
-    Utilities.Array.Fill(result, @this);
+    Array.Fill(result, @this);
     return result;
   }
 

@@ -719,7 +719,7 @@ internal class _Cache<TKey, TValue> {
     }
 
     Random random = new();
-    var keys = Utilities.Array.Empty<TKey>();
+    var keys = Array.Empty<TKey>();
     var index = 0;
     while (this._NeedsGarbageCollection) {
 
@@ -743,7 +743,7 @@ internal class _Cache<TKey, TValue> {
   }
 
   private void _RemoveOrdered(bool orderDescending) {
-    var keys = Utilities.Array.Empty<TKey>();
+    var keys = Array.Empty<TKey>();
     var index = 0;
       
     while (this._NeedsGarbageCollection) {

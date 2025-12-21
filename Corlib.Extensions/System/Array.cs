@@ -455,7 +455,7 @@ public static partial class ArrayExtensions {
     if (@this.Length == 0)
       AlwaysThrow.InvalidOperationException("No Elements!");
 
-    random ??= Utilities.Random.Shared;
+    random ??= Random.Shared;
 
     var index = random.Next(@this.Length);
     return @this[index];
@@ -624,7 +624,7 @@ public static partial class ArrayExtensions {
   /// </example>
   public static void Shuffle<TItem>(this TItem[] @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
-    entropySource ??= Utilities.Random.Shared;
+    entropySource ??= Random.Shared;
 
     var index = @this.Length;
     while (index > 1)

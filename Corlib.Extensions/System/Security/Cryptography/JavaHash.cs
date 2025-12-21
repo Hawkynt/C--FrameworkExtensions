@@ -109,7 +109,7 @@ public sealed class JavaHash : HashAlgorithm, IAdvancedHashAlgorithm {
   public static bool SupportsIV => false;
   public static int MinIVBits => 0;
   public static int MaxIVBits => MinIVBits;
-  public static int[] SupportedIVBits => Utilities.Array.Empty<int>();
+  public static int[] SupportedIVBits => Array.Empty<int>();
 
   #endregion
 }

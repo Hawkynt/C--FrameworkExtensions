@@ -239,7 +239,7 @@ public static partial class TypeExtensions {
 
         var info = this.Info;
         if (info == null)
-          return this.__customAttributes = Utilities.Array.Empty<object>();
+          return this.__customAttributes = Array.Empty<object>();
 
         var name = info.Name;
         List<object> results = [];
@@ -537,7 +537,7 @@ public static partial class TypeExtensions {
   public static object? GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
     Against.ThisIsNull(@this);
 
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Utilities.Random.Shared);
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Random.Shared);
   }
 
   internal static object? GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
