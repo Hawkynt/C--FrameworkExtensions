@@ -13,6 +13,7 @@
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
+using System.Drawing.ColorSpaces;
 using System.Drawing.Imaging;
 
 namespace System.Drawing;
@@ -22,6 +23,8 @@ public static partial class BitmapExtensions {
     BitmapData BitmapData { get; }
     Color this[int x, int y] { get; set; }
     Color this[Point p] { get; set; }
+    internal Rgba32 GetPixelRgba32(int x, int y);
+    internal void SetPixelRgba32(int x, int y, Rgba32 color);
 
     void Clear(Color color);
     void DrawHorizontalLine(int x, int y, int count, Color color);

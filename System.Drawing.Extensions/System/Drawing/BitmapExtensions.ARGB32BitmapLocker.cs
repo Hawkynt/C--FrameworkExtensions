@@ -14,7 +14,11 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 using System.Diagnostics;
+using System.Drawing.ColorSpaces;
 using System.Drawing.Imaging;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Drawing;
 
@@ -28,10 +32,32 @@ public static partial class BitmapExtensions {
     ) {
     protected override int _BytesPerPixel => 4;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override Rgba32 GetPixelRgba32(int x, int y) {
+      unsafe {
+        var data = this.BitmapData;
+        var pointer = (uint*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride >> 2;
+        var offset = stride * y + x;
+        return new(pointer[offset]);
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void SetPixelRgba32(int x, int y, Rgba32 color) {
+      unsafe {
+        var data = this.BitmapData;
+        var pointer = (uint*)data.Scan0;
+        Debug.Assert(pointer != null, nameof(pointer) + " != null");
+        var stride = data.Stride >> 2;
+        var offset = stride * y + x;
+        pointer[offset] = color.Packed;
+      }
+    }
+
     public override Color this[int x, int y] {
       get {
-#if UNSAFE
-
         unsafe {
           var data = this.BitmapData;
           var pointer = (int*)data.Scan0;
@@ -40,20 +66,8 @@ public static partial class BitmapExtensions {
           var offset = stride * y + x;
           return Color.FromArgb(pointer[offset]);
         }
-
-#else
-          var data = this.BitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-          return Color.FromArgb(Marshal.ReadInt32(pointer, offset));
-
-#endif
       }
       set {
-#if UNSAFE
-
         unsafe {
           var data = this.BitmapData;
           var pointer = (int*)data.Scan0;
@@ -62,21 +76,9 @@ public static partial class BitmapExtensions {
           var offset = stride * y + x;
           pointer[offset] = value.ToArgb();
         }
-
-#else
-          var data = this.BitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-          Marshal.WriteInt32(pointer, offset, value.ToArgb());
-
-#endif
       }
     }
 
-
-#if UNSAFE
 
     protected override unsafe void _DrawHorizontalLine(int x, int y, int count, Color color) {
       Debug.Assert(count > 0);
@@ -148,9 +150,6 @@ public static partial class BitmapExtensions {
       }
     }
 
-#endif
-
-#if UNSAFE
 
     public override unsafe void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
       if (other is not ARGB32BitmapLocker otherLocker) {
@@ -220,68 +219,5 @@ public static partial class BitmapExtensions {
       } // y
     }
 
-#else
-      public override void BlendWithUnchecked(IBitmapLocker other, int xs, int ys, int width, int height, int xt = 0, int yt = 0) {
-        if (!(other is ARGB32BitmapLocker otherLocker)) {
-          base.BlendWithUnchecked(other, xs, ys, width, height, xt, yt);
-          return;
-        }
-
-        var thisStride = this.BitmapData.Stride;
-        var otherStride = otherLocker.BitmapData.Stride;
-        const int bpp = 4;
-
-#if SUPPORTS_POINTER_ARITHMETIC
-        var thisOffset = this.BitmapData.Scan0 + yt * thisStride + xt * bpp;
-        var otherOffset = otherLocker.BitmapData.Scan0 + ys * otherStride + xs * bpp;
-#else
-        var thisOffset = _Add(this.BitmapData.Scan0, yt * thisStride + xt * bpp);
-        var otherOffset = _Add(otherLocker.BitmapData.Scan0, ys * otherStride + xs * bpp);
-#endif
-
-#if SUPPORTS_POINTER_ARITHMETIC
-        for (; height > 0; thisOffset += thisStride, otherOffset += otherStride, --height) {
-#else
-        for (; height > 0; _Add(ref thisOffset, thisStride), _Add(ref otherOffset, otherStride), --height) {
-#endif
-          var to = thisOffset;
-          var oo = otherOffset;
-
-#if SUPPORTS_POINTER_ARITHMETIC
-          for (var x = width; x > 0; to += bpp, oo += bpp, --x) {
-#else
-          for (var x = width; x > 0; _Add(ref to, bpp), _Add(ref oo, bpp), --x) {
-#endif
-            var otherPixel = (uint)Marshal.ReadInt32(oo);
-            if (otherPixel < 0x01000000)
-              continue;
-
-            if (otherPixel >= 0xff000000) {
-              Marshal.WriteInt32(to, (int)otherPixel);
-              continue;
-            }
-
-            var sourcePixel = (uint)Marshal.ReadInt32(to);
-
-            var alpha = otherPixel >> 24;
-            var factor = 1d / (255 + alpha);
-
-            var b = (uint)(((byte)(sourcePixel) * byte.MaxValue + (byte)(otherPixel) * alpha) * factor);
-            var g = (uint)(((byte)(sourcePixel >> 8) * byte.MaxValue + (byte)(otherPixel >> 8) * alpha) * factor);
-            var r = (uint)(((byte)(sourcePixel >> 16) * byte.MaxValue + (byte)(otherPixel >> 16) * alpha) * factor);
-
-            var newPixel =
-                (sourcePixel & 0xff000000)
-                | b
-                | (g << 8)
-                | (r << 16)
-              ;
-
-            Marshal.WriteInt32(to, (int)newPixel);
-          } // x
-        } // y
-      }
-
-#endif
   }
 }

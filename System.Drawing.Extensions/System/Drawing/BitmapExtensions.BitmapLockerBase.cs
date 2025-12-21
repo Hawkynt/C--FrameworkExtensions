@@ -83,6 +83,18 @@ public static partial class BitmapExtensions {
       set => this[p.X, p.Y] = value;
     }
 
+    /// <summary>
+    /// Gets the pixel color as Rgba32. Override in derived classes for optimized access.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual ColorSpaces.Rgba32 GetPixelRgba32(int x, int y) => new(this[x, y]);
+
+    /// <summary>
+    /// Sets the pixel color from Rgba32. Override in derived classes for optimized access.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual void SetPixelRgba32(int x, int y, ColorSpaces.Rgba32 color) => this[x, y] = color.ToColor();
+
     #region Rectangles
 
     public void Clear(Color color) => this.FillRectangle(0, 0, this.Width, this.Height, color);

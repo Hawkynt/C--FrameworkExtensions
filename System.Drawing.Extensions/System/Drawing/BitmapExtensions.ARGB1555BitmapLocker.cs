@@ -25,7 +25,6 @@ public static partial class BitmapExtensions {
 
     public override Color this[int x, int y] {
       get {
-#if UNSAFE
         unsafe {
           var data = this.BitmapData;
           var pointer = (ushort*)((byte*)data.Scan0 + y * data.Stride + (x << 1));
@@ -38,13 +37,9 @@ public static partial class BitmapExtensions {
             (value & 0x1F) << 3
           );
         }
-#else
-      throw new PlatformNotSupportedException("Safe access for RGB16BitmapLocker not implemented.");
-#endif
       }
 
       set {
-#if UNSAFE
         unsafe {
           var data = this.BitmapData;
           var pointer = (ushort*)((byte*)data.Scan0 + y * data.Stride + (x << 1));
@@ -56,9 +51,6 @@ public static partial class BitmapExtensions {
             (value.B >> 3)
           );
         }
-#else
-      throw new PlatformNotSupportedException("Safe access for RGB16BitmapLocker not implemented.");
-#endif
       }
     }
 

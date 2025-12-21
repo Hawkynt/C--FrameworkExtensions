@@ -25,8 +25,6 @@ public static partial class BitmapExtensions {
 
     public override Color this[int x, int y] {
       get {
-#if UNSAFE
-
         unsafe {
           var data = this.BitmapData;
           var pointer = (byte*)data.Scan0;
@@ -39,28 +37,8 @@ public static partial class BitmapExtensions {
           var r = pointer[2];
           return Color.FromArgb(r, g, b);
         }
-
-#else
-          var data = this.BitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-#if SUPPORTS_POINTER_ARITHMETIC
-          pointer += offset;
-#else
-          _Add(ref pointer, offset);
-#endif
-          var b = Marshal.ReadByte(pointer, 0);
-          var g = Marshal.ReadByte(pointer, 1);
-          var r = Marshal.ReadByte(pointer, 2);
-          return Color.FromArgb(r, g, b);
-
-#endif
       }
       set {
-#if UNSAFE
-
         unsafe {
           var data = this.BitmapData;
           var pointer = (byte*)data.Scan0;
@@ -72,27 +50,8 @@ public static partial class BitmapExtensions {
           pointer[1] = value.G;
           pointer[2] = value.R;
         }
-
-#else
-          var data = this.BitmapData;
-          var pointer = data.Scan0;
-          Debug.Assert(pointer != null, nameof(pointer) + " != null");
-          var stride = data.Stride;
-          var offset = stride * y + (x << 2);
-#if SUPPORTS_POINTER_ARITHMETIC
-          pointer += offset;
-#else
-          _Add(ref pointer, offset);
-#endif
-          Marshal.WriteByte(pointer, 0, value.B);
-          Marshal.WriteByte(pointer, 1, value.G);
-          Marshal.WriteByte(pointer, 2, value.R);
-
-#endif
       }
     }
-
-#if UNSAFE
 
     protected override unsafe void _DrawHorizontalLine(int x, int y, int count, Color color) {
       var data = this.BitmapData;
@@ -147,6 +106,5 @@ public static partial class BitmapExtensions {
       }
     }
 
-#endif
   }
 }
