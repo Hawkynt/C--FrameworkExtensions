@@ -30,6 +30,7 @@ namespace System.Drawing.ColorSpaces;
 /// <param name="Cb">Chrominance blue component (0-255).</param>
 /// <param name="Cr">Chrominance red component (0-255).</param>
 /// <param name="A">Alpha component (0-255). Defaults to 255 (fully opaque).</param>
+[ColorSpace(3, ["Y", "Cb", "Cr"], ColorSpaceType = ColorSpaceType.LuminanceChrominance)]
 public record struct YCbCr(byte Y, byte Cb, byte Cr, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -106,6 +107,16 @@ public record struct YCbCr(byte Y, byte Cb, byte Cr, byte A = 255) : IThreeCompo
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new YCbCr(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(YCbCr)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(YCbCr)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
@@ -116,6 +127,7 @@ public record struct YCbCr(byte Y, byte Cb, byte Cr, byte A = 255) : IThreeCompo
 /// <param name="Cb">Chrominance blue component (0.0-1.0).</param>
 /// <param name="Cr">Chrominance red component (0.0-1.0).</param>
 /// <param name="A">Alpha component (0.0-1.0). Defaults to 1.0 (fully opaque).</param>
+[ColorSpace(3, ["Y", "Cb", "Cr"], ColorSpaceType = ColorSpaceType.LuminanceChrominance)]
 public record struct YCbCrNormalized(float Y, float Cb, float Cr, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -150,5 +162,15 @@ public record struct YCbCrNormalized(float Y, float Cb, float Cr, float A = 1f) 
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new YCbCrNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(YCbCrNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(YCbCrNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

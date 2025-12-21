@@ -25,6 +25,7 @@ namespace System.Drawing.ColorSpaces;
 /// <summary>
 /// Represents a color in the RGB color space using byte values (0-255).
 /// </summary>
+[ColorSpace(3, ["R", "G", "B"], ColorSpaceType = ColorSpaceType.Additive)]
 public record struct Rgb(byte R, byte G, byte B, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -54,11 +55,22 @@ public record struct Rgb(byte R, byte G, byte B, byte A = 255) : IThreeComponent
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Rgb(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Rgb)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Rgb)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
 /// Represents a color in the RGB color space using normalized float values (0.0-1.0).
 /// </summary>
+[ColorSpace(3, ["R", "G", "B"], ColorSpaceType = ColorSpaceType.Additive)]
 public record struct RgbNormalized(float R, float G, float B, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -97,6 +109,16 @@ public record struct RgbNormalized(float R, float G, float B, float A = 1f) : IT
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new RgbNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(RgbNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(RgbNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static byte _FloatToByte(float value) => (byte)Math.Round(Math.Max(0f, Math.Min(1f, value)) * 255f);

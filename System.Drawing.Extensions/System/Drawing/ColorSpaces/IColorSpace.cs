@@ -29,6 +29,8 @@ public interface IColorSpace: IEquatable<Color> {
   /// <returns>The equivalent RGB color.</returns>
   Color ToColor();
 
+  T ToColor<T>() where T : struct, IColorSpace;
+
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
 
   /// <summary>

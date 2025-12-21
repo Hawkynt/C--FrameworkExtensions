@@ -29,6 +29,7 @@ namespace System.Drawing.ColorSpaces;
 /// <param name="S">Saturation component (0-255).</param>
 /// <param name="V">Value component (0-255).</param>
 /// <param name="A">Alpha component (0-255). Defaults to 255 (fully opaque).</param>
+[ColorSpace(3, ["H", "S", "V"], ColorSpaceType = ColorSpaceType.Cylindrical)]
 public record struct Hsv(byte H, byte S, byte V, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -142,6 +143,16 @@ public record struct Hsv(byte H, byte S, byte V, byte A = 255) : IThreeComponent
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Hsv(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Hsv)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Hsv)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
@@ -151,6 +162,7 @@ public record struct Hsv(byte H, byte S, byte V, byte A = 255) : IThreeComponent
 /// <param name="S">Saturation component (0.0-1.0).</param>
 /// <param name="V">Value component (0.0-1.0).</param>
 /// <param name="A">Alpha component (0.0-1.0). Defaults to 1.0 (fully opaque).</param>
+[ColorSpace(3, ["H", "S", "V"], ColorSpaceType = ColorSpaceType.Cylindrical)]
 public record struct HsvNormalized(float H, float S, float V, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -185,5 +197,15 @@ public record struct HsvNormalized(float H, float S, float V, float A = 1f) : IT
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new HsvNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(HsvNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(HsvNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

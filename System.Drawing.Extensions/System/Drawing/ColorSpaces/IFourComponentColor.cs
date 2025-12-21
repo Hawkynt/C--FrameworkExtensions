@@ -29,6 +29,7 @@ namespace System.Drawing.ColorSpaces;
 public interface IFourComponentColor : IColorSpace {
   /// <summary>Deconstructs into four components plus alpha (e.g., (C,M,Y,K,A)).</summary>
   void Deconstruct(out byte C, out byte M, out byte Y, out byte K, out byte A);
+  T ConvertTo<T>() where T : struct, IFourComponentColor;
 
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
 
@@ -49,6 +50,7 @@ public interface IFourComponentColor : IColorSpace {
 public interface IFourComponentFloatColor : IColorSpace {
   /// <summary>Deconstructs into four components plus alpha (e.g., (C,M,Y,K,A)).</summary>
   void Deconstruct(out float C, out float M, out float Y, out float K, out float A);
+  T ConvertTo<T>() where T : struct, IFourComponentFloatColor;
 
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
 

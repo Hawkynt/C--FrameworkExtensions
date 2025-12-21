@@ -31,6 +31,7 @@ namespace System.Drawing.ColorSpaces;
 /// <param name="Y">Yellow component (0-255).</param>
 /// <param name="K">Key (Black) component (0-255).</param>
 /// <param name="A">Alpha component (0-255). Defaults to 255 (fully opaque).</param>
+[ColorSpace(4, ["C", "M", "Y", "K"], ColorSpaceType = ColorSpaceType.Subtractive)]
 public record struct Cmyk(byte C, byte M, byte Y, byte K, byte A = 255) : IFourComponentColor {
 
   /// <inheritdoc />
@@ -101,6 +102,16 @@ public record struct Cmyk(byte C, byte M, byte Y, byte K, byte A = 255) : IFourC
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IFourComponentColor Create(byte c1, byte c2, byte c3, byte c4, byte a) => new Cmyk(c1, c2, c3, c4, a);
 
+  public T ConvertTo<T>() where T : struct, IFourComponentColor
+    => typeof(T) == typeof(Cmyk)
+      ?  (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Cmyk)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
@@ -112,6 +123,7 @@ public record struct Cmyk(byte C, byte M, byte Y, byte K, byte A = 255) : IFourC
 /// <param name="Y">Yellow component (0.0-1.0).</param>
 /// <param name="K">Key (Black) component (0.0-1.0).</param>
 /// <param name="A">Alpha component (0.0-1.0). Defaults to 1.0 (fully opaque).</param>
+[ColorSpace(4, ["C", "M", "Y", "K"], ColorSpaceType = ColorSpaceType.Subtractive)]
 public record struct CmykNormalized(float C, float M, float Y, float K, float A = 1f) : IFourComponentFloatColor {
 
   /// <inheritdoc />
@@ -147,5 +159,15 @@ public record struct CmykNormalized(float C, float M, float Y, float K, float A 
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IFourComponentFloatColor Create(float c1, float c2, float c3, float c4, float a) => new CmykNormalized(c1, c2, c3, c4, a);
+
+  public T ConvertTo<T>() where T : struct, IFourComponentFloatColor
+    => typeof(T) == typeof(CmykNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(CmykNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

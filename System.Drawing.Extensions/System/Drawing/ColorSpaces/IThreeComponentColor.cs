@@ -31,6 +31,8 @@ public interface IThreeComponentColor : IColorSpace {
   /// <summary>Gets all three components as a tuple (e.g., (R,G,B), (H,S,L), (L,a,b)).</summary>
   void Deconstruct(out byte H, out byte S, out byte L, out byte A);
 
+  T ConvertTo<T>() where T : struct, IThreeComponentColor;
+
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
 
   /// <summary>Creates a new instance from component values.</summary>
@@ -42,6 +44,8 @@ public interface IThreeComponentColor : IColorSpace {
 public interface IThreeComponentFloatColor : IColorSpace {
   /// <summary>Gets all three components as a tuple (e.g., (R,G,B), (H,S,L), (L,a,b)).</summary>
   void Deconstruct(out float H, out float S, out float L, out float A);
+
+  T ConvertTo<T>() where T : struct, IThreeComponentFloatColor;
 
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
   

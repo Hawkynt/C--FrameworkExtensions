@@ -27,6 +27,7 @@ namespace System.Drawing.ColorSpaces;
 /// <param name="Y">Y: 0-255 (scaled from 0-1)</param>
 /// <param name="Z">Z: 0-255 (scaled from ~0-1.09)</param>
 /// <param name="A">Alpha: 0-255</param>
+[ColorSpace(3, ["X", "Y", "Z"], ColorSpaceType = ColorSpaceType.CieStandard, WhitePoint = "D65")]
 public record struct Xyz(byte X, byte Y, byte Z, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -44,6 +45,16 @@ public record struct Xyz(byte X, byte Y, byte Z, byte A = 255) : IThreeComponent
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Xyz(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Xyz)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Xyz)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>CIE 1931 XYZ color space with normalized components (sRGB, D65 illuminant)</summary>
@@ -51,6 +62,7 @@ public record struct Xyz(byte X, byte Y, byte Z, byte A = 255) : IThreeComponent
 /// <param name="Y">Y: 0.0-1.0 (luminance)</param>
 /// <param name="Z">Z: typically 0.0-1.08883</param>
 /// <param name="A">Alpha: 0.0-1.0</param>
+[ColorSpace(3, ["X", "Y", "Z"], ColorSpaceType = ColorSpaceType.CieStandard, WhitePoint = "D65")]
 public record struct XyzNormalized(float X, float Y, float Z, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -111,5 +123,15 @@ public record struct XyzNormalized(float X, float Y, float Z, float A = 1f) : IT
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new XyzNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(XyzNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(XyzNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

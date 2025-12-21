@@ -40,6 +40,7 @@ namespace System.Drawing.ColorSpaces;
 /// The U and V components are stored as 0-255 with 128 representing zero chrominance.
 /// </para>
 /// </remarks>
+[ColorSpace(3, ["Y", "U", "V"], ColorSpaceType = ColorSpaceType.LuminanceChrominance)]
 public record struct Yuv(byte Y, byte U, byte V, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -134,6 +135,16 @@ public record struct Yuv(byte Y, byte U, byte V, byte A = 255) : IThreeComponent
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Yuv(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Yuv)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Yuv)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
@@ -143,6 +154,7 @@ public record struct Yuv(byte Y, byte U, byte V, byte A = 255) : IThreeComponent
 /// <param name="U">Chrominance U component (-0.5 to 0.5, centered at 0).</param>
 /// <param name="V">Chrominance V component (-0.5 to 0.5, centered at 0).</param>
 /// <param name="A">Alpha component (0.0-1.0). Defaults to 1.0 (fully opaque).</param>
+[ColorSpace(3, ["Y", "U", "V"], ColorSpaceType = ColorSpaceType.LuminanceChrominance)]
 public record struct YuvNormalized(float Y, float U, float V, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -177,5 +189,15 @@ public record struct YuvNormalized(float Y, float U, float V, float A = 1f) : IT
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new YuvNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(YuvNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(YuvNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

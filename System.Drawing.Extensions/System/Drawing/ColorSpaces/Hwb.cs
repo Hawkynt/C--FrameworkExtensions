@@ -23,6 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Drawing.ColorSpaces;
 
 /// <summary>HWB color space with byte components (H: 0-255, W: 0-255, B: 0-255)</summary>
+[ColorSpace(3, ["H", "W", "B"], ColorSpaceType = ColorSpaceType.Cylindrical)]
 public record struct Hwb(byte H, byte W, byte B, byte A = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -51,12 +52,15 @@ public record struct Hwb(byte H, byte W, byte B, byte A = 255) : IThreeComponent
     var sector = h6 / 255;
     var f = h6 - sector * 255;
 
-    // Snap to sector boundaries when very close (compensates for 255 not being divisible by 6)
-    if (f < 4)
-      f = 0;
-    else if (f > 251) {
-      f = 0;
-      sector = (sector + 1) % 6;
+    switch (f) {
+      // Snap to sector boundaries when very close (compensates for 255 not being divisible by 6)
+      case < 4:
+        f = 0;
+        break;
+      case > 251:
+        f = 0;
+        sector = (sector + 1) % 6;
+        break;
     }
 
     var p = (v * (255 - s) + 127) / 255;
@@ -118,9 +122,20 @@ public record struct Hwb(byte H, byte W, byte B, byte A = 255) : IThreeComponent
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Hwb(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Hwb)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Hwb)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>HWB color space with normalized components (0.0-1.0)</summary>
+[ColorSpace(3, ["H", "W", "B"], ColorSpaceType = ColorSpaceType.Cylindrical)]
 public record struct HwbNormalized(float H, float W, float B, float A = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -142,5 +157,15 @@ public record struct HwbNormalized(float H, float W, float B, float A = 1f) : IT
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new HwbNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(HwbNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(HwbNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

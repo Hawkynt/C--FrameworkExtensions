@@ -23,6 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Drawing.ColorSpaces;
 
 /// <summary>CIE L*a*b* color space with byte components</summary>
+[ColorSpace(3, ["L", "a", "b"], ColorSpaceType = ColorSpaceType.Perceptual, IsPerceptuallyUniform = true)]
 public record struct Lab(byte L, byte A, byte B, byte Alpha = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -45,9 +46,20 @@ public record struct Lab(byte L, byte A, byte B, byte Alpha = 255) : IThreeCompo
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Lab(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Lab)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Lab)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>CIE L*a*b* color space with normalized components (D65 illuminant)</summary>
+[ColorSpace(3, ["L", "a", "b"], ColorSpaceType = ColorSpaceType.Perceptual, IsPerceptuallyUniform = true, WhitePoint = "D65")]
 public record struct LabNormalized(float L, float A, float B, float Alpha = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -140,5 +152,15 @@ public record struct LabNormalized(float L, float A, float B, float Alpha = 1f) 
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new LabNormalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(LabNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(LabNormalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }

@@ -37,6 +37,7 @@ namespace System.Drawing.ColorSpaces;
 /// good perceptual uniformity for small color differences.
 /// </para>
 /// </remarks>
+[ColorSpace(3, ["L", "a", "b"], ColorSpaceType = ColorSpaceType.Perceptual, IsPerceptuallyUniform = true)]
 public record struct Din99(byte L, byte A, byte B, byte Alpha = 255) : IThreeComponentColor {
 
   /// <inheritdoc />
@@ -59,6 +60,16 @@ public record struct Din99(byte L, byte A, byte B, byte Alpha = 255) : IThreeCom
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentColor Create(byte c1, byte c2, byte c3, byte a) => new Din99(c1, c2, c3, a);
 
+  public T ConvertTo<T>() where T : struct, IThreeComponentColor
+    => typeof(T) == typeof(Din99)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Din99)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
 }
 
 /// <summary>
@@ -68,6 +79,7 @@ public record struct Din99(byte L, byte A, byte B, byte Alpha = 255) : IThreeCom
 /// <param name="A">a99 component (approximately -40 to +40).</param>
 /// <param name="B">b99 component (approximately -40 to +40).</param>
 /// <param name="Alpha">Alpha component (0.0-1.0). Defaults to 1.0 (fully opaque).</param>
+[ColorSpace(3, ["L", "a", "b"], ColorSpaceType = ColorSpaceType.Perceptual, IsPerceptuallyUniform = true)]
 public record struct Din99Normalized(float L, float A, float B, float Alpha = 1f) : IThreeComponentFloatColor {
 
   /// <inheritdoc />
@@ -159,5 +171,15 @@ public record struct Din99Normalized(float L, float A, float B, float Alpha = 1f
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static IThreeComponentFloatColor Create(float c1, float c2, float c3, float a) => new Din99Normalized(c1, c2, c3, a);
+
+  public T ConvertTo<T>() where T : struct, IThreeComponentFloatColor
+    => typeof(T) == typeof(Din99Normalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
+
+  public T ToColor<T>() where T : struct, IColorSpace
+    => typeof(T) == typeof(Din99Normalized)
+      ? (T)(object)this
+      : ColorSpaceFactory<T>.FromColor(this.ToColor());
 
 }
