@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -73,12 +74,26 @@ internal static class ColorSpaceFactory<TColorSpace> where TColorSpace : struct,
       null
     );
 
-    if (method != null && method.ReturnType == type)
-      return (Func<Color, TColorSpace>)Delegate.CreateDelegate(typeof(Func<Color, TColorSpace>), method);
+    if (method != null) {
+      // If the method returns the exact type, create a direct delegate
+      if (method.ReturnType == type)
+        return (Func<Color, TColorSpace>)Delegate.CreateDelegate(typeof(Func<Color, TColorSpace>), method);
+
+      // If the method returns IColorSpace (the interface contract), build a compiled expression with cast
+      if (typeof(IColorSpace).IsAssignableFrom(method.ReturnType)) {
+        // Build: (Color color) => (TColorSpace)FromColor(color)
+        var colorParam = Expression.Parameter(typeof(Color), "color");
+        var callExpr = Expression.Call(method, colorParam);
+        var convertExpr = Expression.Convert(callExpr, type);
+        var lambda = Expression.Lambda<Func<Color, TColorSpace>>(convertExpr, colorParam);
+        return lambda.Compile();
+      }
+    }
 
     // No FromColor method found - throw with helpful message
     throw new InvalidOperationException(
       $"Color space type '{type.Name}' must have a public static method: " +
-      $"public static {type.Name} FromColor(Color color)");
+      $"public static {type.Name} FromColor(Color color) or " +
+      $"public static IColorSpace FromColor(Color color)");
   }
 }

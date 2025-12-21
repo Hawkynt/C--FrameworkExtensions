@@ -45,7 +45,32 @@ public readonly struct CompuPhaseDistance : IColorDistanceCalculator {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public double Calculate(Color color1, Color color2) {
+  public double Calculate(Color color1, Color color2) => Math.Sqrt(CompuPhaseDistanceSquared._Calculate(color1, color2));
+
+}
+
+/// <summary>
+/// Calculates squared color distance using the CompuPhase low-cost approximation algorithm.
+/// Faster than <see cref="CompuPhaseDistance"/> when only comparing distances.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This algorithm provides a fast approximation of perceptual color difference
+/// by weighting RGB components based on the mean red value. It's particularly
+/// efficient as it uses only integer arithmetic and bit shifts.
+/// </para>
+/// <para>
+/// Reference: https://www.compuphase.com/cmetric.htm
+/// </para>
+/// </remarks>
+public readonly struct CompuPhaseDistanceSquared : IColorDistanceCalculator {
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Calculate(Color color1, Color color2) => _Calculate(color1, color2);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static int _Calculate(Color color1, Color color2) {
     var c1 = new Rgba32(color1);
     var c2 = new Rgba32(color2);
 

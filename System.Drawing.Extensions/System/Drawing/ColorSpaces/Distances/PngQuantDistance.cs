@@ -53,7 +53,41 @@ public readonly struct PngQuantDistance(Color whitePoint) : IColorDistanceCalcul
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public double Calculate(Color color1, Color color2) {
+  public double Calculate(Color color1, Color color2) => Math.Sqrt(PngQuantDistanceSquared._Calculate(color1, color2, whitePoint));
+
+}
+
+/// <summary>
+/// Calculates squared color distance using the PNGQuant algorithm.
+/// Faster than <see cref="PngQuantDistance"/> when only comparing distances.
+/// </summary>
+/// <param name="whitePoint">
+/// White point color for channel weighting. Higher component values = less important,
+/// lower values = more important. Default Color.White gives equal weighting.
+/// Example: Color.FromArgb(255, 255, 128, 255) makes green 2x more important.
+/// </param>
+/// <remarks>
+/// <para>
+/// This algorithm considers how colors appear when blended on both black and white backgrounds,
+/// making it particularly effective for semi-transparent colors.
+/// </para>
+/// <para>
+/// Reference: https://github.com/pornel/pngquant/blob/cc39b47799a7ff2ef17b529f9415ff6e6b213b8f/lib/pam.h#L148
+/// </para>
+/// </remarks>
+public readonly struct PngQuantDistanceSquared(Color whitePoint) : IColorDistanceCalculator {
+
+  /// <summary>
+  /// Default instance with equal channel weighting (Color.White).
+  /// </summary>
+  public static readonly PngQuantDistanceSquared Default = new(Color.White);
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Calculate(Color color1, Color color2) => _Calculate(color1, color2, whitePoint);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static int _Calculate(Color color1, Color color2, Color whitePoint) {
     var wp = new Rgba32(whitePoint);
     var c1 = new Rgba32(color1);
     var c2 = new Rgba32(color2);

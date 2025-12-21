@@ -35,7 +35,7 @@ namespace System.Drawing.ColorSpaces.Distances;
 /// <para>
 /// This is a generic weighted Euclidean distance calculator that works with any color space
 /// implementing <see cref="IThreeComponentColor"/>. The weighted distance is calculated as:
-/// (w1*d1² + w2*d2² + w3*d3² + wa*da²) / divisor
+/// sqrt((w1*d1² + w2*d2² + w3*d3² + wa*da²) / divisor)
 /// </para>
 /// <para>
 /// Example usage for YUV space with luminance emphasis:
@@ -55,7 +55,28 @@ public readonly struct WeightedEuclideanDistance<TColorSpace>(int w1, int w2, in
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public double Calculate(Color color1, Color color2) {
+  public double Calculate(Color color1, Color color2) => Math.Sqrt(WeightedEuclideanDistanceSquared<TColorSpace>._Calculate(color1, color2, w1, w2, w3, wa, divisor));
+}
+
+/// <summary>
+/// Calculates squared weighted Euclidean distance in any 3-component color space.
+/// Faster than <see cref="WeightedEuclideanDistance{TColorSpace}"/> when only comparing distances.
+/// </summary>
+/// <typeparam name="TColorSpace">The color space to perform the distance calculation in.</typeparam>
+/// <param name="w1">Weight for the first component.</param>
+/// <param name="w2">Weight for the second component.</param>
+/// <param name="w3">Weight for the third component.</param>
+/// <param name="wa">Weight for the alpha component.</param>
+/// <param name="divisor">Divisor for normalization. Defaults to 1.</param>
+public readonly struct WeightedEuclideanDistanceSquared<TColorSpace>(int w1, int w2, int w3, int wa, int divisor = 1) : IColorDistanceCalculator
+  where TColorSpace : struct, IThreeComponentColor {
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Calculate(Color color1, Color color2) => _Calculate(color1, color2, w1, w2, w3, wa, divisor);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static double _Calculate(Color color1, Color color2, int w1, int w2, int w3, int wa, int divisor) {
     var (c1a, c1b, c1c, c1Alpha) = ColorSpaceFactory<TColorSpace>.FromColor(color1);
     var (c2a, c2b, c2c, c2Alpha) = ColorSpaceFactory<TColorSpace>.FromColor(color2);
 
@@ -68,12 +89,44 @@ public readonly struct WeightedEuclideanDistance<TColorSpace>(int w1, int w2, in
   }
 }
 
+/// <summary>
+/// Calculates weighted Euclidean distance in any 4-component color space.
+/// </summary>
+/// <typeparam name="TColorSpace">The color space to perform the distance calculation in.</typeparam>
+/// <param name="w1">Weight for the first component.</param>
+/// <param name="w2">Weight for the second component.</param>
+/// <param name="w3">Weight for the third component.</param>
+/// <param name="w4">Weight for the fourth component.</param>
+/// <param name="wa">Weight for the alpha component.</param>
+/// <param name="divisor">Divisor for normalization. Defaults to 1.</param>
 public readonly struct WeightedEuclideanDistance4<TColorSpace>(int w1, int w2, int w3, int w4, int wa, int divisor = 1) : IColorDistanceCalculator
   where TColorSpace : struct, IFourComponentColor {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public double Calculate(Color color1, Color color2) {
+  public double Calculate(Color color1, Color color2) => Math.Sqrt(WeightedEuclideanDistanceSquared4<TColorSpace>._Calculate(color1, color2, w1, w2, w3, w4, wa, divisor));
+}
+
+/// <summary>
+/// Calculates squared weighted Euclidean distance in any 4-component color space.
+/// Faster than <see cref="WeightedEuclideanDistance4{TColorSpace}"/> when only comparing distances.
+/// </summary>
+/// <typeparam name="TColorSpace">The color space to perform the distance calculation in.</typeparam>
+/// <param name="w1">Weight for the first component.</param>
+/// <param name="w2">Weight for the second component.</param>
+/// <param name="w3">Weight for the third component.</param>
+/// <param name="w4">Weight for the fourth component.</param>
+/// <param name="wa">Weight for the alpha component.</param>
+/// <param name="divisor">Divisor for normalization. Defaults to 1.</param>
+public readonly struct WeightedEuclideanDistanceSquared4<TColorSpace>(int w1, int w2, int w3, int w4, int wa, int divisor = 1) : IColorDistanceCalculator
+  where TColorSpace : struct, IFourComponentColor {
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Calculate(Color color1, Color color2) => _Calculate(color1, color2, w1, w2, w3, w4, wa, divisor);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static double _Calculate(Color color1, Color color2, int w1, int w2, int w3, int w4, int wa, int divisor) {
     var (c1a, c1b, c1c, c1d, c1Alpha) = ColorSpaceFactory<TColorSpace>.FromColor(color1);
     var (c2a, c2b, c2c, c2d, c2Alpha) = ColorSpaceFactory<TColorSpace>.FromColor(color2);
 
@@ -146,6 +199,66 @@ public static class WeightedEuclideanDistances {
   /// High red sensitivity - emphasizes red over blue.
   /// </summary>
   public static readonly WeightedEuclideanDistance<Rgb> HighRed = new(
+    DistanceWeights.HighRed.Red,
+    DistanceWeights.HighRed.Green,
+    DistanceWeights.HighRed.Blue,
+    DistanceWeights.HighRed.Alpha
+  );
+
+  /// <summary>
+  /// Squared weighted YUV distance with default weights: Y=6, U=2, V=2, A=10, divisor=20.
+  /// Emphasizes luminance and alpha over chrominance.
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Yuv> YuvSquared = new(6, 2, 2, 10, 20);
+
+  /// <summary>
+  /// Squared weighted YCbCr distance with default weights: Y=2, Cb=1, Cr=1, A=1, divisor=5.
+  /// Emphasizes luminance (Y) over chrominance (Cb, Cr).
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<YCbCr> YCbCrSquared = new(2, 1, 1, 1, 5);
+
+  /// <summary>
+  /// Squared weighted RGB distance with custom weights: R=30, G=59, B=11, A=10, divisor=110.
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Rgb> RgbSquared = new(30, 59, 11, 10, 110);
+
+  /// <summary>
+  /// BT.709 (HDTV) weights based on relative luminance formula.
+  /// Y = 0.2126R + 0.7152G + 0.0722B
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Rgb> BT709Squared = new(
+    DistanceWeights.BT709.Red,
+    DistanceWeights.BT709.Green,
+    DistanceWeights.BT709.Blue,
+    DistanceWeights.BT709.Alpha,
+    DistanceWeights.BT709.Divisor
+  );
+
+  /// <summary>
+  /// Nommyde perceptually optimized weights.
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Rgb> NommydeSquared = new(
+    DistanceWeights.Nommyde.Red,
+    DistanceWeights.Nommyde.Green,
+    DistanceWeights.Nommyde.Blue,
+    DistanceWeights.Nommyde.Alpha,
+    DistanceWeights.Nommyde.Divisor
+  );
+
+  /// <summary>
+  /// Low red sensitivity - emphasizes green over red.
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Rgb> LowRedSquared = new(
+    DistanceWeights.LowRed.Red,
+    DistanceWeights.LowRed.Green,
+    DistanceWeights.LowRed.Blue,
+    DistanceWeights.LowRed.Alpha
+  );
+
+  /// <summary>
+  /// High red sensitivity - emphasizes red over blue.
+  /// </summary>
+  public static readonly WeightedEuclideanDistanceSquared<Rgb> HighRedSquared = new(
     DistanceWeights.HighRed.Red,
     DistanceWeights.HighRed.Green,
     DistanceWeights.HighRed.Blue,
