@@ -7,13 +7,16 @@
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS8632</NoWarn><!-- Nullable annotations used without nullable context - legacy test code not designed for nullable -->
     <SelfContained>false</SelfContained>
     <IsPackable>false</IsPackable>
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <SuppressTfmSupportBuildErrors>True</SuppressTfmSupportBuildErrors>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <NoWarn>$(NoWarn);NU1701</NoWarn><!-- NUnit3TestAdapter is .NET Framework only but works via netstandard2.0 -->
+    <NoWarn>$(NoWarn);MSB3268</NoWarn><!-- Microsoft.BCL.Async indirect dependencies on net40 can't be resolved but library works -->
   </PropertyGroup>
 
   <Import Project="..\..\VersionSpecificSymbols.Common.prop" />

@@ -536,7 +536,7 @@ public static partial class EnumerableExtensions {
     public IShuffledEnumerable<TItem> Shuffled(Random entropySource = null) {
       Against.ThisIsNull(@this);
 
-      entropySource ??= Utilities.Random.Shared;
+      entropySource ??= Random.Shared;
       return new ShuffledEnumerable<TItem>(@this, entropySource);
     }
   }

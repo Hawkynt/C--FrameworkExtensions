@@ -455,7 +455,7 @@ public static partial class ArrayExtensions {
     if (@this.Length == 0)
       AlwaysThrow.InvalidOperationException("No Elements!");
 
-    random ??= Utilities.Random.Shared;
+    random ??= Random.Shared;
 
     var index = random.Next(@this.Length);
     return @this[index];
@@ -624,7 +624,7 @@ public static partial class ArrayExtensions {
   /// </example>
   public static void Shuffle<TItem>(this TItem[] @this, Random entropySource = null) {
     Against.ThisIsNull(@this);
-    entropySource ??= Utilities.Random.Shared;
+    entropySource ??= Random.Shared;
 
     var index = @this.Length;
     while (index > 1)
@@ -1812,18 +1812,7 @@ public static partial class ArrayExtensions {
   /// <returns>The given buffer</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   [DebuggerStepThrough]
-  public static void RandomizeBuffer(this byte[] @this) {
-#if SUPPORTS_RNG_FILL
-    RandomNumberGenerator.Fill(@this);
-#else
-#if NEEDS_RNG_DISPOSE
-    using RNGCryptoServiceProvider provider = new();
-    provider.GetBytes(@this);
-#else
-    new RNGCryptoServiceProvider().GetBytes(@this);
-#endif
-#endif
-  }
+  public static void RandomizeBuffer(this byte[] @this) => RandomNumberGenerator.Fill(@this);
 
   /// <summary>
   ///   Gets a small portion of a byte array.

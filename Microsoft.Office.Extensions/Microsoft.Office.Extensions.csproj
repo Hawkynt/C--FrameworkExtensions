@@ -22,6 +22,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
     <NoWarn>$(NoWarn);MSB3305</NoWarn><!-- Suppresses the COM Dummy warning -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn><!-- Office Interop packages are .NET Framework only -->
   </PropertyGroup>
 
   <ItemGroup>

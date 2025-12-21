@@ -17,8 +17,6 @@
 
 #endregion
 
-#if SUPPORTS_SLIM_SEMAPHORES
-
 #if DEBUG
 using System.Diagnostics;
 #endif
@@ -77,5 +75,3 @@ public static partial class SemaphoreSlimExtensions {
   /// <returns>An <see cref="IDisposable">IDisposable</see> to be used in using-blocks</returns>
   public static IDisposable Enter(this SemaphoreSlim @this) => new SemaphoreAcquired(@this);
 }
-
-#endif

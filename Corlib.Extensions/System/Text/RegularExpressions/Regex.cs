@@ -17,6 +17,8 @@
 
 #endregion
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 using Guard;
@@ -34,7 +36,7 @@ public static partial class RegexExtensions {
   /// <param name="groupId">The group id, defaults to <c>null</c>.</param>
   /// <param name="matchCount">The max replaces, default to <c>null</c>.</param>
   /// <returns></returns>
-  private static string _ReplaceGroup(Regex regex, string source, string replacement, string groupName, int? groupId, int? matchCount) {
+  private static string? _ReplaceGroup(Regex regex, string? source, string? replacement, string? groupName, int? groupId, int? matchCount) {
     Against.ThisIsNull(regex);
 
     if (source == null)
@@ -63,7 +65,7 @@ public static partial class RegexExtensions {
   /// <param name="source">The source string.</param>
   /// <param name="replacement">The replacement.</param>
   /// <returns>A new string with all groups replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, string replacement) {
+  public static string? ReplaceGroup(this Regex @this, string? source, string? replacement) {
     Against.ThisIsNull(@this);
 
     return _ReplaceGroup(@this, source, replacement, null, null, null);
@@ -77,7 +79,7 @@ public static partial class RegexExtensions {
   /// <param name="replacement">The replacement.</param>
   /// <param name="matchCount">The number of matches.</param>
   /// <returns>A new string with the first n matches replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, string replacement, int matchCount) {
+  public static string? ReplaceGroup(this Regex @this, string? source, string? replacement, int matchCount) {
     Against.ThisIsNull(@this);
     Against.CountBelowZero(matchCount);
 
@@ -92,7 +94,7 @@ public static partial class RegexExtensions {
   /// <param name="groupId">The group id.</param>
   /// <param name="replacement">The replacement.</param>
   /// <returns>A new string with all groups with the given index replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, int groupId, string replacement) {
+  public static string? ReplaceGroup(this Regex @this, string? source, int groupId, string? replacement) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(groupId);
 
@@ -108,7 +110,7 @@ public static partial class RegexExtensions {
   /// <param name="replacement">The replacement.</param>
   /// <param name="matchCount">The number of matches.</param>
   /// <returns>A new string with the firstn n groups with the given index replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, int groupId, string replacement, int matchCount) {
+  public static string? ReplaceGroup(this Regex @this, string? source, int groupId, string? replacement, int matchCount) {
     Against.ThisIsNull(@this);
     Against.IndexBelowZero(groupId);
     Against.CountBelowZero(matchCount);
@@ -124,7 +126,7 @@ public static partial class RegexExtensions {
   /// <param name="groupName">The group name.</param>
   /// <param name="replacement">The replacement.</param>
   /// <returns>A new string with all groups with the given index replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, string groupName, string replacement) {
+  public static string? ReplaceGroup(this Regex @this, string? source, string groupName, string? replacement) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(groupName);
 
@@ -140,7 +142,7 @@ public static partial class RegexExtensions {
   /// <param name="replacement">The replacement.</param>
   /// <param name="matchCount">The number of matches.</param>
   /// <returns>A new string with the firstn n groups with the given index replaced.</returns>
-  public static string ReplaceGroup(this Regex @this, string source, string groupName, string replacement, int matchCount) {
+  public static string? ReplaceGroup(this Regex @this, string? source, string groupName, string? replacement, int matchCount) {
     Against.ThisIsNull(@this);
     Against.ArgumentIsNull(groupName);
     Against.CountBelowZero(matchCount);

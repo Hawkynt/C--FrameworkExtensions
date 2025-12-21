@@ -17,6 +17,11 @@
 
 #endregion
 
+// Note: This file extensively uses reflection and intentional null returns.
+// Using 'enable annotations' allows nullable syntax without full nullable analysis.
+#pragma warning disable CS8632 // Nullable annotations in non-nullable context (for older TFMs)
+#nullable enable annotations
+
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,12 +56,12 @@ public static partial class TypeExtensions {
     /// <summary>
     ///   Cache
     /// </summary>
-    private string __name;
+    private string? __name;
 
     /// <summary>
     ///   Gets the name.
     /// </summary>
-    public string Name => this.__name ??= this.Info?.Name;
+    public string? Name => this.__name ??= this.Info?.Name;
 
     /// <summary>
     ///   Gets a value indicating whether this instance is readable.
@@ -143,7 +148,7 @@ public static partial class TypeExtensions {
     public readonly TValue GetValueOrDefault<TValue>(object instance, TValue defaultValue)
       => this.TryGetValue<TValue>(instance, out var result) ? result : defaultValue;
 
-    public readonly object GetValueOrDefault(object defaultValue = null)
+    public readonly object? GetValueOrDefault(object? defaultValue = null)
       => this.TryGetValue(out var result) ? result : defaultValue;
 
     public readonly TValue GetValueOrDefault<TValue>()
@@ -152,9 +157,9 @@ public static partial class TypeExtensions {
     public readonly TValue GetValueOrDefault<TValue>(TValue defaultValue)
       => this.TryGetValue<TValue>(out var result) ? result : defaultValue;
 
-    public readonly bool TryGetValue(out object value) {
+    public readonly bool TryGetValue(out object? value) {
       try {
-        value = this.GetValue(null);
+        value = this.GetValue(null!);
         return true;
       } catch {
         value = null;
@@ -162,7 +167,7 @@ public static partial class TypeExtensions {
       }
     }
 
-    public readonly bool TryGetValue(object instance, out object value) {
+    public readonly bool TryGetValue(object instance, out object? value) {
       try {
         value = this.GetValue(instance);
         return true;
@@ -172,9 +177,9 @@ public static partial class TypeExtensions {
       }
     }
 
-    public readonly bool TryGetValue<TValue>(out TValue value) {
+    public readonly bool TryGetValue<TValue>(out TValue? value) {
       try {
-        value = this.GetValue<TValue>(null);
+        value = this.GetValue<TValue>(null!);
         return true;
       } catch {
         value = default;
@@ -234,7 +239,7 @@ public static partial class TypeExtensions {
 
         var info = this.Info;
         if (info == null)
-          return this.__customAttributes = Utilities.Array.Empty<object>();
+          return this.__customAttributes = Array.Empty<object>();
 
         var name = info.Name;
         List<object> results = [];
@@ -529,13 +534,13 @@ public static partial class TypeExtensions {
   ///   returned.
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static object GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
+  public static object? GetRandomValue(this Type @this, bool allowInstanceCreationForReferenceTypes = false) {
     Against.ThisIsNull(@this);
 
-    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Utilities.Random.Shared);
+    return GetRandomValueFor(@this, allowInstanceCreationForReferenceTypes, Random.Shared);
   }
 
-  internal static object GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
+  internal static object? GetRandomValueFor(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
     Against.ArgumentIsNull(type);
     Against.ArgumentIsNull(entropySource);
 
@@ -562,7 +567,7 @@ public static partial class TypeExtensions {
       ? CreateViaConstructor(type, true, entropySource)
       : null;
 
-    static object CreateViaConstructor(Type type, bool allowRefTypes, Random random) {
+    static object? CreateViaConstructor(Type type, bool allowRefTypes, Random random) {
       if (!allowRefTypes && type.IsClass)
         return null;
 
@@ -614,27 +619,6 @@ public static partial class TypeExtensions {
     static object CreateForNullable(Type underlyingType, bool allowInstanceCreationForReferenceTypes, Random entropySource)
       => entropySource.GetBoolean() ? null : GetRandomValueFor(underlyingType, allowInstanceCreationForReferenceTypes, entropySource)
     ;
-
-    static object CreateForRefType(Type type, bool allowInstanceCreationForReferenceTypes, Random entropySource) {
-      if (entropySource.GetBoolean())
-        return null;
-
-      if (!allowInstanceCreationForReferenceTypes) {
-        Trace.WriteLine($"[Warning]Not allowed to create instance of type {type.FullName} by parameter, always returning <null>");
-        return null;
-      }
-
-      var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-      if (constructors.Length <= 0) {
-        Trace.WriteLine($"[Warning]No public constructors available for type {type.FullName}");
-        return null;
-      }
-
-      // use any ctor randomly
-      var ctor = constructors[entropySource.Next(constructors.Length)];
-      var parameters = ctor.GetParameters().Select(p => GetRandomValueFor(p.ParameterType, true, entropySource)).ToArray();
-      return Activator.CreateInstance(type, parameters);
-    }
 
     static object CreateBlittableValue(Type type, Random entropySource) {
       var size = Marshal.SizeOf(type);

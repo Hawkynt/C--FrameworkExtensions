@@ -152,7 +152,7 @@ internal class BufferedStreamExTests {
     bufferedStream.WriteByte(1);
     bufferedStream.WriteByte(2);
 
-    // Noch nicht geflusht, aber Length sollte trotzdem korrekt sein
+    // not yet flushed but length should be right
     Assert.That(bufferedStream.Length, Is.EqualTo(2));
   }
 
@@ -166,12 +166,14 @@ internal class BufferedStreamExTests {
     using var bufferedStream = new BufferedStreamEx(baseStream, 8);
     bufferedStream.Position = 0;
 
-    // Read ersten 4 Bytes, also buffer load
+    // read 4 bytes and load buffer
     var read = new byte[4];
+    #pragma warning disable CA2022 // Test uses known-length memory stream
     bufferedStream.Read(read, 0, 4);
+    #pragma warning restore CA2022
     Assert.That(read, Is.EqualTo(baseData[..4]));
 
-    // Seek zurück und überschreiben
+    // seek back and overwrite
     bufferedStream.Position = 0;
     bufferedStream.Write(new byte[] { 99, 88, 77, 66 }, 0, 4);
 
@@ -181,7 +183,7 @@ internal class BufferedStreamExTests {
     var result = new byte[16];
     baseStream.Read(result, 0, 16);
 
-    // Veränderte Daten prüfen
+    // check modified data
     Assert.That(result[..4], Is.EqualTo(new byte[] { 99, 88, 77, 66 }));
     Assert.That(result[4..], Is.EqualTo(baseData[4..]));
   }
@@ -194,7 +196,7 @@ internal class BufferedStreamExTests {
     bufferedStream.Write(Enumerable.Range(0, 10).Select(i => (byte)i).ToArray(), 0, 10);
     bufferedStream.SetLength(5);
 
-    // Length muss 5 sein, auch wenn Buffer ursprünglich 10 hielt
+    // length must be 5 now, even when it was 10 at the beginning
     Assert.That(bufferedStream.Length, Is.EqualTo(5));
   }
 
@@ -204,7 +206,7 @@ internal class BufferedStreamExTests {
     using var bufferedStream = new BufferedStreamEx(baseStream, 8);
 
     bufferedStream.Write(new byte[] { 1, 2, 3, 4 }, 0, 4);
-    bufferedStream.SetLength(2); // kürzt Buffer intern
+    bufferedStream.SetLength(2); // internally shortens Buffer
 
     bufferedStream.Position = 0;
     var buf = new byte[4];

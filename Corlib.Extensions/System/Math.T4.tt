@@ -98,34 +98,6 @@ public static partial class MathEx {
   /// <returns>The result of the operation.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> ArithmeticShiftRight(this <#=type#> @this, byte count) => (<#=type#>)(count >= <#=GetSizeInBits(type)#> ? 0 : @this >> count);
-  
-#if !SUPPORTS_BITOPERATIONS
-
-  /// <summary>
-  /// Performs a logical rotation to the left on the specified value.
-  /// </summary>
-  /// <param name="this">The value to rotate</param>
-  /// <param name="count">The number of bits to rotate</param>
-  /// <returns>The result of the operation.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> RotateLeft(this <#=type#> @this, byte count) {
-    count &= <#=GetSizeInBits(type) - 1#>;
-    return (<#=type#>)((@this << count) | (@this >> (<#=GetSizeInBits(type)#> - count)));
-  }
-
-  /// <summary>
-  /// Performs a logical rotation to the right on the specified value.
-  /// </summary>
-  /// <param name="this">The value to rotate</param>
-  /// <param name="count">The number of bits to rotate</param>
-  /// <returns>The result of the operation.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> RotateRight(this <#=type#> @this, byte count) {
-    count &= <#=GetSizeInBits(type) - 1#>;
-    return (<#=type#>)((@this >> count) | (@this << (<#=GetSizeInBits(type)#> - count)));
-  }
-
-#endif
 
 <#}#>
 
@@ -756,7 +728,6 @@ public static partial class MathEx {
 
 <#}#>
     
-#if SUPPORTS_FMADD
 <#foreach (var type in new[]{"float","double"}){#>
 
   /// <summary>
@@ -789,8 +760,6 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, factor, -subtrahend);
 
-#if SUPPORTS_MATH_RECIPROCAL_ESTIMATE
-
   /// <summary>
   /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
   /// </summary>
@@ -805,7 +774,7 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), addend);
-  
+
   /// <summary>
   /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
   /// </summary>
@@ -821,106 +790,7 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => <#=(type=="double"?"Math":"MathF")#>.FusedMultiplyAdd(@this, <#=(type=="double"?"Math":"MathF")#>.ReciprocalEstimate(divisor), -subtrahend);
 
-#else
-
-  /// <summary>
-  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
-  /// </summary>
-  /// <param name="this">The dividend value.</param>
-  /// <param name="divisor">The divisor value.</param>
-  /// <param name="addend">The value to add after division.</param>
-  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
-
-  /// <summary>
-  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
-  /// </summary>
-  /// <param name="this">The dividend value.</param>
-  /// <param name="divisor">The divisor value.</param>
-  /// <param name="subtrahend">The value to subtract after division.</param>
-  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
-
-#endif
-
 <#}#>
-#else
-<#foreach (var type in new[]{"float","double"}){#>
-
-  /// <summary>
-  /// Computes a fused multiply-add operation: (<paramref name="this"/> × <paramref name="factor"/> + <paramref name="addend"/>).
-  /// </summary>
-  /// <param name="this">The base value to multiply.</param>
-  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
-  /// <param name="addend">The value to add after multiplication.</param>
-  /// <returns>The result of the fused multiply-add operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)2).FusedMultiplyAdd(3, 4); // result == 10
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedMultiplyAdd(this <#=type#> @this, <#=type#> factor, <#=type#> addend) => @this * factor + addend;
-
-  /// <summary>
-  /// Computes a fused multiply-subtract operation: (<paramref name="this"/> × <paramref name="factor"/> - <paramref name="subtrahend"/>).
-  /// </summary>
-  /// <param name="this">The base value to multiply.</param>
-  /// <param name="factor">The factor to multiply with <paramref name="this"/>.</param>
-  /// <param name="subtrahend">The value to subtract after multiplication.</param>
-  /// <returns>The result of the fused multiply-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)2).FusedMultiplySubtract(3, 1); // result == 5
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedMultiplySubtract(this <#=type#> @this, <#=type#> factor, <#=type#> subtrahend) => @this * factor - subtrahend;
-
-  /// <summary>
-  /// Computes a fused divide-add operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> + <paramref name="addend"/>).
-  /// </summary>
-  /// <param name="this">The dividend value.</param>
-  /// <param name="divisor">The divisor value.</param>
-  /// <param name="addend">The value to add after division.</param>
-  /// <returns>The result of the fused divide-add operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)10).FusedDivideAdd(2, 3); // result == 8
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedDivideAdd(this <#=type#> @this, <#=type#> divisor, <#=type#> addend) => @this / divisor + addend;
-
-  /// <summary>
-  /// Computes a fused divide-subtract operation: (<paramref name="this"/> ÷ <paramref name="divisor"/> - <paramref name="subtrahend"/>).
-  /// </summary>
-  /// <param name="this">The dividend value.</param>
-  /// <param name="divisor">The divisor value.</param>
-  /// <param name="subtrahend">The value to subtract after division.</param>
-  /// <returns>The result of the fused divide-subtract operation, cast to <see cref="<#=type#>"/>.</returns>
-  /// <example>
-  /// <code>
-  /// <#=type#> result = ((<#=type#>)10).FusedDivideSubtract(2, 3); // result == 2
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static <#=type#> FusedDivideSubtract(this <#=type#> @this, <#=type#> divisor, <#=type#> subtrahend) => @this / divisor - subtrahend;
-
-<#}#>
-#endif
 
   #region Clamping
 
@@ -941,14 +811,7 @@ public static partial class MathEx {
   /// </code>
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if SUPPORTS_MATH_CLAMP
   public static <#=type#> Clamp(this <#=type#> @this, <#=type#> min, <#=type#> max) => Math.Clamp(@this, min, max);
-#else
-  public static <#=type#> Clamp(this <#=type#> @this, <#=type#> min, <#=type#> max) {
-    Against.ValuesBelow(max, min);
-    return @this < min ? min : @this > max ? max : @this;
-  }
-#endif
 
   /// <summary>
   /// Clamps the specified value between a minimum and maximum value without parameter validation.

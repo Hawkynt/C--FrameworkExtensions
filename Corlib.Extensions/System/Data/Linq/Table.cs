@@ -49,7 +49,7 @@ namespace System.Data.Linq {
         // Property is associated to another entity
         var propType = pi.PropertyType;
         // Invoke Empty contructor (set to default value)
-        var ci = propType.GetConstructor(Utilities.Array.Empty<Type>());
+        var ci = propType.GetConstructor(Array.Empty<Type>());
         if (ci != null)
           pi.SetValue(entity, ci.Invoke(null), null);
       }

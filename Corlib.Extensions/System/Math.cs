@@ -52,257 +52,269 @@ public static partial class MathEx {
   private const int MAX_EXP_ITERATIONS = 1000;
   private const decimal DEFAULT_EPSILON = 1E-28m;
 
-  /// <summary>
-  /// Extracts the lower nibble of the specified byte.
-  /// </summary>
   /// <param name="this">The byte from which to extract the lower half.</param>
-  /// <returns>A byte containing the lower 4 bits of the input byte.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0xAB;
-  /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0x0B
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte LowerHalf(this byte @this) => (byte)(@this & 0x0F);
+  extension(byte @this)
+  {
+    /// <summary>
+    /// Extracts the lower nibble of the specified byte.
+    /// </summary>
+    /// <returns>A byte containing the lower 4 bits of the input byte.</returns>
+    /// <example>
+    /// <code>
+    /// byte value = 0xAB;
+    /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0x0B
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte LowerHalf() => (byte)(@this & 0x0F);
 
-  /// <summary>
-  /// Extracts the upper nibble of the specified byte.
-  /// </summary>
-  /// <param name="this">The byte from which to extract the upper half.</param>
-  /// <returns>A byte containing the upper 4 bits of the input byte.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0xAB;
-  /// byte upperHalf = value.UpperHalf(); // upperHalf is 0x0A
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte UpperHalf(this byte @this) => (byte)(@this >> 4);
+    /// <summary>
+    /// Extracts the upper nibble of the specified byte.
+    /// </summary>
+    /// <returns>A byte containing the upper 4 bits of the input byte.</returns>
+    /// <example>
+    /// <code>
+    /// byte value = 0xAB;
+    /// byte upperHalf = value.UpperHalf(); // upperHalf is 0x0A
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte UpperHalf() => (byte)(@this >> 4);
+  }
 
-  /// <summary>
-  /// Extracts the lower byte of the specified word.
-  /// </summary>
   /// <param name="this">The ushort from which to extract the lower half.</param>
-  /// <returns>A byte containing the lower 8 bits of the input ushort.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0xABCD;
-  /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0xCD
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte LowerHalf(this ushort @this) => (byte)@this;
+  extension(ushort @this)
+  {
+    /// <summary>
+    /// Extracts the lower byte of the specified word.
+    /// </summary>
+    /// <returns>A byte containing the lower 8 bits of the input ushort.</returns>
+    /// <example>
+    /// <code>
+    /// ushort value = 0xABCD;
+    /// byte lowerHalf = value.LowerHalf(); // lowerHalf is 0xCD
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte LowerHalf() => (byte)@this;
 
-  /// <summary>
-  /// Extracts the upper byte of the specified word.
-  /// </summary>
-  /// <param name="this">The ushort from which to extract the upper half.</param>
-  /// <returns>A byte containing the upper 8 bits of the input ushort.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0xABCD;
-  /// byte upperHalf = value.UpperHalf(); // upperHalf is 0xAB
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte UpperHalf(this ushort @this) => (byte)(@this >> 8);
+    /// <summary>
+    /// Extracts the upper byte of the specified word.
+    /// </summary>
+    /// <returns>A byte containing the upper 8 bits of the input ushort.</returns>
+    /// <example>
+    /// <code>
+    /// ushort value = 0xABCD;
+    /// byte upperHalf = value.UpperHalf(); // upperHalf is 0xAB
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte UpperHalf() => (byte)(@this >> 8);
+  }
 
-  /// <summary>
-  /// Extracts the lower word of the specified dword.
-  /// </summary>
   /// <param name="this">The uint from which to extract the lower half.</param>
-  /// <returns>A ushort containing the lower 16 bits of the input uint.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0xABCDEF12;
-  /// ushort lowerHalf = value.LowerHalf(); // lowerHalf is 0xEF12
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort LowerHalf(this uint @this) => (ushort)@this;
+  extension(uint @this)
+  {
+    /// <summary>
+    /// Extracts the lower word of the specified dword.
+    /// </summary>
+    /// <returns>A ushort containing the lower 16 bits of the input uint.</returns>
+    /// <example>
+    /// <code>
+    /// uint value = 0xABCDEF12;
+    /// ushort lowerHalf = value.LowerHalf(); // lowerHalf is 0xEF12
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort LowerHalf() => (ushort)@this;
 
-  /// <summary>
-  /// Extracts the upper word of the specified dword.
-  /// </summary>
-  /// <param name="this">The uint from which to extract the upper half.</param>
-  /// <returns>A ushort containing the upper 16 bits of the input uint.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0xABCDEF12;
-  /// ushort upperHalf = value.UpperHalf(); // upperHalf is 0xABCD
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort UpperHalf(this uint @this) => (ushort)(@this >> 16);
+    /// <summary>
+    /// Extracts the upper word of the specified dword.
+    /// </summary>
+    /// <returns>A ushort containing the upper 16 bits of the input uint.</returns>
+    /// <example>
+    /// <code>
+    /// uint value = 0xABCDEF12;
+    /// ushort upperHalf = value.UpperHalf(); // upperHalf is 0xABCD
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort UpperHalf() => (ushort)(@this >> 16);
+  }
 
-  /// <summary>
-  /// Extracts the lower dword of the specified qword.
-  /// </summary>
   /// <param name="this">The ulong from which to extract the lower half.</param>
-  /// <returns>A uint containing the lower 32 bits of the input ulong.</returns>
-  /// <example>
-  /// <code>
-  /// ulong value = 0xABCDEF1234567890;
-  /// uint lowerHalf = value.LowerHalf(); // lowerHalf is 0x34567890
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint LowerHalf(this ulong @this) => (uint)@this;
+  extension(ulong @this)
+  {
+    /// <summary>
+    /// Extracts the lower dword of the specified qword.
+    /// </summary>
+    /// <returns>A uint containing the lower 32 bits of the input ulong.</returns>
+    /// <example>
+    /// <code>
+    /// ulong value = 0xABCDEF1234567890;
+    /// uint lowerHalf = value.LowerHalf(); // lowerHalf is 0x34567890
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint LowerHalf() => (uint)@this;
 
-  /// <summary>
-  /// Extracts the upper dword of the specified qword.
-  /// </summary>
-  /// <param name="this">The ulong from which to extract the upper half.</param>
-  /// <returns>A uint containing the upper 32 bits of the input ulong.</returns>
-  /// <example>
-  /// <code>
-  /// ulong value = 0xABCDEF1234567890;
-  /// uint upperHalf = value.UpperHalf(); // upperHalf is 0xABCDEF12
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint UpperHalf(this ulong @this) => (uint)(@this >> 32);
+    /// <summary>
+    /// Extracts the upper dword of the specified qword.
+    /// </summary>
+    /// <returns>A uint containing the upper 32 bits of the input ulong.</returns>
+    /// <example>
+    /// <code>
+    /// ulong value = 0xABCDEF1234567890;
+    /// uint upperHalf = value.UpperHalf(); // upperHalf is 0xABCDEF12
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint UpperHalf() => (uint)(@this >> 32);
+  }
 
-#if SUPPORTS_BITOPERATIONS
-
-  /// <summary>
-  /// Performs a bitwise left rotation on an 8-bit unsigned integer.
-  /// </summary>
   /// <param name="this">The <see cref="byte"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate left by.</param>
-  /// <returns>The rotated <see cref="byte"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0b_00110101;
-  /// byte result = value.RotateLeft(3); // result == 0b_10101001
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte RotateLeft(this byte @this, byte count) {
-    var result = @this * 0x01010101U;
-    result = BitOperations.RotateLeft(result, count);
-    return (byte)result;
+  extension(byte @this)
+  {
+    /// <summary>
+    /// Performs a bitwise left rotation on an 8-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="byte"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// byte value = 0b_00110101;
+    /// byte result = value.RotateLeft(3); // result == 0b_10101001
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte RotateLeft(byte count) {
+      var result = @this * 0x01010101U;
+      result = BitOperations.RotateLeft(result, count);
+      return (byte)result;
+    }
+
+    /// <summary>
+    /// Performs a bitwise right rotation on an 8-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="byte"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// byte value = 0b_00110101;
+    /// byte result = value.RotateRight(3); // result == 0b_10100110
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte RotateRight(byte count) {
+      var result = @this * 0x01010101U;
+      result = BitOperations.RotateRight(result, count);
+      return (byte)result;
+    }
   }
 
-  /// <summary>
-  /// Performs a bitwise right rotation on an 8-bit unsigned integer.
-  /// </summary>
-  /// <param name="this">The <see cref="byte"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate right by.</param>
-  /// <returns>The rotated <see cref="byte"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// byte value = 0b_00110101;
-  /// byte result = value.RotateRight(3); // result == 0b_10100110
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte RotateRight(this byte @this, byte count) {
-    var result = @this * 0x01010101U;
-    result = BitOperations.RotateRight(result, count);
-    return (byte)result;
-  }
-
-  /// <summary>
-  /// Performs a bitwise left rotation on a 16-bit unsigned integer.
-  /// </summary>
   /// <param name="this">The <see cref="ushort"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate left by.</param>
-  /// <returns>The rotated <see cref="ushort"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0b_1010_0011_0001_1100;
-  /// ushort result = value.RotateLeft(4);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort RotateLeft(this ushort @this, byte count) {
-    var result = @this * 0x00010001U;
-    result = BitOperations.RotateLeft(result, count);
-    return (ushort)result;
+  extension(ushort @this)
+  {
+    /// <summary>
+    /// Performs a bitwise left rotation on a 16-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="ushort"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// ushort value = 0b_1010_0011_0001_1100;
+    /// ushort result = value.RotateLeft(4);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort RotateLeft(byte count) {
+      var result = @this * 0x00010001U;
+      result = BitOperations.RotateLeft(result, count);
+      return (ushort)result;
+    }
+
+    /// <summary>
+    /// Performs a bitwise right rotation on a 16-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="ushort"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// ushort value = 0b_1010_0011_0001_1100;
+    /// ushort result = value.RotateRight(4);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort RotateRight(byte count) {
+      var result = @this * 0x00010001U;
+      result = BitOperations.RotateRight(result, count);
+      return (ushort)result;
+    }
   }
 
-  /// <summary>
-  /// Performs a bitwise right rotation on a 16-bit unsigned integer.
-  /// </summary>
-  /// <param name="this">The <see cref="ushort"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate right by.</param>
-  /// <returns>The rotated <see cref="ushort"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// ushort value = 0b_1010_0011_0001_1100;
-  /// ushort result = value.RotateRight(4);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort RotateRight(this ushort @this, byte count) {
-    var result = @this * 0x00010001U;
-    result = BitOperations.RotateRight(result, count);
-    return (ushort)result;
+  /// <param name="this">The <see cref="uint"/> value to rotate.</param>
+  extension(uint @this)
+  {
+    /// <summary>
+    /// Performs a bitwise left rotation on a 32-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="uint"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// uint value = 0xA5A5A5A5U;
+    /// uint result = value.RotateLeft(8);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint RotateLeft(byte count) => BitOperations.RotateLeft(@this, count);
+
+    /// <summary>
+    /// Performs a bitwise right rotation on a 32-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="uint"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// uint value = 0xA5A5A5A5U;
+    /// uint result = value.RotateRight(8);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint RotateRight(byte count) => BitOperations.RotateRight(@this, count);
   }
 
-  /// <summary>
-  /// Performs a bitwise left rotation on a 32-bit unsigned integer.
-  /// </summary>
-  /// <param name="this">The <see cref="uint"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate left by.</param>
-  /// <returns>The rotated <see cref="uint"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0xA5A5A5A5U;
-  /// uint result = value.RotateLeft(8);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint RotateLeft(this uint @this, byte count) => BitOperations.RotateLeft(@this, count);
-
-  /// <summary>
-  /// Performs a bitwise right rotation on a 32-bit unsigned integer.
-  /// </summary>
-  /// <param name="this">The <see cref="uint"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate right by.</param>
-  /// <returns>The rotated <see cref="uint"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// uint value = 0xA5A5A5A5U;
-  /// uint result = value.RotateRight(8);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint RotateRight(this uint @this, byte count) => BitOperations.RotateRight(@this, count);
-
-  /// <summary>
-  /// Performs a bitwise left rotation on a 64-bit unsigned integer.
-  /// </summary>
   /// <param name="this">The <see cref="ulong"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate left by.</param>
-  /// <returns>The rotated <see cref="ulong"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// ulong value = 0x0123456789ABCDEFUL;
-  /// ulong result = value.RotateLeft(16);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong RotateLeft(this ulong @this, byte count) => BitOperations.RotateLeft(@this, count);
+  extension(ulong @this)
+  {
+    /// <summary>
+    /// Performs a bitwise left rotation on a 64-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="ulong"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// ulong value = 0x0123456789ABCDEFUL;
+    /// ulong result = value.RotateLeft(16);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong RotateLeft(byte count) => BitOperations.RotateLeft(@this, count);
 
-  /// <summary>
-  /// Performs a bitwise right rotation on a 64-bit unsigned integer.
-  /// </summary>
-  /// <param name="this">The <see cref="ulong"/> value to rotate.</param>
-  /// <param name="count">The number of bits to rotate right by.</param>
-  /// <returns>The rotated <see cref="ulong"/> result.</returns>
-  /// <example>
-  /// <code>
-  /// ulong value = 0x0123456789ABCDEFUL;
-  /// ulong result = value.RotateRight(16);
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong RotateRight(this ulong @this, byte count) => BitOperations.RotateRight(@this, count);
-
-#endif
+    /// <summary>
+    /// Performs a bitwise right rotation on a 64-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="ulong"/> result.</returns>
+    /// <example>
+    /// <code>
+    /// ulong value = 0x0123456789ABCDEFUL;
+    /// ulong result = value.RotateRight(16);
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong RotateRight(byte count) => BitOperations.RotateRight(@this, count);
+  }
 
   /// <summary>
   /// Counts the number of trailing zero bits in the specified <see cref="byte"/> value.
@@ -1451,908 +1463,904 @@ public static partial class MathEx {
     return (add & ~m) | (sub & m);
   }
 
-  /// <summary>
-  /// Performs linear interpolation between two byte values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// byte start = 100;
-  /// byte end = 200;
-  /// byte half = start.Lerp(end, 0.5f); // result = 150 (halfway point)
-  /// byte quarter = start.Lerp(end, 0.25f); // result = 125 (quarter point)
-  /// byte clamped = start.Lerp(end, 1.5f); // result = 200 (clamped to 1.0)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte Lerp(this byte @this, byte b, float t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(byte @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two byte values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// byte start = 100;
+    /// byte end = 200;
+    /// byte half = start.Lerp(end, 0.5f); // result = 150 (halfway point)
+    /// byte quarter = start.Lerp(end, 0.25f); // result = 125 (quarter point)
+    /// byte clamped = start.Lerp(end, 1.5f); // result = 200 (clamped to 1.0)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte Lerp(byte b, float t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two byte values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// byte start = 100;
-  /// byte end = 200;
-  /// byte precise = start.Lerp(end, 0.333); // result ≈ 133 (one-third point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte Lerp(this byte @this, byte b, double t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two byte values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// byte start = 100;
+    /// byte end = 200;
+    /// byte precise = start.Lerp(end, 0.333); // result ≈ 133 (one-third point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte Lerp(byte b, double t) => (byte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two byte values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// byte start = 100;
-  /// byte end = 200;
-  /// byte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 250 (50% beyond end)
-  /// byte negative = start.LerpUnclamped(end, -0.5f); // result = 50 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte LerpUnclamped(this byte @this, byte b, float t) => (byte)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two byte values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// byte start = 100;
+    /// byte end = 200;
+    /// byte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 250 (50% beyond end)
+    /// byte negative = start.LerpUnclamped(end, -0.5f); // result = 50 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte LerpUnclamped(byte b, float t) => (byte)(@this + (b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two byte values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// byte start = 100;
-  /// byte end = 200;
-  /// byte extrapolated = start.LerpUnclamped(end, 1.25); // result = 225 (25% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte LerpUnclamped(this byte @this, byte b, double t) => (byte)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two byte values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// byte start = 100;
+    /// byte end = 200;
+    /// byte extrapolated = start.LerpUnclamped(end, 1.25); // result = 225 (25% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte LerpUnclamped(byte b, double t) => (byte)(@this + (b - @this) * t);
+  }
 
-  /// <summary>
-  /// Performs linear interpolation between two sbyte values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// sbyte start = -50;
-  /// sbyte end = 50;
-  /// sbyte result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static sbyte Lerp(this sbyte @this, sbyte b, float t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(sbyte @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two sbyte values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// sbyte start = -50;
+    /// sbyte end = 50;
+    /// sbyte result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public sbyte Lerp(sbyte b, float t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two sbyte values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// sbyte start = -50;
-  /// sbyte end = 50;
-  /// sbyte result = start.Lerp(end, 0.25); // result = -25 (quarter point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static sbyte Lerp(this sbyte @this, sbyte b, double t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two sbyte values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// sbyte start = -50;
+    /// sbyte end = 50;
+    /// sbyte result = start.Lerp(end, 0.25); // result = -25 (quarter point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public sbyte Lerp(sbyte b, double t) => (sbyte)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two sbyte values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// sbyte start = -50;
-  /// sbyte end = 50;
-  /// sbyte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 100 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static sbyte LerpUnclamped(this sbyte @this, sbyte b, float t) => (sbyte)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two sbyte values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// sbyte start = -50;
+    /// sbyte end = 50;
+    /// sbyte extrapolated = start.LerpUnclamped(end, 1.5f); // result = 100 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public sbyte LerpUnclamped(sbyte b, float t) => (sbyte)(@this + (b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two sbyte values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// sbyte start = -50;
-  /// sbyte end = 50;
-  /// sbyte extrapolated = start.LerpUnclamped(end, -0.5); // result = -100 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static sbyte LerpUnclamped(this sbyte @this, sbyte b, double t) => (sbyte)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two sbyte values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// sbyte start = -50;
+    /// sbyte end = 50;
+    /// sbyte extrapolated = start.LerpUnclamped(end, -0.5); // result = -100 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public sbyte LerpUnclamped(sbyte b, double t) => (sbyte)(@this + (b - @this) * t);
+  }
 
-  /// <summary>
-  /// Performs linear interpolation between two ushort values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// ushort start = 1000;
-  /// ushort end = 2000;
-  /// ushort result = start.Lerp(end, 0.75f); // result = 1750 (three-quarters point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort Lerp(this ushort @this, ushort b, float t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(ushort @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two ushort values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// ushort start = 1000;
+    /// ushort end = 2000;
+    /// ushort result = start.Lerp(end, 0.75f); // result = 1750 (three-quarters point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort Lerp(ushort b, float t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two ushort values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// ushort start = 1000;
-  /// ushort end = 2000;
-  /// ushort result = start.Lerp(end, 0.333); // result ≈ 1333 (one-third point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort Lerp(this ushort @this, ushort b, double t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two ushort values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// ushort start = 1000;
+    /// ushort end = 2000;
+    /// ushort result = start.Lerp(end, 0.333); // result ≈ 1333 (one-third point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort Lerp(ushort b, double t) => (ushort)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two ushort values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// ushort start = 1000;
-  /// ushort end = 2000;
-  /// ushort extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort LerpUnclamped(this ushort @this, ushort b, float t) => (ushort)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two ushort values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// ushort start = 1000;
+    /// ushort end = 2000;
+    /// ushort extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort LerpUnclamped(ushort b, float t) => (ushort)(@this + (b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two ushort values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// ushort start = 1000;
-  /// ushort end = 2000;
-  /// ushort extrapolated = start.LerpUnclamped(end, -0.25); // result = 750 (25% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort LerpUnclamped(this ushort @this, ushort b, double t) => (ushort)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two ushort values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// ushort start = 1000;
+    /// ushort end = 2000;
+    /// ushort extrapolated = start.LerpUnclamped(end, -0.25); // result = 750 (25% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort LerpUnclamped(ushort b, double t) => (ushort)(@this + (b - @this) * t);
+  }
 
-  /// <summary>
-  /// Performs linear interpolation between two short values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// short start = -1000;
-  /// short end = 1000;
-  /// short result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short Lerp(this short @this, short b, float t) => (short)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(short @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two short values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// short start = -1000;
+    /// short end = 1000;
+    /// short result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short Lerp(short b, float t) => (short)(@this + (b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two short values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// short start = -1000;
-  /// short end = 1000;
-  /// short result = start.Lerp(end, 0.666); // result ≈ 332 (two-thirds point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short Lerp(this short @this, short b, double t) => (short)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two short values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// short start = -1000;
+    /// short end = 1000;
+    /// short result = start.Lerp(end, 0.666); // result ≈ 332 (two-thirds point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short Lerp(short b, double t) => (short)(@this + (b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two short values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// short start = -1000;
-  /// short end = 1000;
-  /// short extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short LerpUnclamped(this short @this, short b, float t) => (short)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two short values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// short start = -1000;
+    /// short end = 1000;
+    /// short extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short LerpUnclamped(short b, float t) => (short)(@this + (b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two short values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// short start = -1000;
-  /// short end = 1000;
-  /// short extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short LerpUnclamped(this short @this, short b, double t) => (short)(@this + (b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two short values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// short start = -1000;
+    /// short end = 1000;
+    /// short extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short LerpUnclamped(short b, double t) => (short)(@this + (b - @this) * t);
+  }
 
-  /// <summary>
-  /// Performs linear interpolation between two uint values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// uint start = 1000000;
-  /// uint end = 2000000;
-  /// uint result = start.Lerp(end, 0.75f); // result = 1750000 (three-quarters point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint Lerp(this uint @this, uint b, float t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(uint @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two uint values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// uint start = 1000000;
+    /// uint end = 2000000;
+    /// uint result = start.Lerp(end, 0.75f); // result = 1750000 (three-quarters point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint Lerp(uint b, float t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two uint values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// uint start = 1000000;
-  /// uint end = 2000000;
-  /// uint result = start.Lerp(end, 0.333); // result ≈ 1333000 (one-third point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint Lerp(this uint @this, uint b, double t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two uint values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// uint start = 1000000;
+    /// uint end = 2000000;
+    /// uint result = start.Lerp(end, 0.333); // result ≈ 1333000 (one-third point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint Lerp(uint b, double t) => (uint)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two uint values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// uint start = 1000000;
-  /// uint end = 2000000;
-  /// uint extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint LerpUnclamped(this uint @this, uint b, float t) => (uint)(@this + (long)(b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two uint values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// uint start = 1000000;
+    /// uint end = 2000000;
+    /// uint extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint LerpUnclamped(uint b, float t) => (uint)(@this + (long)(b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two uint values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// uint start = 1000000;
-  /// uint end = 2000000;
-  /// uint extrapolated = start.LerpUnclamped(end, -0.25); // result = 750000 (25% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint LerpUnclamped(this uint @this, uint b, double t) => (uint)(@this + (long)(b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two uint values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// uint start = 1000000;
+    /// uint end = 2000000;
+    /// uint extrapolated = start.LerpUnclamped(end, -0.25); // result = 750000 (25% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint LerpUnclamped(uint b, double t) => (uint)(@this + (long)(b - @this) * t);
+  }
 
-  /// <summary>
-  /// Performs linear interpolation between two int values using a floating-point parameter.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// int start = -500000;
-  /// int end = 500000;
-  /// int result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int Lerp(this int @this, int b, float t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
+  extension(int @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two int values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// int start = -500000;
+    /// int end = 500000;
+    /// int result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Lerp(int b, float t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0f, 1f));
 
-  /// <summary>
-  /// Performs linear interpolation between two int values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// int start = -500000;
-  /// int end = 500000;
-  /// int result = start.Lerp(end, 0.8); // result = 300000 (80% towards end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int Lerp(this int @this, int b, double t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
+    /// <summary>
+    /// Performs linear interpolation between two int values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// int start = -500000;
+    /// int end = 500000;
+    /// int result = start.Lerp(end, 0.8); // result = 300000 (80% towards end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Lerp(int b, double t) => (int)(@this + (long)(b - @this) * t.ClampUnchecked(0.0, 1.0));
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two int values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// int start = -500000;
-  /// int end = 500000;
-  /// int extrapolated = start.LerpUnclamped(end, 1.5f); // result = 1000000 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int LerpUnclamped(this int @this, int b, float t) => (int)(@this + (long)(b - @this) * t);
+    /// <summary>
+    /// Performs unclamped linear interpolation between two int values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// int start = -500000;
+    /// int end = 500000;
+    /// int extrapolated = start.LerpUnclamped(end, 1.5f); // result = 1000000 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int LerpUnclamped(int b, float t) => (int)(@this + (long)(b - @this) * t);
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two int values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
+    /// <summary>
+    /// Performs unclamped linear interpolation between two int values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// int start = -500000;
+    /// int end = 500000;
+    /// int extrapolated = start.LerpUnclamped(end, -0.5); // result = -1000000 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int LerpUnclamped(int b, double t) => (int)(@this + (long)(b - @this) * t);
+  }
+
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// int start = -500000;
-  /// int end = 500000;
-  /// int extrapolated = start.LerpUnclamped(end, -0.5); // result = -1000000 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int LerpUnclamped(this int @this, int b, double t) => (int)(@this + (long)(b - @this) * t);
-  
-  /// <summary>
-  /// Performs linear interpolation between two ulong values using a floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// ulong start = 1000000000UL;
-  /// ulong end = 2000000000UL;
-  /// ulong result = start.Lerp(end, 0.5f); // result = 1500000000 (halfway point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong Lerp(this ulong @this, ulong b, float t) {
-    var clampedT = t.ClampUnchecked(0f, 1f);
-    return b >= @this ?
+  extension(ulong @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two ulong values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// ulong start = 1000000000UL;
+    /// ulong end = 2000000000UL;
+    /// ulong result = start.Lerp(end, 0.5f); // result = 1500000000 (halfway point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong Lerp(ulong b, float t) {
+      var clampedT = t.ClampUnchecked(0f, 1f);
+      return b >= @this ?
         @this + (ulong)((b - @this) * clampedT) :
         @this - (ulong)((@this - b) * clampedT);
-  }
+    }
 
-  /// <summary>
-  /// Performs linear interpolation between two ulong values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// ulong start = 1000000000UL;
-  /// ulong end = 2000000000UL;
-  /// ulong result = start.Lerp(end, 0.25); // result = 1250000000 (quarter point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong Lerp(this ulong @this, ulong b, double t) {
-    var clampedT = t.ClampUnchecked(0.0, 1.0);
-    return b >= @this ?
+    /// <summary>
+    /// Performs linear interpolation between two ulong values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// ulong start = 1000000000UL;
+    /// ulong end = 2000000000UL;
+    /// ulong result = start.Lerp(end, 0.25); // result = 1250000000 (quarter point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong Lerp(ulong b, double t) {
+      var clampedT = t.ClampUnchecked(0.0, 1.0);
+      return b >= @this ?
         @this + (ulong)((b - @this) * clampedT) :
         @this - (ulong)((@this - b) * clampedT);
+    }
+
+    /// <summary>
+    /// Performs unclamped linear interpolation between two ulong values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// ulong start = 1000000000UL;
+    /// ulong end = 2000000000UL;
+    /// ulong extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000000 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong LerpUnclamped(ulong b, float t) =>
+      b >= @this ?
+        @this + (ulong)((b - @this) * t) :
+        @this - (ulong)((@this - b) * t);
+
+    /// <summary>
+    /// Performs unclamped linear interpolation between two ulong values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// ulong start = 1000000000UL;
+    /// ulong end = 2000000000UL;
+    /// ulong extrapolated = start.LerpUnclamped(end, -0.5); // result = 500000000 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong LerpUnclamped(ulong b, double t) =>
+      b >= @this ?
+        @this + (ulong)((b - @this) * t) :
+        @this - (ulong)((@this - b) * t);
   }
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two ulong values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
   /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// ulong start = 1000000000UL;
-  /// ulong end = 2000000000UL;
-  /// ulong extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2500000000 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong LerpUnclamped(this ulong @this, ulong b, float t) =>
-      b >= @this ?
-          @this + (ulong)((b - @this) * t) :
-          @this - (ulong)((@this - b) * t);
-
-  /// <summary>
-  /// Performs unclamped linear interpolation between two ulong values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// ulong start = 1000000000UL;
-  /// ulong end = 2000000000UL;
-  /// ulong extrapolated = start.LerpUnclamped(end, -0.5); // result = 500000000 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong LerpUnclamped(this ulong @this, ulong b, double t) =>
-      b >= @this ?
-          @this + (ulong)((b - @this) * t) :
-          @this - (ulong)((@this - b) * t);
-
-  /// <summary>
-  /// Performs linear interpolation between two long values using a floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// long start = -1000000000L;
-  /// long end = 1000000000L;
-  /// long result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long Lerp(this long @this, long b, float t) {
-    var clampedT = t.ClampUnchecked(0f, 1f);
-    return b >= @this ?
+  extension(long @this)
+  {
+    /// <summary>
+    /// Performs linear interpolation between two long values using a floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// long start = -1000000000L;
+    /// long end = 1000000000L;
+    /// long result = start.Lerp(end, 0.5f); // result = 0 (halfway point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long Lerp(long b, float t) {
+      var clampedT = t.ClampUnchecked(0f, 1f);
+      return b >= @this ?
         @this + (long)((ulong)(b - @this) * clampedT) :
         @this - (long)((ulong)(@this - b) * clampedT);
-  }
+    }
 
-  /// <summary>
-  /// Performs linear interpolation between two long values using a double-precision floating-point parameter.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
-  /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
-  /// <example>
-  /// <code>
-  /// long start = -1000000000L;
-  /// long end = 1000000000L;
-  /// long result = start.Lerp(end, 0.75); // result = 500000000 (three-quarters point)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long Lerp(this long @this, long b, double t) {
-    var clampedT = t.ClampUnchecked(0.0, 1.0);
-    return b >= @this ?
+    /// <summary>
+    /// Performs linear interpolation between two long values using a double-precision floating-point parameter.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter, clamped to [0, 1] range (0 = <paramref name="this"/>, 1 = <paramref name="b"/>).</param>
+    /// <returns>The interpolated value between <paramref name="this"/> and <paramref name="b"/>.</returns>
+    /// <example>
+    /// <code>
+    /// long start = -1000000000L;
+    /// long end = 1000000000L;
+    /// long result = start.Lerp(end, 0.75); // result = 500000000 (three-quarters point)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long Lerp(long b, double t) {
+      var clampedT = t.ClampUnchecked(0.0, 1.0);
+      return b >= @this ?
         @this + (long)((ulong)(b - @this) * clampedT) :
         @this - (long)((ulong)(@this - b) * clampedT);
+    }
+
+    /// <summary>
+    /// Performs unclamped linear interpolation between two long values using a floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// long start = -1000000000L;
+    /// long end = 1000000000L;
+    /// long extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000000000 (50% beyond end)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long LerpUnclamped(long b, float t) =>
+      b >= @this ?
+        @this + (long)((ulong)(b - @this) * t) :
+        @this - (long)((ulong)(@this - b) * t);
+
+    /// <summary>
+    /// Performs unclamped linear interpolation between two long values using a double-precision floating-point parameter.
+    /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
+    /// </summary>
+    /// <param name="b">The ending value.</param>
+    /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
+    /// <returns>The interpolated/extrapolated value.</returns>
+    /// <example>
+    /// <code>
+    /// long start = -1000000000L;
+    /// long end = 1000000000L;
+    /// long extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000000000 (50% before start)
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long LerpUnclamped(long b, double t) =>
+      b >= @this ?
+        @this + (long)((ulong)(b - @this) * t) :
+        @this - (long)((ulong)(@this - b) * t);
   }
 
-  /// <summary>
-  /// Performs unclamped linear interpolation between two long values using a floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// long start = -1000000000L;
-  /// long end = 1000000000L;
-  /// long extrapolated = start.LerpUnclamped(end, 1.5f); // result = 2000000000 (50% beyond end)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long LerpUnclamped(this long @this, long b, float t) =>
-      b >= @this ?
-          @this + (long)((ulong)(b - @this) * t) :
-          @this - (long)((ulong)(@this - b) * t);
-
-  /// <summary>
-  /// Performs unclamped linear interpolation between two long values using a double-precision floating-point parameter.
-  /// Unlike Lerp, this method does not clamp the parameter to [0, 1] range, allowing extrapolation.
-  /// </summary>
-  /// <param name="this">The starting value.</param>
-  /// <param name="b">The ending value.</param>
-  /// <param name="t">The interpolation parameter (0 = <paramref name="this"/>, 1 = <paramref name="b"/>, values outside [0,1] extrapolate).</param>
-  /// <returns>The interpolated/extrapolated value.</returns>
-  /// <example>
-  /// <code>
-  /// long start = -1000000000L;
-  /// long end = 1000000000L;
-  /// long extrapolated = start.LerpUnclamped(end, -0.5); // result = -2000000000 (50% before start)
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long LerpUnclamped(this long @this, long b, double t) =>
-      b >= @this ?
-          @this + (long)((ulong)(b - @this) * t) :
-          @this - (long)((ulong)(@this - b) * t);
-
-  /// <summary>
-  /// Raises a decimal base to a decimal exponent with refined precision.
-  /// </summary>
   /// <param name="this">The base value.</param>
-  /// <param name="exponent">The exponent value.</param>
-  /// <param name="epsilon">(Optional) The maximum allowed deviation in the result.</param>
-  /// <returns><c>@this</c> raised to the power of <c>exponent</c></returns>
-  /// <exception cref="ArgumentOutOfRangeException">If base is &lt;= 0 or epsilon is negative</exception>
-  /// <remarks>
-  /// Uses identity: a^b = exp(b * ln(a)), refined with Newton iteration.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// decimal value = 2;
-  /// decimal result = value.Pow(3); // result == 8
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal Pow(this decimal @this, decimal exponent, decimal epsilon = 0) {
-    Against.NegativeValues(epsilon);
+  extension(decimal @this)
+  {
+    /// <summary>
+    /// Raises a decimal base to a decimal exponent with refined precision.
+    /// </summary>
+    /// <param name="exponent">The exponent value.</param>
+    /// <param name="epsilon">(Optional) The maximum allowed deviation in the result.</param>
+    /// <returns><c>@this</c> raised to the power of <c>exponent</c></returns>
+    /// <exception cref="ArgumentOutOfRangeException">If base is &lt;= 0 or epsilon is negative</exception>
+    /// <remarks>
+    /// Uses identity: a^b = exp(b * ln(a)), refined with Newton iteration.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// decimal value = 2;
+    /// decimal result = value.Pow(3); // result == 8
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal Pow(decimal exponent, decimal epsilon = 0) {
+      Against.NegativeValues(epsilon);
 
-    return exponent switch {
-      0 => 1,
-      1 => @this,
-      < 0 when @this == 0 => AlwaysThrow.ArgumentOutOfRangeException<decimal>(nameof(@this), "Can not raise 0 to a negative power"),
-      _ when @this == 1 => 1,
-      _ when exponent == decimal.Truncate(exponent) && exponent is >= int.MinValue and <= int.MaxValue => Calculate(@this, (int)exponent),
-      _ => Exp(exponent * Log(@this, epsilon: epsilon), epsilon: epsilon)
-    };
+      return exponent switch {
+        0 => 1,
+        1 => @this,
+        < 0 when @this == 0 => AlwaysThrow.ArgumentOutOfRangeException<decimal>(nameof(@this), "Can not raise 0 to a negative power"),
+        _ when @this == 1 => 1,
+        _ when exponent == decimal.Truncate(exponent) && exponent is >= int.MinValue and <= int.MaxValue => Calculate(@this, (int)exponent),
+        _ => Exp(exponent * Log(@this, epsilon: epsilon), epsilon: epsilon)
+      };
 
-    static decimal Calculate(decimal baseValue, int exponent) {
-      switch (exponent) {
-        case 0:
-          return 1;
-        case < 0:
-          return 1 / Calculate(baseValue, -exponent);
-        default:
-          decimal result = 1;
-          while (exponent > 0) {
-            if ((exponent & 1) != 0)
-              result *= baseValue;
+      static decimal Calculate(decimal baseValue, int exponent) {
+        switch (exponent) {
+          case 0:
+            return 1;
+          case < 0:
+            return 1 / Calculate(baseValue, -exponent);
+          default:
+            decimal result = 1;
+            while (exponent > 0) {
+              if ((exponent & 1) != 0)
+                result *= baseValue;
 
-            baseValue *= baseValue;
-            exponent >>= 1;
-          }
-          return result;
+              baseValue *= baseValue;
+              exponent >>= 1;
+            }
+            return result;
+        }
+      }
+    }
+
+    /// <summary>
+    ///   Calculate a more accurate square root, see
+    ///   http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
+    /// </summary>
+    /// <param name="epsilon">The epsilon.</param>
+    /// <returns>The square root of x</returns>
+    public decimal Sqrt(decimal epsilon = 0) {
+      Against.NegativeValues(@this);
+      Against.NegativeValues(epsilon);
+
+      return @this switch {
+        0 => 0,
+        1 => 1,
+        2 => Sqrt2,
+        3 => Sqrt3,
+        4 => 2,
+        5 => Sqrt5,
+        6 => Sqrt6,
+        7 => Sqrt7,
+        8 => Sqrt8,
+        9 => 3,
+        10 => Sqrt10,
+        _ => Calculate()
+      };
+
+      decimal Calculate() {
+        var current = (decimal)Math.Sqrt((double)@this);
+        decimal previous;
+        const decimal factor = 2m;
+
+        do {
+          previous = current;
+          current = (previous + @this / previous) / factor;
+        } while (Math.Abs(previous - current) > epsilon);
+
+        return current;
+      }
+    }
+
+    public decimal Sin(decimal epsilon = 0m) => Cos(@this - Pi / 2m, epsilon);
+
+    public decimal Cos(decimal epsilon = 0m) {
+      @this = ReduceAngle(@this);
+
+      var result = 1m;
+      var term = 1m;
+      var x2 = @this * @this;
+      var sign = -1;
+
+      for (var n = 2; n < MAX_TAN_ITERATIONS; n += 2) {
+        term *= x2 / ((n - 1) * n);
+        var delta = term * sign;
+        result += delta;
+
+        if (Math.Abs(delta) < epsilon)
+          break;
+
+        sign = -sign;
+      }
+
+      return result;
+
+      static decimal ReduceAngle(decimal x) {
+        const decimal TwoPi = 2 * Pi;
+
+        x %= TwoPi;
+
+        // Reduce to [-π, π]
+        if (x < -Pi)
+          x += TwoPi;
+        if (x > Pi)
+          x -= TwoPi;
+
+        return x;
+      }
+    }
+
+    /// <summary>
+    /// Computes the tangent of the specified <see langword="decimal"/> angle in radians.
+    /// </summary>
+    /// <param name="epsilon">(Optional: defaults to <c>0</c>) The maximum error tolerance for refinement using a power series.</param>
+    /// <returns>The tangent of the angle as a <see cref="decimal"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="epsilon"/> is negative.</exception>
+    /// <remarks>
+    /// This implementation starts with a double-based approximation and refines the result using a truncated Maclaurin series.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// decimal angle = Math.PIm / 4; // 45 degrees in radians
+    /// decimal tan = angle.Tan();   // ≈ 1.0
+    /// </code>
+    /// </example>
+    public decimal Tan(decimal epsilon = 0) {
+      var cos = Cos(@this, epsilon / 10);
+      if (cos == 0)
+        throw new DivideByZeroException("tan(x) undefined at odd multiples of π/2");
+
+      return Sin(@this, epsilon / 10) / cos;
+    }
+
+    /// <summary>
+    /// Computes the arctangent (inverse tangent) of the specified <see langword="decimal"/> value.
+    /// </summary>
+    /// <param name="epsilon">(Optional: defaults to <c>0</c>) The maximum allowed deviation between successive approximations.</param>
+    /// <returns>The angle in radians whose tangent is equal to the input value.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="epsilon"/> is negative.</exception>
+    /// <remarks>
+    /// Uses an adaptive Newton-Raphson approach for refinement based on <see cref="Math.Tan"/> and the identity <c>atan(x) = sign(x) * π/2 - atan(1 / |x|)</c> when <c>|x| &gt; 1</c>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// decimal value = 1m;
+    /// decimal angle = value.Atan(); // ≈ π / 4
+    /// </code>
+    /// </example>
+    public decimal Atan(decimal epsilon = 0) {
+      Against.NegativeValues(epsilon);
+
+      const decimal PI_OVER_2 = Pi/2;
+      return @this switch {
+        0m => 0m,
+        > 1m => PI_OVER_2 - Atan(1m / @this, epsilon),
+        < -1m => -PI_OVER_2 - Atan(1m / @this, epsilon),
+        _ => Calculate()
+      };
+
+      decimal Calculate() {
+        var current = (decimal)Math.Atan((double)@this);
+        decimal previous;
+        var iterations = 0;
+        do {
+          previous = current;
+          var tanY = Tan(current, epsilon);
+          var sec2Y = 1m + tanY * tanY; // sec^2(y) = 1 + tan^2(y)
+          current -= (tanY - @this) / sec2Y;
+        }
+        while (Math.Abs(current - previous) > epsilon && ++iterations < MAX_ATAN_ITERATIONS);
+
+        return current;
       }
     }
   }
 
-  /// <summary>
-  ///   Calculate a more accurate square root, see
-  ///   http://stackoverflow.com/questions/4124189/performing-math-operations-on-decimal-datatype-in-c
-  /// </summary>
-  /// <param name="this">The x.</param>
-  /// <param name="epsilon">The epsilon.</param>
-  /// <returns>The square root of x</returns>
-  public static decimal Sqrt(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValues(@this);
-    Against.NegativeValues(epsilon);
-
-    return @this switch {
-      0 => 0,
-      1 => 1,
-      2 => Sqrt2,
-      3 => Sqrt3,
-      4 => 2,
-      5 => Sqrt5,
-      6 => Sqrt6,
-      7 => Sqrt7,
-      8 => Sqrt8,
-      9 => 3,
-      10 => Sqrt10,
-      _ => Calculate()
-    };
-
-    decimal Calculate() {
-      var current = (decimal)Math.Sqrt((double)@this);
-      decimal previous;
-      const decimal factor = 2m;
-
-      do {
-        previous = current;
-        current = (previous + @this / previous) / factor;
-      } while (Math.Abs(previous - current) > epsilon);
-
-      return current;
-    }
-  }
-
-  public static decimal Sin(this decimal x, decimal epsilon = 0m) => Cos(x - Pi / 2m, epsilon);
-  
-  public static decimal Cos(this decimal x, decimal epsilon = 0m) {
-    x = ReduceAngle(x);
-
-    var result = 1m;
-    var term = 1m;
-    var x2 = x * x;
-    var sign = -1;
-
-    for (var n = 2; n < MAX_TAN_ITERATIONS; n += 2) {
-      term *= x2 / ((n - 1) * n);
-      var delta = term * sign;
-      result += delta;
-
-      if (Math.Abs(delta) < epsilon)
-        break;
-
-      sign = -sign;
-    }
-
-    return result;
-
-    static decimal ReduceAngle(decimal x) {
-      const decimal TwoPi = 2 * Pi;
-
-      x %= TwoPi;
-
-      // Reduce to [-π, π]
-      if (x < -Pi)
-        x += TwoPi;
-      if (x > Pi)
-        x -= TwoPi;
-
-      return x;
-    }
-  }
-
-  /// <summary>
-  /// Computes the tangent of the specified <see langword="decimal"/> angle in radians.
-  /// </summary>
-  /// <param name="this">The angle in radians.</param>
-  /// <param name="epsilon">(Optional: defaults to <c>0</c>) The maximum error tolerance for refinement using a power series.</param>
-  /// <returns>The tangent of the angle as a <see cref="decimal"/>.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="epsilon"/> is negative.</exception>
-  /// <remarks>
-  /// This implementation starts with a double-based approximation and refines the result using a truncated Maclaurin series.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// decimal angle = Math.PIm / 4; // 45 degrees in radians
-  /// decimal tan = angle.Tan();   // ≈ 1.0
-  /// </code>
-  /// </example>
-  public static decimal Tan(this decimal @this, decimal epsilon = 0) {
-    var cos = Cos(@this, epsilon / 10);
-    if (cos == 0)
-      throw new DivideByZeroException("tan(x) undefined at odd multiples of π/2");
-
-    return Sin(@this, epsilon / 10) / cos;
-  }
-
-  /// <summary>
-  /// Computes the arctangent (inverse tangent) of the specified <see langword="decimal"/> value.
-  /// </summary>
-  /// <param name="this">The tangent value to invert.</param>
-  /// <param name="epsilon">(Optional: defaults to <c>0</c>) The maximum allowed deviation between successive approximations.</param>
-  /// <returns>The angle in radians whose tangent is equal to the input value.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="epsilon"/> is negative.</exception>
-  /// <remarks>
-  /// Uses an adaptive Newton-Raphson approach for refinement based on <see cref="Math.Tan"/> and the identity <c>atan(x) = sign(x) * π/2 - atan(1 / |x|)</c> when <c>|x| &gt; 1</c>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// decimal value = 1m;
-  /// decimal angle = value.Atan(); // ≈ π / 4
-  /// </code>
-  /// </example>
-  public static decimal Atan(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValues(epsilon);
-
-    const decimal PI_OVER_2 = Pi/2;
-    return @this switch {
-      0m => 0m,
-      > 1m => PI_OVER_2 - Atan(1m / @this, epsilon),
-      < -1m => -PI_OVER_2 - Atan(1m / @this, epsilon),
-      _ => Calculate()
-    };
-
-    decimal Calculate() {
-      var current = (decimal)Math.Atan((double)@this);
-      decimal previous;
-      var iterations = 0;
-      do {
-        previous = current;
-        var tanY = Tan(current, epsilon);
-        var sec2Y = 1m + tanY * tanY; // sec^2(y) = 1 + tan^2(y)
-        current -= (tanY - @this) / sec2Y;
-      }
-      while (Math.Abs(current - previous) > epsilon && ++iterations < MAX_ATAN_ITERATIONS);
-
-      return current;
-    }
-  }
-
-  /// <summary>
-  /// Returns the largest integral value less than or equal to the specified single-precision floating-point number.
-  /// </summary>
   /// <param name="this">The <see langword="float"/> value to round down.</param>
-  /// <returns>The largest integer less than or equal to <paramref name="this"/>.</returns>
-  /// <remarks>
-  /// Uses <see cref="MathF.Floor(float)"/> when available; otherwise falls back to <see cref="Math.Floor(double)"/>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// float value = 3.7f;
-  /// float result = value.Floor(); // result = 3.0f
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Floor(this float @this) => MathF.Floor(@this);
+  extension(float @this)
+  {
+    /// <summary>
+    /// Returns the largest integral value less than or equal to the specified single-precision floating-point number.
+    /// </summary>
+    /// <returns>The largest integer less than or equal to <paramref name="this"/>.</returns>
+    /// <remarks>
+    /// Uses <see cref="MathF.Floor(float)"/> when available; otherwise falls back to <see cref="Math.Floor(double)"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// float value = 3.7f;
+    /// float result = value.Floor(); // result = 3.0f
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Floor() => MathF.Floor(@this);
 
-  /// <summary>
-  /// Returns the smallest integral value greater than or equal to the specified single-precision floating-point number.
-  /// </summary>
-  /// <param name="this">The <see langword="float"/> value to round up.</param>
-  /// <returns>The smallest integer greater than or equal to <paramref name="this"/>.</returns>
-  /// <remarks>
-  /// Uses <see cref="MathF.Ceiling(float)"/> when available; otherwise falls back to <see cref="Math.Ceiling(double)"/>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// float value = 3.2f;
-  /// float result = value.Ceiling(); // result = 4.0f
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Ceiling(this float @this) => MathF.Ceiling(@this);
+    /// <summary>
+    /// Returns the smallest integral value greater than or equal to the specified single-precision floating-point number.
+    /// </summary>
+    /// <returns>The smallest integer greater than or equal to <paramref name="this"/>.</returns>
+    /// <remarks>
+    /// Uses <see cref="MathF.Ceiling(float)"/> when available; otherwise falls back to <see cref="Math.Ceiling(double)"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// float value = 3.2f;
+    /// float result = value.Ceiling(); // result = 4.0f
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Ceiling() => MathF.Ceiling(@this);
 
-  /// <summary>
-  /// Calculates the integral part of the specified single-precision floating-point number by removing any fractional digits.
-  /// </summary>
-  /// <param name="this">The <see langword="float"/> value to truncate.</param>
-  /// <returns>The integral part of <paramref name="this"/>, rounded toward zero.</returns>
-  /// <remarks>
-  /// Uses <see cref="MathF.Truncate(float)"/> when available; otherwise falls back to <see cref="Math.Truncate(double)"/>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// float value = -3.9f;
-  /// float result = value.Truncate(); // result = -3.0f
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Truncate(this float @this) => MathF.Truncate(@this);
+    /// <summary>
+    /// Calculates the integral part of the specified single-precision floating-point number by removing any fractional digits.
+    /// </summary>
+    /// <returns>The integral part of <paramref name="this"/>, rounded toward zero.</returns>
+    /// <remarks>
+    /// Uses <see cref="MathF.Truncate(float)"/> when available; otherwise falls back to <see cref="Math.Truncate(double)"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// float value = -3.9f;
+    /// float result = value.Truncate(); // result = -3.0f
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Truncate() => MathF.Truncate(@this);
 
-  /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
-  /// <param name="this">A number to be rounded.</param>
-  /// <returns>
-  ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
-  ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
-  ///   returned.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Round(this float @this) => MathF.Round(@this);
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <returns>
+    ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+    ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+    ///   returned.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Round() => MathF.Round(@this);
 
-  /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
-  /// <param name="this">A number to be rounded.</param>
-  /// <param name="digits">The number of decimal places in the return value.</param>
-  /// <returns>
-  ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
-  ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
-  ///   returned.
-  /// </returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Round(this float @this, int digits) {
-    Against.ValuesOutOfRange(digits, 0, 15);
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <returns>
+    ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+    ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+    ///   returned.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Round(int digits) {
+      Against.ValuesOutOfRange(digits, 0, 15);
 
-    return MathF.Round(@this, digits);
+      return MathF.Round(@this, digits);
+    }
+
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Round(MidpointRounding method) => MathF.Round(@this, method);
+
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Round(int digits, MidpointRounding method) {
+      Against.ValuesOutOfRange(digits, 0, 15);
+      Against.UnknownEnumValues(method);
+
+      return MathF.Round(@this, digits, method);
+    }
+
+    /// <summary>
+    /// Calculates the logarithm of a specified number in a specified base.
+    /// </summary>
+    /// <param name="base">(Base) The base of the logarithm.</param>
+    /// <returns>The logarithm of <paramref name="this"/> in the specified <paramref name="base"/>.</returns>
+    /// <remarks>
+    /// Uses <see cref="MathF.Log(float, float)"/> if available; otherwise falls back to <see cref="Math.Log(double, double)"/>.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// float result = 8f.Log(2f); // result = 3.0f
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float LogN(float @base) => MathF.Log(@this, @base);
   }
-
-  /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
-  /// <param name="this">A number to be rounded.</param>
-  /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
-  /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Round(this float @this, MidpointRounding method) => MathF.Round(@this, method);
-
-  /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
-  /// <param name="this">A number to be rounded.</param>
-  /// <param name="digits">The number of decimal places in the return value.</param>
-  /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
-  /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float Round(this float @this, int digits, MidpointRounding method) {
-    Against.ValuesOutOfRange(digits, 0, 15);
-    Against.UnknownEnumValues(method);
-
-    return MathF.Round(@this, digits, method);
-  }
-
-  /// <summary>
-  /// Calculates the logarithm of a specified number in a specified base.
-  /// </summary>
-  /// <param name="this">The number whose logarithm is to be found.</param>
-  /// <param name="base">(Base) The base of the logarithm.</param>
-  /// <returns>The logarithm of <paramref name="this"/> in the specified <paramref name="base"/>.</returns>
-  /// <remarks>
-  /// Uses <see cref="MathF.Log(float, float)"/> if available; otherwise falls back to <see cref="Math.Log(double, double)"/>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// float result = 8f.Log(2f); // result = 3.0f
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float LogN(this float @this, float @base) => MathF.Log(@this, @base);
 
   /// <summary>
   /// Calculates the logarithm of a specified number in a specified base.
@@ -2448,84 +2456,85 @@ public static partial class MathEx {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPowerOfTwo(this ulong @this) => @this != 0 && (@this & (@this - 1)) == 0;
 
-  /// <summary>
-  /// Computes e^x using Taylor series expansion.
-  /// </summary>
   /// <param name="this">The exponent value.</param>
-  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
-  /// <returns>e raised to the power of the input value.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal Exp(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValues(epsilon);
+  extension(decimal @this)
+  {
+    /// <summary>
+    /// Computes e^x using Taylor series expansion.
+    /// </summary>
+    /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+    /// <returns>e raised to the power of the input value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal Exp(decimal epsilon = 0) {
+      Against.NegativeValues(epsilon);
 
-    switch (@this) {
-      case 0m:
-        return 1m;
-      case > 0 when @this.Truncate() == @this: {
-        var value = E;
-        while (@this-- > 1)
-          value *= E;
+      switch (@this) {
+        case 0m:
+          return 1m;
+        case > 0 when @this.Truncate() == @this: {
+          var value = E;
+          while (@this-- > 1)
+            value *= E;
 
-        return value;
+          return value;
+        }
       }
+
+
+      epsilon = epsilon == 0 ? DEFAULT_EPSILON : epsilon;
+
+      // Taylor series: e^x = Σ(x^n / n!) for n=0 to ∞
+      var term = 1m;
+      var result = 1m;
+      var n = 1;
+
+      while (Math.Abs(term) > epsilon && n <= MAX_EXP_ITERATIONS) {
+        term *= @this / n;
+        result += term;
+        ++n;
+      }
+
+      return result;
     }
 
+    /// <summary>
+    /// Computes the natural logarithm (ln) of a decimal value using Newton-Raphson iteration.
+    /// </summary>
+    /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+    /// <returns>The natural logarithm of the input value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal Log(decimal epsilon = 0) {
+      Against.NegativeValuesAndZero(@this);
+      Against.NegativeValues(epsilon);
 
-    epsilon = epsilon == 0 ? DEFAULT_EPSILON : epsilon;
+      if (@this == 1m)
+        return 0m;
 
-    // Taylor series: e^x = Σ(x^n / n!) for n=0 to ∞
-    var term = 1m;
-    var result = 1m;
-    var n = 1;
+      // Start with double approximation
+      var current = (decimal)Math.Log((double)@this);
+      decimal previous;
+      var iteration = 0;
 
-    while (Math.Abs(term) > epsilon && n <= MAX_EXP_ITERATIONS) {
-      term *= @this / n;
-      result += term;
-      ++n;
+      // Newton-Raphson: x_{n+1} = x_n - (e^x_n - target) / e^x_n
+      do {
+        previous = current;
+        var exp = Exp(previous, epsilon);
+        current -= (exp - @this) / exp;
+      } while (Math.Abs(current - previous) > epsilon && ++iteration < MAX_LOG_ITERATIONS);
+
+      return current;
     }
 
-    return result;
-  }
-
-  /// <summary>
-  /// Computes the natural logarithm (ln) of a decimal value using Newton-Raphson iteration.
-  /// </summary>
-  /// <param name="this">The value to compute the logarithm for.</param>
-  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
-  /// <returns>The natural logarithm of the input value.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal Log(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValuesAndZero(@this);
-    Against.NegativeValues(epsilon);
-
-    if (@this == 1m)
-      return 0m;
-
-    // Start with double approximation
-    var current = (decimal)Math.Log((double)@this);
-    decimal previous;
-    var iteration = 0;
-
-    // Newton-Raphson: x_{n+1} = x_n - (e^x_n - target) / e^x_n
-    do {
-      previous = current;
-      var exp = Exp(previous, epsilon);
-      current -= (exp - @this) / exp;
-    } while (Math.Abs(current - previous) > epsilon && ++iteration < MAX_LOG_ITERATIONS);
-
-    return current;
-  }
-
-  /// <summary>
-  /// Computes the base-10 logarithm using the change of base formula.
-  /// </summary>
-  /// <param name="this">The value to compute the logarithm for.</param>
-  /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
-  /// <returns>The base-10 logarithm of the input value.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal Log10(this decimal @this, decimal epsilon = 0) {
-    Against.NegativeValuesAndZero(@this);
-    return Log(@this, epsilon) / Ln10;
+    /// <summary>
+    /// Computes the base-10 logarithm using the change of base formula.
+    /// </summary>
+    /// <param name="epsilon">Precision threshold (0 = maximum precision).</param>
+    /// <returns>The base-10 logarithm of the input value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal Log10(decimal epsilon = 0) {
+      Against.NegativeValuesAndZero(@this);
+      return Log(@this, epsilon) / Ln10;
+    }
   }
 
   /// <summary>
@@ -2690,159 +2699,145 @@ public static partial class MathEx {
     < 0 => -(-@this).Pow(1m / 3)
   };
 
-  /// <summary>
-  ///   Calculates the cotangent.
-  /// </summary>
   /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Cot(this double @this) => Math.Cos(@this) / Math.Sin(@this);
+  extension(double @this)
+  {
+    /// <summary>
+    ///   Calculates the cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Cot() => Math.Cos(@this) / Math.Sin(@this);
 
-  /// <summary>
-  ///   Calculates the hyperbolic cotangent.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Coth(this double @this) {
-    var ex = Math.Exp(@this);
-    var em = 1 / ex;
-    return (ex + em) / (ex - em);
+    /// <summary>
+    ///   Calculates the hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Coth() {
+      var ex = Math.Exp(@this);
+      var em = 1 / ex;
+      return (ex + em) / (ex - em);
+    }
+
+    /// <summary>
+    ///   Calculates the cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Csc() => 1 / Math.Sin(@this);
+
+    /// <summary>
+    ///   Calculates the hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Csch() {
+      var ex = Math.Exp(@this);
+      return 2 / (ex - 1 / ex);
+    }
+
+    /// <summary>
+    ///   Calculates the secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Sec() => 1 / Math.Cos(@this);
+
+    /// <summary>
+    ///   Calculates the hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Sech() {
+      var ex = Math.Exp(@this);
+      return 2 / (ex + 1 / ex);
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Arsinh() => Math.Log(@this + Math.Sqrt(@this * @this + 1));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Arcosh() => Math.Log(@this + Math.Sqrt(@this * @this - 1));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Artanh() => 0.5d * Math.Log((1 + @this) / (1 - @this));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Arcoth() => 0.5d * Math.Log((@this + 1) / (@this - 1));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Arsech() => Math.Log((1 + Math.Sqrt(1 - @this * @this)) / @this);
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Arcsch() => Math.Log((1 + Math.Sqrt(1 + @this * @this)) / @this);
+
+    /// <summary>
+    ///   Calculates the arcus sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Asin() => Math.Asin(@this);
+
+    /// <summary>
+    ///   Calculates the arcus cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Acos() => Math.Acos(@this);
+
+    /// <summary>
+    ///   Calculates the arcus tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Atan() => Math.Atan(@this);
+
+    /// <summary>
+    ///   Calculates the arcus cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Acot() => Math.Atan(1 / @this);
+
+    /// <summary>
+    ///   Calculates the arcus secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Asec() => Math.Acos(1 / @this);
+
+    /// <summary>
+    ///   Calculates the arcus cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double Acsc() => Math.Asin(1 / @this);
   }
-
-  /// <summary>
-  ///   Calculates the cosecant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Csc(this double @this) => 1 / Math.Sin(@this);
-
-  /// <summary>
-  ///   Calculates the hyperbolic cosecant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Csch(this double @this) {
-    var ex = Math.Exp(@this);
-    return 2 / (ex - 1 / ex);
-  }
-
-  /// <summary>
-  ///   Calculates the secant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Sec(this double @this) => 1 / Math.Cos(@this);
-
-  /// <summary>
-  ///   Calculates the hyperbolic secant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Sech(this double @this) {
-    var ex = Math.Exp(@this);
-    return 2 / (ex + 1 / ex);
-  }
-
-  /// <summary>
-  ///   Calculates the area hyperbolic sine.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Arsinh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this + 1));
-
-  /// <summary>
-  ///   Calculates the area hyperbolic cosine.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Arcosh(this double @this) => Math.Log(@this + Math.Sqrt(@this * @this - 1));
-
-  /// <summary>
-  ///   Calculates the area hyperbolic tangent.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Artanh(this double @this) => 0.5d * Math.Log((1 + @this) / (1 - @this));
-
-  /// <summary>
-  ///   Calculates the area hyperbolic cotangent.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Arcoth(this double @this) => 0.5d * Math.Log((@this + 1) / (@this - 1));
-
-  /// <summary>
-  ///   Calculates the area hyperbolic secant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Arsech(this double @this) => Math.Log((1 + Math.Sqrt(1 - @this * @this)) / @this);
-
-  /// <summary>
-  ///   Calculates the area hyperbolic cosecant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Arcsch(this double @this) => Math.Log((1 + Math.Sqrt(1 + @this * @this)) / @this);
-
-  /// <summary>
-  ///   Calculates the arcus sine.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Asin(this double @this) => Math.Asin(@this);
-
-  /// <summary>
-  ///   Calculates the arcus cosine.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Acos(this double @this) => Math.Acos(@this);
-
-  /// <summary>
-  ///   Calculates the arcus tangent.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Atan(this double @this) => Math.Atan(@this);
-
-  /// <summary>
-  ///   Calculates the arcus cotangent.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Acot(this double @this) => Math.Atan(1 / @this);
-
-  /// <summary>
-  ///   Calculates the arcus secant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Asec(this double @this) => Math.Acos(1 / @this);
-
-  /// <summary>
-  ///   Calculates the arcus cosecant.
-  /// </summary>
-  /// <param name="this">This value.</param>
-  /// <returns>Calculation result</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double Acsc(this double @this) => Math.Asin(1 / @this);
 
   public static bool IsPrime(this ulong candidate) {
     switch (candidate) {

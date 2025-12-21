@@ -6,7 +6,8 @@
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS8632</NoWarn><!-- Nullable annotations used without nullable context - legacy test code not designed for nullable -->
     <SelfContained>false</SelfContained>
     <IsPackable>false</IsPackable>
     <LangVersion>default</LangVersion>
@@ -15,11 +16,11 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
-    <NoWarn>MSB3270</NoWarn>
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
     <!-- Suppresses the processor architecture mismatch warning -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <NoWarn>MSB3268;MSB3270</NoWarn>
+    <NoWarn>$(NoWarn);MSB3268;MSB3270</NoWarn>
     <!-- Suppresses assembly resolution and processor architecture warnings for net40 with Microsoft.Bcl.Async -->
   </PropertyGroup>
 
