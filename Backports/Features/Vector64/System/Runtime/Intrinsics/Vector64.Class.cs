@@ -1,4 +1,4 @@
-﻿// This file is part of Hawkynt's .NET Framework extensions.
+// This file is part of Hawkynt's .NET Framework extensions.
 //
 // Hawkynt's .NET Framework extensions are free software:
 // you can redistribute and/or modify it under the terms
@@ -1300,7 +1300,7 @@ public static partial class Vector64 {
   /// <returns>The vector loaded from <paramref name="source" />.</returns>
   /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe Vector64<T> Load<T>(T* source) => LoadUnsafe(ref *source);
+  public static unsafe Vector64<T> Load<T>(T* source) where T : unmanaged => LoadUnsafe(ref *source);
 
   /// <summary>Loads a vector from the given aligned source.</summary>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
@@ -1308,7 +1308,7 @@ public static partial class Vector64 {
   /// <returns>The vector loaded from <paramref name="source" />.</returns>
   /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe Vector64<T> LoadAligned<T>(T* source) {
+  public static unsafe Vector64<T> LoadAligned<T>(T* source) where T : unmanaged {
     Vector64<T>.ThrowIfNotSupported();
 
     if ((nuint)source % Alignment != 0)
@@ -1324,7 +1324,7 @@ public static partial class Vector64 {
   /// <remarks>This method may bypass the cache on certain platforms.</remarks>
   /// <exception cref="NotSupportedException">The type of <paramref name="source" /> (<typeparamref name="T" />) is not supported.</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe Vector64<T> LoadAlignedNonTemporal<T>(T* source) => LoadAligned(source);
+  public static unsafe Vector64<T> LoadAlignedNonTemporal<T>(T* source) where T : unmanaged => LoadAligned(source);
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type ('T')
 
   /// <summary>Loads a vector from the given source.</summary>
@@ -2057,7 +2057,7 @@ public static partial class Vector64 {
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type ('T')
   /// <param name="source">The vector that will be stored.</param>
   /// <typeparam name="T">The type of the elements in the vector.</typeparam>
-  extension<T>(Vector64<T> source)
+  extension<T>(Vector64<T> source) where T : unmanaged
   {
     /// <summary>Stores a vector at the given destination.</summary>
     /// <param name="destination">The destination at which <paramref name="source" /> will be stored.</param>
@@ -2530,7 +2530,7 @@ public static partial class Vector64Polyfills {
     // Only needed as extensions for WAVE1 frameworks
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Vector64<T> Load<T>(T* source) where T : struct
+    public static unsafe Vector64<T> Load<T>(T* source) where T : unmanaged
       => Unsafe.ReadUnaligned<Vector64<T>>(source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2538,7 +2538,7 @@ public static partial class Vector64Polyfills {
       => Unsafe.ReadUnaligned<Vector64<T>>(ref Unsafe.As<T, byte>(ref source));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void Store<T>(Vector64<T> source, T* destination) where T : struct
+    public static unsafe void Store<T>(Vector64<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2546,11 +2546,11 @@ public static partial class Vector64Polyfills {
       => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void StoreAligned<T>(Vector64<T> source, T* destination) where T : struct
+    public static unsafe void StoreAligned<T>(Vector64<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void StoreAlignedNonTemporal<T>(Vector64<T> source, T* destination) where T : struct
+    public static unsafe void StoreAlignedNonTemporal<T>(Vector64<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

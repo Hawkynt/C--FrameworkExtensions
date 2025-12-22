@@ -38,7 +38,7 @@ public static partial class Vector512 {
   public static bool IsHardwareAccelerated => false;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe Vector512<T> Load<T>(T* source) where T : struct
+  public static unsafe Vector512<T> Load<T>(T* source) where T : unmanaged
     => Unsafe.ReadUnaligned<Vector512<T>>(source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,11 +46,11 @@ public static partial class Vector512 {
     => Unsafe.ReadUnaligned<Vector512<T>>(ref Unsafe.As<T, byte>(ref source));
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe Vector512<T> LoadAligned<T>(T* source) where T : struct
+  public static unsafe Vector512<T> LoadAligned<T>(T* source) where T : unmanaged
     => Unsafe.ReadUnaligned<Vector512<T>>(source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void Store<T>(Vector512<T> source, T* destination) where T : struct
+  public static unsafe void Store<T>(Vector512<T> source, T* destination) where T : unmanaged
     => Unsafe.WriteUnaligned(destination, source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,11 +58,11 @@ public static partial class Vector512 {
     => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void StoreAligned<T>(Vector512<T> source, T* destination) where T : struct
+  public static unsafe void StoreAligned<T>(Vector512<T> source, T* destination) where T : unmanaged
     => Unsafe.WriteUnaligned(destination, source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void StoreAlignedNonTemporal<T>(Vector512<T> source, T* destination) where T : struct
+  public static unsafe void StoreAlignedNonTemporal<T>(Vector512<T> source, T* destination) where T : unmanaged
     => Unsafe.WriteUnaligned(destination, source);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

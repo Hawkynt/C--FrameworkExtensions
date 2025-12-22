@@ -327,7 +327,7 @@ public static partial class Vector256Polyfills {
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Vector256<T> Load<T>(T* source) where T : struct
+    public static unsafe Vector256<T> Load<T>(T* source) where T : unmanaged
       => Unsafe.ReadUnaligned<Vector256<T>>(source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -335,7 +335,7 @@ public static partial class Vector256Polyfills {
       => Unsafe.ReadUnaligned<Vector256<T>>(ref Unsafe.As<T, byte>(ref source));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void Store<T>(Vector256<T> source, T* destination) where T : struct
+    public static unsafe void Store<T>(Vector256<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -343,11 +343,11 @@ public static partial class Vector256Polyfills {
       => Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref destination), source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void StoreAligned<T>(Vector256<T> source, T* destination) where T : struct
+    public static unsafe void StoreAligned<T>(Vector256<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void StoreAlignedNonTemporal<T>(Vector256<T> source, T* destination) where T : struct
+    public static unsafe void StoreAlignedNonTemporal<T>(Vector256<T> source, T* destination) where T : unmanaged
       => Unsafe.WriteUnaligned(destination, source);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
