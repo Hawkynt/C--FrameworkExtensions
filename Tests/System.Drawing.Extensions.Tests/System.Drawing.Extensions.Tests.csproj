@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Match System.Drawing.Extensions target frameworks + net8.0-windows for modern testing -->
-    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net8.0-windows</TargetFrameworks>
+    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net9.0-windows</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Platforms>AnyCPU;x64;x86</Platforms>
