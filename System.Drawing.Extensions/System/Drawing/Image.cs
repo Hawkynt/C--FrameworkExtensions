@@ -225,7 +225,7 @@ public static partial class ImageExtensions {
       c => {
         var mean = (c.R + c.G + c.B) / 3.0;
         var color = mean < threshold ? byte.MinValue : byte.MaxValue;
-        return Color.FromArgb(c.A, color, color, color);
+        return Color.FromArgb(255, color, color, color);
       }
     );
   }

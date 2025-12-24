@@ -324,6 +324,8 @@ public static partial class Vector256 {
 #else
 public static partial class Vector256Polyfills {
   extension(Vector256) {
+    /// <summary>Gets a value that indicates whether 256-bit vector operations are subject to hardware acceleration.</summary>
+    public static bool IsHardwareAccelerated => System.Numerics.Vector.IsHardwareAccelerated && System.Numerics.Vector<byte>.Count >= 32;
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

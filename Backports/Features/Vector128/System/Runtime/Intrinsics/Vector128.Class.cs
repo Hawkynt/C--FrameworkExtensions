@@ -458,6 +458,8 @@ public static partial class Vector128 {
 public static partial class Vector128Polyfills {
   extension(Vector128) {
     private static void SkipInit<T>(out T result) => result = default!;
+    /// <summary>Gets a value that indicates whether 128-bit vector operations are subject to hardware acceleration.</summary>
+    public static bool IsHardwareAccelerated => System.Numerics.Vector.IsHardwareAccelerated && System.Numerics.Vector<byte>.Count >= 16;
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

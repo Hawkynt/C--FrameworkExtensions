@@ -18,6 +18,7 @@
 #endregion
 
 using System.Drawing.Imaging;
+using Hawkynt.Drawing.Lockers;
 using NUnit.Framework;
 
 namespace System.Drawing.Tests;
@@ -170,6 +171,19 @@ public class BitmapLockerTests {
 
   [Test]
   [Category("HappyPath")]
+  public void DrawHorizontalLine_MultiplePixels_Works() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.DrawHorizontalLine(2, 5, 4, Color.Red);
+
+    for (var x = 2; x < 6; ++x)
+      Assert.That(locker[x, 5].ToArgb(), Is.EqualTo(Color.Red.ToArgb()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
   public void DrawHorizontalLine_PointOverload_Works() {
     using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
     using var locker = bitmap.Lock();
@@ -201,6 +215,19 @@ public class BitmapLockerTests {
 
     Assert.That(locker[10, 4].ToArgb(), Is.EqualTo(Color.Black.ToArgb()), "Pixel before line should be black");
     Assert.That(locker[10, 13].ToArgb(), Is.EqualTo(Color.Black.ToArgb()), "Pixel after line should be black");
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DrawVerticalLine_PointOverload_Works() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.DrawVerticalLine(new Point(10, 5), 8, Color.White);
+
+    for (var y = 5; y < 13; ++y)
+      Assert.That(locker[10, y].ToArgb(), Is.EqualTo(Color.White.ToArgb()), $"Line pixel at y={y} should be white");
   }
 
   #endregion
@@ -259,6 +286,19 @@ public class BitmapLockerTests {
 
   [Test]
   [Category("HappyPath")]
+  public void DrawLine_ShortDiagonal_Works() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.DrawLine(0, 0, 5, 5, Color.Yellow);
+
+    Assert.That(locker[0, 0].ToArgb(), Is.EqualTo(Color.Yellow.ToArgb()));
+    Assert.That(locker[5, 5].ToArgb(), Is.EqualTo(Color.Yellow.ToArgb()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
   public void DrawLine_PointOverload_Works() {
     using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
     using var locker = bitmap.Lock();
@@ -300,15 +340,29 @@ public class BitmapLockerTests {
 
   [Test]
   [Category("HappyPath")]
+  public void DrawRectangle_SmallRectangle_Works() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.DrawRectangle(2, 2, 5, 5, Color.Red);
+
+    Assert.That(locker[2, 2].ToArgb(), Is.EqualTo(Color.Red.ToArgb()));
+    Assert.That(locker[6, 6].ToArgb(), Is.EqualTo(Color.Red.ToArgb()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
   public void DrawRectangle_RectangleOverload_Works() {
     using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
     using var locker = bitmap.Lock();
 
     locker.Clear(Color.Black);
-    locker.DrawRectangle(new Rectangle(2, 2, 5, 5), Color.Red);
+    locker.DrawRectangle(new Rectangle(5, 5, 10, 10), Color.White);
 
-    Assert.That(locker[2, 2].ToArgb(), Is.EqualTo(Color.Red.ToArgb()));
-    Assert.That(locker[6, 6].ToArgb(), Is.EqualTo(Color.Red.ToArgb()));
+    Assert.That(locker[5, 5].ToArgb(), Is.EqualTo(Color.White.ToArgb()), "Top-left corner");
+    Assert.That(locker[14, 14].ToArgb(), Is.EqualTo(Color.White.ToArgb()), "Bottom-right corner");
+    Assert.That(locker[10, 10].ToArgb(), Is.EqualTo(Color.Black.ToArgb()), "Interior should be black");
   }
 
   #endregion
@@ -347,12 +401,61 @@ public class BitmapLockerTests {
   }
 
   [Test]
-  [Category("Exception")]
-  public void FillRectangleChecked_InvalidCoords_Throws() {
+  [Category("HappyPath")]
+  public void FillRectangle_NegativeCoords_ClipsCorrectly() {
     using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
     using var locker = bitmap.Lock();
 
-    Assert.Throws<ArgumentOutOfRangeException>(() => locker.FillRectangleChecked(-5, -5, 30, 30, Color.White));
+    locker.Clear(Color.Black);
+    locker.FillRectangle(-5, -5, 10, 10, Color.White);
+
+    // Should only fill from (0,0) to (4,4) since rectangle starts at -5,-5 with size 10x10
+    Assert.That(locker[0, 0].ToArgb(), Is.EqualTo(Color.White.ToArgb()));
+    Assert.That(locker[4, 4].ToArgb(), Is.EqualTo(Color.White.ToArgb()));
+    Assert.That(locker[5, 5].ToArgb(), Is.EqualTo(Color.Black.ToArgb()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void FillRectangle_RectangleOverload_Works() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.FillRectangle(new Rectangle(5, 5, 10, 10), Color.White);
+
+    for (var y = 5; y < 15; ++y)
+    for (var x = 5; x < 15; ++x)
+      Assert.That(locker[x, y].ToArgb(), Is.EqualTo(Color.White.ToArgb()), $"Pixel at ({x},{y}) should be white");
+
+    Assert.That(locker[4, 4].ToArgb(), Is.EqualTo(Color.Black.ToArgb()));
+    Assert.That(locker[15, 15].ToArgb(), Is.EqualTo(Color.Black.ToArgb()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void FillRectangleChecked_ValidBounds_FillsArea() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    locker.Clear(Color.Black);
+    locker.FillRectangleChecked(5, 5, 10, 10, Color.White);
+
+    for (var y = 5; y < 15; ++y)
+    for (var x = 5; x < 15; ++x)
+      Assert.That(locker[x, y].ToArgb(), Is.EqualTo(Color.White.ToArgb()), $"Pixel at ({x},{y}) should be white");
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void FillRectangleChecked_OutOfBounds_ThrowsException() {
+    using var bitmap = new Bitmap(20, 20, PixelFormat.Format32bppArgb);
+    using var locker = bitmap.Lock();
+
+    Assert.Throws<ArgumentOutOfRangeException>(() => locker.FillRectangleChecked(-1, 0, 10, 10, Color.White));
+    Assert.Throws<ArgumentOutOfRangeException>(() => locker.FillRectangleChecked(0, -1, 10, 10, Color.White));
+    Assert.Throws<ArgumentOutOfRangeException>(() => locker.FillRectangleChecked(15, 0, 10, 10, Color.White));
+    Assert.Throws<ArgumentOutOfRangeException>(() => locker.FillRectangleChecked(0, 15, 10, 10, Color.White));
   }
 
   #endregion

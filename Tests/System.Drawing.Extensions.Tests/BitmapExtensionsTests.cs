@@ -109,11 +109,22 @@ public class BitmapExtensionsTests {
   [Category("HappyPath")]
   public void ConvertPixelFormat_24bppTo32bpp_Converts() {
     using var original = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue, PixelFormat.Format24bppRgb);
+
+    // Debug: verify source is properly filled
+    using (var srcLock = original.Lock()) {
+      var srcColor = srcLock[5, 5];
+      Console.WriteLine($"Source pixel [5,5]: R={srcColor.R}, G={srcColor.G}, B={srcColor.B}, A={srcColor.A}");
+      Console.WriteLine($"Source locker type: {srcLock.GetType().Name}");
+    }
+
     using var converted = original.ConvertPixelFormat(PixelFormat.Format32bppArgb);
 
     Assert.That(converted.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
 
     using var lockConverted = converted.Lock();
+    Console.WriteLine($"Dest locker type: {lockConverted.GetType().Name}");
+    var color = lockConverted[5, 5];
+    Console.WriteLine($"Converted pixel [5,5]: R={color.R}, G={color.G}, B={color.B}, A={color.A}");
     Assert.That(lockConverted[5, 5].A, Is.EqualTo(255));
     Assert.That(lockConverted[5, 5].B, Is.EqualTo(Color.Blue.B));
   }

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
     <!-- Match System.Drawing.Extensions target frameworks + net8.0-windows for modern testing -->
     <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net9.0-windows</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>

@@ -18,38 +18,42 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using Guard;
 using System.Runtime.CompilerServices;
+using Hawkynt.Drawing.Lockers;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Drawing;
 
 public static partial class BitmapExtensions {
+
   #region nested types
 
   private delegate IBitmapLocker LockerFactory(Bitmap bitmap, Rectangle rect, ImageLockMode flags, PixelFormat format);
 
   private static readonly Dictionary<PixelFormat, LockerFactory> _LOCKER_TYPES = new() {
-    [PixelFormat.Format32bppArgb] = (b, r, f, f2) => new ARGB32BitmapLocker(b, r, f, f2), 
-    [PixelFormat.Format32bppRgb] = (b, r, f, f2) => new RGB32BitmapLocker(b, r, f, f2), 
-    [PixelFormat.Format24bppRgb] = (b, r, f, f2) => new RGB24BitmapLocker(b, r, f, f2),
-    [PixelFormat.Format16bppRgb565] = (b, r, f, f2) => new RGB565BitmapLocker(b, r, f, f2),
-    [PixelFormat.Format16bppArgb1555] = (b, r, f, f2) => new ARGB1555BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format32bppArgb] = (b, r, f, f2) => new Argb8888BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format32bppPArgb] = (b, r, f, f2) => new PArgb8888BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format32bppRgb] = (b, r, f, f2) => new Rgb888XBitmapLocker(b, r, f, f2),
+    [PixelFormat.Format24bppRgb] = (b, r, f, f2) => new Rgb888BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format16bppRgb565] = (b, r, f, f2) => new Rgb565BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format16bppArgb1555] = (b, r, f, f2) => new Argb1555BitmapLocker(b, r, f, f2),
     [PixelFormat.Format16bppGrayScale] = (b, r, f, f2) => new Gray16BitmapLocker(b, r, f, f2),
-    [PixelFormat.Format16bppRgb555] = (b, r, f, f2) => new RGB555BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format16bppRgb555] = (b, r, f, f2) => new Rgb555BitmapLocker(b, r, f, f2),
     [PixelFormat.Format8bppIndexed] = (b, r, f, f2) => new Indexed8BitmapLocker(b, r, f, f2),
-    [PixelFormat.Format4bppIndexed] = (b, r, f, f2) => new IndexedBitmapLocker(b, r, f, f2),
-    [PixelFormat.Format1bppIndexed] = (b, r, f, f2) => new IndexedBitmapLocker(b, r, f, f2),
+    [PixelFormat.Format4bppIndexed] = (b, r, f, f2) => new Indexed4BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format1bppIndexed] = (b, r, f, f2) => new Indexed1BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format48bppRgb] = (b, r, f, f2) => new Rgb161616BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format64bppArgb] = (b, r, f, f2) => new Argb16161616BitmapLocker(b, r, f, f2),
+    [PixelFormat.Format64bppPArgb] = (b, r, f, f2) => new PArgb16161616BitmapLocker(b, r, f, f2),
   };
 
   #endregion
-  
-  extension(Bitmap @this)
-  {
+
+  extension(Bitmap @this) {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IBitmapLocker Lock(Rectangle rect, ImageLockMode flags, PixelFormat format)
       => _LOCKER_TYPES.TryGetValue(format, out var factory)
@@ -76,93 +80,25 @@ public static partial class BitmapExtensions {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IBitmapLocker Lock(ImageLockMode flags, PixelFormat format) => Lock(@this, new(Point.Empty, @this.Size), flags, format);
-  
+
     public Bitmap ConvertPixelFormat(PixelFormat format) {
       Against.ThisIsNull(@this);
-    
+
       if (@this.PixelFormat == format)
         return (Bitmap)@this.Clone();
 
       var result = new Bitmap(@this.Width, @this.Height, format);
 
-      var sourceFormat = @this.PixelFormat;
-
-      switch (sourceFormat) {
-        case PixelFormat.Format24bppRgb when format == PixelFormat.Format32bppArgb: {
-          var rect = new Rectangle(0, 0, @this.Width, @this.Height);
-          using var sourceData = Lock(@this, rect, ImageLockMode.ReadOnly, sourceFormat);
-          using var targetData = Lock(result, rect, ImageLockMode.WriteOnly, format);
-          unsafe {
-            var source = (byte*)sourceData.BitmapData.Scan0;
-            Debug.Assert(source != null, nameof(source) + " != null");
-            var target = (byte*)targetData.BitmapData.Scan0;
-            Debug.Assert(target != null, nameof(target) + " != null");
-
-            var sourceStride = sourceData.BitmapData.Stride;
-            var targetStride = targetData.BitmapData.Stride;
-            for (var y = @this.Height; y > 0; --y) {
-              var sourceRow = source;
-              var targetRow = target;
-              for (var x = @this.Width; x > 0; --x) {
-                var bg = *(ushort*)sourceRow;
-                var r = sourceRow[2];
-
-                *(ushort*)targetRow = bg;
-                targetRow[2] = r;
-                targetRow[3] = 0xff;
-
-                sourceRow += 3;
-                targetRow += 4;
-              }
-
-              source += sourceStride;
-              target += targetStride;
-            }
-          }
-
+      // Try internal fast path using typed lockers
+      using (var srcLock = @this.Lock(ImageLockMode.ReadOnly))
+      using (var dstLock = result.Lock(ImageLockMode.WriteOnly))
+        if (PixelFormatConverters.TryFastConvert(srcLock, dstLock))
           return result;
-        }
-        case PixelFormat.Format32bppArgb when format == PixelFormat.Format24bppRgb: {
-          var rect = new Rectangle(0, 0, @this.Width, @this.Height);
-          using var sourceData = Lock(@this, rect, ImageLockMode.ReadOnly, sourceFormat);
-          using var targetData = Lock(result, rect, ImageLockMode.WriteOnly, format);
-          unsafe {
-            var source = (byte*)sourceData.BitmapData.Scan0;
-            Debug.Assert(source != null, nameof(source) + " != null");
-            var target = (byte*)targetData.BitmapData.Scan0;
-            Debug.Assert(target != null, nameof(target) + " != null");
 
-            var sourceStride = sourceData.BitmapData.Stride;
-            var targetStride = targetData.BitmapData.Stride;
-            for (var y = @this.Height; y > 0; --y) {
-              var sourceRow = source;
-              var targetRow = target;
-              for (var x = @this.Width; x > 0; --x) {
-                var bg = *(ushort*)sourceRow;
-                var r = sourceRow[2];
-
-                *(ushort*)targetRow = bg;
-                targetRow[2] = r;
-
-                sourceRow += 4;
-                targetRow += 3;
-              }
-
-              source += sourceStride;
-              target += targetStride;
-            }
-          }
-
-          return result;
-        }
-      }
-
-      using var g = Graphics.FromImage(result);
-      g.CompositingMode = CompositingMode.SourceCopy;
-      g.InterpolationMode = InterpolationMode.NearestNeighbor;
-      g.DrawImage(@this, Point.Empty);
-
-      return result;
+      // GDI+ fallback for unsupported format pairs
+      // Use Bitmap clone constructor for reliable format conversion
+      result.Dispose();
+      return new Bitmap(@this, @this.Width, @this.Height);
     }
 
     public Bitmap Crop(Rectangle rect, PixelFormat format = PixelFormat.DontCare) {
