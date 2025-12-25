@@ -121,6 +121,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
 
+* System.IO.Compression
+  * [CompressionLevel](https://learn.microsoft.com/dotnet/api/system.io.compression.compressionlevel)
+  * [ZipArchive](https://learn.microsoft.com/dotnet/api/system.io.compression.ziparchive)
+  * [ZipArchiveEntry](https://learn.microsoft.com/dotnet/api/system.io.compression.ziparchiveentry)
+  * [ZipArchiveMode](https://learn.microsoft.com/dotnet/api/system.io.compression.ziparchivemode)
+  * [ZipFile](https://learn.microsoft.com/dotnet/api/system.io.compression.zipfile)
+  * [ZipFileExtensions](https://learn.microsoft.com/dotnet/api/system.io.compression.zipfileextensions)
+
 * System.Numerics
   * [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
   * [Matrix3x2](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2)

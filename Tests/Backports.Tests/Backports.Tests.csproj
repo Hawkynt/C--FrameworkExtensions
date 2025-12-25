@@ -65,6 +65,12 @@
 
   </ItemGroup>
 
+  <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
   <!--
     For ProjectReference scenarios, import Backports build targets if they exist for the target framework.
     (NuGet package consumers get this automatically via the package's build folder)
