@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
+using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Pipeline;
 using Hawkynt.ColorProcessing.Storage;
@@ -44,7 +45,7 @@ public static class BitmapAdapter {
     in WorkFrame<TWork> workFrame,
     TEncode encoder = default
   )
-    where TWork : unmanaged
+    where TWork : unmanaged, IColorSpace
     where TEncode : struct, IEncode<TWork, Bgra8888> {
     var bitmap = new Bitmap(workFrame.Width, workFrame.Height, PixelFormat.Format32bppArgb);
     bitmap.FromWorkFrame(workFrame, encoder);
@@ -64,7 +65,7 @@ public static class BitmapAdapter {
     public WorkFrame<TWork> ToWorkFrame<TWork, TDecode>(
       TDecode decoder = default
     )
-      where TWork : unmanaged
+      where TWork : unmanaged, IColorSpace
       where TDecode : struct, IDecode<Bgra8888, TWork> {
       using var locker = new Argb8888BitmapLocker(@this, ImageLockMode.ReadOnly);
       var frame = locker.AsFrame();
@@ -81,7 +82,7 @@ public static class BitmapAdapter {
       in WorkFrame<TWork> workFrame,
       TEncode encoder = default
     )
-      where TWork : unmanaged
+      where TWork : unmanaged, IColorSpace
       where TEncode : struct, IEncode<TWork, Bgra8888> {
       using var locker = new Argb8888BitmapLocker(@this, ImageLockMode.WriteOnly);
       var frame = locker.AsFrame();
@@ -116,7 +117,7 @@ public static class BitmapAdapter {
       TDecode decoder = default,
       TEncode encoder = default
     )
-      where TWork : unmanaged
+      where TWork : unmanaged, IColorSpace
       where TDecode : struct, IDecode<Bgra8888, TWork>
       where TEncode : struct, IEncode<TWork, Bgra8888> {
       using var workFrame = @this.ToWorkFrame<TWork, TDecode>(decoder);

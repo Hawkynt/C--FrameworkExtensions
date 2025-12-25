@@ -28,9 +28,9 @@ namespace Hawkynt.ColorProcessing.Codecs;
 /// Implementations are stateless structs for zero-cost abstraction via generic dispatch.
 /// Example: <c>Srgb32ToLinearRgbaF</c> decodes sRGB bytes to linear float with gamma expansion.
 /// </remarks>
-public interface IDecode<TPixel, TWork>
-  where TPixel : unmanaged
-  where TWork : unmanaged {
+public interface IDecode<TPixel, out TWork>
+  where TPixel : unmanaged, IStorageSpace
+  where TWork : unmanaged, IColorSpace {
 
   /// <summary>
   /// Decodes a storage pixel to working space.

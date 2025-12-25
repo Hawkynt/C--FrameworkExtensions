@@ -20,17 +20,25 @@
 namespace Hawkynt.ColorProcessing.Codecs;
 
 /// <summary>
-/// Encodes a working color space to a storage pixel format.
+/// Encodes a working color space to an output format.
 /// </summary>
 /// <typeparam name="TWork">The working color type (e.g., LinearRgbaF).</typeparam>
-/// <typeparam name="TPixel">The storage pixel type (e.g., Rgba32).</typeparam>
+/// <typeparam name="TPixel">The output type (typically IStorageSpace for final output, or same as TWork for identity).</typeparam>
 /// <remarks>
+/// <para>
 /// Implementations are stateless structs for zero-cost abstraction via generic dispatch.
+/// </para>
+/// <para>
+/// For storage encoding (working → storage), use types that implement <see cref="IStorageSpace"/>.
+/// For identity operations (working → working), use the same type for both parameters.
+/// </para>
+/// <para>
 /// Example: <c>LinearRgbaFToSrgb32</c> encodes linear float to sRGB bytes with gamma compression.
+/// </para>
 /// </remarks>
-public interface IEncode<TWork, TPixel>
-  where TWork : unmanaged
-  where TPixel : unmanaged {
+public interface IEncode<TWork, out TPixel>
+  where TWork : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace {
 
   /// <summary>
   /// Encodes a working space color to storage pixel.
