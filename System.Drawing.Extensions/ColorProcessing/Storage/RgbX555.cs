@@ -30,7 +30,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Bit layout: [X:1][R:5][G:5][B:5] where X is unused.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct RgbX555 : IColorSpace3B<RgbX555> {
+public readonly struct RgbX555 : IColorSpace3B<RgbX555>, IStorageSpace {
 
   private readonly ushort _packed;
 

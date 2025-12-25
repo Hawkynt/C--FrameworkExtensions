@@ -30,7 +30,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Bit layout: [A:4][R:4][G:4][B:4].
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Argb4444 : IColorSpace4B<Argb4444> {
+public readonly struct Argb4444 : IColorSpace4B<Argb4444>, IStorageSpace {
 
   private readonly ushort _packed;
 

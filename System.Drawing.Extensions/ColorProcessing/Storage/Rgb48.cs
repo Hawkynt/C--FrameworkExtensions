@@ -32,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Used for high dynamic range and professional imaging.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 2, Size = 6)]
-public readonly struct Rgb48 : IColorSpace3B<Rgb48> {
+public readonly struct Rgb48 : IColorSpace3B<Rgb48>, IStorageSpace {
 
   /// <summary>Reciprocal of 65535 for fast ushort-to-normalized-float conversion.</summary>
   public const float UShortToNormalized = ColorConstants.UShortToFloat;

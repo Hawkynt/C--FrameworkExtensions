@@ -32,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Memory layout (little-endian): [B, G, R, A] matching ARGB packed format.
 /// </remarks>
 [StructLayout(LayoutKind.Explicit, Size = 4)]
-public readonly struct Bgra8888 : IColorSpace4B<Bgra8888> {
+public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace {
 
   /// <summary>Reciprocal of 255 for fast byte-to-normalized-float conversion.</summary>
   public const float ByteToNormalized = ColorConstants.ByteToFloat;

@@ -32,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Used for print-oriented color workflows.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 5)]
-public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888> {
+public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888>, IStorageSpace {
 
   /// <summary>Reciprocal of 255 for fast byte-to-normalized-float conversion.</summary>
   public const float ByteToNormalized = ColorConstants.ByteToFloat;

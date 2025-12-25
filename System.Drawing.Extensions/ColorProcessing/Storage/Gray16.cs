@@ -31,7 +31,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Single 16-bit luminance value (0-65535).
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Gray16 {
+public readonly struct Gray16 : IStorageSpace {
 
   /// <summary>Reciprocal of 65535 for fast 16-bit-to-normalized-float conversion.</summary>
   public const float ValueToNormalized = 1f / 65535f;

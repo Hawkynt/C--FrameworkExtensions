@@ -30,7 +30,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Bit layout: [A:1][R:5][G:5][B:5] where A is 0 (transparent) or 1 (opaque).
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Argb1555 : IColorSpace4B<Argb1555> {
+public readonly struct Argb1555 : IColorSpace4B<Argb1555>, IStorageSpace {
 
   private readonly ushort _packed;
 

@@ -30,7 +30,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Bit layout: [R:5][G:6][B:5] - green has extra bit for human eye sensitivity.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Rgb565 : IColorSpace3B<Rgb565> {
+public readonly struct Rgb565 : IColorSpace3B<Rgb565>, IStorageSpace {
 
   private readonly ushort _packed;
 
