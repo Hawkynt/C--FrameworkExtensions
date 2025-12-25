@@ -19,6 +19,7 @@
 
 #if !SUPPORTS_PARALLEL
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace System.Threading.Tasks;
@@ -387,6 +388,230 @@ public static class Parallel {
                 exceptions.Add(ex);
               flags.IsExceptional = true;
             }
+          }
+        },
+        options.CancellationToken
+      );
+      tasks.Add(task);
+      task.Start(options.TaskScheduler);
+    }
+
+    foreach (var task in tasks)
+      try {
+        task.Wait();
+      } catch {
+        // Exceptions are already captured
+      }
+
+    if (exceptions.Count > 0)
+      throw new AggregateException(exceptions);
+
+    options.CancellationToken.ThrowIfCancellationRequested();
+
+    return new ParallelLoopResult {
+      IsCompleted = !flags.IsStopped && !flags.IsBroken,
+      LowestBreakIteration = flags.LowestBreakIteration
+    };
+  }
+
+  #endregion
+
+  #region ForEach with Partitioner
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(Partitioner<TSource> source, Action<TSource> body)
+    => ForEach(source, new ParallelOptions(), body);
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel and loop options can be configured.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="parallelOptions">An object that configures the behavior of this operation.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(Partitioner<TSource> source, ParallelOptions parallelOptions, Action<TSource> body) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(body);
+    ArgumentNullException.ThrowIfNull(parallelOptions);
+
+    return _ForEachPartitionerImpl(source, parallelOptions, (item, _) => body(item));
+  }
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel and the state of the loop can be monitored and manipulated.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(Partitioner<TSource> source, Action<TSource, ParallelLoopState> body)
+    => ForEach(source, new ParallelOptions(), body);
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel, loop options can be configured, and the state of the loop can be monitored and manipulated.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="parallelOptions">An object that configures the behavior of this operation.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(Partitioner<TSource> source, ParallelOptions parallelOptions, Action<TSource, ParallelLoopState> body) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(body);
+    ArgumentNullException.ThrowIfNull(parallelOptions);
+
+    return _ForEachPartitionerImpl(source, parallelOptions, body);
+  }
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="OrderablePartitioner{TSource}"/> in which iterations may run in parallel and the state of the loop can be monitored and manipulated.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The orderable partitioner that contains the original data source.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(OrderablePartitioner<TSource> source, Action<TSource, ParallelLoopState, long> body)
+    => ForEach(source, new ParallelOptions(), body);
+
+  /// <summary>
+  /// Executes a foreach operation on a <see cref="OrderablePartitioner{TSource}"/> in which iterations may run in parallel, loop options can be configured, and the state of the loop can be monitored and manipulated.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <param name="source">The orderable partitioner that contains the original data source.</param>
+  /// <param name="parallelOptions">An object that configures the behavior of this operation.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource>(OrderablePartitioner<TSource> source, ParallelOptions parallelOptions, Action<TSource, ParallelLoopState, long> body) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(body);
+    ArgumentNullException.ThrowIfNull(parallelOptions);
+
+    return _ForEachOrderablePartitionerImpl(source, parallelOptions, body);
+  }
+
+  private static ParallelLoopResult _ForEachPartitionerImpl<TSource>(
+    Partitioner<TSource> source,
+    ParallelOptions options,
+    Action<TSource, ParallelLoopState> body
+  ) {
+    var maxDegree = options.MaxDegreeOfParallelism;
+    if (maxDegree <= 0)
+      maxDegree = Environment.ProcessorCount;
+
+    var partitions = source.GetPartitions(maxDegree);
+    if (partitions.Count == 0)
+      return new ParallelLoopResult { IsCompleted = true };
+
+    var flags = new ParallelLoopStateFlags();
+    var state = new ParallelLoopState(flags);
+    var exceptions = new List<Exception>();
+    var lockObj = new object();
+    var tasks = new List<Task>();
+
+    foreach (var partition in partitions) {
+      var localPartition = partition;
+      var task = new Task(
+        () => {
+          try {
+            using (localPartition) {
+              while (localPartition.MoveNext()) {
+                if (flags.IsStopped || options.CancellationToken.IsCancellationRequested)
+                  break;
+
+                try {
+                  body(localPartition.Current, state);
+                } catch (Exception ex) {
+                  lock (lockObj)
+                    exceptions.Add(ex);
+                  flags.IsExceptional = true;
+                }
+              }
+            }
+          } catch (Exception ex) {
+            lock (lockObj)
+              exceptions.Add(ex);
+            flags.IsExceptional = true;
+          }
+        },
+        options.CancellationToken
+      );
+      tasks.Add(task);
+      task.Start(options.TaskScheduler);
+    }
+
+    foreach (var task in tasks)
+      try {
+        task.Wait();
+      } catch {
+        // Exceptions are already captured
+      }
+
+    if (exceptions.Count > 0)
+      throw new AggregateException(exceptions);
+
+    options.CancellationToken.ThrowIfCancellationRequested();
+
+    return new ParallelLoopResult {
+      IsCompleted = !flags.IsStopped && !flags.IsBroken,
+      LowestBreakIteration = flags.LowestBreakIteration
+    };
+  }
+
+  private static ParallelLoopResult _ForEachOrderablePartitionerImpl<TSource>(
+    OrderablePartitioner<TSource> source,
+    ParallelOptions options,
+    Action<TSource, ParallelLoopState, long> body
+  ) {
+    var maxDegree = options.MaxDegreeOfParallelism;
+    if (maxDegree <= 0)
+      maxDegree = Environment.ProcessorCount;
+
+    var partitions = source.GetOrderablePartitions(maxDegree);
+    if (partitions.Count == 0)
+      return new ParallelLoopResult { IsCompleted = true };
+
+    var flags = new ParallelLoopStateFlags();
+    var state = new ParallelLoopState(flags);
+    var exceptions = new List<Exception>();
+    var lockObj = new object();
+    var tasks = new List<Task>();
+
+    foreach (var partition in partitions) {
+      var localPartition = partition;
+      var task = new Task(
+        () => {
+          try {
+            using (localPartition) {
+              while (localPartition.MoveNext()) {
+                if (flags.IsStopped || options.CancellationToken.IsCancellationRequested)
+                  break;
+
+                var kvp = localPartition.Current;
+                if (flags.IsBroken && flags.LowestBreakIteration.HasValue && kvp.Key >= flags.LowestBreakIteration.Value)
+                  break;
+
+                try {
+                  body(kvp.Value, state, kvp.Key);
+                  if (flags.IsBroken)
+                    flags.SetLowestBreakIteration(kvp.Key);
+                } catch (Exception ex) {
+                  lock (lockObj)
+                    exceptions.Add(ex);
+                  flags.IsExceptional = true;
+                }
+              }
+            }
+          } catch (Exception ex) {
+            lock (lockObj)
+              exceptions.Add(ex);
+            flags.IsExceptional = true;
           }
         },
         options.CancellationToken

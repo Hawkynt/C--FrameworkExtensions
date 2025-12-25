@@ -116,6 +116,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [ConcurrentDictionary](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentdictionary-2)&lt;TKey, TValue&gt;
   * [ConcurrentQueue](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1)&lt;T&gt;
   * [ConcurrentStack](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentstack-1)&lt;T&gt;
+  * [EnumerablePartitionerOptions](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.enumerablepartitioneroptions)
+  * [OrderablePartitioner](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.orderablepartitioner-1)&lt;TSource&gt;
+  * [Partitioner](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.partitioner)
+  * [Partitioner](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.partitioner-1)&lt;TSource&gt;
 
 * System.Collections.Generic
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
@@ -540,6 +544,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * int [ProcessId](https://learn.microsoft.com/dotnet/api/system.environment.processid)
   * string? [ProcessPath](https://learn.microsoft.com/dotnet/api/system.environment.processpath)
   * bool [IsPrivilegedProcess](https://learn.microsoft.com/dotnet/api/system.environment.isprivilegedprocess)
+
+* System.GC
+  * T[] [AllocateArray](https://learn.microsoft.com/dotnet/api/system.gc.allocatearray)&lt;T&gt;(int length, bool pinned = false)
 
 * System.Enum
   * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
