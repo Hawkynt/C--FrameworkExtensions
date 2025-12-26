@@ -79,6 +79,10 @@ public static partial class BitmapExtensions {
       }
     }
 
+    public Bgra8888 GetPixelBgra8888(int x, int y) => new(this[x,y]);
+
+    public void SetPixelBgra8888(int x, int y, Bgra8888 color) => this[x, y] = color.ToColor();
+
     public abstract Color this[int x, int y] { get; set; }
 
     public Color this[Point p] {
