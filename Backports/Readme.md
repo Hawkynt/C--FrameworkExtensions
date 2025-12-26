@@ -738,6 +738,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Reflection.MethodInfo
   * Delegate [CreateDelegate](https://learn.microsoft.com/dotnet/api/system.reflection.methodinfo.createdelegate#system-reflection-methodinfo-createdelegate%28system-type%29)(this MethodInfo @this, Type result)
+
+* System.Reflection.PropertyInfo
+  * object [GetValue](https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo.getvalue#system-reflection-propertyinfo-getvalue%28system-object%29)(this PropertyInfo @this, object obj)
+  * void [SetValue](https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo.setvalue#system-reflection-propertyinfo-setvalue%28system-object-system-object%29)(this PropertyInfo @this, object obj, object value)
+
 * System.String
   * int [GetHashCode](https://learn.microsoft.com/dotnet/api/system.string.gethashcode#system-string-gethashcode%28system-stringcomparison%29)(this string @this, StringComparison comparisonType)
   * bool [Contains](https://learn.microsoft.com/dotnet/api/system.string.contains#system-string-contains%28system-string-system-stringcomparison%29)(this string @this, string value, StringComparison comparisonType)
