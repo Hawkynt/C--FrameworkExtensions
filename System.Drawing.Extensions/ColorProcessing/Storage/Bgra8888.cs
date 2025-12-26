@@ -88,7 +88,13 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888> {
   /// Constructs an Rgba32 from a System.Drawing.Color.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal Bgra8888(Color color) : this((uint)color.ToArgb()) { }
+  public Bgra8888(Color color) : this((uint)color.ToArgb()) { }
+
+  /// <summary>
+  /// Converts this color to a System.Drawing.Color.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public Color ToColor() => Color.FromArgb((int)this._packed);
 
   /// <summary>Gets the red component normalized to 0.0-1.0 range.</summary>
   public float RNormalized {

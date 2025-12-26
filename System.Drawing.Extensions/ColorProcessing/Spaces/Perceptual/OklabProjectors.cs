@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Working;
@@ -42,9 +43,9 @@ public readonly struct LinearRgbFToOklabF : IProject<LinearRgbF, OklabF> {
     var s = 0.0883024619f * work.R + 0.2817188376f * work.G + 0.6299787005f * work.B;
 
     // Cube root
-    var l_ = _Cbrt(l);
-    var m_ = _Cbrt(m);
-    var s_ = _Cbrt(s);
+    var l_ = MathF.Cbrt(l);
+    var m_ = MathF.Cbrt(m);
+    var s_ = MathF.Cbrt(s);
 
     // LMS to Oklab
     return new(
@@ -53,9 +54,6 @@ public readonly struct LinearRgbFToOklabF : IProject<LinearRgbF, OklabF> {
       0.0259040371f * l_ + 0.7827717662f * m_ - 0.8086757660f * s_
     );
   }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _Cbrt(float x) => x >= 0 ? (float)SysMath.Pow(x, 1.0 / 3.0) : -(float)SysMath.Pow(-x, 1.0 / 3.0);
 }
 
 /// <summary>
@@ -69,9 +67,9 @@ public readonly struct LinearRgbaFToOklabF : IProject<LinearRgbaF, OklabF> {
     var m = 0.2119034982f * work.R + 0.6806995451f * work.G + 0.1073969566f * work.B;
     var s = 0.0883024619f * work.R + 0.2817188376f * work.G + 0.6299787005f * work.B;
 
-    var l_ = _Cbrt(l);
-    var m_ = _Cbrt(m);
-    var s_ = _Cbrt(s);
+    var l_ = MathF.Cbrt(l);
+    var m_ = MathF.Cbrt(m);
+    var s_ = MathF.Cbrt(s);
 
     return new(
       0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,
@@ -79,9 +77,6 @@ public readonly struct LinearRgbaFToOklabF : IProject<LinearRgbaF, OklabF> {
       0.0259040371f * l_ + 0.7827717662f * m_ - 0.8086757660f * s_
     );
   }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _Cbrt(float x) => x >= 0 ? (float)SysMath.Pow(x, 1.0 / 3.0) : -(float)SysMath.Pow(-x, 1.0 / 3.0);
 }
 
 /// <summary>

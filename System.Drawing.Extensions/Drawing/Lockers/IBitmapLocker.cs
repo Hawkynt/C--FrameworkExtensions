@@ -16,6 +16,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.Drawing.Lockers;
 
@@ -433,12 +434,68 @@ public interface IBitmapLocker : IDisposable {
   /// <param name="destLocation">Destination offset.</param>
   void CopyFromUnchecked(IBitmapLocker source, Rectangle srcRect, Point destLocation);
 
+  /// <summary>Copies a tile from a grid-based layout in another locker.</summary>
+  /// <param name="other">Source bitmap locker containing the grid.</param>
+  /// <param name="column">Column index of the tile.</param>
+  /// <param name="row">Row index of the tile.</param>
+  /// <param name="width">Tile width.</param>
+  /// <param name="height">Tile height.</param>
+  /// <param name="dx">Horizontal spacing between tiles (default 0).</param>
+  /// <param name="dy">Vertical spacing between tiles (default 0).</param>
+  /// <param name="offsetX">Horizontal offset of the grid origin (default 0).</param>
+  /// <param name="offsetY">Vertical offset of the grid origin (default 0).</param>
+  /// <param name="targetX">Target X position in this locker (default 0).</param>
+  /// <param name="targetY">Target Y position in this locker (default 0).</param>
+  void CopyFromGrid(IBitmapLocker other, int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0, int targetX = 0, int targetY = 0);
+
+  /// <summary>Copies a tile from a grid-based layout in another locker.</summary>
+  /// <param name="other">Source bitmap locker containing the grid.</param>
+  /// <param name="tile">Column and row index of the tile.</param>
+  /// <param name="tileSize">Tile dimensions.</param>
+  void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize);
+
+  /// <summary>Copies a tile from a grid-based layout in another locker.</summary>
+  /// <param name="other">Source bitmap locker containing the grid.</param>
+  /// <param name="tile">Column and row index of the tile.</param>
+  /// <param name="tileSize">Tile dimensions.</param>
+  /// <param name="distance">Spacing between tiles.</param>
+  void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance);
+
+  /// <summary>Copies a tile from a grid-based layout in another locker.</summary>
+  /// <param name="other">Source bitmap locker containing the grid.</param>
+  /// <param name="tile">Column and row index of the tile.</param>
+  /// <param name="tileSize">Tile dimensions.</param>
+  /// <param name="distance">Spacing between tiles.</param>
+  /// <param name="offset">Grid origin offset.</param>
+  void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset);
+
+  /// <summary>Copies a tile from a grid-based layout in another locker.</summary>
+  /// <param name="other">Source bitmap locker containing the grid.</param>
+  /// <param name="tile">Column and row index of the tile.</param>
+  /// <param name="tileSize">Tile dimensions.</param>
+  /// <param name="distance">Spacing between tiles.</param>
+  /// <param name="offset">Grid origin offset.</param>
+  /// <param name="target">Target position in this locker.</param>
+  void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target);
+
   /// <summary>Blends source bitmap over this bitmap using alpha.</summary>
   /// <param name="source">Source bitmap locker.</param>
   void BlendWith(IBitmapLocker source);
 
   /// <summary>Gets a value indicating whether all pixels have the same color.</summary>
   bool IsFlatColor { get; }
+
+  /// <summary>Gets the pixel color as Bgra8888.</summary>
+  /// <param name="x">X coordinate.</param>
+  /// <param name="y">Y coordinate.</param>
+  /// <returns>The pixel color in Bgra8888 format.</returns>
+  Bgra8888 GetPixelBgra8888(int x, int y);
+
+  /// <summary>Sets the pixel color from Bgra8888.</summary>
+  /// <param name="x">X coordinate.</param>
+  /// <param name="y">Y coordinate.</param>
+  /// <param name="color">The color in Bgra8888 format.</param>
+  void SetPixelBgra8888(int x, int y, Bgra8888 color);
 
   #endregion
 }
