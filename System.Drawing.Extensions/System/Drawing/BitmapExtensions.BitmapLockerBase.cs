@@ -17,6 +17,9 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using Guard;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.Drawing;
+using Hawkynt.Drawing.Lockers;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Drawing;
@@ -84,16 +87,16 @@ public static partial class BitmapExtensions {
     }
 
     /// <summary>
-    /// Gets the pixel color as Rgba32. Override in derived classes for optimized access.
+    /// Gets the pixel color as Bgra8888. Override in derived classes for optimized access.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual ColorSpaces.Rgba32 GetPixelRgba32(int x, int y) => new(this[x, y]);
+    public virtual Bgra8888 GetPixelRgba32(int x, int y) => new(this[x, y]);
 
     /// <summary>
-    /// Sets the pixel color from Rgba32. Override in derived classes for optimized access.
+    /// Sets the pixel color from Bgra8888. Override in derived classes for optimized access.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public virtual void SetPixelRgba32(int x, int y, ColorSpaces.Rgba32 color) => this[x, y] = color.ToColor();
+    public virtual void SetPixelRgba32(int x, int y, Bgra8888 color) => this[x, y] = color.ToColor();
 
     #region Rectangles
 
@@ -653,7 +656,7 @@ public static partial class BitmapExtensions {
     public Bitmap CopyFromGrid(int column, int row, int width, int height, int dx = 0, int dy = 0, int offsetX = 0, int offsetY = 0) {
       var result = new Bitmap(width, height);
       using var target = result.Lock(ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-      target.CopyFromGrid(
+      ((BitmapLockerBase)target).CopyFromGrid(
         this,
         column,
         row,
@@ -1258,6 +1261,218 @@ public static partial class BitmapExtensions {
         thickness,
         color
       );
+
+    #endregion
+
+    #region Unchecked Line Methods
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawHorizontalLineUnchecked(int x, int y, int length, Color color) {
+      if (color.A == byte.MinValue)
+        return;
+
+      if (color.A < byte.MaxValue)
+        this._BlendHorizontalLine(x, y, length, color);
+      else
+        this._DrawHorizontalLine(x, y, length, color);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawVerticalLineUnchecked(int x, int y, int length, Color color) {
+      if (color.A == byte.MinValue)
+        return;
+
+      if (color.A < byte.MaxValue)
+        this._BlendVerticalLine(x, y, length, color);
+      else
+        this._DrawVerticalLine(x, y, length, color);
+    }
+
+    #endregion
+
+    #region Circles
+
+    public void DrawCircle(int cx, int cy, int radius, Color color) {
+      if (radius <= 0 || color.A == byte.MinValue)
+        return;
+
+      var x = 0;
+      var y = radius;
+      var d = 3 - 2 * radius;
+
+      while (x <= y) {
+        this._SetPixelSafe(cx + x, cy + y, color);
+        this._SetPixelSafe(cx - x, cy + y, color);
+        this._SetPixelSafe(cx + x, cy - y, color);
+        this._SetPixelSafe(cx - x, cy - y, color);
+        this._SetPixelSafe(cx + y, cy + x, color);
+        this._SetPixelSafe(cx - y, cy + x, color);
+        this._SetPixelSafe(cx + y, cy - x, color);
+        this._SetPixelSafe(cx - y, cy - x, color);
+
+        if (d < 0)
+          d += 4 * x + 6;
+        else {
+          d += 4 * (x - y) + 10;
+          --y;
+        }
+        ++x;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawCircle(Point center, int radius, Color color) => this.DrawCircle(center.X, center.Y, radius, color);
+
+    public void FillCircle(int cx, int cy, int radius, Color color) {
+      if (radius <= 0 || color.A == byte.MinValue)
+        return;
+
+      var x = 0;
+      var y = radius;
+      var d = 3 - 2 * radius;
+
+      while (x <= y) {
+        this.DrawHorizontalLine(cx - x, cy + y, 2 * x + 1, color);
+        this.DrawHorizontalLine(cx - x, cy - y, 2 * x + 1, color);
+        this.DrawHorizontalLine(cx - y, cy + x, 2 * y + 1, color);
+        this.DrawHorizontalLine(cx - y, cy - x, 2 * y + 1, color);
+
+        if (d < 0)
+          d += 4 * x + 6;
+        else {
+          d += 4 * (x - y) + 10;
+          --y;
+        }
+        ++x;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillCircle(Point center, int radius, Color color) => this.FillCircle(center.X, center.Y, radius, color);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void _SetPixelSafe(int x, int y, Color color) {
+      if (x >= 0 && x < this.Width && y >= 0 && y < this.Height)
+        this[x, y] = color;
+    }
+
+    #endregion
+
+    #region Ellipses
+
+    public void DrawEllipse(int cx, int cy, int rx, int ry, Color color) {
+      if (rx <= 0 || ry <= 0 || color.A == byte.MinValue)
+        return;
+
+      var rx2 = rx * rx;
+      var ry2 = ry * ry;
+      var twoRx2 = 2 * rx2;
+      var twoRy2 = 2 * ry2;
+      var x = 0;
+      var y = ry;
+      var px = 0;
+      var py = twoRx2 * y;
+
+      this._SetPixelSafe(cx, cy + y, color);
+      this._SetPixelSafe(cx, cy - y, color);
+
+      var p = (int)(ry2 - rx2 * ry + 0.25 * rx2);
+      while (px < py) {
+        ++x;
+        px += twoRy2;
+        if (p < 0)
+          p += ry2 + px;
+        else {
+          --y;
+          py -= twoRx2;
+          p += ry2 + px - py;
+        }
+
+        this._SetPixelSafe(cx + x, cy + y, color);
+        this._SetPixelSafe(cx - x, cy + y, color);
+        this._SetPixelSafe(cx + x, cy - y, color);
+        this._SetPixelSafe(cx - x, cy - y, color);
+      }
+
+      p = (int)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
+      while (y > 0) {
+        --y;
+        py -= twoRx2;
+        if (p > 0)
+          p += rx2 - py;
+        else {
+          ++x;
+          px += twoRy2;
+          p += rx2 - py + px;
+        }
+
+        this._SetPixelSafe(cx + x, cy + y, color);
+        this._SetPixelSafe(cx - x, cy + y, color);
+        this._SetPixelSafe(cx + x, cy - y, color);
+        this._SetPixelSafe(cx - x, cy - y, color);
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawEllipse(Point center, Size radii, Color color) => this.DrawEllipse(center.X, center.Y, radii.Width, radii.Height, color);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawEllipse(Rectangle bounds, Color color) => this.DrawEllipse(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2, bounds.Width / 2, bounds.Height / 2, color);
+
+    public void FillEllipse(int cx, int cy, int rx, int ry, Color color) {
+      if (rx <= 0 || ry <= 0 || color.A == byte.MinValue)
+        return;
+
+      var rx2 = rx * rx;
+      var ry2 = ry * ry;
+      var twoRx2 = 2 * rx2;
+      var twoRy2 = 2 * ry2;
+      var x = 0;
+      var y = ry;
+      var px = 0;
+      var py = twoRx2 * y;
+
+      this._SetPixelSafe(cx, cy + y, color);
+      this._SetPixelSafe(cx, cy - y, color);
+      
+      var p = (int)(ry2 - rx2 * ry + 0.25 * rx2);
+      while (px < py) {
+        ++x;
+        px += twoRy2;
+        if (p < 0)
+          p += ry2 + px;
+        else {
+          --y;
+          py -= twoRx2;
+          p += ry2 + px - py;
+        }
+
+        this.DrawHorizontalLine(cx - x, cy + y, 2 * x + 1, color);
+        this.DrawHorizontalLine(cx - x, cy - y, 2 * x + 1, color);
+      }
+
+      p = (int)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
+      while (y > 0) {
+        --y;
+        py -= twoRx2;
+        if (p > 0)
+          p += rx2 - py;
+        else {
+          ++x;
+          px += twoRy2;
+          p += rx2 - py + px;
+        }
+
+        this.DrawHorizontalLine(cx - x, cy + y, 2 * x + 1, color);
+        this.DrawHorizontalLine(cx - x, cy - y, 2 * x + 1, color);
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillEllipse(Point center, Size radii, Color color) => this.FillEllipse(center.X, center.Y, radii.Width, radii.Height, color);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillEllipse(Rectangle bounds, Color color) => this.FillEllipse(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2, bounds.Width / 2, bounds.Height / 2, color);
 
     #endregion
   }

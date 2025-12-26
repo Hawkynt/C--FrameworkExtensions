@@ -19,7 +19,7 @@
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
     <CheckEolTargetFramework>False</CheckEolTargetFramework>
-    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net9.0-windows</TargetFrameworks>
+    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net8.0-windows;net9.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
