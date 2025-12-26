@@ -151,18 +151,18 @@ public class ImageExtensionsTests {
 
   [Test]
   [Category("HappyPath")]
-  public void Threshold_SetsFullOpacity() {
-    // Threshold converts to black/white with full opacity
-    using var original = TestUtilities.CreateSolidBitmap(20, 20, Color.FromArgb(128, 200, 200, 200));
+  public void Threshold_ProducesBlackOrWhite() {
+    // Threshold converts to black/white (RGB values become 0 or 255)
+    using var original = TestUtilities.CreateSolidBitmap(20, 20, Color.FromArgb(255, 200, 200, 200));
     using var thresholded = original.Threshold(127);
 
     using var locker = thresholded.Lock();
     var pixel = locker[10, 10];
 
-    // Threshold produces fully opaque black or white
-    Assert.That(pixel.A, Is.EqualTo(255).Or.EqualTo(0), "Alpha should be fully opaque or transparent");
-    // Light pixel should become white (above threshold)
+    // Light pixel (200 > 127) should become white
     Assert.That(pixel.R, Is.EqualTo(255).Or.EqualTo(0));
+    Assert.That(pixel.G, Is.EqualTo(255).Or.EqualTo(0));
+    Assert.That(pixel.B, Is.EqualTo(255).Or.EqualTo(0));
   }
 
   #endregion

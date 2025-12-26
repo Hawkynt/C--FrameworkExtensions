@@ -28,6 +28,9 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="System.Drawing.Extensions.Tests" />
+  </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
     <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
   </PropertyGroup>
@@ -74,5 +77,11 @@
     <Folder Include="Utilities\" />
     <Folder Include="System\IO\" />
     <ProjectReference Include="..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <!-- System.IO.Compression for ZipArchive on .NET Framework 4.5+ -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 </Project>

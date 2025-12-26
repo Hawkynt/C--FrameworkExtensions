@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <IsTestProject>true</IsTestProject>
-    <!-- Match System.Drawing.Extensions target frameworks + net8.0-windows for modern testing -->
-    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net9.0-windows</TargetFrameworks>
+    <!-- Match System.Drawing.Extensions target frameworks -->
+    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net8.0-windows;net9.0-windows</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Platforms>AnyCPU;x64;x86</Platforms>
@@ -38,13 +37,10 @@
 
   <!-- NUnit Test Framework -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net9.0-windows'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0-windows'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net8.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0'" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net7.0-windows'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0-windows'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net6.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'net5.0'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" Condition="$(TargetFramework) == 'netcoreapp3.1'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net48'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.*" Condition="$(TargetFramework) == 'net45'" />
@@ -63,6 +59,22 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\System.Drawing.Extensions\System.Drawing.Extensions.csproj" />
+  </ItemGroup>
+
+  <!-- Test Resources -->
+  <ItemGroup>
+    <Content Include="Resources\*.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\*.safetensors">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\*.npy">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\*.npz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
