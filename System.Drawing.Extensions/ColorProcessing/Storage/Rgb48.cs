@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
@@ -32,7 +33,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Used for high dynamic range and professional imaging.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 2, Size = 6)]
-public readonly struct Rgb48 : IColorSpace3B<Rgb48>, IStorageSpace {
+public readonly struct Rgb48 : IColorSpace3B<Rgb48>, IStorageSpace, IEquatable<Rgb48> {
 
   /// <summary>Reciprocal of 65535 for fast ushort-to-normalized-float conversion.</summary>
   public const float UShortToNormalized = ColorConstants.UShortToFloat;
@@ -115,4 +116,30 @@ public readonly struct Rgb48 : IColorSpace3B<Rgb48>, IStorageSpace {
     (ushort)((c1.GValue + c2.GValue) >> 1),
     (ushort)((c1.BValue + c2.BValue) >> 1)
   );
+
+  #region IEquatable<Rgb48> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Rgb48 other)
+    => this.RValue == other.RValue && this.GValue == other.GValue && this.BValue == other.BValue;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Rgb48 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() {
+    unchecked {
+      var hash = 17;
+      hash = hash * 31 + this.RValue;
+      hash = hash * 31 + this.GValue;
+      hash = hash * 31 + this.BValue;
+      return hash;
+    }
+  }
+
+  public static bool operator ==(Rgb48 left, Rgb48 right) => left.Equals(right);
+  public static bool operator !=(Rgb48 left, Rgb48 right) => !left.Equals(right);
+
+  #endregion
 }

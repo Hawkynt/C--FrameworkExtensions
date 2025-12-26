@@ -19,8 +19,8 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Constants;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Working;
@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Working;
 /// <param name="A">Alpha component (0.0-1.0).</param>
 [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 16)]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public readonly record struct LinearRgbaF(float R, float G, float B, float A) : IColorSpace4F<LinearRgbaF>, IAccum<LinearRgbaF>, IErrorOps<LinearRgbaF> {
+public readonly record struct LinearRgbaF(float R, float G, float B, float A) : IColorSpace4F<LinearRgbaF>, IErrorOps<LinearRgbaF> {
 
   /// <summary>
   /// Constructs a LinearRgbaF with opaque alpha.
@@ -73,20 +73,6 @@ public readonly record struct LinearRgbaF(float R, float G, float B, float A) : 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LinearRgbaF Create(float c1, float c2, float c3, float a) => new(c1, c2, c3, a);
   
-  #endregion
-
-  #region IAccum Implementation
-
-  public static LinearRgbaF Zero => default;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static LinearRgbaF AddMul(in LinearRgbaF acc, in LinearRgbaF x, float weight) => new(
-    acc.R + x.R * weight,
-    acc.G + x.G * weight,
-    acc.B + x.B * weight,
-    acc.A + x.A * weight
-  );
-
   #endregion
 
   #region IErrorOps Implementation

@@ -139,7 +139,6 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     this._horizontalMode = horizontalMode;
     this._verticalMode = verticalMode;
     this._rowWidth = width + 4; // +2 left, +2 right for OOB padding
-    this._currentY = startY;
 
     // Allocate and pin buffer
     this._buffer = new NeighborPixel<TWork, TKey>[5 * this._rowWidth];
@@ -154,11 +153,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     this._ptrP2 = basePtr + 4 * this._rowWidth;
 
     // Load initial 5 rows centered at startY
-    this._LoadRow(this._ptrM2, startY - 2);
-    this._LoadRow(this._ptrM1, startY - 1);
-    this._LoadRow(this._ptrP0, startY);
-    this._LoadRow(this._ptrP1, startY + 1);
-    this._LoadRow(this._ptrP2, startY + 2);
+    this.SeekToRow(startY);
   }
 
   /// <summary>
@@ -190,6 +185,24 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     // Load new bottom row into recycled memory
     ++this._currentY;
     this._LoadRow(this._ptrP2, this._currentY + 2);
+  }
+
+  /// <summary>
+  /// Seeks to a specific row, reloading all 5 buffer rows. O(5 * width) operation.
+  /// </summary>
+  /// <param name="y">The target row to center the window on.</param>
+  /// <remarks>
+  /// Use this for random row access or large jumps (e.g., downscaling by ratio 3+).
+  /// For sequential access, use <see cref="MoveDown"/> which is more cache-efficient.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void SeekToRow(int y) {
+    this._currentY = y;
+    this._LoadRow(this._ptrM2, y - 2);
+    this._LoadRow(this._ptrM1, y - 1);
+    this._LoadRow(this._ptrP0, y);
+    this._LoadRow(this._ptrP1, y + 1);
+    this._LoadRow(this._ptrP2, y + 2);
   }
 
   /// <summary>

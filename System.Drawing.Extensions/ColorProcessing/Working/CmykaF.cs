@@ -40,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Working;
 /// <param name="A">Alpha component (0.0-1.0).</param>
 [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 20)]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public readonly record struct CmykaF(float C, float M, float Y, float K, float A) : IColorSpace5F<CmykaF>, IAccum<CmykaF>, IErrorOps<CmykaF> {
+public readonly record struct CmykaF(float C, float M, float Y, float K, float A) : IColorSpace5F<CmykaF>, IErrorOps<CmykaF> {
 
   /// <summary>
   /// Constructs a CmykaF with opaque alpha.
@@ -78,21 +78,6 @@ public readonly record struct CmykaF(float C, float M, float Y, float K, float A
   /// <summary>Creates a new instance from component values.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static CmykaF Create(float c1, float c2, float c3, float c4, float a) => new(c1, c2, c3, c4, a);
-
-  #endregion
-
-  #region IAccum Implementation
-
-  public static CmykaF Zero => default;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static CmykaF AddMul(in CmykaF acc, in CmykaF x, float weight) => new(
-    acc.C + x.C * weight,
-    acc.M + x.M * weight,
-    acc.Y + x.Y * weight,
-    acc.K + x.K * weight,
-    acc.A + x.A * weight
-  );
 
   #endregion
 

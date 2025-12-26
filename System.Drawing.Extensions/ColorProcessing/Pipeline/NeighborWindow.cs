@@ -248,6 +248,13 @@ public unsafe ref struct NeighborWindow<TWork, TKey>
   public void MoveRight() => ++this._currentX;
 
   /// <summary>
+  /// Moves the window by the specified number of pixels. O(1) operation.
+  /// </summary>
+  /// <param name="delta">The number of pixels to move (positive = right, negative = left).</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void MoveBy(int delta) => this._currentX += delta;
+
+  /// <summary>
   /// Resets the X position to the start of the row.
   /// </summary>
   /// <param name="startX">The starting X offset (typically 2 for OOB padding).</param>
