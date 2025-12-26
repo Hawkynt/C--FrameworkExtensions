@@ -265,4 +265,80 @@ public class PathTests {
 
   #endregion
 
+  #region Path.Combine (3/4/params overloads)
+
+  [Test]
+  [Category("HappyPath")]
+  public void PathCombine_ThreePaths_CombinesThem() {
+    var result = Path.Combine("a", "b", "c");
+    var expected = "a" + Path.DirectorySeparatorChar + "b" + Path.DirectorySeparatorChar + "c";
+    Assert.That(result, Is.EqualTo(expected));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void PathCombine_FourPaths_CombinesThem() {
+    var result = Path.Combine("a", "b", "c", "d");
+    var expected = "a" + Path.DirectorySeparatorChar + "b" + Path.DirectorySeparatorChar + "c" + Path.DirectorySeparatorChar + "d";
+    Assert.That(result, Is.EqualTo(expected));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void PathCombine_ParamsArray_CombinesThem() {
+    var result = Path.Combine(new[] { "a", "b", "c", "d", "e" });
+    var sep = Path.DirectorySeparatorChar.ToString();
+    Assert.That(result, Is.EqualTo("a" + sep + "b" + sep + "c" + sep + "d" + sep + "e"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void PathCombine_ThreePathsWithRooted_ReturnsRooted() {
+    var rooted = Path.DirectorySeparatorChar + "rooted";
+    var result = Path.Combine("a", rooted, "c");
+    Assert.That(result, Does.StartWith(Path.DirectorySeparatorChar.ToString()));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void PathCombine_EmptyArray_ReturnsEmpty() {
+    var result = Path.Combine(new string[0]);
+    Assert.That(result, Is.EqualTo(string.Empty));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void PathCombine_SingleElementArray_ReturnsThatElement() {
+    var result = Path.Combine(new[] { "single" });
+    Assert.That(result, Is.EqualTo("single"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void PathCombine_ThreePathsWithEmptyMiddle_SkipsEmpty() {
+    var result = Path.Combine("a", "", "c");
+    var expected = "a" + Path.DirectorySeparatorChar + "c";
+    Assert.That(result, Is.EqualTo(expected));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void PathCombine_NullArray_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Path.Combine((string[])null));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void PathCombine_ThreePathsWithNullFirst_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Path.Combine(null, "b", "c"));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void PathCombine_FourPathsWithNullSecond_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Path.Combine("a", null, "c", "d"));
+  }
+
+  #endregion
+
 }

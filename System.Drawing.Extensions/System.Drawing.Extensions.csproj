@@ -19,7 +19,7 @@
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
     <CheckEolTargetFramework>False</CheckEolTargetFramework>
-    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net9.0-windows</TargetFrameworks>
+    <TargetFrameworks>net35;net40;net45;net48;netcoreapp3.1;net6.0-windows;net7.0-windows;net8.0-windows;net9.0-windows</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
@@ -28,6 +28,9 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="System.Drawing.Extensions.Tests" />
+  </ItemGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
     <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
   </PropertyGroup>
@@ -74,5 +77,11 @@
     <Folder Include="Utilities\" />
     <Folder Include="System\IO\" />
     <ProjectReference Include="..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <!-- System.IO.Compression for ZipArchive on .NET Framework 4.5+ -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 </Project>

@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.Drawing.Lockers;
@@ -52,6 +53,14 @@ internal abstract class BitmapLockerBase : IBitmapLocker {
 
   /// <inheritdoc/>
   public abstract Color this[int x, int y] { get; set; }
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public virtual Bgra8888 GetPixelBgra8888(int x, int y) => new(this[x, y]);
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public virtual void SetPixelBgra8888(int x, int y, Bgra8888 color) => this[x, y] = color.ToColor();
 
   /// <inheritdoc/>
   public Color this[Point p] {
@@ -743,6 +752,49 @@ internal abstract class BitmapLockerBase : IBitmapLocker {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void CopyFromUnchecked(IBitmapLocker source, Rectangle srcRect, Point destLocation)
     => this.CopyFromUnchecked(source, srcRect.X, srcRect.Y, srcRect.Width, srcRect.Height, destLocation.X, destLocation.Y);
+
+  #endregion
+
+  #region CopyFromGrid Methods
+
+  /// <inheritdoc/>
+  public virtual void CopyFromGrid(
+    IBitmapLocker other,
+    int column,
+    int row,
+    int width,
+    int height,
+    int dx = 0,
+    int dy = 0,
+    int offsetX = 0,
+    int offsetY = 0,
+    int targetX = 0,
+    int targetY = 0
+  ) {
+    var sourceX = column * (width + dx) + offsetX;
+    var sourceY = row * (height + dy) + offsetY;
+    this.CopyFromChecked(other, sourceX, sourceY, width, height, targetX, targetY);
+  }
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize)
+    => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height);
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance)
+    => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height);
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset)
+    => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height);
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void CopyFromGrid(IBitmapLocker other, Point tile, Size tileSize, Size distance, Size offset, Point target)
+    => this.CopyFromGrid(other, tile.X, tile.Y, tileSize.Width, tileSize.Height, distance.Width, distance.Height, offset.Width, offset.Height, target.X, target.Y);
 
   #endregion
 

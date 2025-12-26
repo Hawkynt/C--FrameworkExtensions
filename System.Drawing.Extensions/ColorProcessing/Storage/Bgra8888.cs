@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -87,7 +88,13 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace {
   /// Constructs an Rgba32 from a System.Drawing.Color.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal Bgra8888(Color color) : this((uint)color.ToArgb()) { }
+  public Bgra8888(Color color) : this((uint)color.ToArgb()) { }
+
+  /// <summary>
+  /// Converts this color to a System.Drawing.Color.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public Color ToColor() => Color.FromArgb((int)this._packed);
 
   /// <summary>Gets the red component normalized to 0.0-1.0 range.</summary>
   public float RNormalized {
@@ -111,6 +118,12 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace {
   public float ANormalized {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get => this.A * ByteToNormalized;
+  }
+
+  /// <summary>Gets luminance using BT.709 coefficients (0.2126R + 0.7152G + 0.0722B).</summary>
+  public float Luminance {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => 0.2126f * this.R + 0.7152f * this.G + 0.0722f * this.B;
   }
 
   #region Interpolation Methods
@@ -218,6 +231,26 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace {
       (byte)(c00.A * fx1 * fy1 + c10.A * fx * fy1 + c01.A * fx1 * fy + c11.A * fx * fy + 0.5f)
     );
   }
+
+  #endregion
+
+  #region Clamping Utilities
+
+  /// <summary>
+  /// Clamps a floating-point value to byte range [0-255] with rounding.
+  /// </summary>
+  /// <param name="value">The value to clamp (typically 0-255 range).</param>
+  /// <returns>The clamped byte value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ClampToByte(float value) => (byte)Math.Max(0, Math.Min(255, (int)(value + 0.5f)));
+
+  /// <summary>
+  /// Clamps an integer value to byte range [0-255].
+  /// </summary>
+  /// <param name="value">The value to clamp.</param>
+  /// <returns>The clamped byte value.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ClampToByte(int value) => value < 0 ? (byte)0 : value > 255 ? (byte)255 : (byte)value;
 
   #endregion
 }

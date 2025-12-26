@@ -71,7 +71,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.Collections.Generic
   * [IAsyncEnumerable](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1)&lt;T&gt;
   * [IAsyncEnumerator](https://learn.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerator-1)&lt;T&gt;
+  * [IReadOnlyCollection](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1)&lt;T&gt;
   * [IReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2)&lt;TKey, TValue&gt;
+  * [IReadOnlyList](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1)&lt;T&gt;
 
 * System.Runtime.CompilerServices
   * [IAsyncStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.iasyncstatemachine)
@@ -306,6 +308,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string%29)(string path1, string path2, string path3)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string-system-string%29)(string path1, string path2, string path3, string path4)
   * string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string%28%29%29)(params string[] paths)
+  * string [Combine](https://learn.microsoft.com/dotnet/api/system.io.path.combine#system-io-path-combine%28system-string-system-string-system-string%29)(string path1, string path2, string path3)
+  * string [Combine](https://learn.microsoft.com/dotnet/api/system.io.path.combine#system-io-path-combine%28system-string-system-string-system-string-system-string%29)(string path1, string path2, string path3, string path4)
+  * string [Combine](https://learn.microsoft.com/dotnet/api/system.io.path.combine#system-io-path-combine%28system-string%28%29%29)(params string[] paths)
   * string [GetRelativePath](https://learn.microsoft.com/dotnet/api/system.io.path.getrelativepath)(string relativeTo, string path)
   * bool [Exists](https://learn.microsoft.com/dotnet/api/system.io.path.exists)(string? path)
   * bool [EndsInDirectorySeparator](https://learn.microsoft.com/dotnet/api/system.io.path.endsindirectoryseparator)(string? path)
