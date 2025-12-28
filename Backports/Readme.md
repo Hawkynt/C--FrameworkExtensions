@@ -74,6 +74,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [IReadOnlyCollection](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlycollection-1)&lt;T&gt;
   * [IReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlydictionary-2)&lt;TKey, TValue&gt;
   * [IReadOnlyList](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1)&lt;T&gt;
+  * [IReadOnlySet](https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlyset-1)&lt;T&gt;
+  * [ISet](https://learn.microsoft.com/dotnet/api/system.collections.generic.iset-1)&lt;T&gt;
 
 * System.Runtime.CompilerServices
   * [IAsyncStateMachine](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.iasyncstatemachine)
@@ -112,6 +114,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [ReadOnlySequence](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequence-1)&lt;T&gt;
   * [ReadOnlySequenceSegment](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequencesegment-1)&lt;T&gt;
   * [SequenceReader](https://learn.microsoft.com/dotnet/api/system.buffers.sequencereader-1)&lt;T&gt;
+  * [SearchValues](https://learn.microsoft.com/dotnet/api/system.buffers.searchvalues-1)&lt;T&gt;
 
 * System.Collections.Concurrent
   * [ConcurrentBag](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1)&lt;T&gt;
@@ -123,8 +126,14 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Partitioner](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.partitioner)
   * [Partitioner](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.partitioner-1)&lt;TSource&gt;
 
+* System.Collections.Frozen
+  * [FrozenDictionary](https://learn.microsoft.com/dotnet/api/system.collections.frozen.frozendictionary-2)&lt;TKey, TValue&gt;
+  * [FrozenSet](https://learn.microsoft.com/dotnet/api/system.collections.frozen.frozenset-1)&lt;T&gt;
+
 * System.Collections.Generic
   * [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
+  * [OrderedDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ordereddictionary-2)&lt;TKey, TValue&gt;
+  * [PriorityQueue](https://learn.microsoft.com/dotnet/api/system.collections.generic.priorityqueue-2)&lt;TElement, TPriority&gt;
   * [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
 
 * System.IO.Compression
@@ -362,6 +371,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System.TimeSpan
   * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.timespan.tryparse#system-timespan-tryparse%28system-readonlyspan%28%28system-char%29%29-system-timespan%40%29)(ReadOnlySpan&lt;char&gt; input, out TimeSpan result)
   * TimeSpan [Parse](https://learn.microsoft.com/dotnet/api/system.timespan.parse#system-timespan-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
+  * string [ToString](https://learn.microsoft.com/dotnet/api/system.timespan.tostring#system-timespan-tostring%28system-string-system-iformatprovider%29)(this TimeSpan @this, string? format, IFormatProvider? formatProvider)
+  * bool [TryFormat](https://learn.microsoft.com/dotnet/api/system.timespan.tryformat)(this TimeSpan @this, Span&lt;char&gt; destination, out int charsWritten, ...)
 
 * System.Version
   * bool [TryParse](https://learn.microsoft.com/dotnet/api/system.version.tryparse#system-version-tryparse%28system-readonlyspan%28%28system-char%29%29-system-version%40%29)(ReadOnlySpan&lt;char&gt; input, out Version? result)
@@ -691,6 +702,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * void [GetItems](https://learn.microsoft.com/dotnet/api/system.random.getitems)&lt;T&gt;(this Random @this, ReadOnlySpan&lt;T&gt; choices, Span&lt;T&gt; destination)
   * void [Shuffle](https://learn.microsoft.com/dotnet/api/system.random.shuffle)&lt;T&gt;(this Random @this, T[] values)
   * void [Shuffle](https://learn.microsoft.com/dotnet/api/system.random.shuffle)&lt;T&gt;(this Random @this, Span&lt;T&gt; values)
+  * string [GetHexString](https://learn.microsoft.com/dotnet/api/system.random.gethexstring#system-random-gethexstring%28system-int32-system-boolean%29)(this Random @this, int length, bool lowercase = false)
+  * void [GetHexString](https://learn.microsoft.com/dotnet/api/system.random.gethexstring#system-random-gethexstring%28system-span%28%28system-char%29%29-system-boolean%29)(this Random @this, Span&lt;char&gt; destination, bool lowercase = false)
+  * string [GetString](https://learn.microsoft.com/dotnet/api/system.random.getstring)(this Random @this, ReadOnlySpan&lt;char&gt; choices, int length)
 
 * System.Reflection.Assembly  
   * Attribute [GetCustomAttribute](https://learn.microsoft.com/dotnet/api/system.reflection.customattributeextensions.getcustomattribute#system-reflection-customattributeextensions-getcustomattribute%28system-reflection-assembly-system-type%29)(this Assembly element, Type attributeType)  

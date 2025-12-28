@@ -247,8 +247,6 @@ public class BitConverterTests {
     Assert.That(result, Is.EqualTo(original));
   }
 
-#if SUPPORTS_SPAN
-
   [Test]
   public void ToHalf_Span_RoundTrips() {
     var original = (Half)3.14;
@@ -270,8 +268,6 @@ public class BitConverterTests {
     var success = BitConverter.TryWriteBytes(buffer, (Half)3.14);
     Assert.That(success, Is.False);
   }
-
-#endif
 
   #endregion
 

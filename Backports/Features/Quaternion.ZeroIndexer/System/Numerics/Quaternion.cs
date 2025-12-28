@@ -15,7 +15,7 @@
 //
 
 // Requires System.Numerics.Vectors (SUPPORTS_VECTOR or OFFICIAL_VECTOR) for base types
-#if (SUPPORTS_VECTOR || OFFICIAL_VECTOR) && !SUPPORTS_QUATERNION_ZERO_INDEXER
+#if !SUPPORTS_QUATERNION_ZERO_INDEXER
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -27,19 +27,23 @@ namespace System.Numerics;
 /// </summary>
 public static partial class QuaternionPolyfills {
 
-  /// <summary>
-  /// Gets a quaternion representing no rotation (0, 0, 0, 0).
-  /// </summary>
-  public static Quaternion Zero {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => new(0, 0, 0, 0);
+  extension(Quaternion) {
+
+    /// <summary>
+    /// Gets a quaternion representing no rotation (0, 0, 0, 0).
+    /// </summary>
+    public static Quaternion Zero {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => new(0, 0, 0, 0);
+    }
+
   }
 
   /// <param name="this">The quaternion.</param>
   extension(Quaternion @this)
   {
     /// <summary>
-    /// Gets the element at the specified index.
+    /// Gets the element at the specified index (indexer polyfill).
     /// </summary>
     /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
     /// <returns>The element at the specified index.</returns>
@@ -47,7 +51,7 @@ public static partial class QuaternionPolyfills {
     /// <paramref name="index"/> is less than 0 or greater than 3.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetElement(int index) {
+    public float get_Item(int index) {
       ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
       ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3, nameof(index));
 
@@ -57,30 +61,6 @@ public static partial class QuaternionPolyfills {
         2 => @this.Z,
         _ => @this.W
       };
-    }
-
-    /// <summary>
-    /// Creates a new Quaternion with the element at the specified index replaced.
-    /// </summary>
-    /// <param name="index">The index (0=X, 1=Y, 2=Z, 3=W).</param>
-    /// <param name="value">The new value.</param>
-    /// <returns>A new quaternion with the specified element changed.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="index"/> is less than 0 or greater than 3.
-    /// </exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Quaternion WithElement(int index, float value) {
-      ArgumentOutOfRangeException.ThrowIfNegative(index, nameof(index));
-      ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 3, nameof(index));
-
-      var result = @this;
-      switch (index) {
-        case 0: result.X = value; break;
-        case 1: result.Y = value; break;
-        case 2: result.Z = value; break;
-        default: result.W = value; break;
-      }
-      return result;
     }
   }
 }

@@ -52,6 +52,76 @@ public static partial class MemoryExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<T> AsSpan(int start, int length) => array == null ? default : new(array, start, length);
   }
+
+  /// <summary>
+  /// Sorts the elements in the entire <see cref="Span{T}"/> using the <see cref="IComparable{T}"/> implementation of each element.
+  /// </summary>
+  /// <typeparam name="T">The type of elements in the span.</typeparam>
+  /// <param name="span">The span to sort.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Sort<T>(Span<T> span) {
+    if (span.Length <= 1)
+      return;
+
+    var array = span.ToArray();
+    Array.Sort(array);
+    array.AsSpan().CopyTo(span);
+  }
+
+  /// <summary>
+  /// Sorts the elements in the entire <see cref="Span{T}"/> using the specified <see cref="Comparison{T}"/>.
+  /// </summary>
+  /// <typeparam name="T">The type of elements in the span.</typeparam>
+  /// <param name="span">The span to sort.</param>
+  /// <param name="comparison">The comparison to use when comparing elements.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Sort<T>(Span<T> span, Comparison<T> comparison) {
+    if (span.Length <= 1)
+      return;
+
+    var array = span.ToArray();
+    Array.Sort(array, comparison);
+    array.AsSpan().CopyTo(span);
+  }
+
+  /// <summary>
+  /// Sorts a pair of spans based on the keys in the first span.
+  /// </summary>
+  /// <typeparam name="TKey">The type of elements in the keys span.</typeparam>
+  /// <typeparam name="TValue">The type of elements in the items span.</typeparam>
+  /// <param name="keys">The span containing the keys to sort by.</param>
+  /// <param name="items">The span containing the items to sort based on the keys.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Sort<TKey, TValue>(Span<TKey> keys, Span<TValue> items) {
+    if (keys.Length <= 1)
+      return;
+
+    var keyArray = keys.ToArray();
+    var itemArray = items.ToArray();
+    Array.Sort(keyArray, itemArray);
+    keyArray.AsSpan().CopyTo(keys);
+    itemArray.AsSpan().CopyTo(items);
+  }
+
+  /// <summary>
+  /// Reverses the sequence of the elements in the entire span.
+  /// </summary>
+  /// <typeparam name="T">The type of elements in the span.</typeparam>
+  /// <param name="span">The span to reverse.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Reverse<T>(Span<T> span) {
+    if (span.Length <= 1)
+      return;
+
+    var left = 0;
+    var right = span.Length - 1;
+    while (left < right) {
+      (span[left], span[right]) = (span[right], span[left]);
+      ++left;
+      --right;
+    }
+  }
+
 }
 
 public static partial class MemoryPolyfills {

@@ -17,9 +17,6 @@
 
 #endregion
 
-// System.Numerics types require SUPPORTS_VECTOR (netstandard2.0+)
-#if SUPPORTS_VECTOR
-
 using System;
 using System.Numerics;
 using NUnit.Framework;
@@ -32,64 +29,82 @@ namespace Backports.Tests;
 [Category("Numerics")]
 public class NumericsPolyfillTests {
 
-#if !SUPPORTS_MATRIX3X2_INDEXER
-
-  #region Matrix3x2 - Indexer (get_Item)
+  #region Matrix3x2 - Indexer
 
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Indexer_Row0Col0_ReturnsM11() {
     var matrix = new Matrix3x2(1, 2, 3, 4, 5, 6);
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.That(matrix[0, 0], Is.EqualTo(1f));
+#else
     Assert.That(matrix.get_Item(0, 0), Is.EqualTo(1f));
+#endif
   }
 
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Indexer_Row0Col1_ReturnsM12() {
     var matrix = new Matrix3x2(1, 2, 3, 4, 5, 6);
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.That(matrix[0, 1], Is.EqualTo(2f));
+#else
     Assert.That(matrix.get_Item(0, 1), Is.EqualTo(2f));
+#endif
   }
 
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Indexer_Row1Col0_ReturnsM21() {
     var matrix = new Matrix3x2(1, 2, 3, 4, 5, 6);
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.That(matrix[1, 0], Is.EqualTo(3f));
+#else
     Assert.That(matrix.get_Item(1, 0), Is.EqualTo(3f));
+#endif
   }
 
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Indexer_Row2Col1_ReturnsM32() {
     var matrix = new Matrix3x2(1, 2, 3, 4, 5, 6);
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.That(matrix[2, 1], Is.EqualTo(6f));
+#else
     Assert.That(matrix.get_Item(2, 1), Is.EqualTo(6f));
+#endif
   }
 
   [Test]
   [Category("Exception")]
   public void Matrix3x2_Indexer_RowOutOfRange_ThrowsArgumentOutOfRangeException() {
     var matrix = Matrix3x2.Identity;
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.Throws<ArgumentOutOfRangeException>(() => _ = matrix[3, 0]);
+#else
     Assert.Throws<ArgumentOutOfRangeException>(() => _ = matrix.get_Item(3, 0));
+#endif
   }
 
   [Test]
   [Category("Exception")]
   public void Matrix3x2_Indexer_ColumnOutOfRange_ThrowsArgumentOutOfRangeException() {
     var matrix = Matrix3x2.Identity;
+#if SUPPORTS_MATRIX3X2_INDEXER
+    Assert.Throws<ArgumentOutOfRangeException>(() => _ = matrix[0, 2]);
+#else
     Assert.Throws<ArgumentOutOfRangeException>(() => _ = matrix.get_Item(0, 2));
+#endif
   }
 
   #endregion
-
-#endif
-
-#if !SUPPORTS_MATRIX3X2_CREATE
 
   #region Matrix3x2 - Create Factory Methods
 
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Create_Float_SetsAllElements() {
-    var matrix = Matrix3x2Polyfills.Create(5f);
+    var matrix = Matrix3x2.Create(5f);
     Assert.That(matrix.M11, Is.EqualTo(5f));
     Assert.That(matrix.M32, Is.EqualTo(5f));
   }
@@ -97,7 +112,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Create_Vector2_BroadcastsToAllRows() {
-    var matrix = Matrix3x2Polyfills.Create(new Vector2(1, 2));
+    var matrix = Matrix3x2.Create(new Vector2(1, 2));
     Assert.That(matrix.M11, Is.EqualTo(1f));
     Assert.That(matrix.M12, Is.EqualTo(2f));
     Assert.That(matrix.M21, Is.EqualTo(1f));
@@ -107,7 +122,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Matrix3x2_Create_ThreeVector2s_SetsRows() {
-    var matrix = Matrix3x2Polyfills.Create(new Vector2(1, 2), new Vector2(3, 4), new Vector2(5, 6));
+    var matrix = Matrix3x2.Create(new Vector2(1, 2), new Vector2(3, 4), new Vector2(5, 6));
     Assert.That(matrix.M11, Is.EqualTo(1f));
     Assert.That(matrix.M22, Is.EqualTo(4f));
     Assert.That(matrix.M31, Is.EqualTo(5f));
@@ -195,10 +210,6 @@ public class NumericsPolyfillTests {
 
   #endregion
 
-#endif
-
-#if !SUPPORTS_MATRIX4X4_CREATE
-
   #region Matrix4x4 - GetRow / WithRow
 
   [Test]
@@ -283,7 +294,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Matrix4x4_Create_Float_SetsAllElements() {
-    var matrix = Matrix4x4Polyfills.Create(5f);
+    var matrix = Matrix4x4.Create(5f);
     Assert.That(matrix.M11, Is.EqualTo(5f));
     Assert.That(matrix.M44, Is.EqualTo(5f));
   }
@@ -291,7 +302,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Matrix4x4_Create_Vector4_BroadcastsToAllRows() {
-    var matrix = Matrix4x4Polyfills.Create(new Vector4(1, 2, 3, 4));
+    var matrix = Matrix4x4.Create(new Vector4(1, 2, 3, 4));
     Assert.That(matrix.M11, Is.EqualTo(1f));
     Assert.That(matrix.M14, Is.EqualTo(4f));
     Assert.That(matrix.M21, Is.EqualTo(1f));
@@ -302,7 +313,7 @@ public class NumericsPolyfillTests {
   [Category("HappyPath")]
   public void Matrix4x4_Create_FromMatrix3x2_SetsCorrectElements() {
     var source = new Matrix3x2(1, 2, 3, 4, 5, 6);
-    var matrix = Matrix4x4Polyfills.Create(source);
+    var matrix = Matrix4x4.Create(source);
     Assert.That(matrix.M11, Is.EqualTo(1f));
     Assert.That(matrix.M12, Is.EqualTo(2f));
     Assert.That(matrix.M33, Is.EqualTo(1f));
@@ -317,17 +328,13 @@ public class NumericsPolyfillTests {
     var cameraUp = new Vector3(0, 1, 0);
     var cameraForward = new Vector3(0, 0, 1);
 
-    var matrix = Matrix4x4Polyfills.CreateBillboardLeftHanded(objectPos, cameraPos, cameraUp, cameraForward);
+    var matrix = Matrix4x4.CreateBillboardLeftHanded(objectPos, cameraPos, cameraUp, cameraForward);
 
     Assert.That(matrix.M44, Is.EqualTo(1f));
     Assert.That(float.IsNaN(matrix.M11), Is.False);
   }
 
   #endregion
-
-#endif
-
-#if !SUPPORTS_MATRIX4X4_LEFTHANDED
 
   #region Matrix4x4 - Left-Handed Methods
 
@@ -337,7 +344,7 @@ public class NumericsPolyfillTests {
     var cameraPos = new Vector3(0, 0, -5);
     var target = new Vector3(0, 0, 0);
     var up = new Vector3(0, 1, 0);
-    var matrix = Matrix4x4Polyfills.CreateLookAtLeftHanded(cameraPos, target, up);
+    var matrix = Matrix4x4.CreateLookAtLeftHanded(cameraPos, target, up);
 
     Assert.That(matrix.M44, Is.EqualTo(1f));
     Assert.That(float.IsNaN(matrix.M11), Is.False);
@@ -350,7 +357,7 @@ public class NumericsPolyfillTests {
     var direction = new Vector3(0, 0, 1);
     var up = new Vector3(0, 1, 0);
 
-    var matrix = Matrix4x4Polyfills.CreateLookToLeftHanded(cameraPos, direction, up);
+    var matrix = Matrix4x4.CreateLookToLeftHanded(cameraPos, direction, up);
 
     Assert.That(matrix.M44, Is.EqualTo(1f));
     Assert.That(float.IsNaN(matrix.M11), Is.False);
@@ -359,7 +366,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Matrix4x4_CreateOrthographicLeftHanded_ReturnsValidMatrix() {
-    var matrix = Matrix4x4Polyfills.CreateOrthographicLeftHanded(800, 600, 0.1f, 1000f);
+    var matrix = Matrix4x4.CreateOrthographicLeftHanded(800, 600, 0.1f, 1000f);
 
     Assert.That(matrix.M44, Is.EqualTo(1f));
     Assert.That(matrix.M11, Is.GreaterThan(0f));
@@ -369,7 +376,7 @@ public class NumericsPolyfillTests {
   [Category("HappyPath")]
   public void Matrix4x4_CreatePerspectiveFieldOfViewLeftHanded_ReturnsValidMatrix() {
     var fov = MathF.PI / 4;
-    var matrix = Matrix4x4Polyfills.CreatePerspectiveFieldOfViewLeftHanded(fov, 16f / 9f, 0.1f, 1000f);
+    var matrix = Matrix4x4.CreatePerspectiveFieldOfViewLeftHanded(fov, 16f / 9f, 0.1f, 1000f);
 
     Assert.That(matrix.M11, Is.GreaterThan(0f));
     Assert.That(matrix.M34, Is.EqualTo(1f));
@@ -379,13 +386,13 @@ public class NumericsPolyfillTests {
   [Category("Exception")]
   public void Matrix4x4_CreatePerspectiveFieldOfViewLeftHanded_InvalidFov_ThrowsArgumentOutOfRangeException() {
     Assert.Throws<ArgumentOutOfRangeException>(() =>
-      Matrix4x4Polyfills.CreatePerspectiveFieldOfViewLeftHanded(0, 1, 0.1f, 1000f));
+      Matrix4x4.CreatePerspectiveFieldOfViewLeftHanded(0, 1, 0.1f, 1000f));
   }
 
   [Test]
   [Category("HappyPath")]
   public void Matrix4x4_CreateViewport_ReturnsValidMatrix() {
-    var matrix = Matrix4x4Polyfills.CreateViewport(0, 0, 800, 600, 0, 1);
+    var matrix = Matrix4x4.CreateViewport(0, 0, 800, 600, 0, 1);
 
     Assert.That(matrix.M11, Is.EqualTo(400f));
     Assert.That(matrix.M22, Is.EqualTo(-300f));
@@ -393,16 +400,12 @@ public class NumericsPolyfillTests {
 
   #endregion
 
-#endif
-
-#if !SUPPORTS_PLANE_CREATE
-
   #region Plane - Create Factory Methods
 
   [Test]
   [Category("HappyPath")]
   public void Plane_Create_Vector4_SetsCorrectValues() {
-    var plane = PlanePolyfills.Create(new Vector4(1, 0, 0, 5));
+    var plane = Plane.Create(new Vector4(1, 0, 0, 5));
     Assert.That(plane.Normal.X, Is.EqualTo(1f));
     Assert.That(plane.D, Is.EqualTo(5f));
   }
@@ -410,7 +413,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Plane_Create_NormalAndD_SetsCorrectValues() {
-    var plane = PlanePolyfills.Create(new Vector3(0, 1, 0), 10f);
+    var plane = Plane.Create(new Vector3(0, 1, 0), 10f);
     Assert.That(plane.Normal.Y, Is.EqualTo(1f));
     Assert.That(plane.D, Is.EqualTo(10f));
   }
@@ -418,7 +421,7 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Plane_Create_FourFloats_SetsCorrectValues() {
-    var plane = PlanePolyfills.Create(1, 2, 3, 4);
+    var plane = Plane.Create(1, 2, 3, 4);
     Assert.That(plane.Normal.X, Is.EqualTo(1f));
     Assert.That(plane.Normal.Z, Is.EqualTo(3f));
     Assert.That(plane.D, Is.EqualTo(4f));
@@ -426,16 +429,12 @@ public class NumericsPolyfillTests {
 
   #endregion
 
-#endif
-
-#if !SUPPORTS_QUATERNION_ZERO_INDEXER
-
   #region Quaternion - Zero Property
 
   [Test]
   [Category("HappyPath")]
   public void Quaternion_Zero_AllComponentsZero() {
-    var zero = QuaternionPolyfills.Zero;
+    var zero = Quaternion.Zero;
     Assert.That(zero.X, Is.EqualTo(0f));
     Assert.That(zero.Y, Is.EqualTo(0f));
     Assert.That(zero.Z, Is.EqualTo(0f));
@@ -444,66 +443,68 @@ public class NumericsPolyfillTests {
 
   #endregion
 
-  #region Quaternion - GetElement / WithElement
+  #region Quaternion - Indexer
 
   [Test]
   [Category("HappyPath")]
-  public void Quaternion_GetElement_Index0_ReturnsX() {
+  public void Quaternion_Indexer_Index0_ReturnsX() {
     var quat = new Quaternion(1, 2, 3, 4);
-    Assert.That(quat.GetElement(0), Is.EqualTo(1f));
+#if SUPPORTS_QUATERNION_ZERO_INDEXER
+    Assert.That(quat[0], Is.EqualTo(1f));
+#else
+    Assert.That(quat.get_Item(0), Is.EqualTo(1f));
+#endif
   }
 
   [Test]
   [Category("HappyPath")]
-  public void Quaternion_GetElement_Index3_ReturnsW() {
+  public void Quaternion_Indexer_Index3_ReturnsW() {
     var quat = new Quaternion(1, 2, 3, 4);
-    Assert.That(quat.GetElement(3), Is.EqualTo(4f));
+#if SUPPORTS_QUATERNION_ZERO_INDEXER
+    Assert.That(quat[3], Is.EqualTo(4f));
+#else
+    Assert.That(quat.get_Item(3), Is.EqualTo(4f));
+#endif
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Quaternion_Indexer_AllElements_ReturnCorrectValues() {
+    var quat = new Quaternion(1, 2, 3, 4);
+#if SUPPORTS_QUATERNION_ZERO_INDEXER
+    Assert.That(quat[0], Is.EqualTo(1f));
+    Assert.That(quat[1], Is.EqualTo(2f));
+    Assert.That(quat[2], Is.EqualTo(3f));
+    Assert.That(quat[3], Is.EqualTo(4f));
+#else
+    Assert.That(quat.get_Item(0), Is.EqualTo(1f));
+    Assert.That(quat.get_Item(1), Is.EqualTo(2f));
+    Assert.That(quat.get_Item(2), Is.EqualTo(3f));
+    Assert.That(quat.get_Item(3), Is.EqualTo(4f));
+#endif
   }
 
   [Test]
   [Category("Exception")]
-  public void Quaternion_GetElement_InvalidIndex_ThrowsArgumentOutOfRangeException() {
+  public void Quaternion_Indexer_InvalidIndex_ThrowsArgumentOutOfRangeException() {
     var quat = Quaternion.Identity;
-    Assert.Throws<ArgumentOutOfRangeException>(() => quat.GetElement(4));
-    Assert.Throws<ArgumentOutOfRangeException>(() => quat.GetElement(-1));
-  }
-
-  [Test]
-  [Category("HappyPath")]
-  public void Quaternion_WithElement_Index0_SetsX() {
-    var quat = Quaternion.Identity;
-    var result = quat.WithElement(0, 99f);
-    Assert.That(result.X, Is.EqualTo(99f));
-    Assert.That(result.W, Is.EqualTo(1f));
-  }
-
-  [Test]
-  [Category("HappyPath")]
-  public void Quaternion_WithElement_DoesNotModifyOriginal() {
-    var original = Quaternion.Identity;
-    _ = original.WithElement(0, 99f);
-    Assert.That(original.X, Is.EqualTo(0f));
-  }
-
-  [Test]
-  [Category("Exception")]
-  public void Quaternion_WithElement_InvalidIndex_ThrowsArgumentOutOfRangeException() {
-    var quat = Quaternion.Identity;
-    Assert.Throws<ArgumentOutOfRangeException>(() => quat.WithElement(4, 1f));
+#if SUPPORTS_QUATERNION_ZERO_INDEXER
+    Assert.Throws<ArgumentOutOfRangeException>(() => { _ = quat[4]; });
+    Assert.Throws<ArgumentOutOfRangeException>(() => { _ = quat[-1]; });
+#else
+    Assert.Throws<ArgumentOutOfRangeException>(() => quat.get_Item(4));
+    Assert.Throws<ArgumentOutOfRangeException>(() => quat.get_Item(-1));
+#endif
   }
 
   #endregion
-
-#endif
-
-#if !SUPPORTS_QUATERNION_CREATE
 
   #region Quaternion - Create Factory Methods
 
   [Test]
   [Category("HappyPath")]
   public void Quaternion_Create_VectorAndScalar_SetsCorrectValues() {
-    var quat = QuaternionPolyfills.Create(new Vector3(1, 2, 3), 4);
+    var quat = Quaternion.Create(new Vector3(1, 2, 3), 4);
     Assert.That(quat.X, Is.EqualTo(1f));
     Assert.That(quat.Y, Is.EqualTo(2f));
     Assert.That(quat.Z, Is.EqualTo(3f));
@@ -513,15 +514,11 @@ public class NumericsPolyfillTests {
   [Test]
   [Category("HappyPath")]
   public void Quaternion_Create_FourFloats_SetsCorrectValues() {
-    var quat = QuaternionPolyfills.Create(1, 2, 3, 4);
+    var quat = Quaternion.Create(1, 2, 3, 4);
     Assert.That(quat.X, Is.EqualTo(1f));
     Assert.That(quat.W, Is.EqualTo(4f));
   }
 
   #endregion
 
-#endif
-
 }
-
-#endif

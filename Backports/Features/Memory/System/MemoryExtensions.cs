@@ -24,6 +24,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
+// This class name is required by the compiler for certain wellknown members.
 public static partial class MemoryExtensions {
 
   extension<T>(T[] array) {

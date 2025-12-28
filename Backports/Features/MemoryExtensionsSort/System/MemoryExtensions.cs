@@ -17,7 +17,9 @@
 
 #endregion
 
-#if !SUPPORTS_MEMORYEXTENSIONS_SORT
+// This file extends the native MemoryExtensions type, which only exists when Span is natively supported
+// or provided by System.Memory package. Without that, there's no type to extend.
+#if !SUPPORTS_MEMORYEXTENSIONS_SORT && (SUPPORTS_SPAN || OFFICIAL_SPAN)
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;

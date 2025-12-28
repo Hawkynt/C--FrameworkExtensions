@@ -17,12 +17,6 @@
 
 #endregion
 
-// Note: Tests use SUPPORTS_ZIPARCHIVE to detect API availability
-// When SUPPORTS_ZIPARCHIVE is defined, official .NET API is used (net45+)
-// When NOT defined, our polyfill is used (net35/net40)
-// Some newer API overloads (e.g., overwriteFiles parameter) are only available
-// in our polyfill or in .NET Core 2.0+, not in .NET Framework 4.5/4.8
-
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -49,9 +43,8 @@ public class ZipFileTests {
 
     Assert.That(File.Exists(zipPath), Is.True);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      Assert.That(archive.Entries.Count, Is.GreaterThan(0));
-    }
+    using var archive = ZipFile.OpenRead(zipPath);
+    Assert.That(archive.Entries.Count, Is.GreaterThan(0));
   }
 
   [Test]
@@ -63,12 +56,11 @@ public class ZipFileTests {
 
     ZipFile.CreateFromDirectory(sourceDir, zipPath, CompressionLevel.Optimal, includeBaseDirectory: true);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      foreach (var entry in archive.Entries) {
-        // Normalize path separators - some implementations use \ on Windows
-        var normalizedName = entry.FullName.Replace('\\', '/');
-        Assert.That(normalizedName, Does.StartWith("myroot/"));
-      }
+    using var archive = ZipFile.OpenRead(zipPath);
+    foreach (var entry in archive.Entries) {
+      // Normalize path separators - some implementations use \ on Windows
+      var normalizedName = entry.FullName.Replace('\\', '/');
+      Assert.That(normalizedName, Does.StartWith("myroot/"));
     }
   }
 
@@ -81,16 +73,15 @@ public class ZipFileTests {
 
     ZipFile.CreateFromDirectory(sourceDir, zipPath, CompressionLevel.Optimal, includeBaseDirectory: false);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      var hasRootPrefix = false;
-      foreach (var entry in archive.Entries) {
-        // Normalize path separators
-        var normalizedName = entry.FullName.Replace('\\', '/');
-        if (normalizedName.StartsWith("myroot/"))
-          hasRootPrefix = true;
-      }
-      Assert.That(hasRootPrefix, Is.False);
+    using var archive = ZipFile.OpenRead(zipPath);
+    var hasRootPrefix = false;
+    foreach (var entry in archive.Entries) {
+      // Normalize path separators
+      var normalizedName = entry.FullName.Replace('\\', '/');
+      if (normalizedName.StartsWith("myroot/"))
+        hasRootPrefix = true;
     }
+    Assert.That(hasRootPrefix, Is.False);
   }
 
   [Test]
@@ -121,15 +112,14 @@ public class ZipFileTests {
 
     ZipFile.CreateFromDirectory(sourceDir, zipPath);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      var hasNestedFile = false;
-      foreach (var entry in archive.Entries) {
-        // Check for either path separator style
-        if (entry.FullName.Contains("/") || entry.FullName.Contains("\\"))
-          hasNestedFile = true;
-      }
-      Assert.That(hasNestedFile, Is.True);
+    using var archive = ZipFile.OpenRead(zipPath);
+    var hasNestedFile = false;
+    foreach (var entry in archive.Entries) {
+      // Check for either path separator style
+      if (entry.FullName.Contains("/") || entry.FullName.Contains("\\"))
+        hasNestedFile = true;
     }
+    Assert.That(hasNestedFile, Is.True);
   }
 
   [Test]
@@ -198,11 +188,8 @@ public class ZipFileTests {
     Assert.That(actualContent, Is.EqualTo(expectedContent));
   }
 
-  // Note: ExtractToDirectory with overwriteFiles parameter is only available in:
-  // - Our polyfill (!SUPPORTS_ZIPARCHIVE)
-  // - .NET Core 2.0+
-  // Not available in .NET Framework 4.5/4.8
 #if !SUPPORTS_ZIPARCHIVE
+
   [Test]
   [Category("HappyPath")]
   public void ExtractToDirectory_OverwriteTrue_OverwritesExisting() {
@@ -240,6 +227,7 @@ public class ZipFileTests {
 
     Assert.Throws<IOException>(() => ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: false));
   }
+
 #endif
 
   [Test]
@@ -288,10 +276,9 @@ public class ZipFileTests {
     var zipPath = helper.GetZipPath("open_read");
     ZipFile.CreateFromDirectory(sourceDir, zipPath);
 
-    using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read)) {
-      Assert.That(archive.Mode, Is.EqualTo(ZipArchiveMode.Read));
-      Assert.That(archive.Entries.Count, Is.EqualTo(1));
-    }
+    using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Read);
+    Assert.That(archive.Mode, Is.EqualTo(ZipArchiveMode.Read));
+    Assert.That(archive.Entries.Count, Is.EqualTo(1));
   }
 
   [Test]
@@ -342,9 +329,8 @@ public class ZipFileTests {
     var zipPath = helper.GetZipPath("openread");
     ZipFile.CreateFromDirectory(sourceDir, zipPath);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      Assert.That(archive.Mode, Is.EqualTo(ZipArchiveMode.Read));
-    }
+    using var archive = ZipFile.OpenRead(zipPath);
+    Assert.That(archive.Mode, Is.EqualTo(ZipArchiveMode.Read));
   }
 
   [Test]
@@ -454,10 +440,9 @@ public class ZipFileTests {
     var extractPath = Path.Combine(helper.TestDirectory, "extracted.txt");
     File.WriteAllText(extractPath, "Existing");
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      var entry = archive.GetEntry("test.txt");
-      Assert.Throws<IOException>(() => entry.ExtractToFile(extractPath, overwrite: false));
-    }
+    using var archive = ZipFile.OpenRead(zipPath);
+    var entry = archive.GetEntry("test.txt");
+    Assert.Throws<IOException>(() => entry.ExtractToFile(extractPath, overwrite: false));
   }
 
   [Test]
@@ -467,19 +452,17 @@ public class ZipFileTests {
     var zipPath = helper.GetZipPath("nonexistent_source");
     var nonexistentFile = Path.Combine(helper.TestDirectory, "doesnotexist.txt");
 
-    using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
-    using (var archive = new ZipArchive(fs, ZipArchiveMode.Create)) {
-      Assert.Throws<FileNotFoundException>(() => archive.CreateEntryFromFile(nonexistentFile, "test.txt"));
-    }
+    using var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write);
+    using var archive = new ZipArchive(fs, ZipArchiveMode.Create);
+    Assert.Throws<FileNotFoundException>(() => archive.CreateEntryFromFile(nonexistentFile, "test.txt"));
   }
 
   #endregion
 
   #region Zip Slip Protection
 
-  // Note: Zip Slip protection is guaranteed in our polyfill
-  // The official .NET Framework 4.5/4.8 implementation may not have this protection
 #if !SUPPORTS_ZIPARCHIVE
+
   [Test]
   [Category("Exception")]
   [Category("Security")]
@@ -498,6 +481,7 @@ public class ZipFileTests {
 
     Assert.Throws<IOException>(() => ZipFile.ExtractToDirectory(zipPath, extractDir));
   }
+
 #endif
 
   #endregion
@@ -515,9 +499,8 @@ public class ZipFileTests {
 
     Assert.That(File.Exists(zipPath), Is.True);
 
-    using (var archive = ZipFile.OpenRead(zipPath)) {
-      Assert.That(archive.Entries.Count, Is.EqualTo(0));
-    }
+    using var archive = ZipFile.OpenRead(zipPath);
+    Assert.That(archive.Entries.Count, Is.EqualTo(0));
   }
 
   [Test]

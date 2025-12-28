@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace System.IO;
@@ -178,7 +179,6 @@ internal class StreamTest {
     Assert.Throws<EndOfStreamException>(() => ms.ReadZeroTerminatedString(Encoding.UTF8));
   }
 
-#if SUPPORTS_STREAM_ASYNC
   [Test]
   public void ReadBytesAsync_Works() {
     using var ms = new MemoryStream(Enumerable.Range(0, 10).Select(i => (byte)i).ToArray());
@@ -195,7 +195,6 @@ internal class StreamTest {
     ms.EndReadBytes(ar);
     Assert.That(buffer, Is.EqualTo(new byte[] { 2, 3 }));
   }
-#endif
 
   [Test]
   [TestCase(true)]

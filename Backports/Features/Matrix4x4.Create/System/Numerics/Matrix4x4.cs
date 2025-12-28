@@ -29,136 +29,140 @@ public static partial class Matrix4x4Polyfills {
 
   #region Create Factory Methods
 
-  /// <summary>
-  /// Creates a Matrix4x4 from a Matrix3x2.
-  /// </summary>
-  /// <param name="value">The source matrix.</param>
-  /// <returns>A new Matrix4x4.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 Create(Matrix3x2 value) => new(value);
+  extension(Matrix4x4) {
 
-  /// <summary>
-  /// Creates a Matrix4x4 with all elements initialized to the specified value.
-  /// </summary>
-  /// <param name="value">The value to assign to all elements.</param>
-  /// <returns>A new Matrix4x4 with all elements set to <paramref name="value"/>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 Create(float value) => new(
-    value, value, value, value,
-    value, value, value, value,
-    value, value, value, value,
-    value, value, value, value
-  );
+    /// <summary>
+    /// Creates a Matrix4x4 from a Matrix3x2.
+    /// </summary>
+    /// <param name="value">The source matrix.</param>
+    /// <returns>A new Matrix4x4.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4x4 Create(Matrix3x2 value) => new(value);
 
-  /// <summary>
-  /// Creates a Matrix4x4 from a Vector4 (broadcast to all rows).
-  /// </summary>
-  /// <param name="value">The vector value.</param>
-  /// <returns>A new Matrix4x4.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 Create(Vector4 value) => new(
-    value.X, value.Y, value.Z, value.W,
-    value.X, value.Y, value.Z, value.W,
-    value.X, value.Y, value.Z, value.W,
-    value.X, value.Y, value.Z, value.W
-  );
-
-  /// <summary>
-  /// Creates a Matrix4x4 from four row vectors.
-  /// </summary>
-  /// <param name="x">The first row.</param>
-  /// <param name="y">The second row.</param>
-  /// <param name="z">The third row.</param>
-  /// <param name="w">The fourth row.</param>
-  /// <returns>A new Matrix4x4.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 Create(Vector4 x, Vector4 y, Vector4 z, Vector4 w) => new(
-    x.X, x.Y, x.Z, x.W,
-    y.X, y.Y, y.Z, y.W,
-    z.X, z.Y, z.Z, z.W,
-    w.X, w.Y, w.Z, w.W
-  );
-
-  /// <summary>
-  /// Creates a Matrix4x4 from the specified components.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix4x4 Create(
-    float m11, float m12, float m13, float m14,
-    float m21, float m22, float m23, float m24,
-    float m31, float m32, float m33, float m34,
-    float m41, float m42, float m43, float m44
-  ) => new(
-    m11, m12, m13, m14,
-    m21, m22, m23, m24,
-    m31, m32, m33, m34,
-    m41, m42, m43, m44
-  );
-
-  /// <summary>
-  /// Creates a left-handed billboard matrix.
-  /// </summary>
-  /// <param name="objectPosition">The position of the object.</param>
-  /// <param name="cameraPosition">The position of the camera.</param>
-  /// <param name="cameraUpVector">The up vector of the camera.</param>
-  /// <param name="cameraForwardVector">The forward vector of the camera.</param>
-  /// <returns>The billboard matrix.</returns>
-  public static Matrix4x4 CreateBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 cameraUpVector, Vector3 cameraForwardVector) {
-    var zAxis = objectPosition - cameraPosition;
-    var norm = zAxis.LengthSquared();
-
-    zAxis = norm < 0.0001f ? -cameraForwardVector : zAxis * (1.0f / MathF.Sqrt(norm));
-
-    var xAxis = Vector3.Normalize(Vector3.Cross(cameraUpVector, zAxis));
-    var yAxis = Vector3.Cross(zAxis, xAxis);
-
-    return new(
-      xAxis.X, xAxis.Y, xAxis.Z, 0,
-      yAxis.X, yAxis.Y, yAxis.Z, 0,
-      zAxis.X, zAxis.Y, zAxis.Z, 0,
-      objectPosition.X, objectPosition.Y, objectPosition.Z, 1
+    /// <summary>
+    /// Creates a Matrix4x4 with all elements initialized to the specified value.
+    /// </summary>
+    /// <param name="value">The value to assign to all elements.</param>
+    /// <returns>A new Matrix4x4 with all elements set to <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4x4 Create(float value) => new(
+      value, value, value, value,
+      value, value, value, value,
+      value, value, value, value,
+      value, value, value, value
     );
-  }
 
-  /// <summary>
-  /// Creates a left-handed constrained billboard matrix.
-  /// </summary>
-  /// <param name="objectPosition">The position of the object.</param>
-  /// <param name="cameraPosition">The position of the camera.</param>
-  /// <param name="rotateAxis">The axis to rotate around.</param>
-  /// <param name="cameraForwardVector">The forward vector of the camera.</param>
-  /// <param name="objectForwardVector">The forward vector of the object.</param>
-  /// <returns>The constrained billboard matrix.</returns>
-  public static Matrix4x4 CreateConstrainedBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 rotateAxis, Vector3 cameraForwardVector, Vector3 objectForwardVector) {
-    var faceDir = objectPosition - cameraPosition;
-    var norm = faceDir.LengthSquared();
+    /// <summary>
+    /// Creates a Matrix4x4 from a Vector4 (broadcast to all rows).
+    /// </summary>
+    /// <param name="value">The vector value.</param>
+    /// <returns>A new Matrix4x4.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4x4 Create(Vector4 value) => new(
+      value.X, value.Y, value.Z, value.W,
+      value.X, value.Y, value.Z, value.W,
+      value.X, value.Y, value.Z, value.W,
+      value.X, value.Y, value.Z, value.W
+    );
 
-    faceDir = norm < 0.0001f ? -cameraForwardVector : faceDir * (1.0f / MathF.Sqrt(norm));
+    /// <summary>
+    /// Creates a Matrix4x4 from four row vectors.
+    /// </summary>
+    /// <param name="x">The first row.</param>
+    /// <param name="y">The second row.</param>
+    /// <param name="z">The third row.</param>
+    /// <param name="w">The fourth row.</param>
+    /// <returns>A new Matrix4x4.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4x4 Create(Vector4 x, Vector4 y, Vector4 z, Vector4 w) => new(
+      x.X, x.Y, x.Z, x.W,
+      y.X, y.Y, y.Z, y.W,
+      z.X, z.Y, z.Z, z.W,
+      w.X, w.Y, w.Z, w.W
+    );
 
-    var yAxis = rotateAxis;
-    Vector3 xAxis;
-    Vector3 zAxis;
+    /// <summary>
+    /// Creates a Matrix4x4 from the specified components.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix4x4 Create(
+      float m11, float m12, float m13, float m14,
+      float m21, float m22, float m23, float m24,
+      float m31, float m32, float m33, float m34,
+      float m41, float m42, float m43, float m44
+    ) => new(
+      m11, m12, m13, m14,
+      m21, m22, m23, m24,
+      m31, m32, m33, m34,
+      m41, m42, m43, m44
+    );
 
-    var dot = Vector3.Dot(rotateAxis, faceDir);
-    if (MathF.Abs(dot) > 0.9982547f) {
-      zAxis = objectForwardVector;
-      dot = Vector3.Dot(rotateAxis, zAxis);
-      if (MathF.Abs(dot) > 0.9982547f)
-        zAxis = MathF.Abs(rotateAxis.Z) > 0.9982547f ? new Vector3(1, 0, 0) : new Vector3(0, 0, -1);
+    /// <summary>
+    /// Creates a left-handed billboard matrix.
+    /// </summary>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="cameraPosition">The position of the camera.</param>
+    /// <param name="cameraUpVector">The up vector of the camera.</param>
+    /// <param name="cameraForwardVector">The forward vector of the camera.</param>
+    /// <returns>The billboard matrix.</returns>
+    public static Matrix4x4 CreateBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 cameraUpVector, Vector3 cameraForwardVector) {
+      var zAxis = objectPosition - cameraPosition;
+      var norm = zAxis.LengthSquared();
 
-      xAxis = Vector3.Normalize(Vector3.Cross(rotateAxis, zAxis));
-      zAxis = Vector3.Normalize(Vector3.Cross(xAxis, rotateAxis));
-    } else {
-      xAxis = Vector3.Normalize(Vector3.Cross(rotateAxis, faceDir));
-      zAxis = Vector3.Normalize(Vector3.Cross(xAxis, rotateAxis));
+      zAxis = norm < 0.0001f ? -cameraForwardVector : zAxis * (1.0f / MathF.Sqrt(norm));
+
+      var xAxis = Vector3.Normalize(Vector3.Cross(cameraUpVector, zAxis));
+      var yAxis = Vector3.Cross(zAxis, xAxis);
+
+      return new(
+        xAxis.X, xAxis.Y, xAxis.Z, 0,
+        yAxis.X, yAxis.Y, yAxis.Z, 0,
+        zAxis.X, zAxis.Y, zAxis.Z, 0,
+        objectPosition.X, objectPosition.Y, objectPosition.Z, 1
+      );
     }
 
-    return new(
-      xAxis.X, xAxis.Y, xAxis.Z, 0,
-      yAxis.X, yAxis.Y, yAxis.Z, 0,
-      zAxis.X, zAxis.Y, zAxis.Z, 0,
-      objectPosition.X, objectPosition.Y, objectPosition.Z, 1
-    );
+    /// <summary>
+    /// Creates a left-handed constrained billboard matrix.
+    /// </summary>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="cameraPosition">The position of the camera.</param>
+    /// <param name="rotateAxis">The axis to rotate around.</param>
+    /// <param name="cameraForwardVector">The forward vector of the camera.</param>
+    /// <param name="objectForwardVector">The forward vector of the object.</param>
+    /// <returns>The constrained billboard matrix.</returns>
+    public static Matrix4x4 CreateConstrainedBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 rotateAxis, Vector3 cameraForwardVector, Vector3 objectForwardVector) {
+      var faceDir = objectPosition - cameraPosition;
+      var norm = faceDir.LengthSquared();
+
+      faceDir = norm < 0.0001f ? -cameraForwardVector : faceDir * (1.0f / MathF.Sqrt(norm));
+
+      var yAxis = rotateAxis;
+      Vector3 xAxis;
+      Vector3 zAxis;
+
+      var dot = Vector3.Dot(rotateAxis, faceDir);
+      if (MathF.Abs(dot) > 0.9982547f) {
+        zAxis = objectForwardVector;
+        dot = Vector3.Dot(rotateAxis, zAxis);
+        if (MathF.Abs(dot) > 0.9982547f)
+          zAxis = MathF.Abs(rotateAxis.Z) > 0.9982547f ? new Vector3(1, 0, 0) : new Vector3(0, 0, -1);
+
+        xAxis = Vector3.Normalize(Vector3.Cross(rotateAxis, zAxis));
+        zAxis = Vector3.Normalize(Vector3.Cross(xAxis, rotateAxis));
+      } else {
+        xAxis = Vector3.Normalize(Vector3.Cross(rotateAxis, faceDir));
+        zAxis = Vector3.Normalize(Vector3.Cross(xAxis, rotateAxis));
+      }
+
+      return new(
+        xAxis.X, xAxis.Y, xAxis.Z, 0,
+        yAxis.X, yAxis.Y, yAxis.Z, 0,
+        zAxis.X, zAxis.Y, zAxis.Z, 0,
+        objectPosition.X, objectPosition.Y, objectPosition.Z, 1
+      );
+    }
+
   }
 
   #endregion

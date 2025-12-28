@@ -15,7 +15,7 @@
 //
 
 // Requires System.Numerics.Vectors (SUPPORTS_VECTOR or OFFICIAL_VECTOR) for base types
-#if (SUPPORTS_VECTOR || OFFICIAL_VECTOR) && !SUPPORTS_PLANE_CREATE
+#if !SUPPORTS_PLANE_CREATE
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -27,33 +27,37 @@ namespace System.Numerics;
 /// </summary>
 public static partial class PlanePolyfills {
 
-  /// <summary>
-  /// Creates a Plane from a Vector4.
-  /// </summary>
-  /// <param name="value">The vector containing the plane equation coefficients (Normal.X, Normal.Y, Normal.Z, D).</param>
-  /// <returns>A new Plane.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Plane Create(Vector4 value) => new(value);
+  extension(Plane) {
 
-  /// <summary>
-  /// Creates a Plane from a normal vector and distance.
-  /// </summary>
-  /// <param name="normal">The normal vector of the plane.</param>
-  /// <param name="d">The distance from the origin to the plane along the normal.</param>
-  /// <returns>A new Plane.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Plane Create(Vector3 normal, float d) => new(normal, d);
+    /// <summary>
+    /// Creates a Plane from a Vector4.
+    /// </summary>
+    /// <param name="value">The vector containing the plane equation coefficients (Normal.X, Normal.Y, Normal.Z, D).</param>
+    /// <returns>A new Plane.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Plane Create(Vector4 value) => new(value);
 
-  /// <summary>
-  /// Creates a Plane from the specified components.
-  /// </summary>
-  /// <param name="x">The X component of the normal vector.</param>
-  /// <param name="y">The Y component of the normal vector.</param>
-  /// <param name="z">The Z component of the normal vector.</param>
-  /// <param name="d">The distance from the origin to the plane along the normal.</param>
-  /// <returns>A new Plane.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Plane Create(float x, float y, float z, float d) => new(x, y, z, d);
+    /// <summary>
+    /// Creates a Plane from a normal vector and distance.
+    /// </summary>
+    /// <param name="normal">The normal vector of the plane.</param>
+    /// <param name="d">The distance from the origin to the plane along the normal.</param>
+    /// <returns>A new Plane.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Plane Create(Vector3 normal, float d) => new(normal, d);
+
+    /// <summary>
+    /// Creates a Plane from the specified components.
+    /// </summary>
+    /// <param name="x">The X component of the normal vector.</param>
+    /// <param name="y">The Y component of the normal vector.</param>
+    /// <param name="z">The Z component of the normal vector.</param>
+    /// <param name="d">The distance from the origin to the plane along the normal.</param>
+    /// <returns>A new Plane.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Plane Create(float x, float y, float z, float d) => new(x, y, z, d);
+
+  }
 
 }
 

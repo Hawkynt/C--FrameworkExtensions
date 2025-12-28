@@ -28,46 +28,50 @@ public static partial class Matrix3x2Polyfills {
 
   #region Create Factory Methods
 
-  /// <summary>
-  /// Creates a Matrix3x2 with all elements initialized to the specified value.
-  /// </summary>
-  /// <param name="value">The value to assign to all elements.</param>
-  /// <returns>A new Matrix3x2 with all elements set to <paramref name="value"/>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 Create(float value) => new(value, value, value, value, value, value);
+  extension(Matrix3x2) {
 
-  /// <summary>
-  /// Creates a Matrix3x2 with all elements initialized from a Vector2.
-  /// The X component is used for even columns, Y for odd columns.
-  /// </summary>
-  /// <param name="value">The vector value.</param>
-  /// <returns>A new Matrix3x2.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 Create(Vector2 value) => new(value.X, value.Y, value.X, value.Y, value.X, value.Y);
+    /// <summary>
+    /// Creates a Matrix3x2 with all elements initialized to the specified value.
+    /// </summary>
+    /// <param name="value">The value to assign to all elements.</param>
+    /// <returns>A new Matrix3x2 with all elements set to <paramref name="value"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix3x2 Create(float value) => new(value, value, value, value, value, value);
 
-  /// <summary>
-  /// Creates a Matrix3x2 from three row vectors.
-  /// </summary>
-  /// <param name="x">The first row.</param>
-  /// <param name="y">The second row.</param>
-  /// <param name="z">The third row.</param>
-  /// <returns>A new Matrix3x2.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 Create(Vector2 x, Vector2 y, Vector2 z) => new(x.X, x.Y, y.X, y.Y, z.X, z.Y);
+    /// <summary>
+    /// Creates a Matrix3x2 with all elements initialized from a Vector2.
+    /// The X component is used for even columns, Y for odd columns.
+    /// </summary>
+    /// <param name="value">The vector value.</param>
+    /// <returns>A new Matrix3x2.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix3x2 Create(Vector2 value) => new(value.X, value.Y, value.X, value.Y, value.X, value.Y);
 
-  /// <summary>
-  /// Creates a Matrix3x2 from the specified components.
-  /// </summary>
-  /// <param name="m11">The value for row 0, column 0.</param>
-  /// <param name="m12">The value for row 0, column 1.</param>
-  /// <param name="m21">The value for row 1, column 0.</param>
-  /// <param name="m22">The value for row 1, column 1.</param>
-  /// <param name="m31">The value for row 2, column 0.</param>
-  /// <param name="m32">The value for row 2, column 1.</param>
-  /// <returns>A new Matrix3x2.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Matrix3x2 Create(float m11, float m12, float m21, float m22, float m31, float m32)
-    => new(m11, m12, m21, m22, m31, m32);
+    /// <summary>
+    /// Creates a Matrix3x2 from three row vectors.
+    /// </summary>
+    /// <param name="x">The first row.</param>
+    /// <param name="y">The second row.</param>
+    /// <param name="z">The third row.</param>
+    /// <returns>A new Matrix3x2.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix3x2 Create(Vector2 x, Vector2 y, Vector2 z) => new(x.X, x.Y, y.X, y.Y, z.X, z.Y);
+
+    /// <summary>
+    /// Creates a Matrix3x2 from the specified components.
+    /// </summary>
+    /// <param name="m11">The value for row 0, column 0.</param>
+    /// <param name="m12">The value for row 0, column 1.</param>
+    /// <param name="m21">The value for row 1, column 0.</param>
+    /// <param name="m22">The value for row 1, column 1.</param>
+    /// <param name="m31">The value for row 2, column 0.</param>
+    /// <param name="m32">The value for row 2, column 1.</param>
+    /// <returns>A new Matrix3x2.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Matrix3x2 Create(float m11, float m12, float m21, float m22, float m31, float m32)
+      => new(m11, m12, m21, m22, m31, m32);
+
+  }
 
   #endregion
 

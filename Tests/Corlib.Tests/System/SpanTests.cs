@@ -289,11 +289,7 @@ internal class SpanTests {
     var sourceSpan = source.AsSpan();
     var target = sourceSpan.ToString();
 
-#if SUPPORTS_SPAN
     Assert.AreEqual(source, target);
-#else
-    Assert.AreSame(source, target);
-#endif
   }
 
   [Test]

@@ -71,92 +71,92 @@ public static partial class StreamExtensions {
     if(size < sizeof(TType))
       throw new EndOfStreamException("Read past end of stream");
   }
-  
-  /// <summary>
-  ///   Writes a whole array of bytes to a stream.
-  /// </summary>
+
   /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="data">The data to write.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, byte[] data) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(data);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    /// <summary>
+    ///   Writes a whole array of bytes to a stream.
+    /// </summary>
+    /// <param name="data">The data to write.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(byte[] data) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(data);
+      Against.False(@this.CanWrite);
 
-    @this.Write(data, 0, data.Length);
-  }
+      @this.Write(data, 0, data.Length);
+    }
 
-  /// <summary>
-  ///   Fills a whole array with bytes from a stream.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="result">The array where to store the results.</param>
-  /// <returns>The number of bytes actually read.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int Read(this Stream @this, byte[] result) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(result);
-    Against.False(@this.CanRead);
+    /// <summary>
+    ///   Fills a whole array with bytes from a stream.
+    /// </summary>
+    /// <param name="result">The array where to store the results.</param>
+    /// <returns>The number of bytes actually read.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int Read(byte[] result) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(result);
+      Against.False(@this.CanRead);
 
-    return @this.Read(result, 0, result.Length);
-  }
+      return @this.Read(result, 0, result.Length);
+    }
 
-  /// <summary>
-  ///   Tries to read a given number of bytes from a stream.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="count">The number of bytes to read.</param>
-  /// <returns>The number of bytes actually read.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte[] ReadBytes(this Stream @this, int count) {
-    Against.ThisIsNull(@this);
-    Against.CountBelowZero(count);
-    Against.False(@this.CanRead);
+    /// <summary>
+    ///   Tries to read a given number of bytes from a stream.
+    /// </summary>
+    /// <param name="count">The number of bytes to read.</param>
+    /// <returns>The number of bytes actually read.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte[] ReadBytes(int count) {
+      Against.ThisIsNull(@this);
+      Against.CountBelowZero(count);
+      Against.False(@this.CanRead);
 
-    return _ReadBytes(@this, count);
-  }
+      return _ReadBytes(@this, count);
+    }
 
-  /// <summary>
-  ///   Reads all bytes from the current position of the given <see cref="Stream" /> and returns them as a byte array.
-  /// </summary>
-  /// <param name="this">The <see cref="Stream" /> instance on which the extension method is called.</param>
-  /// <returns>A byte array containing the bytes read from the <see cref="Stream" />.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  ///   Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single
-  ///   array in .NET.
-  /// </exception>
-  /// <remarks>
-  ///   The method reads bytes into a byte array, which has a maximum indexable length of <see cref="int.MaxValue" />
-  ///   (2,147,483,647) elements,
-  ///   roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow
-  ///   of the array index.
-  /// </remarks>
-  /// <example>
-  ///   This example shows how to use the <see cref="ReadAllBytes" /> extension method
-  ///   to read all bytes from a file stream and store them in a byte array.
-  ///   <code>
-  /// using System;
-  /// using System.IO;
-  /// 
-  /// class Program
-  /// {
-  ///     static void Main()
-  ///     {
-  ///         using (FileStream fileStream = File.OpenRead("example.txt"))
-  ///         {
-  ///             byte[] fileContents = fileStream.ReadAllBytes();
-  ///             // Use fileContents as needed
-  ///         }
-  ///     }
-  /// }
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte[] ReadAllBytes(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    /// <summary>
+    ///   Reads all bytes from the current position of the given <see cref="Stream" /> and returns them as a byte array.
+    /// </summary>
+    /// <returns>A byte array containing the bytes read from the <see cref="Stream" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single
+    ///   array in .NET.
+    /// </exception>
+    /// <remarks>
+    ///   The method reads bytes into a byte array, which has a maximum indexable length of <see cref="int.MaxValue" />
+    ///   (2,147,483,647) elements,
+    ///   roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow
+    ///   of the array index.
+    /// </remarks>
+    /// <example>
+    ///   This example shows how to use the <see cref="ReadAllBytes" /> extension method
+    ///   to read all bytes from a file stream and store them in a byte array.
+    ///   <code>
+    /// using System;
+    /// using System.IO;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         using (FileStream fileStream = File.OpenRead("example.txt"))
+    ///         {
+    ///             byte[] fileContents = fileStream.ReadAllBytes();
+    ///             // Use fileContents as needed
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte[] ReadAllBytes() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return @this.CanSeek ? _ReadBytesSeekable(@this, @this.Length - @this.Position) : _ReadAllBytesNonSeekable(@this);
+      return @this.CanSeek ? _ReadBytesSeekable(@this, @this.Length - @this.Position) : _ReadAllBytesNonSeekable(@this);
+    }
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -222,64 +222,59 @@ public static partial class StreamExtensions {
 
   #region bool
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, bool value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(bool value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    @this.WriteByte(value ? (byte)255 : (byte)0);
-  }
+      @this.WriteByte(value ? (byte)255 : (byte)0);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool ReadBool(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ReadBool() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return @this.ReadByte() != 0;
-  }
+      return @this.ReadByte() != 0;
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(byte value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-  #region byte
+      @this.WriteByte(value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, byte value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte ReadUInt8() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    @this.WriteByte(value);
-  }
+      return (byte)@this.ReadByte();
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte ReadUInt8(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(sbyte value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return (byte)@this.ReadByte();
-  }
+      @this.WriteByte((byte)value);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public sbyte ReadInt8() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region sbyte
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, sbyte value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    @this.WriteByte((byte)value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static sbyte ReadInt8(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    return (sbyte)@this.ReadByte();
+      return (sbyte)@this.ReadByte();
+    }
   }
 
   #endregion
-
+  
   #region ushort
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -347,117 +342,112 @@ public static partial class StreamExtensions {
     return result;
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, ushort value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(ushort value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU16(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, ushort value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU16(@this, value);
-    else
       _WriteLittleEndianU16(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort ReadUInt16(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(ushort value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianU16(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU16(@this, value);
+      else
+        _WriteLittleEndianU16(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ushort ReadUInt16(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort ReadUInt16() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this);
-  }
+      return _ReadLittleEndianU16(@this);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ushort ReadUInt16(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region short
+      return bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, short value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(short value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU16(@this, (ushort)value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, short value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU16(@this, (ushort)value);
-    else
       _WriteLittleEndianU16(@this, (ushort)value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short ReadInt16(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(short value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return (short)_ReadLittleEndianU16(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU16(@this, (ushort)value);
+      else
+        _WriteLittleEndianU16(@this, (ushort)value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static short ReadInt16(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short ReadInt16() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return (short)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
-  }
+      return (short)_ReadLittleEndianU16(@this);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public short ReadInt16(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region char
+      return (short)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, char value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(char value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU16(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, char value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU16(@this, value);
-    else
       _WriteLittleEndianU16(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static char ReadChar(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(char value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return (char)_ReadLittleEndianU16(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU16(@this, value);
+      else
+        _WriteLittleEndianU16(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static char ReadChar(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public char ReadChar() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return (char)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
+      return (char)_ReadLittleEndianU16(@this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public char ReadChar(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      return (char)(bigEndian ? _ReadBigEndianU16(@this) : _ReadLittleEndianU16(@this));
+    }
   }
 
   #endregion
@@ -529,78 +519,77 @@ public static partial class StreamExtensions {
     return result;
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, uint value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(uint value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU32(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, uint value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU32(@this, value);
-    else
       _WriteLittleEndianU32(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint ReadUInt32(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(uint value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianU32(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU32(@this, value);
+      else
+        _WriteLittleEndianU32(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static uint ReadUInt32(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint ReadUInt32() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this);
-  }
+      return _ReadLittleEndianU32(@this);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint ReadUInt32(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region int
+      return bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, int value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(int value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU32(@this, (uint)value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, int value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU32(@this, (uint)value);
-    else
       _WriteLittleEndianU32(@this, (uint)value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int ReadInt32(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(int value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return (int)_ReadLittleEndianU32(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU32(@this, (uint)value);
+      else
+        _WriteLittleEndianU32(@this, (uint)value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int ReadInt32(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadInt32() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return (int)(bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this));
+      return (int)_ReadLittleEndianU32(@this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadInt32(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      return (int)(bigEndian ? _ReadBigEndianU32(@this) : _ReadLittleEndianU32(@this));
+    }
   }
 
   #endregion
@@ -672,78 +661,77 @@ public static partial class StreamExtensions {
     return result;
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, ulong value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(ulong value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU64(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, ulong value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU64(@this, value);
-    else
       _WriteLittleEndianU64(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong ReadUInt64(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(ulong value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianU64(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU64(@this, value);
+      else
+        _WriteLittleEndianU64(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static ulong ReadUInt64(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong ReadUInt64() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this);
-  }
+      return _ReadLittleEndianU64(@this);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ulong ReadUInt64(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region long
+      return bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, long value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(long value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianU64(@this, (ulong)value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, long value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianU64(@this, (ulong)value);
-    else
       _WriteLittleEndianU64(@this, (ulong)value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long ReadInt64(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(long value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return (long)_ReadLittleEndianU64(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianU64(@this, (ulong)value);
+      else
+        _WriteLittleEndianU64(@this, (ulong)value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static long ReadInt64(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadInt64() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return (long)(bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this));
+      return (long)_ReadLittleEndianU64(@this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadInt64(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      return (long)(bigEndian ? _ReadBigEndianU64(@this) : _ReadLittleEndianU64(@this));
+    }
   }
 
   #endregion
@@ -768,39 +756,42 @@ public static partial class StreamExtensions {
     return *(float*)&result;
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, float value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(float value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianF32(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, float value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianF32(@this, value);
-    else
       _WriteLittleEndianF32(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float ReadFloat32(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(float value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianF32(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianF32(@this, value);
+      else
+        _WriteLittleEndianF32(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float ReadFloat32(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadFloat32() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianF32(@this) : _ReadLittleEndianF32(@this);
+      return _ReadLittleEndianF32(@this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadFloat32(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      return bigEndian ? _ReadBigEndianF32(@this) : _ReadLittleEndianF32(@this);
+    }
   }
 
   #endregion
@@ -825,39 +816,42 @@ public static partial class StreamExtensions {
     return *(double*)&result;
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, double value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(double value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianF64(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, double value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianF64(@this, value);
-    else
       _WriteLittleEndianF64(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double ReadFloat64(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(double value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianF64(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianF64(@this, value);
+      else
+        _WriteLittleEndianF64(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static double ReadFloat64(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double ReadFloat64() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianF64(@this) : _ReadLittleEndianF64(@this);
+      return _ReadLittleEndianF64(@this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double ReadFloat64(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      return bigEndian ? _ReadBigEndianF64(@this) : _ReadLittleEndianF64(@this);
+    }
   }
 
   #endregion
@@ -892,130 +886,133 @@ public static partial class StreamExtensions {
     return new(blocks);
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, decimal value) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(decimal value) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    _WriteLittleEndianM128(@this, value);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Write(this Stream @this, decimal value, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-
-    if (bigEndian)
-      _WriteBigEndianM128(@this, value);
-    else
       _WriteLittleEndianM128(@this, value);
-  }
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal ReadMoney128(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Write(decimal value, bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    return _ReadLittleEndianM128(@this);
-  }
+      if (bigEndian)
+        _WriteBigEndianM128(@this, value);
+      else
+        _WriteLittleEndianM128(@this, value);
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static decimal ReadMoney128(this Stream @this, bool bigEndian) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal ReadMoney128() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
-  }
+      return _ReadLittleEndianM128(@this);
+    }
 
-  #endregion
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public decimal ReadMoney128(bool bigEndian) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-  #region Strings
+      return bigEndian ? _ReadBigEndianM128(@this) : _ReadLittleEndianM128(@this);
+    }
 
-  public static void WriteLengthPrefixedString(this Stream @this, string data, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-    Against.ArgumentIsNull(data);
+    public void WriteLengthPrefixedString(string data, Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
+      Against.ArgumentIsNull(data);
 
-    encoding ??= Encoding.UTF8;
-    var rawData = encoding.GetBytes(data);
-    _WriteLittleEndianU32(@this, (uint)rawData.Length);
-    @this.Write(rawData, 0, rawData.Length);
-  }
+      encoding ??= Encoding.UTF8;
+      var rawData = encoding.GetBytes(data);
+      _WriteLittleEndianU32(@this, (uint)rawData.Length);
+      @this.Write(rawData, 0, rawData.Length);
+    }
 
-  public static string ReadLengthPrefixedString(this Stream @this, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    public string ReadLengthPrefixedString(Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    encoding ??= Encoding.UTF8;
+      encoding ??= Encoding.UTF8;
 
-    var length = _ReadLittleEndianU32(@this);
-    var buffer = new byte[length];
-    var bytesRead = @this.Read(buffer, 0, (int)length);
-    if (bytesRead != length)
-      throw new EndOfStreamException("Unexpected end of stream while reading length-prefixed string.");
+      var length = _ReadLittleEndianU32(@this);
+      var buffer = new byte[length];
+      var bytesRead = @this.Read(buffer, 0, (int)length);
+      if (bytesRead != length)
+        throw new EndOfStreamException("Unexpected end of stream while reading length-prefixed string.");
 
-    return encoding.GetString(buffer);
-  }
-  
-  public static void WriteZeroTerminatedString(this Stream @this, string data, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-    Against.ArgumentIsNull(data);
-    Against.True(data.Contains('\0'));
+      return encoding.GetString(buffer);
+    }
 
-    encoding ??= Encoding.UTF8;
-    var rawData = encoding.GetBytes(data + '\0');
-    @this.Write(rawData, 0, rawData.Length);
-  }
+    public void WriteZeroTerminatedString(string data, Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
+      Against.ArgumentIsNull(data);
+      Against.True(data.Contains('\0'));
 
-  public static string ReadZeroTerminatedString(this Stream @this, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+      encoding ??= Encoding.UTF8;
+      var rawData = encoding.GetBytes(data + '\0');
+      @this.Write(rawData, 0, rawData.Length);
+    }
 
-    encoding ??= Encoding.UTF8;
-    var @null = encoding.GetBytes("\0");
-    using var buffer = new MemoryStream(_BUFFER_SIZE);
+    public string ReadZeroTerminatedString(Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      encoding ??= Encoding.UTF8;
+      var @null = encoding.GetBytes("\0");
+      using var buffer = new MemoryStream(_BUFFER_SIZE);
     
-    if (encoding.IsSingleByte) {
-      var nullPattern = @null[0];
+      if (encoding.IsSingleByte) {
+        var nullPattern = @null[0];
+        for (;;) {
+          var data = @this.ReadByte();
+          if (data < 0)
+            throw new EndOfStreamException("Unexpected end of stream while reading zero-terminated string.");
+
+          if (data == nullPattern)
+            return buffer.Length == 0 
+                ? string.Empty 
+                : encoding.GetString(buffer.GetBuffer(),0,(int)buffer.Length)
+              ;
+
+          buffer.WriteByte((byte)data);
+        }
+      }
+
+      var nullPatternLength = @null.Length;
       for (;;) {
         var data = @this.ReadByte();
         if (data < 0)
           throw new EndOfStreamException("Unexpected end of stream while reading zero-terminated string.");
 
-        if (data == nullPattern)
-          return buffer.Length == 0 
-            ? string.Empty 
-            : encoding.GetString(buffer.GetBuffer(),0,(int)buffer.Length)
-            ;
-
         buffer.WriteByte((byte)data);
+        var nullPatternOffsetInBuffer = (int)(buffer.Length - nullPatternLength);
+
+        // not enough bytes yet?
+        if (nullPatternOffsetInBuffer < 0)
+          continue;
+      
+        // does the buffer end with the null sequence?
+        if (!@null.SequenceEqual(0, buffer.GetBuffer(), nullPatternOffsetInBuffer, nullPatternLength))
+          continue;
+
+        return nullPatternOffsetInBuffer == 0 
+            ? string.Empty 
+            : encoding.GetString(buffer.GetBuffer(),0, nullPatternOffsetInBuffer)
+          ;
       }
     }
-
-    var nullPatternLength = @null.Length;
-    for (;;) {
-      var data = @this.ReadByte();
-      if (data < 0)
-        throw new EndOfStreamException("Unexpected end of stream while reading zero-terminated string.");
-
-      buffer.WriteByte((byte)data);
-      var nullPatternOffsetInBuffer = (int)(buffer.Length - nullPatternLength);
-
-      // not enough bytes yet?
-      if (nullPatternOffsetInBuffer < 0)
-        continue;
-      
-      // does the buffer end with the null sequence?
-      if (!@null.SequenceEqual(0, buffer.GetBuffer(), nullPatternOffsetInBuffer, nullPatternLength))
-        continue;
-
-      return nullPatternOffsetInBuffer == 0 
-        ? string.Empty 
-        : encoding.GetString(buffer.GetBuffer(),0, nullPatternOffsetInBuffer)
-        ;
-    }
   }
+
+  #endregion
+
+  #region Strings
 
   private class ByteEncoding : Encoding {
 
@@ -1044,155 +1041,157 @@ public static partial class StreamExtensions {
     public override int GetMaxCharCount(int byteCount) => byteCount;
   }
 
-  public static void WriteFixedLengthString(this Stream @this, string data, int length, char padding='\0', Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
-    Against.ArgumentIsNull(data);
-    Against.CountOutOfRange(data.Length,length);
+  extension(Stream @this)
+  {
+    public void WriteFixedLengthString(string data, int length, char padding='\0', Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
+      Against.ArgumentIsNull(data);
+      Against.CountOutOfRange(data.Length,length);
 
-    encoding ??= ByteEncoding.Instance;
+      encoding ??= ByteEncoding.Instance;
     
-    var rawData = encoding.GetBytes(data.PadRight(length,padding));
-    if (rawData.Length != encoding.GetMaxByteCount(length))
-      throw new ArgumentException($"Encoding '{encoding.EncodingName}' is variable-length and cannot be used for fixed-length strings.");
+      var rawData = encoding.GetBytes(data.PadRight(length,padding));
+      if (rawData.Length != encoding.GetMaxByteCount(length))
+        throw new ArgumentException($"Encoding '{encoding.EncodingName}' is variable-length and cannot be used for fixed-length strings.");
 
-    @this.Write(rawData, 0, rawData.Length);
+      @this.Write(rawData, 0, rawData.Length);
+    }
+
+    public string ReadFixedLengthString(int length, char padding = '\0', Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      encoding ??= ByteEncoding.Instance;
+      var buffer = new byte[encoding.GetMaxByteCount(length)];
+
+      var bytesRead = @this.Read(buffer, 0, length);
+      if (bytesRead != length)
+        throw new EndOfStreamException("Unexpected end of stream while reading fixed-length string.");
+
+      return encoding.GetString(buffer).TrimEnd(padding);
+    }
   }
-
-  public static string ReadFixedLengthString(this Stream @this, int length, char padding = '\0', Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    encoding ??= ByteEncoding.Instance;
-    var buffer = new byte[encoding.GetMaxByteCount(length)];
-
-    var bytesRead = @this.Read(buffer, 0, length);
-    if (bytesRead != length)
-      throw new EndOfStreamException("Unexpected end of stream while reading fixed-length string.");
-
-    return encoding.GetString(buffer).TrimEnd(padding);
-  }
-
 
   #endregion
 
   #endregion
 
-  /// <summary>
-  ///   Determines whether the current <see cref="Stream" /> position pointer is at the end of the <see cref="Stream" />.
-  ///   This method is applicable to streams that support seeking and specific <see cref="Stream" /> types like
-  ///   <see cref="NetworkStream" />.
-  ///   For other non-seekable streams, the method throws an <see cref="InvalidOperationException" />, as checking for the
-  ///   end-of-stream
-  ///   without altering the <see cref="Stream" /> state may not be possible.
-  /// </summary>
   /// <param name="this">This <see cref="Stream" />.</param>
-  /// <returns>
-  ///   <see langword="true" /> if the <see cref="Stream" /> position is at the end for seekable streams or if no more data
-  ///   is available in a <see cref="NetworkStream" />;
-  ///   otherwise, <see langword="false" />.
-  /// </returns>
-  /// <exception cref="InvalidOperationException">
-  ///   Thrown when the <see cref="Stream" /> does not support seeking or is not a recognized type (like
-  ///   <see cref="NetworkStream" />) that allows safe EOF checking.
-  /// </exception>
-  /// <remarks>
-  ///   For seekable streams, this method checks if the current position is at or beyond the end of the <see cref="Stream" />
-  ///   .
-  ///   For <see cref="NetworkStream" />, it checks the availability of data to read.
-  ///   For other non-seekable stream types, the caller should ensure an appropriate method to check for the end of the
-  ///   <see cref="Stream" />,
-  ///   as this method will throw an <see cref="InvalidOperationException" />.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsAtEndOfStream(this Stream @this) {
-    Against.ThisIsNull(@this);
+  extension(Stream @this)
+  {
+    /// <summary>
+    ///   Determines whether the current <see cref="Stream" /> position pointer is at the end of the <see cref="Stream" />.
+    ///   This method is applicable to streams that support seeking and specific <see cref="Stream" /> types like
+    ///   <see cref="NetworkStream" />.
+    ///   For other non-seekable streams, the method throws an <see cref="InvalidOperationException" />, as checking for the
+    ///   end-of-stream
+    ///   without altering the <see cref="Stream" /> state may not be possible.
+    /// </summary>
+    /// <returns>
+    ///   <see langword="true" /> if the <see cref="Stream" /> position is at the end for seekable streams or if no more data
+    ///   is available in a <see cref="NetworkStream" />;
+    ///   otherwise, <see langword="false" />.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when the <see cref="Stream" /> does not support seeking or is not a recognized type (like
+    ///   <see cref="NetworkStream" />) that allows safe EOF checking.
+    /// </exception>
+    /// <remarks>
+    ///   For seekable streams, this method checks if the current position is at or beyond the end of the <see cref="Stream" />
+    ///   .
+    ///   For <see cref="NetworkStream" />, it checks the availability of data to read.
+    ///   For other non-seekable stream types, the caller should ensure an appropriate method to check for the end of the
+    ///   <see cref="Stream" />,
+    ///   as this method will throw an <see cref="InvalidOperationException" />.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsAtEndOfStream() {
+      Against.ThisIsNull(@this);
 
-    if (@this.CanSeek)
-      return @this.Position >= @this.Length;
+      if (@this.CanSeek)
+        return @this.Position >= @this.Length;
 
-    if (@this is NetworkStream n)
-      return !n.DataAvailable;
+      if (@this is NetworkStream n)
+        return !n.DataAvailable;
 
-    AlwaysThrow.InvalidOperationException("Stream doesn't support EOF-checking");
-    return true;
-  }
+      AlwaysThrow.InvalidOperationException("Stream doesn't support EOF-checking");
+      return true;
+    }
 
-  /// <summary>
-  ///   Reads all bytes from the starting position of the given <see cref="Stream" /> and returns them as a byte array.
-  /// </summary>
-  /// <param name="this">The <see cref="Stream" /> instance on which the extension method is called.</param>
-  /// <returns>A byte array containing the bytes read from the <see cref="Stream" />.</returns>
-  /// <exception cref="ArgumentOutOfRangeException">
-  ///   Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single
-  ///   array in .NET.
-  /// </exception>
-  /// <remarks>
-  ///   If the <see cref="Stream" /> is not seekable, the bytes are read from the current position.
-  ///   The method reads bytes into a byte array, which has a maximum indexable length of <see cref="int.MaxValue" />
-  ///   (2,147,483,647) elements,
-  ///   roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow
-  ///   of the array index.
-  /// </remarks>
-  /// <example>
-  ///   This example shows how to use the <see cref="ToArray" /> extension method
-  ///   to read all bytes from a file stream and store them in a byte array.
-  ///   <code>
-  /// using System;
-  /// using System.IO;
-  /// 
-  /// class Program
-  /// {
-  ///     static void Main()
-  ///     {
-  ///         using (FileStream fileStream = File.OpenRead("example.txt"))
-  ///         {
-  ///             byte[] fileContents = fileStream.ToArray();
-  ///             // Use fileContents as needed
-  ///         }
-  ///     }
-  /// }
-  /// </code>
-  /// </example>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte[] ToArray(this Stream @this) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
+    /// <summary>
+    ///   Reads all bytes from the starting position of the given <see cref="Stream" /> and returns them as a byte array.
+    /// </summary>
+    /// <returns>A byte array containing the bytes read from the <see cref="Stream" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when the stream's available number of bytes exceeds 2GB, which is the maximum length supported by a single
+    ///   array in .NET.
+    /// </exception>
+    /// <remarks>
+    ///   If the <see cref="Stream" /> is not seekable, the bytes are read from the current position.
+    ///   The method reads bytes into a byte array, which has a maximum indexable length of <see cref="int.MaxValue" />
+    ///   (2,147,483,647) elements,
+    ///   roughly equating to a 2GB size limit. Attempting to read a stream larger than this limit will result in an overflow
+    ///   of the array index.
+    /// </remarks>
+    /// <example>
+    ///   This example shows how to use the <see cref="ToArray" /> extension method
+    ///   to read all bytes from a file stream and store them in a byte array.
+    ///   <code>
+    /// using System;
+    /// using System.IO;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main()
+    ///     {
+    ///         using (FileStream fileStream = File.OpenRead("example.txt"))
+    ///         {
+    ///             byte[] fileContents = fileStream.ToArray();
+    ///             // Use fileContents as needed
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public byte[] ToArray() {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
 
-    if (!@this.CanSeek)
-      return _ReadAllBytesNonSeekable(@this);
+      if (!@this.CanSeek)
+        return _ReadAllBytesNonSeekable(@this);
 
-    @this.Position = 0;
-    return _ReadBytesSeekable(@this, @this.Length);
-  }
+      @this.Position = 0;
+      return _ReadBytesSeekable(@this, @this.Length);
+    }
 
-  /// <summary>
-  ///   Reads all text from the stream..
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="encoding">The encoding.</param>
-  /// <returns>The text from the stream.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static string ReadAllText(this Stream @this, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
+    /// <summary>
+    ///   Reads all text from the stream..
+    /// </summary>
+    /// <param name="encoding">The encoding.</param>
+    /// <returns>The text from the stream.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string ReadAllText(Encoding encoding = null) {
+      Against.ThisIsNull(@this);
 
-    encoding ??= Encoding.Default;
-    return @this.CanRead ? encoding.GetString(@this.ReadAllBytes()) : null;
-  }
+      encoding ??= Encoding.Default;
+      return @this.CanRead ? encoding.GetString(@this.ReadAllBytes()) : null;
+    }
 
-  /// <summary>
-  ///   Writes all text.
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="data">The data.</param>
-  /// <param name="encoding">The encoding.</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void WriteAllText(this Stream @this, string data, Encoding encoding = null) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+    /// <summary>
+    ///   Writes all text.
+    /// </summary>
+    /// <param name="data">The data.</param>
+    /// <param name="encoding">The encoding.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteAllText(string data, Encoding encoding = null) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    encoding ??= Encoding.Default;
-    @this.Write(encoding.GetBytes(data));
+      encoding ??= Encoding.Default;
+      @this.Write(encoding.GetBytes(data));
+    }
   }
 
   /// <summary>
@@ -1253,191 +1252,176 @@ public static partial class StreamExtensions {
     }
   }
 
-  /// <summary>
-  ///   Writes the given structure to the stream.
-  /// </summary>
-  /// <typeparam name="TStruct">The type of the structure.</typeparam>
   /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="value">The value.</param>
-  public static void Write<TStruct>(this Stream @this, TStruct value) where TStruct : struct {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanWrite);
+  extension(Stream @this)
+  {
+    /// <summary>
+    ///   Writes the given structure to the stream.
+    /// </summary>
+    /// <typeparam name="TStruct">The type of the structure.</typeparam>
+    /// <param name="value">The value.</param>
+    public void Write<TStruct>(TStruct value) where TStruct : struct {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanWrite);
 
-    if (typeof(TStruct) == typeof(byte))
-      @this.WriteByte((byte)(object)value);
-    else if (typeof(TStruct) == typeof(bool))
-      @this.WriteByte((bool)(object)value ? (byte)255 : (byte)0);
-    else if (typeof(TStruct) == typeof(sbyte))
-      @this.WriteByte((byte)(sbyte)(object)value);
-    else if (typeof(TStruct) == typeof(ushort))
-      _WriteLittleEndianU16(@this, (ushort)(object)value);
-    else if (typeof(TStruct) == typeof(short))
-      _WriteLittleEndianU16(@this, (ushort)(short)(object)value);
-    else if (typeof(TStruct) == typeof(char))
-      _WriteLittleEndianU16(@this, (char)(object)value);
-    else if (typeof(TStruct) == typeof(uint))
-      _WriteLittleEndianU32(@this, (uint)(object)value);
-    else if (typeof(TStruct) == typeof(int))
-      _WriteLittleEndianU32(@this, (uint)(int)(object)value);
-    else if (typeof(TStruct) == typeof(ulong))
-      _WriteLittleEndianU64(@this, (ulong)(object)value);
-    else if (typeof(TStruct) == typeof(long))
-      _WriteLittleEndianU64(@this, (ulong)(long)(object)value);
-    else if (typeof(TStruct) == typeof(float))
-      _WriteLittleEndianF32(@this, (float)(object)value);
-    else if (typeof(TStruct) == typeof(double))
-      _WriteLittleEndianF64(@this, (double)(object)value);
-    else if (typeof(TStruct) == typeof(decimal))
-      _WriteLittleEndianM128(@this, (decimal)(object)value);
-    else
-      @this.Write(StructToBytes(value));
-    return;
+      if (typeof(TStruct) == typeof(byte))
+        @this.WriteByte((byte)(object)value);
+      else if (typeof(TStruct) == typeof(bool))
+        @this.WriteByte((bool)(object)value ? (byte)255 : (byte)0);
+      else if (typeof(TStruct) == typeof(sbyte))
+        @this.WriteByte((byte)(sbyte)(object)value);
+      else if (typeof(TStruct) == typeof(ushort))
+        _WriteLittleEndianU16(@this, (ushort)(object)value);
+      else if (typeof(TStruct) == typeof(short))
+        _WriteLittleEndianU16(@this, (ushort)(short)(object)value);
+      else if (typeof(TStruct) == typeof(char))
+        _WriteLittleEndianU16(@this, (char)(object)value);
+      else if (typeof(TStruct) == typeof(uint))
+        _WriteLittleEndianU32(@this, (uint)(object)value);
+      else if (typeof(TStruct) == typeof(int))
+        _WriteLittleEndianU32(@this, (uint)(int)(object)value);
+      else if (typeof(TStruct) == typeof(ulong))
+        _WriteLittleEndianU64(@this, (ulong)(object)value);
+      else if (typeof(TStruct) == typeof(long))
+        _WriteLittleEndianU64(@this, (ulong)(long)(object)value);
+      else if (typeof(TStruct) == typeof(float))
+        _WriteLittleEndianF32(@this, (float)(object)value);
+      else if (typeof(TStruct) == typeof(double))
+        _WriteLittleEndianF64(@this, (double)(object)value);
+      else if (typeof(TStruct) == typeof(decimal))
+        _WriteLittleEndianM128(@this, (decimal)(object)value);
+      else
+        @this.Write(StructToBytes(value));
+      return;
 
-    static byte[] StructToBytes(TStruct value) {
-      var size = Marshal.SizeOf(typeof(TStruct));
-      var unmanagedMemory = IntPtr.Zero;
-      try {
-        unmanagedMemory = Marshal.AllocHGlobal(size);
-        Marshal.StructureToPtr(value, unmanagedMemory, false);
-        var result = new byte[size];
-        Marshal.Copy(unmanagedMemory, result, 0, size);
-        return result;
-      } finally {
-        if (unmanagedMemory != IntPtr.Zero)
-          Marshal.FreeHGlobal(unmanagedMemory);
+      static byte[] StructToBytes(TStruct value) {
+        var size = Marshal.SizeOf(typeof(TStruct));
+        var unmanagedMemory = IntPtr.Zero;
+        try {
+          unmanagedMemory = Marshal.AllocHGlobal(size);
+          Marshal.StructureToPtr(value, unmanagedMemory, false);
+          var result = new byte[size];
+          Marshal.Copy(unmanagedMemory, result, 0, size);
+          return result;
+        } finally {
+          if (unmanagedMemory != IntPtr.Zero)
+            Marshal.FreeHGlobal(unmanagedMemory);
+        }
       }
     }
+
+    /// <summary>
+    ///   Read Bytes from a given position with a given SeekOrigin in the given buffer
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    // Note: not thread safe
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadBytes(long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+      Against.False(@this.CanRead);
+
+      _SeekToPositionAndCheck(@this, position, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
+      _ReadBytesToArraySeekable(@this, buffer, 0, buffer.Length);
+    }
+
+    /// <summary>
+    ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns>A awaitable Task representing the operation</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<int> ReadBytesAsync(long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
+      => ReadBytesAsync(@this, position, buffer, 0, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
+
+    /// <summary>
+    ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="offset">The offset in the buffer</param>
+    /// <param name="count">The amount of bytes you want to read</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns>A awaitable Task representing the operation</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public async Task<int> ReadBytesAsync(long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+      _SeekToPositionAndCheck(@this, position, count, seekOrigin);
+      return await @this.ReadAsync(buffer, offset, count).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="token">The Cancellation Token</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns>A awaitable Task representing the operation</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<int> ReadBytesAsync(long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
+      => ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
+
+    /// <summary>
+    ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="offset"></param>
+    /// <param name="count"></param>
+    /// <param name="token">The Cancellation Token</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns>A awaitable Task representing the operation</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public async Task<int> ReadBytesAsync(long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+      token.ThrowIfCancellationRequested();
+      _SeekToPositionAndCheck(@this, position, count, seekOrigin);
+      return await @this.ReadAsync(buffer, offset, count, token).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///   Begins reading Bytes from a given position with a given SeekOrigin in the given buffer
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="callback">The callback you want to get called</param>
+    /// <param name="state">The given State</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns>A IAsyncResult representing the operation</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IAsyncResult BeginReadBytes(long position, byte[] buffer, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin)
+      => BeginReadBytes(@this, position, buffer, 0, buffer.Length, callback, state, seekOrigin);
+
+    /// <summary>
+    ///   Begins reading Bytes from a given position with a given SeekOrigin in the given buffer with an offset
+    /// </summary>
+    /// <param name="position">The position from which you want to read</param>
+    /// <param name="buffer">The buffer where the result is written in</param>
+    /// <param name="offset">The offset in the buffer</param>
+    /// <param name="count">The amount of bytes you want to read</param>
+    /// <param name="callback">The callback you want to get called</param>
+    /// <param name="state">The given State</param>
+    /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IAsyncResult BeginReadBytes(long position, byte[] buffer, int offset, int count, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin) {
+      Against.ThisIsNull(@this);
+      Against.False(@this.CanRead);
+
+      _SeekToPositionAndCheck(@this, position, count, seekOrigin);
+      return @this.BeginRead(buffer, offset, count, callback, state);
+    }
+
+    /// <summary>
+    ///   Ends to read bytes
+    /// </summary>
+    /// <param name="result">The IAsyncResult representing the result of the Begin operation</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EndReadBytes(IAsyncResult result)
+      => @this.EndRead(result);
   }
-
-  /// <summary>
-  ///   Read Bytes from a given position with a given SeekOrigin in the given buffer
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  // Note: not thread safe
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void ReadBytes(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin) {
-    Against.False(@this.CanRead);
-
-    _SeekToPositionAndCheck(@this, position, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
-    _ReadBytesToArraySeekable(@this, buffer, 0, buffer.Length);
-  }
-
-#if SUPPORTS_STREAM_ASYNC
-
-  /// <summary>
-  ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns>A awaitable Task representing the operation</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => ReadBytesAsync(@this, position, buffer, 0, (int)Math.Min(buffer.Length, @this.Length - position), seekOrigin);
-
-  /// <summary>
-  ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="offset">The offset in the buffer</param>
-  /// <param name="count">The amount of bytes you want to read</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns>A awaitable Task representing the operation</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, SeekOrigin seekOrigin = SeekOrigin.Begin) 
-    => Task.Run(
-      () => {
-        _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-        return @this.ReadAsync(buffer, offset, count);
-      }
-    );
-
-  /// <summary>
-  ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="token">The Cancellation Token</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns>A awaitable Task representing the operation</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => ReadBytesAsync(@this, position, buffer, 0, buffer.Length, token, seekOrigin);
-
-  /// <summary>
-  ///   Reads async Bytes from a given position with a given SeekOrigin in the given buffer with an offset
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="offset"></param>
-  /// <param name="count"></param>
-  /// <param name="token">The Cancellation Token</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns>A awaitable Task representing the operation</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Task<int> ReadBytesAsync(this Stream @this, long position, byte[] buffer, int offset, int count, CancellationToken token, SeekOrigin seekOrigin = SeekOrigin.Begin) 
-    => Task.Run(
-      () => {
-        _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-        return @this.ReadAsync(buffer, offset, count, token);
-      },
-      token
-    );
   
-#endif
-
-  /// <summary>
-  ///   Begins reading Bytes from a given position with a given SeekOrigin in the given buffer
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="callback">The callback you want to get called</param>
-  /// <param name="state">The given State</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns>A IAsyncResult representing the operation</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IAsyncResult BeginReadBytes(this Stream @this, long position, byte[] buffer, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin)
-    => BeginReadBytes(@this, position, buffer, 0, buffer.Length, callback, state, seekOrigin);
-
-  /// <summary>
-  ///   Begins reading Bytes from a given position with a given SeekOrigin in the given buffer with an offset
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="position">The position from which you want to read</param>
-  /// <param name="buffer">The buffer where the result is written in</param>
-  /// <param name="offset">The offset in the buffer</param>
-  /// <param name="count">The amount of bytes you want to read</param>
-  /// <param name="callback">The callback you want to get called</param>
-  /// <param name="state">The given State</param>
-  /// <param name="seekOrigin">The SeekOrigin from where did you want to start</param>
-  /// <returns></returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IAsyncResult BeginReadBytes(this Stream @this, long position, byte[] buffer, int offset, int count, AsyncCallback callback, object state = null, SeekOrigin seekOrigin = SeekOrigin.Begin) {
-    Against.ThisIsNull(@this);
-    Against.False(@this.CanRead);
-
-    _SeekToPositionAndCheck(@this, position, count, seekOrigin);
-    return @this.BeginRead(buffer, offset, count, callback, state);
-  }
-
-  /// <summary>
-  ///   Ends to read bytes
-  /// </summary>
-  /// <param name="this">This <see cref="Stream" />.</param>
-  /// <param name="result">The IAsyncResult representing the result of the Begin operation</param>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void EndReadBytes(this Stream @this, IAsyncResult result)
-    => @this.EndRead(result);
-
   /// <summary>
   ///   Seeks to the gives position and checks if the position is valid
   /// </summary>
