@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
@@ -31,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Memory layout: [B, G, R] (BGR order for compatibility with GDI+).
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 3)]
-public readonly struct Bgr888 : IColorSpace3B<Bgr888> {
+public readonly struct Bgr888 : IColorSpace3B<Bgr888>, IStorageSpace, IEquatable<Bgr888> {
 
   /// <summary>Reciprocal of 255 for fast byte-to-normalized-float conversion.</summary>
   public const float ByteToNormalized = ColorConstants.ByteToFloat;
@@ -99,4 +100,21 @@ public readonly struct Bgr888 : IColorSpace3B<Bgr888> {
       (byte)(c1.B * invFactor + c2.B * factor + 0.5f)
     );
   }
+
+  #region IEquatable<Bgr888> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Bgr888 other) => this.R == other.R && this.G == other.G && this.B == other.B;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Bgr888 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() => (this.R << 16) | (this.G << 8) | this.B;
+
+  public static bool operator ==(Bgr888 left, Bgr888 right) => left.Equals(right);
+  public static bool operator !=(Bgr888 left, Bgr888 right) => !left.Equals(right);
+
+  #endregion
 }

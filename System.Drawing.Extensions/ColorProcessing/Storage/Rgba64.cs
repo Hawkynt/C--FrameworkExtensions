@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
@@ -32,7 +33,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Used for high dynamic range and professional imaging with alpha.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 2, Size = 8)]
-public readonly struct Rgba64 : IColorSpace4B<Rgba64> {
+public readonly struct Rgba64 : IColorSpace4B<Rgba64>, IStorageSpace, IEquatable<Rgba64> {
 
   /// <summary>Reciprocal of 65535 for fast ushort-to-normalized-float conversion.</summary>
   public const float UShortToNormalized = ColorConstants.UShortToFloat;
@@ -132,4 +133,31 @@ public readonly struct Rgba64 : IColorSpace4B<Rgba64> {
     (ushort)((c1.BValue + c2.BValue) >> 1),
     (ushort)((c1.AValue + c2.AValue) >> 1)
   );
+
+  #region IEquatable<Rgba64> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Rgba64 other)
+    => this.RValue == other.RValue && this.GValue == other.GValue && this.BValue == other.BValue && this.AValue == other.AValue;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Rgba64 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() {
+    unchecked {
+      var hash = 17;
+      hash = hash * 31 + this.RValue;
+      hash = hash * 31 + this.GValue;
+      hash = hash * 31 + this.BValue;
+      hash = hash * 31 + this.AValue;
+      return hash;
+    }
+  }
+
+  public static bool operator ==(Rgba64 left, Rgba64 right) => left.Equals(right);
+  public static bool operator !=(Rgba64 left, Rgba64 right) => !left.Equals(right);
+
+  #endregion
 }

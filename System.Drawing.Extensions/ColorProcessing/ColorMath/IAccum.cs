@@ -22,24 +22,42 @@ namespace Hawkynt.ColorProcessing.ColorMath;
 /// <summary>
 /// Provides weighted accumulation for resampling operations.
 /// </summary>
-/// <typeparam name="T">The color type to accumulate.</typeparam>
+/// <typeparam name="TAccum">The accumulator type (mutable, accumulates values).</typeparam>
+/// <typeparam name="TColor">The color type being accumulated.</typeparam>
 /// <remarks>
+/// <para>
 /// Used in convolution-based scaling algorithms (Lanczos, Bicubic, etc.)
 /// where multiple source pixels are weighted and summed.
+/// </para>
+/// <para>
+/// The accumulator is mutable - <see cref="AddMul"/> modifies the accumulator in place
+/// for efficiency. Call <see cref="Result"/> to finalize and get the output color.
+/// </para>
+/// <para>
+/// For float-based color types (e.g., LinearRgbaF), the type can be its own accumulator
+/// where <typeparamref name="TAccum"/> equals <typeparamref name="TColor"/>.
+/// For byte-based types (e.g., Bgra8888), a separate float-precision accumulator
+/// prevents rounding errors during accumulation.
+/// </para>
 /// </remarks>
-public interface IAccum<T> where T : unmanaged {
-
-#if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
-  /// <summary>Gets the zero/identity value for accumulation.</summary>
-  static abstract T Zero { get; }
+public interface IAccum<TAccum, TColor>
+  where TAccum : unmanaged, IAccum<TAccum, TColor>
+  where TColor : unmanaged, IColorSpace {
 
   /// <summary>
-  /// Adds a weighted color to an accumulator: acc + x * weight.
+  /// Adds a weighted color to this accumulator: acc += color * weight.
   /// </summary>
-  /// <param name="acc">The current accumulator value.</param>
-  /// <param name="x">The color to add.</param>
+  /// <param name="color">The color to add.</param>
   /// <param name="weight">The weight to apply.</param>
-  /// <returns>The updated accumulator.</returns>
-  static abstract T AddMul(in T acc, in T x, float weight);
-#endif
+  /// <remarks>This method mutates the accumulator in place.</remarks>
+  void AddMul(in TColor color, float weight);
+
+  /// <summary>
+  /// Finalizes the accumulation and returns the result color.
+  /// </summary>
+  /// <remarks>
+  /// For byte-based accumulators, this is where clamping and rounding occurs.
+  /// For float-based self-accumulators, this may simply return the accumulator value.
+  /// </remarks>
+  TColor Result { get; }
 }

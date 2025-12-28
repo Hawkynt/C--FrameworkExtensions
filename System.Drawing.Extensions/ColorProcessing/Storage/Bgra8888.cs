@@ -33,7 +33,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Memory layout (little-endian): [B, G, R, A] matching ARGB packed format.
 /// </remarks>
 [StructLayout(LayoutKind.Explicit, Size = 4)]
-public readonly struct Bgra8888 : IColorSpace4B<Bgra8888> {
+public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace, IEquatable<Bgra8888> {
 
   /// <summary>Reciprocal of 255 for fast byte-to-normalized-float conversion.</summary>
   public const float ByteToNormalized = ColorConstants.ByteToFloat;
@@ -231,6 +231,23 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888> {
       (byte)(c00.A * fx1 * fy1 + c10.A * fx * fy1 + c01.A * fx1 * fy + c11.A * fx * fy + 0.5f)
     );
   }
+
+  #endregion
+
+  #region IEquatable<Bgra8888> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Bgra8888 other) => this._packed == other._packed;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Bgra8888 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() => (int)this._packed;
+
+  public static bool operator ==(Bgra8888 left, Bgra8888 right) => left.Equals(right);
+  public static bool operator !=(Bgra8888 left, Bgra8888 right) => !left.Equals(right);
 
   #endregion
 

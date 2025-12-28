@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -30,7 +31,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Bit layout: [A:1][R:5][G:5][B:5] where A is 0 (transparent) or 1 (opaque).
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Argb1555 : IColorSpace4B<Argb1555> {
+public readonly struct Argb1555 : IColorSpace4B<Argb1555>, IStorageSpace, IEquatable<Argb1555> {
 
   private readonly ushort _packed;
 
@@ -117,4 +118,21 @@ public readonly struct Argb1555 : IColorSpace4B<Argb1555> {
     (byte)((c1.B + c2.B) >> 1),
     (byte)((c1.A + c2.A) >> 1)
   );
+
+  #region IEquatable<Argb1555> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Argb1555 other) => this._packed == other._packed;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Argb1555 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() => this._packed;
+
+  public static bool operator ==(Argb1555 left, Argb1555 right) => left.Equals(right);
+  public static bool operator !=(Argb1555 left, Argb1555 right) => !left.Equals(right);
+
+  #endregion
 }

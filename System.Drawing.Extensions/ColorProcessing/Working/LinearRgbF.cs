@@ -37,7 +37,7 @@ namespace Hawkynt.ColorProcessing.Working;
 /// <param name="B">Blue component (typically 0.0-1.0).</param>
 [StructLayout(LayoutKind.Sequential, Pack = 4, Size = 12)]
 [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-public readonly record struct LinearRgbF(float R, float G, float B) : IColorSpace3F<LinearRgbF>, IAccum<LinearRgbF>, IErrorOps<LinearRgbF> {
+public readonly record struct LinearRgbF(float R, float G, float B) : IColorSpace3F<LinearRgbF>, IErrorOps<LinearRgbF> {
 
   #region IColorSpace3F Implementation
 
@@ -59,19 +59,6 @@ public readonly record struct LinearRgbF(float R, float G, float B) : IColorSpac
   /// <summary>Creates a new instance from component values.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LinearRgbF Create(float c1, float c2, float c3) => new(c1, c2, c3);
-
-  #endregion
-
-  #region IAccum Implementation
-
-  public static LinearRgbF Zero => default;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static LinearRgbF AddMul(in LinearRgbF acc, in LinearRgbF x, float weight) => new(
-    acc.R + x.R * weight,
-    acc.G + x.G * weight,
-    acc.B + x.B * weight
-  );
 
   #endregion
 

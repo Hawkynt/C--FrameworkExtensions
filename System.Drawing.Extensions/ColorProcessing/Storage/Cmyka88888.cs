@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
@@ -32,7 +33,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Used for print-oriented color workflows.
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 5)]
-public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888> {
+public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888>, IStorageSpace, IEquatable<Cmyka88888> {
 
   /// <summary>Reciprocal of 255 for fast byte-to-normalized-float conversion.</summary>
   public const float ByteToNormalized = ColorConstants.ByteToFloat;
@@ -122,4 +123,32 @@ public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888> {
       (byte)(c1.A * invFactor + c2.A * factor + 0.5f)
     );
   }
+
+  #region IEquatable<Cmyka88888> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Cmyka88888 other)
+    => this.C == other.C && this.M == other.M && this.Y == other.Y && this.K == other.K && this.A == other.A;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Cmyka88888 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() {
+    unchecked {
+      var hash = 17;
+      hash = hash * 31 + this.C;
+      hash = hash * 31 + this.M;
+      hash = hash * 31 + this.Y;
+      hash = hash * 31 + this.K;
+      hash = hash * 31 + this.A;
+      return hash;
+    }
+  }
+
+  public static bool operator ==(Cmyka88888 left, Cmyka88888 right) => left.Equals(right);
+  public static bool operator !=(Cmyka88888 left, Cmyka88888 right) => !left.Equals(right);
+
+  #endregion
 }

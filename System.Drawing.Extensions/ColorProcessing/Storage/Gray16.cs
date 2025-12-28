@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
@@ -31,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Storage;
 /// Single 16-bit luminance value (0-65535).
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 2)]
-public readonly struct Gray16 {
+public readonly struct Gray16 : IStorageSpace, IEquatable<Gray16> {
 
   /// <summary>Reciprocal of 65535 for fast 16-bit-to-normalized-float conversion.</summary>
   public const float ValueToNormalized = 1f / 65535f;
@@ -93,4 +94,21 @@ public readonly struct Gray16 {
     var invFactor = 1f - factor;
     return new((ushort)(c1.Value * invFactor + c2.Value * factor + 0.5f));
   }
+
+  #region IEquatable<Gray16> Implementation
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Equals(Gray16 other) => this.Value == other.Value;
+
+  /// <inheritdoc />
+  public override bool Equals(object? obj) => obj is Gray16 other && this.Equals(other);
+
+  /// <inheritdoc />
+  public override int GetHashCode() => this.Value;
+
+  public static bool operator ==(Gray16 left, Gray16 right) => left.Equals(right);
+  public static bool operator !=(Gray16 left, Gray16 right) => !left.Equals(right);
+
+  #endregion
 }

@@ -17,25 +17,21 @@
 
 #endregion
 
-namespace Hawkynt.ColorProcessing.Codecs;
+namespace Hawkynt.ColorProcessing.Scalers;
 
 /// <summary>
-/// Decodes a storage pixel format to a working color space.
+/// Base interface for all image scaling algorithms.
 /// </summary>
-/// <typeparam name="TPixel">The storage pixel type (e.g., Rgba32).</typeparam>
-/// <typeparam name="TWork">The working color type (e.g., LinearRgbaF).</typeparam>
 /// <remarks>
-/// Implementations are stateless structs for zero-cost abstraction via generic dispatch.
-/// Example: <c>Srgb32ToLinearRgbaF</c> decodes sRGB bytes to linear float with gamma expansion.
+/// Provides the fundamental <see cref="Scale"/> property that defines
+/// the scaling factor. Extended by <see cref="IPixelScaler"/> for
+/// discrete pixel-art scalers and <see cref="IResampler"/> for
+/// continuous-scale resamplers.
 /// </remarks>
-public interface IDecode<TPixel, out TWork>
-  where TPixel : unmanaged, IStorageSpace
-  where TWork : unmanaged, IColorSpace {
+public interface IScalerInfo {
 
   /// <summary>
-  /// Decodes a storage pixel to working space.
+  /// Gets the scaling factor for this scaler instance.
   /// </summary>
-  /// <param name="pixel">The storage pixel to decode.</param>
-  /// <returns>The working space color.</returns>
-  TWork Decode(in TPixel pixel);
+  ScaleFactor Scale { get; }
 }
