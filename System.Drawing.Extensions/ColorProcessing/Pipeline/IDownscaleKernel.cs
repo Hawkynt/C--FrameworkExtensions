@@ -18,14 +18,12 @@
 #endregion
 
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.ColorMath;
 
 namespace Hawkynt.ColorProcessing.Pipeline;
 
 /// <summary>
 /// Represents a downscaling kernel that uses the 5x5 NeighborWindow.
 /// </summary>
-/// <typeparam name="TAccum">The accumulator type for weighted operations.</typeparam>
 /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
 /// <typeparam name="TKey">The key color type (for pattern matching compatibility).</typeparam>
 /// <typeparam name="TPixel">The storage pixel type.</typeparam>
@@ -40,12 +38,11 @@ namespace Hawkynt.ColorProcessing.Pipeline;
 /// downscaling kernels read multiple source pixels and return one output pixel.
 /// </para>
 /// <para>
-/// Uses IAccum&lt;TAccum, TWork&gt; for weighted accumulation with proper precision.
+/// Kernel implementations handle accumulation internally using IAccum with proper precision.
 /// </para>
 /// </remarks>
-public interface IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
-  where TAccum : unmanaged, IAccum<TAccum, TWork>
-  where TWork : unmanaged, IColorSpace
+public interface IDownscaleKernel<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
   where TPixel : unmanaged, IStorageSpace
   where TEncode : struct, IEncode<TWork, TPixel> {
@@ -74,7 +71,7 @@ public interface IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
   /// For 5:1 downscaling, reads M2M2 through P2P2 (25 pixels, full window).
   /// </para>
   /// <para>
-  /// Uses TAccum.AddMul() for weighted accumulation, and TAccum.Result to finalize.
+  /// Implementations use internal accumulation for weighted averaging.
   /// </para>
   /// </remarks>
   TPixel Average(

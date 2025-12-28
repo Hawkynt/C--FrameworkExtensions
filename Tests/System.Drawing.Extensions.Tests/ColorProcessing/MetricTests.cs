@@ -67,7 +67,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void EuclideanRgb_SameColor_ReturnsZero() {
-    var metric = new EuclideanRgb();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
     Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
   }
@@ -75,7 +75,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void EuclideanRgb_BlackToWhite_ReturnsMaxDistance() {
-    var metric = new EuclideanRgb();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
     var expected = (float)Math.Sqrt(3f); // sqrt(1^2 + 1^2 + 1^2)
     Assert.That(distance, Is.EqualTo(expected).Within(Tolerance));
@@ -84,7 +84,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void EuclideanRgb_IsSymmetric() {
-    var metric = new EuclideanRgb();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
     Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
@@ -93,7 +93,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void EuclideanRgb_TriangleInequality() {
-    var metric = new EuclideanRgb();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distanceAB = metric.Distance(Black, Gray);
     var distanceBC = metric.Distance(Gray, White);
     var distanceAC = metric.Distance(Black, White);
@@ -103,7 +103,7 @@ public class MetricTests {
   [Test]
   [Category("EdgeCase")]
   public void EuclideanRgb_PrimaryColors_KnownDistance() {
-    var metric = new EuclideanRgb();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Green);
     var expected = (float)Math.Sqrt(2f); // sqrt(1^2 + 1^2)
     Assert.That(distance, Is.EqualTo(expected).Within(Tolerance));
@@ -116,7 +116,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Euclidean3_LinearRgbF_SameColor_ReturnsZero() {
-    var metric = new Euclidean3<LinearRgbF>();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
     Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
   }
@@ -124,7 +124,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Euclidean3_LinearRgbF_IsSymmetric() {
-    var metric = new Euclidean3<LinearRgbF>();
+    var metric = new Euclidean3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
     Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
@@ -133,7 +133,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Euclidean3_LabF_SameColor_ReturnsZero() {
-    var metric = new Euclidean3<LabF>();
+    var metric = new Euclidean3F<LabF>();
     var distance = metric.Distance(LabRed, LabRed);
     Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
   }
@@ -141,7 +141,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Euclidean3_LabF_IsSymmetric() {
-    var metric = new Euclidean3<LabF>();
+    var metric = new Euclidean3F<LabF>();
     var distance1 = metric.Distance(LabRed, LabGreen);
     var distance2 = metric.Distance(LabGreen, LabRed);
     Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
@@ -154,7 +154,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Manhattan3_LinearRgbF_SameColor_ReturnsZero() {
-    var metric = new Manhattan3<LinearRgbF>();
+    var metric = new Manhattan3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
     Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
   }
@@ -162,7 +162,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Manhattan3_LinearRgbF_BlackToWhite_ReturnsSum() {
-    var metric = new Manhattan3<LinearRgbF>();
+    var metric = new Manhattan3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
     Assert.That(distance, Is.EqualTo(3f).Within(Tolerance)); // |1| + |1| + |1|
   }
@@ -170,7 +170,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Manhattan3_LinearRgbF_IsSymmetric() {
-    var metric = new Manhattan3<LinearRgbF>();
+    var metric = new Manhattan3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
     Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
@@ -183,7 +183,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Chebyshev3_LinearRgbF_SameColor_ReturnsZero() {
-    var metric = new Chebyshev3<LinearRgbF>();
+    var metric = new Chebyshev3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
     Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
   }
@@ -191,7 +191,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Chebyshev3_LinearRgbF_BlackToWhite_ReturnsMax() {
-    var metric = new Chebyshev3<LinearRgbF>();
+    var metric = new Chebyshev3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
     Assert.That(distance, Is.EqualTo(1f).Within(Tolerance)); // max(|1|, |1|, |1|)
   }
@@ -199,7 +199,7 @@ public class MetricTests {
   [Test]
   [Category("HappyPath")]
   public void Chebyshev3_LinearRgbF_IsSymmetric() {
-    var metric = new Chebyshev3<LinearRgbF>();
+    var metric = new Chebyshev3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
     Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
@@ -208,7 +208,7 @@ public class MetricTests {
   [Test]
   [Category("EdgeCase")]
   public void Chebyshev3_LinearRgbF_ReturnsMaxDifference() {
-    var metric = new Chebyshev3<LinearRgbF>();
+    var metric = new Chebyshev3F<LinearRgbF>();
     var a = new LinearRgbF(0.5f, 0.2f, 0.8f);
     var b = new LinearRgbF(0.3f, 0.9f, 0.6f);
     var distance = metric.Distance(a, b);
@@ -444,10 +444,10 @@ public class MetricTests {
   public void AllMetrics_SameColor_ReturnZero() {
     var color = MixedColor1;
 
-    Assert.That(new EuclideanRgb().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Euclidean3<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Manhattan3<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Chebyshev3<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That(new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That(new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That(new Manhattan3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That(new Chebyshev3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
     Assert.That(new CompuPhase().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
   }
 
@@ -471,10 +471,10 @@ public class MetricTests {
     var closer = new LinearRgbF(0.45f, 0.45f, 0.45f);
     var farther = new LinearRgbF(0.1f, 0.9f, 0.2f);
 
-    var euclidean = new EuclideanRgb();
+    var euclidean = new Euclidean3F<LinearRgbF>();
     var compuPhase = new CompuPhase();
-    var manhattan = new Manhattan3<LinearRgbF>();
-    var chebyshev = new Chebyshev3<LinearRgbF>();
+    var manhattan = new Manhattan3F<LinearRgbF>();
+    var chebyshev = new Chebyshev3F<LinearRgbF>();
 
     Assert.That(euclidean.Distance(reference, closer), Is.LessThan(euclidean.Distance(reference, farther)));
     Assert.That(compuPhase.Distance(reference, closer), Is.LessThan(compuPhase.Distance(reference, farther)));

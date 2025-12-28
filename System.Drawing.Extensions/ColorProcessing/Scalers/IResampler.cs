@@ -17,6 +17,8 @@
 
 #endregion
 
+using Hawkynt.ColorProcessing.Codecs;
+
 namespace Hawkynt.ColorProcessing.Scalers;
 
 /// <summary>
@@ -48,4 +50,32 @@ public interface IResampler : IScalerInfo {
   /// Gets the vertical scaling factor.
   /// </summary>
   float ScaleY { get; }
+
+  /// <summary>
+  /// Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch.
+  /// </summary>
+  /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
+  /// <typeparam name="TKey">The key color type (for pattern matching compatibility).</typeparam>
+  /// <typeparam name="TPixel">The storage pixel type.</typeparam>
+  /// <typeparam name="TDecode">The decoder type (TPixel → TWork).</typeparam>
+  /// <typeparam name="TProject">The projector type (TWork → TKey).</typeparam>
+  /// <typeparam name="TEncode">The encoder type (TWork → TPixel).</typeparam>
+  /// <typeparam name="TResult">The return type of the callback.</typeparam>
+  /// <param name="callback">The callback to invoke with the concrete kernel.</param>
+  /// <returns>The result from the callback.</returns>
+  /// <remarks>
+  /// <para>
+  /// This method enables zero-overhead dispatch by passing the concrete kernel type
+  /// to the callback, which can then use struct-constrained generic methods.
+  /// Interface dispatch occurs once per call, not per pixel.
+  /// </para>
+  /// </remarks>
+  TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>;
 }

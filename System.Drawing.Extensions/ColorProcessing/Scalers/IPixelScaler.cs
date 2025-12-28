@@ -17,6 +17,11 @@
 
 #endregion
 
+using Hawkynt.ColorProcessing;
+using Hawkynt.ColorProcessing.Codecs;
+using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Metrics;
+
 namespace Hawkynt.ColorProcessing.Scalers;
 
 /// <summary>
@@ -37,4 +42,39 @@ namespace Hawkynt.ColorProcessing.Scalers;
 /// </list>
 /// </para>
 /// </remarks>
-public interface IPixelScaler : IScalerInfo;
+public interface IPixelScaler : IScalerInfo {
+
+  /// <summary>
+  /// Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch.
+  /// </summary>
+  /// <typeparam name="TWork">The working color type (for interpolation).</typeparam>
+  /// <typeparam name="TKey">The key color type (for pattern matching).</typeparam>
+  /// <typeparam name="TPixel">The storage pixel type.</typeparam>
+  /// <typeparam name="TDistance">The color distance metric type.</typeparam>
+  /// <typeparam name="TEquality">The color equality comparer type.</typeparam>
+  /// <typeparam name="TLerp">The color interpolation type.</typeparam>
+  /// <typeparam name="TEncode">The encoder type (TWork → TPixel).</typeparam>
+  /// <typeparam name="TResult">The return type of the callback.</typeparam>
+  /// <param name="callback">The callback to invoke with the concrete kernel.</param>
+  /// <param name="equality">The equality comparer instance.</param>
+  /// <param name="lerp">The lerp instance.</param>
+  /// <returns>The result from the callback.</returns>
+  /// <remarks>
+  /// <para>
+  /// This method enables zero-overhead dispatch by passing the concrete kernel type
+  /// to the callback, which can then use struct-constrained generic methods.
+  /// Interface dispatch occurs once per call, not per pixel.
+  /// </para>
+  /// </remarks>
+  TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
+    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
+    TEquality equality = default,
+    TLerp lerp = default)
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDistance : struct, IColorMetric<TKey>
+    where TEquality : struct, IColorEquality<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TEncode : struct, IEncode<TWork, TPixel>;
+}

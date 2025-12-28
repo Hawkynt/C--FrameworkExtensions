@@ -18,14 +18,12 @@
 #endregion
 
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.ColorMath;
 
 namespace Hawkynt.ColorProcessing.Pipeline;
 
 /// <summary>
 /// Represents a resampling kernel that uses arbitrary pixel access via NeighborFrame.
 /// </summary>
-/// <typeparam name="TAccum">The accumulator type for weighted operations.</typeparam>
 /// <typeparam name="TPixel">The storage pixel type.</typeparam>
 /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
 /// <typeparam name="TKey">The key color type (for NeighborFrame compatibility).</typeparam>
@@ -40,13 +38,12 @@ namespace Hawkynt.ColorProcessing.Pipeline;
 /// with configurable kernel sizes (Lanczos-2, Lanczos-3, Lanczos-5, etc.).
 /// </para>
 /// <para>
-/// Uses IAccum&lt;TAccum, TWork&gt; for weighted accumulation with proper precision.
+/// Kernel implementations handle accumulation internally using IAccum with proper precision.
 /// </para>
 /// </remarks>
-public interface IResampleKernel<TAccum, TPixel, TWork, TKey, TDecode, TProject, TEncode>
-  where TAccum : unmanaged, IAccum<TAccum, TWork>
+public interface IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
-  where TWork : unmanaged, IColorSpace
+  where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
   where TDecode : struct, IDecode<TPixel, TWork>
   where TProject : struct, IProject<TWork, TKey>
@@ -86,7 +83,7 @@ public interface IResampleKernel<TAccum, TPixel, TWork, TKey, TDecode, TProject,
   /// using the frame's indexer: frame[srcX + dx, srcY + dy].
   /// </para>
   /// <para>
-  /// Uses TAccum.AddMul() for weighted accumulation, and TAccum.Result to finalize.
+  /// Implementations use internal accumulation for weighted averaging.
   /// </para>
   /// </remarks>
   unsafe void Resample(

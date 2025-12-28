@@ -147,12 +147,16 @@ public readonly struct Color5FLerp<TWork> : ILerp<TWork> where TWork : unmanaged
 }
 
 /// <summary>
-/// Provides linear interpolation for LinearRgbaF colors.
+/// A no-op lerp implementation for scalers that don't use interpolation.
 /// </summary>
-public readonly struct LinearRgbaFLerp : ILerp<LinearRgbaF> {
+/// <typeparam name="TWork">The working color type.</typeparam>
+/// <remarks>
+/// Returns the first color unchanged. Used as a placeholder type parameter
+/// for scalers that don't perform color interpolation.
+/// </remarks>
+public readonly struct NoLerp<TWork> : ILerp<TWork> where TWork : unmanaged {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public LinearRgbaF Lerp(in LinearRgbaF a, in LinearRgbaF b, float t)
-    => LinearRgbaF.Lerp(a, b, t);
+  public TWork Lerp(in TWork a, in TWork b, float t) => a;
 }

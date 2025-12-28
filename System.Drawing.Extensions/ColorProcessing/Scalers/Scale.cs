@@ -19,16 +19,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Pipeline;
-using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Storage;
-using Hawkynt.ColorProcessing.Working;
-using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Scalers;
@@ -45,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Scalers;
 /// </remarks>
 [ScalerInfo("Scale", Author = "Andrea Mazzoleni", Year = 2001, Url = "https://www.scale2x.it/algorithm",
   Description = "Edge-aware 2x/3x scaling from the AdvanceMAME project", Category = ScalerCategory.PixelArt)]
-public readonly struct Scale : IPixelScaler, IScalerDispatch {
+public readonly struct Scale : IPixelScaler {
 
   public enum Mode {
     X2,X3
@@ -105,49 +101,29 @@ public readonly struct Scale : IPixelScaler, IScalerDispatch {
   #endregion
 
   /// <inheritdoc />
-  Bitmap IScalerDispatch.Apply(Bitmap source, ScalerQuality quality)
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
+    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
+    TEquality equality = default,
+    TLerp lerp = default)
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDistance : struct, IColorMetric<TKey>
+    where TEquality : struct, IColorEquality<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TEncode : struct, IEncode<TWork, TPixel>
     => this._scaleFactor switch {
-      2 => _ApplyScale2x(source, quality),
-      3 => _ApplyScale3x(source, quality),
-      _ => throw new NotSupportedException($"Scale factor {this._scaleFactor} is not supported.")
+      2 => callback.Invoke(new Scale2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp)),
+      3 => callback.Invoke(new Scale3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp)),
+      _ => throw new InvalidOperationException($"Invalid scale factor: {this._scaleFactor}")
     };
 
-  private static Bitmap _ApplyScale2x(Bitmap source, ScalerQuality quality)
-    => quality switch {
-      ScalerQuality.Fast => BitmapScalerExtensions.Upscale<
-        Bgra8888, Bgra8888,
-        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-        Scale2xKernel<Bgra8888, Bgra8888, Bgra8888, ExactEquality<Bgra8888>, Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>>
-      >(source, new()),
-      ScalerQuality.HighQuality => BitmapScalerExtensions.Upscale<
-        LinearRgbaF, OklabF,
-        Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
-        Scale2xKernel<LinearRgbaF, OklabF, Bgra8888, ThresholdEquality<OklabF, Euclidean3<OklabF>>, LinearRgbaFLerp, LinearRgbaFToSrgb32>
-      >(source, new(new(0.02f))),
-      _ => throw new NotSupportedException($"Quality {quality} is not supported for Scale2X.")
-    };
+}
 
-  private static Bitmap _ApplyScale3x(Bitmap source, ScalerQuality quality)
-    => quality switch {
-      ScalerQuality.Fast => BitmapScalerExtensions.Upscale<
-        Bgra8888, Bgra8888,
-        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-        Scale3xKernel<Bgra8888, Bgra8888, Bgra8888, ExactEquality<Bgra8888>, Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>>
-      >(source, new()),
-      ScalerQuality.HighQuality => BitmapScalerExtensions.Upscale<
-        LinearRgbaF, OklabF,
-        Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
-        Scale3xKernel<LinearRgbaF, OklabF, Bgra8888, ThresholdEquality<OklabF, Euclidean3<OklabF>>, LinearRgbaFLerp, LinearRgbaFToSrgb32>
-      >(source, new(new(0.02f))),
-      _ => throw new NotSupportedException($"Quality {quality} is not supported for Scale3X.")
-    };
-
-  #region Nested Kernel Types
-
-  /// <summary>
-  /// Internal kernel for Scale2X algorithm.
-  /// </summary>
-  private readonly struct Scale2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default) : IScaler<TWork, TKey, TPixel, TEncode>
+/// <summary>
+/// Internal kernel for Scale2X algorithm.
+/// </summary>
+file readonly struct Scale2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default) : IScaler<TWork, TKey, TPixel, TEncode>
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -218,10 +194,10 @@ public readonly struct Scale : IPixelScaler, IScalerDispatch {
     }
   }
 
-  /// <summary>
-  /// Internal kernel for Scale3X algorithm.
-  /// </summary>
-  private readonly struct Scale3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default) : IScaler<TWork, TKey, TPixel, TEncode>
+/// <summary>
+/// Internal kernel for Scale3X algorithm.
+/// </summary>
+file readonly struct Scale3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default) : IScaler<TWork, TKey, TPixel, TEncode>
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -344,7 +320,4 @@ public readonly struct Scale : IPixelScaler, IScalerDispatch {
       row2[1] = encoder.Encode(e7);
       row2[2] = encoder.Encode(e8);
     }
-  }
-
-  #endregion
 }

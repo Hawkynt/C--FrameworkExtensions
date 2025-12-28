@@ -20,8 +20,11 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
+
+// For IColorSpace4B
+using Hawkynt.ColorProcessing;
+using static Hawkynt.ColorProcessing.Constants.ColorConstants;
 
 namespace Hawkynt.ColorProcessing.Metrics.Rgb;
 
@@ -41,11 +44,7 @@ public readonly struct CompuPhase : IColorMetric<LinearRgbF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float Distance(in LinearRgbF a, in LinearRgbF b)
-#if SUPPORTS_MATHF
     => MathF.Sqrt(CompuPhaseSquared._Calculate(a, b));
-#else
-    => (float)SysMath.Sqrt(CompuPhaseSquared._Calculate(a, b));
-#endif
 }
 
 /// <summary>
@@ -72,4 +71,56 @@ public readonly struct CompuPhaseSquared : IColorMetric<LinearRgbF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float Distance(in LinearRgbF a, in LinearRgbF b) => _Calculate(a, b);
+}
+
+/// <summary>
+/// CompuPhase perceptual color distance metric for 4-component byte color spaces.
+/// </summary>
+/// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
+/// <remarks>
+/// Uses red-weighted distance formula for better perceptual matching.
+/// C1=R, C2=G, C3=B ordering is expected per IColorSpace4B convention.
+/// Reference: https://www.compuphase.com/cmetric.htm
+/// </remarks>
+public readonly struct CompuPhase4<TKey> : IColorMetric<TKey>
+  where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  /// <summary>
+  /// Calculates the CompuPhase perceptual distance between two colors.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public float Distance(in TKey a, in TKey b)
+    => MathF.Sqrt(CompuPhaseSquared4<TKey>._Calculate(a, b));
+}
+
+/// <summary>
+/// Squared CompuPhase perceptual color distance metric for 4-component byte color spaces.
+/// </summary>
+/// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
+/// <remarks>
+/// Omits the square root for faster comparisons when only relative distances matter.
+/// </remarks>
+public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>
+  where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  /// <summary>
+  /// Calculates the squared CompuPhase distance between two colors.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static float _Calculate(in TKey a, in TKey b) {
+    // C1=R, C2=G, C3=B per IColorSpace4B convention
+    var rMean = 0.5f * (a.C1 + b.C1) * ByteToFloat;
+    var dR = (a.C1 - b.C1) * ByteToFloat;
+    var dG = (a.C2 - b.C2) * ByteToFloat;
+    var dB = (a.C3 - b.C3) * ByteToFloat;
+
+    var weightR = 2f + rMean;
+    var weightG = 4f;
+    var weightB = 3f - rMean;
+
+    return (weightR * dR * dR + weightG * dG * dG + weightB * dB * dB) / 9f;
+  }
 }

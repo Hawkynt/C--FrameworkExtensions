@@ -25,8 +25,11 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Metrics.Rgb;
 using Hawkynt.ColorProcessing.Pipeline;
 using Hawkynt.ColorProcessing.Scalers;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
 using Hawkynt.Drawing.Lockers;
@@ -51,7 +54,7 @@ public static class BitmapScalerExtensions {
     /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Upscale<TScaler>(TScaler scaler, ScalerQuality quality = ScalerQuality.Fast)
-      where TScaler : struct, IScalerInfo
+      where TScaler : struct, IPixelScaler
       => _UpscaleGeneric(@this, scaler, quality);
 
     /// <summary>
@@ -62,7 +65,7 @@ public static class BitmapScalerExtensions {
     /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Upscale<TScaler>(ScalerQuality quality = ScalerQuality.Fast)
-      where TScaler : struct, IScalerInfo
+      where TScaler : struct, IPixelScaler
       => _UpscaleGeneric(@this, default(TScaler), quality);
 
     /// <summary>
@@ -90,7 +93,7 @@ public static class BitmapScalerExtensions {
       int targetHeight,
       TScaler scaler = default,
       ScalerQuality quality = ScalerQuality.Fast
-    ) where TScaler : struct, IScalerInfo
+    ) where TScaler : struct, IPixelScaler
       => _UpscaleToTarget(@this, scaler, targetWidth, targetHeight, quality);
 
     /// <summary>
@@ -106,27 +109,214 @@ public static class BitmapScalerExtensions {
       int targetWidth,
       int targetHeight,
       ScalerQuality quality = ScalerQuality.Fast
-    ) where TScaler : struct, IScalerInfo
+    ) where TScaler : struct, IPixelScaler
       => _UpscaleToTarget(@this, default(TScaler), targetWidth, targetHeight, quality);
+
+    /// <summary>
+    /// Upscales a bitmap with full control over color pipeline and comparison types.
+    /// </summary>
+    /// <typeparam name="TScaler">The scaler type.</typeparam>
+    /// <typeparam name="TWork">The working color space for interpolation.</typeparam>
+    /// <typeparam name="TKey">The key color space for pattern matching.</typeparam>
+    /// <typeparam name="TDecode">The decoder type (Bgra8888 → TWork).</typeparam>
+    /// <typeparam name="TProject">The projector type (TWork → TKey).</typeparam>
+    /// <typeparam name="TEncode">The encoder type (TWork → Bgra8888).</typeparam>
+    /// <typeparam name="TMetric">The color distance metric type.</typeparam>
+    /// <typeparam name="TEquality">The color equality comparer type.</typeparam>
+    /// <typeparam name="TLerp">The color interpolation type.</typeparam>
+    /// <param name="scaler">The scaler instance.</param>
+    /// <param name="equality">The equality comparer instance.</param>
+    /// <param name="lerp">The interpolation instance.</param>
+    /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap Upscale<TScaler, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(
+      TScaler scaler,
+      TEquality equality = default,
+      TLerp lerp = default)
+      where TScaler : struct, IPixelScaler
+      where TWork : unmanaged, IColorSpace
+      where TKey : unmanaged, IColorSpace
+      where TDecode : struct, IDecode<Bgra8888, TWork>
+      where TProject : struct, IProject<TWork, TKey>
+      where TEncode : struct, IEncode<TWork, Bgra8888>
+      where TMetric : struct, IColorMetric<TKey>
+      where TEquality : struct, IColorEquality<TKey>
+      where TLerp : struct, ILerp<TWork> {
+      var callback = new UpscaleCallback<TWork, TKey, TDecode, TProject, TEncode>(@this);
+      return scaler.InvokeKernel<TWork, TKey, Bgra8888, TMetric, TEquality, TLerp, TEncode, Bitmap>(
+        callback, equality, lerp);
+    }
+
+    /// <summary>
+    /// Upscales a bitmap with a custom metric, using default equality/lerp.
+    /// Uses Bgra8888 identity pipeline (no color space conversion).
+    /// </summary>
+    /// <typeparam name="TScaler">The scaler type.</typeparam>
+    /// <typeparam name="TMetric">The color distance metric type for Bgra8888.</typeparam>
+    /// <param name="scaler">The scaler instance.</param>
+    /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap UpscaleWithMetric<TScaler, TMetric>(
+      TScaler scaler)
+      where TScaler : struct, IPixelScaler
+      where TMetric : struct, IColorMetric<Bgra8888>
+      => _UpscaleWithMetric<TScaler, TMetric>(@this, scaler);
+
+    /// <summary>
+    /// Upscales a bitmap with a custom equality comparer, using default metric/lerp.
+    /// Uses Bgra8888 identity pipeline (no color space conversion).
+    /// </summary>
+    /// <typeparam name="TScaler">The scaler type.</typeparam>
+    /// <typeparam name="TEquality">The color equality comparer type for Bgra8888.</typeparam>
+    /// <param name="scaler">The scaler instance.</param>
+    /// <param name="equality">The equality comparer instance.</param>
+    /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap UpscaleWithEquality<TScaler, TEquality>(
+      TScaler scaler,
+      TEquality equality)
+      where TScaler : struct, IPixelScaler
+      where TEquality : struct, IColorEquality<Bgra8888>
+      => _UpscaleWithEquality<TScaler, TEquality>(@this, scaler, equality);
+
+    /// <summary>
+    /// Upscales a bitmap with a custom lerp, using default metric/equality.
+    /// Uses Bgra8888 identity pipeline (no color space conversion).
+    /// </summary>
+    /// <typeparam name="TScaler">The scaler type.</typeparam>
+    /// <typeparam name="TLerp">The color interpolation type for Bgra8888.</typeparam>
+    /// <param name="scaler">The scaler instance.</param>
+    /// <param name="lerp">The interpolation instance.</param>
+    /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap UpscaleWithLerp<TScaler, TLerp>(
+      TScaler scaler,
+      TLerp lerp)
+      where TScaler : struct, IPixelScaler
+      where TLerp : struct, ILerp<Bgra8888>
+      => _UpscaleWithLerp<TScaler, TLerp>(@this, scaler, lerp);
   }
 
   /// <summary>
-  /// Generic scaling path - dispatches to the scaler's Apply method.
+  /// Generic scaling path - dispatches to the appropriate quality pipeline.
   /// JIT devirtualizes the call for struct-constrained generics.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleGeneric<TScaler>(Bitmap source, TScaler scaler, ScalerQuality quality)
-    where TScaler : struct, IScalerInfo
+    where TScaler : struct, IPixelScaler
     => _ApplyScalerOnce(source, scaler, quality);
 
   /// <summary>
-  /// Applies a single scaling pass by delegating to the scaler's dispatch method.
-  /// Uses runtime cast to internal interface to keep public API clean.
+  /// Applies a single scaling pass using the InvokeKernel callback pattern.
+  /// Interface dispatch occurs once per bitmap; concrete kernel flows to hot path.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _ApplyScalerOnce<TScaler>(Bitmap source, TScaler scaler, ScalerQuality quality)
-    where TScaler : struct, IScalerInfo
-    => ((IScalerDispatch)(object)scaler).Apply(source, quality);
+    where TScaler : struct, IPixelScaler
+    => quality switch {
+      ScalerQuality.Fast => _UpscaleFast(source, scaler),
+      ScalerQuality.HighQuality => _UpscaleHighQuality(source, scaler),
+      _ => throw new NotSupportedException($"Quality {quality} is not supported.")
+    };
+
+  /// <summary>
+  /// Fast quality path using identity codecs (Bgra8888 throughout).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _UpscaleFast<TScaler>(Bitmap source, TScaler scaler)
+    where TScaler : struct, IPixelScaler {
+    var callback = new UpscaleCallback<
+      Bgra8888, Bgra8888,
+      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
+    return scaler.InvokeKernel<
+      Bgra8888, Bgra8888, Bgra8888,
+      CompuPhase4<Bgra8888>, ExactEquality<Bgra8888>,
+      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+  }
+
+  /// <summary>
+  /// High quality path using linear RGB working space and Oklab perceptual space.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _UpscaleHighQuality<TScaler>(Bitmap source, TScaler scaler)
+    where TScaler : struct, IPixelScaler {
+    var callback = new UpscaleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source);
+    return scaler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Euclidean3F<OklabF>, ThresholdEquality<OklabF, Euclidean3F<OklabF>>,
+      Color4FLerp<LinearRgbaF>, LinearRgbaFToSrgb32, Bitmap>(callback, new(0.02f));
+  }
+
+  #region Convenience Overload Helpers
+
+  /// <summary>
+  /// Metric-only path: uses Bgra8888 identity codecs, ExactEquality, Color4BLerp.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _UpscaleWithMetric<TScaler, TMetric>(Bitmap source, TScaler scaler)
+    where TScaler : struct, IPixelScaler
+    where TMetric : struct, IColorMetric<Bgra8888> {
+    var callback = new UpscaleCallback<
+      Bgra8888, Bgra8888,
+      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
+    return scaler.InvokeKernel<
+      Bgra8888, Bgra8888, Bgra8888,
+      TMetric, ExactEquality<Bgra8888>,
+      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+  }
+
+  /// <summary>
+  /// Equality-only path: uses Bgra8888 identity codecs, CompuPhase4, Color4BLerp.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _UpscaleWithEquality<TScaler, TEquality>(Bitmap source, TScaler scaler, TEquality equality)
+    where TScaler : struct, IPixelScaler
+    where TEquality : struct, IColorEquality<Bgra8888> {
+    var callback = new UpscaleCallback<
+      Bgra8888, Bgra8888,
+      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
+    return scaler.InvokeKernel<
+      Bgra8888, Bgra8888, Bgra8888,
+      CompuPhase4<Bgra8888>, TEquality,
+      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback, equality);
+  }
+
+  /// <summary>
+  /// Lerp-only path: uses Bgra8888 identity codecs, CompuPhase4, ExactEquality.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _UpscaleWithLerp<TScaler, TLerp>(Bitmap source, TScaler scaler, TLerp lerp)
+    where TScaler : struct, IPixelScaler
+    where TLerp : struct, ILerp<Bgra8888> {
+    var callback = new UpscaleCallback<
+      Bgra8888, Bgra8888,
+      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
+    return scaler.InvokeKernel<
+      Bgra8888, Bgra8888, Bgra8888,
+      CompuPhase4<Bgra8888>, ExactEquality<Bgra8888>,
+      TLerp, IdentityEncode<Bgra8888>, Bitmap>(callback, default, lerp);
+  }
+
+  #endregion
+
+  /// <summary>
+  /// Callback that receives a concrete kernel type and executes the upscale pipeline.
+  /// Enables struct-constrained dispatch without per-pixel virtual calls.
+  /// </summary>
+  private sealed class UpscaleCallback<TWork, TKey, TDecode, TProject, TEncode>(Bitmap source)
+    : IKernelCallback<TWork, TKey, Bgra8888, TEncode, Bitmap>
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888> {
+
+    public Bitmap Invoke<TKernel>(TKernel kernel)
+      where TKernel : struct, IScaler<TWork, TKey, Bgra8888, TEncode>
+      => Upscale<TWork, TKey, TDecode, TProject, TEncode, TKernel>(source, kernel);
+  }
 
   /// <summary>
   /// Upscales to a target resolution by repeated scaler application and optional downsampling.
@@ -138,7 +328,7 @@ public static class BitmapScalerExtensions {
     int targetWidth,
     int targetHeight,
     ScalerQuality quality
-  ) where TScaler : struct, IScalerInfo {
+  ) where TScaler : struct, IPixelScaler {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
     
@@ -222,7 +412,7 @@ public static class BitmapScalerExtensions {
     var srcFrame = srcLocker.AsFrame();
     var dstFrame = dstLocker.AsFrame();
 
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels)
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
     fixed (Bgra8888* dstPtr = dstFrame.Pixels)
       ScalerPipeline.ExecuteParallel<
         Bgra8888, TWork, TKey,
@@ -252,18 +442,17 @@ public static class BitmapScalerExtensions {
   /// <remarks>
   /// <para>
   /// The kernel uses NeighborWindow for fixed-ratio downscaling (max 5:1).
-  /// Uses IAccum&lt;TAccum, TWork&gt; for weighted accumulation.
+  /// Uses IColorSpace4F for internal accumulation.
   /// </para>
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap Downscale<TAccum, TWork, TKey, TDecode, TProject, TEncode, TKernel>(Bitmap source, TKernel kernel)
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
+  internal static unsafe Bitmap Downscale<TWork, TKey, TDecode, TProject, TEncode, TKernel>(Bitmap source, TKernel kernel)
+    where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<Bgra8888, TWork>
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, Bgra8888>
-    where TKernel : struct, IDownscaleKernel<TAccum, TWork, TKey, Bgra8888, TEncode> {
+    where TKernel : struct, IDownscaleKernel<TWork, TKey, Bgra8888, TEncode> {
     var ratioX = kernel.RatioX;
     var ratioY = kernel.RatioY;
     var destWidth = source.Width / ratioX;
@@ -280,10 +469,10 @@ public static class BitmapScalerExtensions {
     var srcFrame = srcLocker.AsFrame();
     var dstFrame = dstLocker.AsFrame();
 
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels)
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
     fixed (Bgra8888* dstPtr = dstFrame.Pixels)
       ScalerPipeline.ExecuteDownscaleParallel<
-        TAccum, Bgra8888, TWork, TKey,
+        Bgra8888, TWork, TKey,
         TDecode, TProject, TEncode,
         TKernel
       >(
@@ -296,234 +485,8 @@ public static class BitmapScalerExtensions {
   }
 
   /// <summary>
-  /// Decodes a bitmap to a Frame in working color space.
-  /// </summary>
-  /// <typeparam name="TWork">The working color type.</typeparam>
-  /// <typeparam name="TDecode">The decoder type (Bgra8888 → TWork).</typeparam>
-  /// <param name="source">The source bitmap.</param>
-  /// <param name="decoder">The decoder instance.</param>
-  /// <returns>A new frame containing the decoded pixel data.</returns>
-  /// <remarks>
-  /// Use this method to convert a bitmap to working space for multi-pass
-  /// scaling operations. The frame should be disposed when no longer needed.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe PooledFrame<TWork> BitmapToFrame<TWork, TDecode>(Bitmap source, TDecode decoder = default)
-    where TWork : unmanaged, IColorSpace
-    where TDecode : struct, IDecode<Bgra8888, TWork> {
-    var result = new PooledFrame<TWork>(source.Width, source.Height);
-
-    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
-    var srcFrame = srcLocker.AsFrame();
-
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels) {
-      using var dstPinned = result.Pin();
-      var dstPtr = dstPinned.Pointer;
-      var srcStride = srcFrame.Stride;
-      var dstStride = result.Stride;
-      var width = srcFrame.Width;
-      var height = srcFrame.Height;
-
-      for (var y = 0; y < height; ++y) {
-        var srcRow = srcPtr + y * srcStride;
-        var dstRow = dstPtr + y * dstStride;
-
-        for (var x = 0; x < width; ++x)
-          dstRow[x] = decoder.Decode(srcRow[x]);
-      }
-    }
-
-    return result;
-  }
-
-  /// <summary>
-  /// Encodes a Frame from working color space to a bitmap.
-  /// </summary>
-  /// <typeparam name="TWork">The working color type.</typeparam>
-  /// <typeparam name="TEncode">The encoder type (TWork → Bgra8888).</typeparam>
-  /// <param name="source">The source frame.</param>
-  /// <param name="encoder">The encoder instance.</param>
-  /// <returns>A new bitmap containing the encoded pixel data.</returns>
-  /// <remarks>
-  /// Use this method to convert a working-space frame back to a bitmap
-  /// after multi-pass scaling operations.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap FrameToBitmap<TWork, TEncode>(PooledFrame<TWork> source, TEncode encoder = default)
-    where TWork : unmanaged, IColorSpace
-    where TEncode : struct, IEncode<TWork, Bgra8888> {
-    var result = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
-
-    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
-    var dstFrame = dstLocker.AsFrame();
-
-    fixed (Bgra8888* dstPtr = dstFrame.Pixels) {
-      using var srcPinned = source.Pin();
-      var srcPtr = srcPinned.Pointer;
-      var srcStride = source.Stride;
-      var dstStride = dstFrame.Stride;
-      var width = source.Width;
-      var height = source.Height;
-
-      // TODO: parallelize, unroll loop, jump-table to tail, etc.
-      for (var y = 0; y < height; ++y) {
-        var srcRow = srcPtr + y * srcStride;
-        var dstRow = dstPtr + y * dstStride;
-
-        for (var x = 0; x < width; ++x)
-          dstRow[x] = encoder.Encode(srcRow[x]);
-      }
-    }
-
-    return result;
-  }
-
-  #region PooledFrame Overloads
-
-  /// <summary>
-  /// Decodes a bitmap to a PooledFrame in working color space.
-  /// </summary>
-  /// <typeparam name="TWork">The working color type.</typeparam>
-  /// <typeparam name="TDecode">The decoder type (Bgra8888 → TWork).</typeparam>
-  /// <param name="source">The source bitmap.</param>
-  /// <param name="decoder">The decoder instance.</param>
-  /// <returns>A new pooled frame containing the decoded pixel data.</returns>
-  /// <remarks>
-  /// Use this method to convert a bitmap to working space for multi-pass
-  /// scaling operations. The pooled frame should be disposed when no longer
-  /// needed to return the buffer to the pool.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe PooledFrame<TWork> BitmapToPooledFrame<TWork, TDecode>(Bitmap source, TDecode decoder = default)
-    where TWork : unmanaged, IColorSpace
-    where TDecode : struct, IDecode<Bgra8888, TWork> {
-    var result = new PooledFrame<TWork>(source.Width, source.Height);
-
-    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
-    var srcFrame = srcLocker.AsFrame();
-
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels) {
-      using var dstPin = result.Pin();
-      var dstPtr = dstPin.Pointer;
-      var srcStride = srcFrame.Stride;
-      var dstStride = result.Stride;
-      var width = srcFrame.Width;
-      var height = srcFrame.Height;
-
-      // TODO: parallelize, unroll loop, jump-table to tail, etc.
-      for (var y = 0; y < height; ++y) {
-        var srcRow = srcPtr + y * srcStride;
-        var dstRow = dstPtr + y * dstStride;
-
-        for (var x = 0; x < width; ++x)
-          dstRow[x] = decoder.Decode(srcRow[x]);
-      }
-    }
-
-    return result;
-  }
-
-  /// <summary>
-  /// Encodes a PooledFrame from working color space to a bitmap.
-  /// </summary>
-  /// <typeparam name="TWork">The working color type.</typeparam>
-  /// <typeparam name="TEncode">The encoder type (TWork → Bgra8888).</typeparam>
-  /// <param name="source">The source pooled frame.</param>
-  /// <param name="encoder">The encoder instance.</param>
-  /// <returns>A new bitmap containing the encoded pixel data.</returns>
-  /// <remarks>
-  /// Use this method to convert a working-space pooled frame back to a bitmap
-  /// after multi-pass scaling operations.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap PooledFrameToBitmap<TWork, TEncode>(ref PooledFrame<TWork> source, TEncode encoder = default)
-    where TWork : unmanaged, IColorSpace
-    where TEncode : struct, IEncode<TWork, Bgra8888> {
-    var result = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
-
-    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
-    var dstFrame = dstLocker.AsFrame();
-
-    fixed (Bgra8888* dstPtr = dstFrame.Pixels) {
-      using var srcPin = source.Pin();
-      var srcPtr = srcPin.Pointer;
-      var srcStride = source.Stride;
-      var dstStride = dstFrame.Stride;
-      var width = source.Width;
-      var height = source.Height;
-
-      for (var y = 0; y < height; ++y) {
-        var srcRow = srcPtr + y * srcStride;
-        var dstRow = dstPtr + y * dstStride;
-
-        for (var x = 0; x < width; ++x)
-          dstRow[x] = encoder.Encode(srcRow[x]);
-      }
-    }
-
-    return result;
-  }
-
-  /// <summary>
-  /// Upscales a bitmap using pooled memory for better memory efficiency.
-  /// </summary>
-  /// <typeparam name="TWork">The working color type.</typeparam>
-  /// <typeparam name="TKey">The key color type.</typeparam>
-  /// <typeparam name="TDecode">The decoder type.</typeparam>
-  /// <typeparam name="TProject">The projector type.</typeparam>
-  /// <typeparam name="TEncode">The encoder type.</typeparam>
-  /// <typeparam name="TScaler">The scaler kernel type.</typeparam>
-  /// <param name="source">The source bitmap.</param>
-  /// <param name="scaler">The scaler kernel instance.</param>
-  /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
-  /// <remarks>
-  /// This method uses ArrayPool-backed frames with scoped pinning for better
-  /// memory efficiency compared to <see cref="Upscale{TWork,TKey,TDecode,TProject,TEncode,TScaler}"/>.
-  /// </remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap UpscalePooled<TWork, TKey, TDecode, TProject, TEncode, TScaler>(Bitmap source, TScaler scaler)
-    where TWork : unmanaged, IColorSpace
-    where TKey : unmanaged, IColorSpace
-    where TDecode : struct, IDecode<Bgra8888, TWork>
-    where TProject : struct, IProject<TWork, TKey>
-    where TEncode : struct, IEncode<TWork, Bgra8888>
-    where TScaler : struct, IScaler<TWork, TKey, Bgra8888, TEncode> {
-    var scaleX = scaler.ScaleX;
-    var scaleY = scaler.ScaleY;
-    var destWidth = source.Width * scaleX;
-    var destHeight = source.Height * scaleY;
-    var result = new Bitmap(destWidth, destHeight, PixelFormat.Format32bppArgb);
-
-    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
-    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
-
-    var srcFrame = srcLocker.AsFrame();
-    var dstFrame = dstLocker.AsFrame();
-
-    // Use the existing pointer-based parallel execution since bitmap data is already pinned by the locker
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels)
-    fixed (Bgra8888* dstPtr = dstFrame.Pixels)
-      ScalerPipeline.ExecuteParallel<
-        Bgra8888, TWork, TKey,
-        TDecode, TProject, TEncode,
-        TScaler
-      >(
-        srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride,
-        dstPtr, dstFrame.Stride,
-        scaler
-      );
-
-    return result;
-  }
-
-  #endregion
-
-#if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
-
-  /// <summary>
   /// Resamples a bitmap using a kernel with arbitrary pixel access.
   /// </summary>
-  /// <typeparam name="TAccum">The accumulator type for weighted averaging.</typeparam>
   /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
   /// <typeparam name="TKey">The key color type (for NeighborFrame compatibility).</typeparam>
   /// <typeparam name="TDecode">The decoder type (Bgra8888 → TWork).</typeparam>
@@ -540,18 +503,17 @@ public static class BitmapScalerExtensions {
   /// This enables Lanczos, Bicubic, and other filter-based algorithms.
   /// </para>
   /// <para>
-  /// Uses IAccum&lt;TAccum, TWork&gt; for weighted accumulation.
+  /// Uses IColorSpace4F for internal accumulation.
   /// </para>
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap Resample<TAccum, TWork, TKey, TDecode, TProject, TEncode, TKernel>(Bitmap source, TKernel kernel)
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
+  internal static unsafe Bitmap Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(Bitmap source, TKernel kernel)
+    where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<Bgra8888, TWork>
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, Bgra8888>
-    where TKernel : struct, IResampleKernel<TAccum, Bgra8888, TWork, TKey, TDecode, TProject, TEncode> {
+    where TKernel : struct, IResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode> {
     var scaleX = kernel.ScaleX;
     var scaleY = kernel.ScaleY;
     var destWidth = source.Width * scaleX;
@@ -564,10 +526,10 @@ public static class BitmapScalerExtensions {
     var srcFrame = srcLocker.AsFrame();
     var dstFrame = dstLocker.AsFrame();
 
-    fixed (Bgra8888* srcPtr = srcFrame.Pixels)
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
     fixed (Bgra8888* dstPtr = dstFrame.Pixels)
       ScalerPipeline.ExecuteResampleParallel<
-        TAccum, Bgra8888, TWork, TKey,
+        Bgra8888, TWork, TKey,
         TDecode, TProject, TEncode,
         TKernel
       >(
@@ -578,7 +540,5 @@ public static class BitmapScalerExtensions {
 
     return result;
   }
-
-#endif
 
 }

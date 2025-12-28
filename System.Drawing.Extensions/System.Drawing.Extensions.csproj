@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <PackageId>FrameworkExtensions.System.Drawing</PackageId>
     <Version>1.0.0</Version>

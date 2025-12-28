@@ -18,16 +18,12 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Pipeline;
-using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Storage;
-using Hawkynt.ColorProcessing.Working;
-using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Scalers;
@@ -45,26 +41,24 @@ namespace Hawkynt.ColorProcessing.Scalers;
 /// </remarks>
 [ScalerInfo("2xSaI", Author = "Derek Liauw Kie Fa", Year = 1999,
   Description = "Scale and Interpolation - advanced diagonal edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
+public readonly struct Sai2x : IPixelScaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);
 
   /// <inheritdoc />
-  Bitmap IScalerDispatch.Apply(Bitmap source, ScalerQuality quality)
-    => quality switch {
-      ScalerQuality.Fast => BitmapScalerExtensions.Upscale<
-        Bgra8888, Bgra8888,
-        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-        Sai2xKernel<Bgra8888, Bgra8888, Bgra8888, ExactEquality<Bgra8888>, Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>>
-      >(source, new()),
-      ScalerQuality.HighQuality => BitmapScalerExtensions.Upscale<
-        LinearRgbaF, OklabF,
-        Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
-        Sai2xKernel<LinearRgbaF, OklabF, Bgra8888, ThresholdEquality<OklabF, Euclidean3<OklabF>>, LinearRgbaFLerp, LinearRgbaFToSrgb32>
-      >(source, new(new(0.02f))),
-      _ => throw new System.NotSupportedException($"Quality {quality} is not supported for 2xSaI.")
-    };
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
+    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
+    TEquality equality = default,
+    TLerp lerp = default)
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDistance : struct, IColorMetric<TKey>
+    where TEquality : struct, IColorEquality<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new Sai2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp));
 
   /// <summary>
   /// Gets the list of scale factors supported by 2xSaI.
@@ -92,29 +86,28 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
   /// Gets the default 2xSaI configuration.
   /// </summary>
   public static Sai2x Default => new();
+}
 
-  #region Nested Kernel Types
-
-  /// <summary>
-  /// Internal kernel for 2xSaI (Scale and Interpolation) algorithm.
-  /// </summary>
-  /// <remarks>
-  /// 2xSaI uses a 4x4 neighborhood for analysis:
-  ///
-  /// C0 C1 C2 D3     (row -1)
-  /// C3 C4 C5 D4     (row 0, center row)
-  /// C6 C7 C8 D5     (row +1)
-  /// D0 D1 D2        (row +2)
-  ///
-  /// Output 2x2 block:
-  /// E00 E01
-  /// E10 E11
-  ///
-  /// Originally by Derek Liauw Kie Fa, uses complex edge detection
-  /// with comparison functions to determine pixel relationships.
-  /// </remarks>
-  private readonly struct Sai2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default)
-    : IScaler<TWork, TKey, TPixel, TEncode>
+/// <summary>
+/// Internal kernel for 2xSaI (Scale and Interpolation) algorithm.
+/// </summary>
+/// <remarks>
+/// 2xSaI uses a 4x4 neighborhood for analysis:
+///
+/// C0 C1 C2 D3     (row -1)
+/// C3 C4 C5 D4     (row 0, center row)
+/// C6 C7 C8 D5     (row +1)
+/// D0 D1 D2        (row +2)
+///
+/// Output 2x2 block:
+/// E00 E01
+/// E10 E11
+///
+/// Originally by Derek Liauw Kie Fa, uses complex edge detection
+/// with comparison functions to determine pixel relationships.
+/// </remarks>
+file readonly struct Sai2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default)
+  : IScaler<TWork, TKey, TPixel, TEncode>
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -138,20 +131,20 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
     ) {
       // Get the 4x4 source neighborhood
       var c0 = window.M1M1; // top-left
-      var c1 = window.M1P0; // top
-      var c2 = window.M1P1; // top-right
-      var d3 = window.M1P2; // top far-right
-      var c3 = window.P0M1; // left
+      var c1 = window.P0M1; // top
+      var c2 = window.P1M1; // top-right
+      var d3 = window.P2M1; // top far-right
+      var c3 = window.M1P0; // left
       var c4 = window.P0P0; // center
-      var c5 = window.P0P1; // right
-      var d4 = window.P0P2; // far-right
-      var c6 = window.P1M1; // bottom-left
-      var c7 = window.P1P0; // bottom
+      var c5 = window.P1P0; // right
+      var d4 = window.P2P0; // far-right
+      var c6 = window.M1P1; // bottom-left
+      var c7 = window.P0P1; // bottom
       var c8 = window.P1P1; // bottom-right
-      var d5 = window.P1P2; // bottom far-right
-      var d0 = window.P2M1; // far-bottom left
-      var d1 = window.P2P0; // far-bottom
-      var d2 = window.P2P1; // far-bottom right
+      var d5 = window.P2P1; // bottom far-right
+      var d0 = window.M1P2; // far-bottom left
+      var d1 = window.P0P2; // far-bottom
+      var d2 = window.P1P2; // far-bottom right
 
       var c4Work = c4.Work;
 
@@ -229,10 +222,10 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
         // When c4≈c8 and c5≈c7, the blends are similar if c4≈c5 (all four pixels similar)
         if (!equality.Equals(c4.Key, c5.Key)) {
           var conc2D = 0;
-          conc2D += this._Conc2D(c4.Key, c8.Key, c5.Key, c7.Key, c3.Key, c1.Key);
-          conc2D -= this._Conc2D(c5.Key, c7.Key, c4.Key, c8.Key, d4.Key, c2.Key);
-          conc2D -= this._Conc2D(c5.Key, c7.Key, c4.Key, c8.Key, c6.Key, d1.Key);
-          conc2D += this._Conc2D(c4.Key, c8.Key, c5.Key, c7.Key, d5.Key, d2.Key);
+          conc2D += this._Conc2D(c4.Key, c8.Key, c5.Key, c7.Key);
+          conc2D -= this._Conc2D(c5.Key, c7.Key, c4.Key, c8.Key);
+          conc2D -= this._Conc2D(c5.Key, c7.Key, c4.Key, c8.Key);
+          conc2D += this._Conc2D(c4.Key, c8.Key, c5.Key, c7.Key);
 
           if (conc2D < 0)
             e11 = c57;
@@ -245,7 +238,7 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
 
       } else {
         // Neither diagonal matches clearly - bilinear-ish fallback
-        e11 = this._Lerp4(c4.Work, c5.Work, c7.Work, c8.Work);
+        e11 = lerp.Lerp(c4.Work, c5.Work, c7.Work, c8.Work);
 
         // E01 logic
         var c4Like7 = equality.Equals(c4.Key, c7.Key);
@@ -260,7 +253,7 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
         if (c4Like7 && c4Like2 && c5NotLike1 && c5LikeD3) {
           // Keep e01 = c4
         } else if (c5Like1 && c5Like8 && c4NotLike2 && c4Like0) {
-          e01 = this._Lerp3(c5.Work, c1.Work, c8.Work);
+          e01 = lerp.Lerp(c5.Work, c1.Work, c8.Work);
         } else {
           e01 = lerp.Lerp(c4Work, c5.Work);
         }
@@ -277,7 +270,7 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
         if (c4Like5 && c4Like6 && c3NotLike7 && c7LikeD0) {
           // Keep e10 = c4
         } else if (c7Like3 && c7Like8 && c4NotLike6 && c4Like0) {
-          e10 = this._Lerp3(c7.Work, c3.Work, c8.Work);
+          e10 = lerp.Lerp(c7.Work, c3.Work, c8.Work);
         } else {
           e10 = lerp.Lerp(c4Work, c7.Work);
         }
@@ -296,7 +289,7 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
     /// Computes concurrency value for diagonal detection.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int _Conc2D(TKey c00, TKey c01, TKey c10, TKey c11, TKey test0, TKey test1) {
+    private int _Conc2D(TKey c00, TKey c01, TKey c10, TKey c11) {
       var result = 0;
 
       var acLike = equality.Equals(c00, c10);
@@ -315,25 +308,4 @@ public readonly struct Sai2x : IPixelScaler, IScalerDispatch {
       return result;
     }
 
-    /// <summary>
-    /// Blends three colors equally.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TWork _Lerp3(in TWork a, in TWork b, in TWork c) {
-      var ab = lerp.Lerp(a, b, 0.5f);
-      return lerp.Lerp(ab, c, 1f / 3f);
-    }
-
-    /// <summary>
-    /// Blends four colors equally.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private TWork _Lerp4(in TWork a, in TWork b, in TWork c, in TWork d) {
-      var ab = lerp.Lerp(a, b, 0.5f);
-      var cd = lerp.Lerp(c, d, 0.5f);
-      return lerp.Lerp(ab, cd, 0.5f);
-    }
-  }
-
-  #endregion
 }

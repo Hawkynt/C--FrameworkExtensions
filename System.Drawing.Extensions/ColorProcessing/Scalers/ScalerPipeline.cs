@@ -22,11 +22,8 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Pipeline;
 using MethodImplOptions = Utilities.MethodImplOptions;
-
-#pragma warning disable CA1043 // this is correct for type constraints
 
 namespace Hawkynt.ColorProcessing.Scalers;
 
@@ -38,7 +35,6 @@ public static class ScalerPipeline {
   /// <summary>
   /// Executes a downscaling kernel on source pixel data, using parallel processing for large images.
   /// </summary>
-  /// <typeparam name="TAccum">The accumulator type for weighted operations.</typeparam>
   /// <typeparam name="TPixel">The storage pixel type.</typeparam>
   /// <typeparam name="TWork">The working color type (for averaging calculations).</typeparam>
   /// <typeparam name="TKey">The key color type (for pattern matching compatibility).</typeparam>
@@ -65,13 +61,9 @@ public static class ScalerPipeline {
   /// Unlike pixel-art upscalers that iterate each source pixel, downscalers iterate
   /// source pixels in steps of RatioX/RatioY, producing one output pixel per step.
   /// </para>
-  /// <para>
-  /// The kernel receives a NeighborWindow centered at the top-left of each source block
-  /// and uses IAccum&lt;TAccum, TWork&gt; for weighted accumulation.
-  /// </para>
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void ExecuteDownscaleParallel<TAccum, TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+  public static unsafe void ExecuteDownscaleParallel<TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
     TPixel* sourcePtr,
     int sourceWidth,
     int sourceHeight,
@@ -87,14 +79,13 @@ public static class ScalerPipeline {
     OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
     OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
   )
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
     where TPixel : unmanaged, IStorageSpace
-    where TWork : unmanaged, IColorSpace
+    where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<TPixel, TWork>
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
-    where TKernel : struct, IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode> {
+    where TKernel : struct, IDownscaleKernel<TWork, TKey, TPixel, TEncode> {
     var ratioX = kernel.RatioX;
     var ratioY = kernel.RatioY;
     var totalPixels = (long)destWidth * destHeight;
@@ -318,12 +309,9 @@ public static class ScalerPipeline {
     );
   }
 
-#if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
-
   /// <summary>
   /// Executes a resampling kernel on source pixel data, using parallel processing for large images.
   /// </summary>
-  /// <typeparam name="TAccum">The accumulator type for weighted operations.</typeparam>
   /// <typeparam name="TPixel">The storage pixel type.</typeparam>
   /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
   /// <typeparam name="TKey">The key color type (for pattern matching compatibility).</typeparam>
@@ -353,7 +341,7 @@ public static class ScalerPipeline {
   /// </para>
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void ExecuteResampleParallel<TAccum, TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+  public static unsafe void ExecuteResampleParallel<TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
     TPixel* sourcePtr,
     int sourceWidth,
     int sourceHeight,
@@ -367,14 +355,13 @@ public static class ScalerPipeline {
     OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
     OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
   )
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
     where TPixel : unmanaged, IStorageSpace
-    where TWork : unmanaged, IColorSpace
+    where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<TPixel, TWork>
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
-    where TKernel : struct, IResampleKernel<TAccum, TPixel, TWork, TKey, TDecode, TProject, TEncode> {
+    where TKernel : struct, IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode> {
     var totalPixels = (long)sourceWidth * sourceHeight;
     var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
 
@@ -455,7 +442,5 @@ public static class ScalerPipeline {
       }
     );
   }
-
-#endif
 
 }

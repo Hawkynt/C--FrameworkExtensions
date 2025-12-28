@@ -19,14 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Pipeline;
 using Hawkynt.ColorProcessing.Storage;
-using Hawkynt.ColorProcessing.Working;
-using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Scalers;
@@ -44,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Scalers;
 /// <para>Uses IAccum&lt;TAccum, TWork&gt; for zero-overhead weighted accumulation with proper precision.</para>
 /// </remarks>
 [ScalerInfo("BoxDownscale", Description = "Box filter downscaling with configurable ratio", Category = ScalerCategory.Resampler)]
-public readonly struct BoxDownscale : IDownscaler, IScalerDispatch {
+public readonly struct BoxDownscale : IDownscaler {
 
   private readonly int _ratioX;
   private readonly int _ratioY;
@@ -135,239 +132,199 @@ public readonly struct BoxDownscale : IDownscaler, IScalerDispatch {
   #endregion
 
   /// <inheritdoc />
-  Bitmap IScalerDispatch.Apply(Bitmap source, ScalerQuality quality) => (this._ratioX, this._ratioY, quality) switch {
-    // Fast quality - work in sRGB space (Bgra8888) with Bgra8888Accum
-    (2, 2, ScalerQuality.Fast) => BitmapScalerExtensions.Downscale<
-      Accum4B<Bgra8888>, Bgra8888, Bgra8888,
-      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-      Box2x2Kernel<Accum4B<Bgra8888>, Bgra8888, Bgra8888, Bgra8888, IdentityEncode<Bgra8888>>
-    >(source, new()),
-
-    (3, 3, ScalerQuality.Fast) => BitmapScalerExtensions.Downscale<
-      Accum4B<Bgra8888>, Bgra8888, Bgra8888,
-      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-      Box3x3Kernel<Accum4B<Bgra8888>, Bgra8888, Bgra8888, Bgra8888, IdentityEncode<Bgra8888>>
-      >(source, new()),
-
-    (4, 4, ScalerQuality.Fast) => BitmapScalerExtensions.Downscale<
-      Accum4B<Bgra8888>, Bgra8888, Bgra8888,
-      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-      Box4x4Kernel<Accum4B<Bgra8888>, Bgra8888, Bgra8888, Bgra8888, IdentityEncode<Bgra8888>>
-    >(source, new()),
-
-    (5, 5, ScalerQuality.Fast) => BitmapScalerExtensions.Downscale<
-      Accum4B<Bgra8888>, Bgra8888, Bgra8888,
-      IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>,
-      Box5x5Kernel<Accum4B<Bgra8888>, Bgra8888, Bgra8888, Bgra8888, IdentityEncode<Bgra8888>>
-    >(source, new()),
-
-    // High quality - work in linear RGB space with Accum4F<LinearRgbaF>
-    (2, 2, ScalerQuality.HighQuality) => BitmapScalerExtensions.Downscale<
-      Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF,
-      Srgb32ToLinearRgbaF, IdentityProjectColor<LinearRgbaF>, LinearRgbaFToSrgb32,
-      Box2x2Kernel<Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF, Bgra8888, LinearRgbaFToSrgb32>
-    >(source, new()),
-
-    (3, 3, ScalerQuality.HighQuality) => BitmapScalerExtensions.Downscale<
-      Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF,
-      Srgb32ToLinearRgbaF, IdentityProjectColor<LinearRgbaF>, LinearRgbaFToSrgb32,
-      Box3x3Kernel<Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF, Bgra8888, LinearRgbaFToSrgb32>
-    >(source, new()),
-
-    (4, 4, ScalerQuality.HighQuality) => BitmapScalerExtensions.Downscale<
-      Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF,
-      Srgb32ToLinearRgbaF, IdentityProjectColor<LinearRgbaF>, LinearRgbaFToSrgb32,
-      Box4x4Kernel<Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF, Bgra8888, LinearRgbaFToSrgb32>
-    >(source, new()),
-
-    (5, 5, ScalerQuality.HighQuality) => BitmapScalerExtensions.Downscale<
-      Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF,
-      Srgb32ToLinearRgbaF, IdentityProjectColor<LinearRgbaF>, LinearRgbaFToSrgb32,
-      Box5x5Kernel<Accum4F<LinearRgbaF>, LinearRgbaF, LinearRgbaF, Bgra8888, LinearRgbaFToSrgb32>
-    >(source, new()),
-
-    _ => throw new NotSupportedException($"Ratio {this._ratioX}x{this._ratioY} with quality {quality} is not supported for BoxDownscale.")
-  };
-
-  #region Unrolled Kernel Types
-
-  /// <summary>
-  /// Box 2x2 kernel for 2:1 downscaling (4 pixels → 1 pixel).
-  /// </summary>
   /// <remarks>
-  /// Reads P0P0, P0P1, P1P0, P1P1 from the window (positions 0,0 to 1,1).
-  /// Weight = 0.25 for each pixel.
+  /// BoxDownscale uses Accum4F internally for 4-component color spaces.
+  /// TWork must implement <see cref="IColorSpace4F{TWork}"/>.
   /// </remarks>
-  private readonly struct Box2x2Kernel<TAccum, TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
+  public TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(
+    IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)
+    where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TEncode : struct, IEncode<TWork, TPixel> {
-
-    /// <inheritdoc />
-    public int RatioX => 2;
-
-    /// <inheritdoc />
-    public int RatioY => 2;
-
-    /// <inheritdoc />
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
-      TAccum acc = default;
-      acc.AddMul(w.P0P0.Work, 1f);
-      acc.AddMul(w.P0P1.Work, 1f);
-      acc.AddMul(w.P1P0.Work, 1f);
-      acc.AddMul(w.P1P1.Work, 1f);
-      return encoder.Encode(acc.Result);
-    }
-  }
-
-  /// <summary>
-  /// Box 3x3 kernel for 3:1 downscaling (9 pixels → 1 pixel).
-  /// </summary>
-  /// <remarks>
-  /// Reads M1M1 through P1P1 from the window (positions -1,-1 to 1,1).
-  /// Weight = 1/9 for each pixel.
-  /// </remarks>
-  private readonly struct Box3x3Kernel<TAccum, TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
-    where TKey : unmanaged, IColorSpace
-    where TPixel : unmanaged, IStorageSpace
-    where TEncode : struct, IEncode<TWork, TPixel> {
-
-    /// <inheritdoc />
-    public int RatioX => 3;
-
-    /// <inheritdoc />
-    public int RatioY => 3;
-
-    /// <inheritdoc />
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
-      TAccum acc = default;
-      // Row M1 (y = -1)
-      acc.AddMul(w.M1M1.Work, 1f);
-      acc.AddMul(w.M1P0.Work, 1f);
-      acc.AddMul(w.M1P1.Work, 1f);
-      // Row P0 (y = 0)
-      acc.AddMul(w.P0M1.Work, 1f);
-      acc.AddMul(w.P0P0.Work, 1f);
-      acc.AddMul(w.P0P1.Work, 1f);
-      // Row P1 (y = 1)
-      acc.AddMul(w.P1M1.Work, 1f);
-      acc.AddMul(w.P1P0.Work, 1f);
-      acc.AddMul(w.P1P1.Work, 1f);
-      return encoder.Encode(acc.Result);
-    }
-  }
-
-  /// <summary>
-  /// Box 4x4 kernel for 4:1 downscaling (16 pixels → 1 pixel).
-  /// </summary>
-  /// <remarks>
-  /// Reads M1M1 through P2P2 from the window (positions -1,-1 to 2,2).
-  /// Weight = 1/16 = 0.0625 for each pixel.
-  /// </remarks>
-  private readonly struct Box4x4Kernel<TAccum, TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
-    where TKey : unmanaged, IColorSpace
-    where TPixel : unmanaged, IStorageSpace
-    where TEncode : struct, IEncode<TWork, TPixel> {
-
-    /// <inheritdoc />
-    public int RatioX => 4;
-
-    /// <inheritdoc />
-    public int RatioY => 4;
-
-    /// <inheritdoc />
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
-      TAccum acc = default;
-      // Row M1 (y = -1)
-      acc.AddMul(w.M1M1.Work, 1f);
-      acc.AddMul(w.M1P0.Work, 1f);
-      acc.AddMul(w.M1P1.Work, 1f);
-      acc.AddMul(w.M1P2.Work, 1f);
-      // Row P0 (y = 0)
-      acc.AddMul(w.P0M1.Work, 1f);
-      acc.AddMul(w.P0P0.Work, 1f);
-      acc.AddMul(w.P0P1.Work, 1f);
-      acc.AddMul(w.P0P2.Work, 1f);
-      // Row P1 (y = 1)
-      acc.AddMul(w.P1M1.Work, 1f);
-      acc.AddMul(w.P1P0.Work, 1f);
-      acc.AddMul(w.P1P1.Work, 1f);
-      acc.AddMul(w.P1P2.Work, 1f);
-      // Row P2 (y = 2)
-      acc.AddMul(w.P2M1.Work, 1f);
-      acc.AddMul(w.P2P0.Work, 1f);
-      acc.AddMul(w.P2P1.Work, 1f);
-      acc.AddMul(w.P2P2.Work, 1f);
-      return encoder.Encode(acc.Result);
-    }
-  }
-
-  /// <summary>
-  /// Box 5x5 kernel for 5:1 downscaling (25 pixels → 1 pixel).
-  /// </summary>
-  /// <remarks>
-  /// Reads M2M2 through P2P2 from the window (full 5x5, positions -2,-2 to 2,2).
-  /// Weight = 1/25 = 0.04 for each pixel.
-  /// </remarks>
-  private readonly struct Box5x5Kernel<TAccum, TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TAccum, TWork, TKey, TPixel, TEncode>
-    where TAccum : unmanaged, IAccum<TAccum, TWork>
-    where TWork : unmanaged, IColorSpace
-    where TKey : unmanaged, IColorSpace
-    where TPixel : unmanaged, IStorageSpace
-    where TEncode : struct, IEncode<TWork, TPixel> {
-
-    /// <inheritdoc />
-    public int RatioX => 5;
-
-    /// <inheritdoc />
-    public int RatioY => 5;
-
-    /// <inheritdoc />
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
-      TAccum acc = default;
-      // Row M2 (y = -2)
-      acc.AddMul(w.M2M2.Work, 1f);
-      acc.AddMul(w.M2M1.Work, 1f);
-      acc.AddMul(w.M2P0.Work, 1f);
-      acc.AddMul(w.M2P1.Work, 1f);
-      acc.AddMul(w.M2P2.Work, 1f);
-      // Row M1 (y = -1)
-      acc.AddMul(w.M1M2.Work, 1f);
-      acc.AddMul(w.M1M1.Work, 1f);
-      acc.AddMul(w.M1P0.Work, 1f);
-      acc.AddMul(w.M1P1.Work, 1f);
-      acc.AddMul(w.M1P2.Work, 1f);
-      // Row P0 (y = 0)
-      acc.AddMul(w.P0M2.Work, 1f);
-      acc.AddMul(w.P0M1.Work, 1f);
-      acc.AddMul(w.P0P0.Work, 1f);
-      acc.AddMul(w.P0P1.Work, 1f);
-      acc.AddMul(w.P0P2.Work, 1f);
-      // Row P1 (y = 1)
-      acc.AddMul(w.P1M2.Work, 1f);
-      acc.AddMul(w.P1M1.Work, 1f);
-      acc.AddMul(w.P1P0.Work, 1f);
-      acc.AddMul(w.P1P1.Work, 1f);
-      acc.AddMul(w.P1P2.Work, 1f);
-      // Row P2 (y = 2)
-      acc.AddMul(w.P2M2.Work, 1f);
-      acc.AddMul(w.P2M1.Work, 1f);
-      acc.AddMul(w.P2P0.Work, 1f);
-      acc.AddMul(w.P2P1.Work, 1f);
-      acc.AddMul(w.P2P2.Work, 1f);
-      return encoder.Encode(acc.Result);
-    }
-  }
-
-  #endregion
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => (this._ratioX, this._ratioY) switch {
+      (2, 2) => callback.Invoke(new Box2x2Kernel<TWork, TKey, TPixel, TEncode>()),
+      (3, 3) => callback.Invoke(new Box3x3Kernel<TWork, TKey, TPixel, TEncode>()),
+      (4, 4) => callback.Invoke(new Box4x4Kernel<TWork, TKey, TPixel, TEncode>()),
+      (5, 5) => callback.Invoke(new Box5x5Kernel<TWork, TKey, TPixel, TEncode>()),
+      _ => throw new InvalidOperationException($"No kernel available for ratio {this._ratioX}x{this._ratioY}")
+    };
 }
+
+#region Box Kernels
+
+/// <summary>
+/// Box 2x2 kernel for 2:1 downscaling (4 pixels → 1 pixel).
+/// </summary>
+/// <remarks>
+/// Reads P0P0, P0P1, P1P0, P1P1 from the window (positions 0,0 to 1,1).
+/// Uses internal accumulation with <see cref="Accum4F{TColor}"/>.
+/// </remarks>
+file readonly struct Box2x2Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TKey : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  /// <inheritdoc />
+  public int RatioX => 2;
+
+  /// <inheritdoc />
+  public int RatioY => 2;
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
+    Accum4F<TWork> acc = default;
+    acc.AddMul(w.P0P0.Work, 1f);
+    acc.AddMul(w.P0P1.Work, 1f);
+    acc.AddMul(w.P1P0.Work, 1f);
+    acc.AddMul(w.P1P1.Work, 1f);
+    return encoder.Encode(acc.Result);
+  }
+}
+
+/// <summary>
+/// Box 3x3 kernel for 3:1 downscaling (9 pixels → 1 pixel).
+/// </summary>
+/// <remarks>
+/// Reads M1M1 through P1P1 from the window (positions -1,-1 to 1,1).
+/// Uses internal accumulation with <see cref="Accum4F{TColor}"/>.
+/// </remarks>
+file readonly struct Box3x3Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TKey : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  /// <inheritdoc />
+  public int RatioX => 3;
+
+  /// <inheritdoc />
+  public int RatioY => 3;
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
+    Accum4F<TWork> acc = default;
+    // Row M1 (y = -1)
+    acc.AddMul(w.M1M1.Work, 1f);
+    acc.AddMul(w.M1P0.Work, 1f);
+    acc.AddMul(w.M1P1.Work, 1f);
+    // Row P0 (y = 0)
+    acc.AddMul(w.P0M1.Work, 1f);
+    acc.AddMul(w.P0P0.Work, 1f);
+    acc.AddMul(w.P0P1.Work, 1f);
+    // Row P1 (y = 1)
+    acc.AddMul(w.P1M1.Work, 1f);
+    acc.AddMul(w.P1P0.Work, 1f);
+    acc.AddMul(w.P1P1.Work, 1f);
+    return encoder.Encode(acc.Result);
+  }
+}
+
+/// <summary>
+/// Box 4x4 kernel for 4:1 downscaling (16 pixels → 1 pixel).
+/// </summary>
+/// <remarks>
+/// Reads M1M1 through P2P2 from the window (positions -1,-1 to 2,2).
+/// Uses internal accumulation with <see cref="Accum4F{TColor}"/>.
+/// </remarks>
+file readonly struct Box4x4Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TKey : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  /// <inheritdoc />
+  public int RatioX => 4;
+
+  /// <inheritdoc />
+  public int RatioY => 4;
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
+    Accum4F<TWork> acc = default;
+    // Row M1 (y = -1)
+    acc.AddMul(w.M1M1.Work, 1f);
+    acc.AddMul(w.M1P0.Work, 1f);
+    acc.AddMul(w.M1P1.Work, 1f);
+    acc.AddMul(w.M1P2.Work, 1f);
+    // Row P0 (y = 0)
+    acc.AddMul(w.P0M1.Work, 1f);
+    acc.AddMul(w.P0P0.Work, 1f);
+    acc.AddMul(w.P0P1.Work, 1f);
+    acc.AddMul(w.P0P2.Work, 1f);
+    // Row P1 (y = 1)
+    acc.AddMul(w.P1M1.Work, 1f);
+    acc.AddMul(w.P1P0.Work, 1f);
+    acc.AddMul(w.P1P1.Work, 1f);
+    acc.AddMul(w.P1P2.Work, 1f);
+    // Row P2 (y = 2)
+    acc.AddMul(w.P2M1.Work, 1f);
+    acc.AddMul(w.P2P0.Work, 1f);
+    acc.AddMul(w.P2P1.Work, 1f);
+    acc.AddMul(w.P2P2.Work, 1f);
+    return encoder.Encode(acc.Result);
+  }
+}
+
+/// <summary>
+/// Box 5x5 kernel for 5:1 downscaling (25 pixels → 1 pixel).
+/// </summary>
+/// <remarks>
+/// Reads M2M2 through P2P2 from the window (full 5x5, positions -2,-2 to 2,2).
+/// Uses internal accumulation with <see cref="Accum4F{TColor}"/>.
+/// </remarks>
+file readonly struct Box5x5Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKernel<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TKey : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  /// <inheritdoc />
+  public int RatioX => 5;
+
+  /// <inheritdoc />
+  public int RatioY => 5;
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
+    Accum4F<TWork> acc = default;
+    // Row M2 (y = -2)
+    acc.AddMul(w.M2M2.Work, 1f);
+    acc.AddMul(w.M2M1.Work, 1f);
+    acc.AddMul(w.M2P0.Work, 1f);
+    acc.AddMul(w.M2P1.Work, 1f);
+    acc.AddMul(w.M2P2.Work, 1f);
+    // Row M1 (y = -1)
+    acc.AddMul(w.M1M2.Work, 1f);
+    acc.AddMul(w.M1M1.Work, 1f);
+    acc.AddMul(w.M1P0.Work, 1f);
+    acc.AddMul(w.M1P1.Work, 1f);
+    acc.AddMul(w.M1P2.Work, 1f);
+    // Row P0 (y = 0)
+    acc.AddMul(w.P0M2.Work, 1f);
+    acc.AddMul(w.P0M1.Work, 1f);
+    acc.AddMul(w.P0P0.Work, 1f);
+    acc.AddMul(w.P0P1.Work, 1f);
+    acc.AddMul(w.P0P2.Work, 1f);
+    // Row P1 (y = 1)
+    acc.AddMul(w.P1M2.Work, 1f);
+    acc.AddMul(w.P1M1.Work, 1f);
+    acc.AddMul(w.P1P0.Work, 1f);
+    acc.AddMul(w.P1P1.Work, 1f);
+    acc.AddMul(w.P1P2.Work, 1f);
+    // Row P2 (y = 2)
+    acc.AddMul(w.P2M2.Work, 1f);
+    acc.AddMul(w.P2M1.Work, 1f);
+    acc.AddMul(w.P2P0.Work, 1f);
+    acc.AddMul(w.P2P1.Work, 1f);
+    acc.AddMul(w.P2P2.Work, 1f);
+    return encoder.Encode(acc.Result);
+  }
+}
+
+#endregion

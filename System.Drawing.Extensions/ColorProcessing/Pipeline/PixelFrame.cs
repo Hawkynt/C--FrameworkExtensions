@@ -38,6 +38,9 @@ public readonly ref struct PixelFrame<TPixel>(Span<TPixel> pixels, int width, in
   /// <summary>The pixel data.</summary>
   public readonly Span<TPixel> Pixels = pixels;
 
+  /// <summary>The pixel data.</summary>
+  public readonly Span<TPixel> ReadOnlyPixels = pixels;
+
   /// <summary>Width of the frame in pixels.</summary>
   public readonly int Width = width;
 
