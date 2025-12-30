@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
@@ -28,22 +29,34 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// MAME AdvInterp 2x - Advanced interpolation similar to Scale2x.
+/// MAME AdvInterp - Advanced interpolation similar to Scale2x/Scale3x (2x, 3x).
 /// </summary>
 /// <remarks>
-/// <para>Scales images by 2x using interpolation-based corner detection.</para>
+/// <para>Scales images using interpolation-based corner and edge detection.</para>
 /// <para>
-/// Similar to Scale2x but uses weighted interpolation (5:3 ratio) when
+/// Similar to Scale2x/Scale3x but uses weighted interpolation (5:3 ratio) when
 /// corners are detected, producing smoother edges.
 /// </para>
 /// <para>From MAME emulator, modified by Hawkynt for threshold support.</para>
 /// </remarks>
-[ScalerInfo("MAME AdvInterp 2x", Author = "MAME Team", Year = 1997,
-  Description = "Advanced interpolation at 2x, similar to Scale2x", Category = ScalerCategory.PixelArt)]
-public readonly struct MameAdvInterp2x : IPixelScaler {
+[ScalerInfo("MAME AdvInterp", Author = "MAME Team", Year = 1997,
+  Description = "Advanced interpolation similar to Scale2x/Scale3x", Category = ScalerCategory.PixelArt)]
+public readonly struct MameAdvInterp : IPixelScaler {
+
+  private readonly int _scale;
+
+  /// <summary>
+  /// Creates a new MameAdvInterp instance.
+  /// </summary>
+  /// <param name="scale">Scale factor (2 or 3).</param>
+  public MameAdvInterp(int scale = 2) {
+    if (scale is not (2 or 3))
+      throw new ArgumentOutOfRangeException(nameof(scale), scale, "MameAdvInterp supports 2x, 3x scaling");
+    this._scale = scale;
+  }
 
   /// <inheritdoc />
-  public ScaleFactor Scale => new(2, 2);
+  public ScaleFactor Scale => this._scale == 0 ? new(2, 2) : new(this._scale, this._scale);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -57,29 +70,44 @@ public readonly struct MameAdvInterp2x : IPixelScaler {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new MameAdvInterp2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp));
+    => this._scale switch {
+      0 or 2 => callback.Invoke(new MameAdvInterp2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp)),
+      3 => callback.Invoke(new MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp)),
+      _ => throw new InvalidOperationException($"Invalid scale factor: {this._scale}")
+    };
 
   /// <summary>
   /// Gets the list of scale factors supported.
   /// </summary>
-  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2)];
+  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 3)];
 
   /// <summary>
   /// Determines whether the specified scale factor is supported.
   /// </summary>
-  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 };
+  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 3 };
 
   /// <summary>
   /// Enumerates all possible target dimensions.
   /// </summary>
   public static IEnumerable<(int Width, int Height)> GetPossibleTargets(int sourceWidth, int sourceHeight) {
     yield return (sourceWidth * 2, sourceHeight * 2);
+    yield return (sourceWidth * 3, sourceHeight * 3);
   }
 
   /// <summary>
-  /// Gets the default configuration.
+  /// Gets a 2x scale instance.
   /// </summary>
-  public static MameAdvInterp2x Default => new();
+  public static MameAdvInterp Scale2x => new(2);
+
+  /// <summary>
+  /// Gets a 3x scale instance.
+  /// </summary>
+  public static MameAdvInterp Scale3x => new(3);
+
+  /// <summary>
+  /// Gets the default configuration (2x).
+  /// </summary>
+  public static MameAdvInterp Default => Scale2x;
 }
 
 file readonly struct MameAdvInterp2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default)
@@ -159,61 +187,6 @@ file readonly struct MameAdvInterp2xKernel<TWork, TKey, TPixel, TEquality, TLerp
     row1[0] = encoder.Encode(e10);
     row1[1] = encoder.Encode(e11);
   }
-}
-
-/// <summary>
-/// MAME AdvInterp 3x - Advanced interpolation at 3x, similar to Scale3x.
-/// </summary>
-/// <remarks>
-/// <para>Scales images by 3x using interpolation-based corner and edge detection.</para>
-/// <para>
-/// Similar to Scale3x but uses weighted interpolation for smoother results.
-/// Includes edge interpolation between corners when conditions are met.
-/// </para>
-/// <para>From MAME emulator, modified by Hawkynt for threshold support.</para>
-/// </remarks>
-[ScalerInfo("MAME AdvInterp 3x", Author = "MAME Team", Year = 1997,
-  Description = "Advanced interpolation at 3x, similar to Scale3x", Category = ScalerCategory.PixelArt)]
-public readonly struct MameAdvInterp3x : IPixelScaler {
-
-  /// <inheritdoc />
-  public ScaleFactor Scale => new(3, 3);
-
-  /// <inheritdoc />
-  public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
-    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
-    TEquality equality = default,
-    TLerp lerp = default)
-    where TWork : unmanaged, IColorSpace
-    where TKey : unmanaged, IColorSpace
-    where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
-    where TEquality : struct, IColorEquality<TKey>
-    where TLerp : struct, ILerp<TWork>
-    where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(equality, lerp));
-
-  /// <summary>
-  /// Gets the list of scale factors supported.
-  /// </summary>
-  public static ScaleFactor[] SupportedScales { get; } = [new(3, 3)];
-
-  /// <summary>
-  /// Determines whether the specified scale factor is supported.
-  /// </summary>
-  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 3, Y: 3 };
-
-  /// <summary>
-  /// Enumerates all possible target dimensions.
-  /// </summary>
-  public static IEnumerable<(int Width, int Height)> GetPossibleTargets(int sourceWidth, int sourceHeight) {
-    yield return (sourceWidth * 3, sourceHeight * 3);
-  }
-
-  /// <summary>
-  /// Gets the default configuration.
-  /// </summary>
-  public static MameAdvInterp3x Default => new();
 }
 
 file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default)

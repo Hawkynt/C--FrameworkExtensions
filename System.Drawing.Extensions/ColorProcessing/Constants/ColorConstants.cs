@@ -40,6 +40,28 @@ public static class ColorConstants {
 
   #endregion
 
+  #region BT.601/709 Luminance Coefficients
+
+  /// <summary>ITU-R BT.601 (SDTV) red luminance coefficient.</summary>
+  public const float BT601_R = 0.299f;
+
+  /// <summary>ITU-R BT.601 (SDTV) green luminance coefficient.</summary>
+  public const float BT601_G = 0.587f;
+
+  /// <summary>ITU-R BT.601 (SDTV) blue luminance coefficient.</summary>
+  public const float BT601_B = 0.114f;
+
+  /// <summary>ITU-R BT.709 (HDTV) red luminance coefficient.</summary>
+  public const float BT709_R = 0.2126f;
+
+  /// <summary>ITU-R BT.709 (HDTV) green luminance coefficient.</summary>
+  public const float BT709_G = 0.7152f;
+
+  /// <summary>ITU-R BT.709 (HDTV) blue luminance coefficient.</summary>
+  public const float BT709_B = 0.0722f;
+
+  #endregion
+
   #region D65 White Point
 
   /// <summary>D65 reference white X component.</summary>
@@ -73,6 +95,50 @@ public static class ColorConstants {
 
   /// <summary>Pre-calculated v'n for D65: 9 * Yn / (Xn + 15 * Yn + 3 * Zn).</summary>
   public const float Luv_Vn = 0.46831999f;
+
+  #endregion
+
+  #region Oklab Transformation Coefficients
+
+  // RGB to LMS matrix row for L
+  /// <summary>Oklab RGB→LMS L-row red coefficient.</summary>
+  public const float Oklab_L_R = 0.4122214708f;
+
+  /// <summary>Oklab RGB→LMS L-row green coefficient.</summary>
+  public const float Oklab_L_G = 0.5363325363f;
+
+  /// <summary>Oklab RGB→LMS L-row blue coefficient.</summary>
+  public const float Oklab_L_B = 0.0514459929f;
+
+  // RGB to LMS matrix row for M
+  /// <summary>Oklab RGB→LMS M-row red coefficient.</summary>
+  public const float Oklab_M_R = 0.2119034982f;
+
+  /// <summary>Oklab RGB→LMS M-row green coefficient.</summary>
+  public const float Oklab_M_G = 0.6806995451f;
+
+  /// <summary>Oklab RGB→LMS M-row blue coefficient.</summary>
+  public const float Oklab_M_B = 0.1073969566f;
+
+  // RGB to LMS matrix row for S
+  /// <summary>Oklab RGB→LMS S-row red coefficient.</summary>
+  public const float Oklab_S_R = 0.0883024619f;
+
+  /// <summary>Oklab RGB→LMS S-row green coefficient.</summary>
+  public const float Oklab_S_G = 0.2817188376f;
+
+  /// <summary>Oklab RGB→LMS S-row blue coefficient.</summary>
+  public const float Oklab_S_B = 0.6299787005f;
+
+  // LMS' to Oklab L transformation vector
+  /// <summary>Oklab LMS'→L L coefficient.</summary>
+  public const float Oklab_ToL_L = 0.2104542553f;
+
+  /// <summary>Oklab LMS'→L M coefficient.</summary>
+  public const float Oklab_ToL_M = 0.7936177850f;
+
+  /// <summary>Oklab LMS'→L S coefficient.</summary>
+  public const float Oklab_ToL_S = -0.0040720468f;
 
   #endregion
 }

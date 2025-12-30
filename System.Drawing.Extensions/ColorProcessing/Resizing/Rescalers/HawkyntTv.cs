@@ -29,29 +29,36 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// MAME RGB - LCD RGB channel filter (2x, 3x).
+/// Hawkynt TV - RGB channel separation effect (2x, 3x).
 /// </summary>
 /// <remarks>
-/// <para>Scales images simulating LCD RGB subpixel arrangement.</para>
+/// <para>Scales images simulating LCD/CRT RGB sub-pixel arrangement.</para>
 /// <para>
-/// 2x mode: Output pattern: [Red only] [Green only] / [Blue only] [Full RGB]
-/// 3x mode: Creates a mosaic of individual color channels with full-color pixels at key positions.
+/// 2x mode: Each 2x2 output block shows:
+/// [0,0] = Red channel only,
+/// [1,0] = Green channel only,
+/// [0,1] = Blue channel only,
+/// [1,1] = Luminance (grayscale).
 /// </para>
-/// <para>From MAME emulator.</para>
+/// <para>
+/// 3x mode: Creates a 3x3 RGB stripe pattern with each row showing
+/// Red, Green, Blue sub-pixels across the columns.
+/// </para>
+/// <para>Original algorithm by Hawkynt, 1998.</para>
 /// </remarks>
-[ScalerInfo("MAME RGB", Author = "MAME Team", Year = 1997,
-  Description = "LCD RGB subpixel filter", Category = ScalerCategory.PixelArt)]
-public readonly struct MameRgb : IPixelScaler {
+[ScalerInfo("Hawkynt TV", Author = "Hawkynt", Year = 1998,
+  Description = "RGB channel separation effect", Category = ScalerCategory.PixelArt)]
+public readonly struct HawkyntTv : IPixelScaler {
 
   private readonly int _scale;
 
   /// <summary>
-  /// Creates a new MameRgb instance.
+  /// Creates a new HawkyntTv instance.
   /// </summary>
   /// <param name="scale">Scale factor (2 or 3).</param>
-  public MameRgb(int scale = 2) {
+  public HawkyntTv(int scale = 2) {
     if (scale is not (2 or 3))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "MameRgb supports 2x, 3x scaling");
+      throw new ArgumentOutOfRangeException(nameof(scale), scale, "HawkyntTv supports 2x, 3x scaling");
     this._scale = scale;
   }
 
@@ -71,8 +78,8 @@ public readonly struct MameRgb : IPixelScaler {
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
     => this._scale switch {
-      0 or 2 => callback.Invoke(new MameRgb2xKernel<TWork, TKey, TPixel, TEncode>()),
-      3 => callback.Invoke(new MameRgb3xKernel<TWork, TKey, TPixel, TEncode>()),
+      0 or 2 => callback.Invoke(new HawkyntTv2xKernel<TWork, TKey, TPixel, TEncode>()),
+      3 => callback.Invoke(new HawkyntTv3xKernel<TWork, TKey, TPixel, TEncode>()),
       _ => throw new InvalidOperationException($"Invalid scale factor: {this._scale}")
     };
 
@@ -97,20 +104,20 @@ public readonly struct MameRgb : IPixelScaler {
   /// <summary>
   /// Gets a 2x scale instance.
   /// </summary>
-  public static MameRgb Scale2x => new(2);
+  public static HawkyntTv Scale2x => new(2);
 
   /// <summary>
   /// Gets a 3x scale instance.
   /// </summary>
-  public static MameRgb Scale3x => new(3);
+  public static HawkyntTv Scale3x => new(3);
 
   /// <summary>
   /// Gets the default configuration (2x).
   /// </summary>
-  public static MameRgb Default => Scale2x;
+  public static HawkyntTv Default => Scale2x;
 }
 
-file readonly struct MameRgb2xKernel<TWork, TKey, TPixel, TEncode>
+file readonly struct HawkyntTv2xKernel<TWork, TKey, TPixel, TEncode>
   : IScaler<TWork, TKey, TPixel, TEncode>
   where TWork : unmanaged, IColorSpace
   where TKey : unmanaged, IColorSpace
@@ -132,23 +139,29 @@ file readonly struct MameRgb2xKernel<TWork, TKey, TPixel, TEncode>
     // Get RGBA components using ColorConverter
     var (r, g, b) = ColorConverter.GetNormalizedRgb(pixel);
     var a = ColorConverter.GetAlpha(pixel);
+    var luminance = ColorConverter.GetLuminance(pixel);
 
     // Create single-channel pixels using ColorConverter
     var redOnly = ColorConverter.FromNormalizedRgba<TWork>(r, 0, 0, a);
     var greenOnly = ColorConverter.FromNormalizedRgba<TWork>(0, g, 0, a);
     var blueOnly = ColorConverter.FromNormalizedRgba<TWork>(0, 0, b, a);
+    var grey = ColorConverter.FromNormalizedRgba<TWork>(luminance, luminance, luminance, a);
 
     var row0 = destTopLeft;
     var row1 = destTopLeft + destStride;
 
+    // [0,0] = Red only
     row0[0] = encoder.Encode(redOnly);
+    // [1,0] = Green only
     row0[1] = encoder.Encode(greenOnly);
+    // [0,1] = Blue only
     row1[0] = encoder.Encode(blueOnly);
-    row1[1] = encoder.Encode(pixel);
+    // [1,1] = Luminance
+    row1[1] = encoder.Encode(grey);
   }
 }
 
-file readonly struct MameRgb3xKernel<TWork, TKey, TPixel, TEncode>
+file readonly struct HawkyntTv3xKernel<TWork, TKey, TPixel, TEncode>
   : IScaler<TWork, TKey, TPixel, TEncode>
   where TWork : unmanaged, IColorSpace
   where TKey : unmanaged, IColorSpace
@@ -176,28 +189,24 @@ file readonly struct MameRgb3xKernel<TWork, TKey, TPixel, TEncode>
     var greenOnly = ColorConverter.FromNormalizedRgba<TWork>(0, g, 0, a);
     var blueOnly = ColorConverter.FromNormalizedRgba<TWork>(0, 0, b, a);
 
-    // Encode to TPixel
-    var full = encoder.Encode(pixel);
-    var red = encoder.Encode(redOnly);
-    var green = encoder.Encode(greenOnly);
-    var blue = encoder.Encode(blueOnly);
+    var encodedR = encoder.Encode(redOnly);
+    var encodedG = encoder.Encode(greenOnly);
+    var encodedB = encoder.Encode(blueOnly);
 
     var row0 = destTopLeft;
     var row1 = destTopLeft + destStride;
     var row2 = row1 + destStride;
 
-    // Pattern from original MAME:
-    // [full]  [green] [blue]
-    // [blue]  [full]  [red]
-    // [red]   [green] [full]
-    row0[0] = full;
-    row0[1] = green;
-    row0[2] = blue;
-    row1[0] = blue;
-    row1[1] = full;
-    row1[2] = red;
-    row2[0] = red;
-    row2[1] = green;
-    row2[2] = full;
+    // All 3 rows show R, G, B stripe pattern
+    // This creates vertical RGB stripes like an LCD display
+    row0[0] = encodedR;
+    row0[1] = encodedG;
+    row0[2] = encodedB;
+    row1[0] = encodedR;
+    row1[1] = encodedG;
+    row1[2] = encodedB;
+    row2[0] = encodedR;
+    row2[1] = encodedG;
+    row2[2] = encodedB;
   }
 }
