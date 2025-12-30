@@ -356,12 +356,18 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * int [ILogB](https://learn.microsoft.com/dotnet/api/system.math.ilogb)(double x)
   * double [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalestimate)(double x)
   * double [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.math.reciprocalsqrtestimate)(double x)
+  * double [Asinh](https://learn.microsoft.com/dotnet/api/system.math.asinh)(double x)
+  * double [Acosh](https://learn.microsoft.com/dotnet/api/system.math.acosh)(double x)
+  * double [Atanh](https://learn.microsoft.com/dotnet/api/system.math.atanh)(double x)
 
 * System.MathF
   * float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
   * float [FusedMultiplyAdd](https://learn.microsoft.com/dotnet/api/system.mathf.fusedmultiplyadd)(float x, float y, float z)
   * float [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalestimate)(float x)
   * float [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalsqrtestimate)(float x)
+  * float [Asinh](https://learn.microsoft.com/dotnet/api/system.mathf.asinh)(float x)
+  * float [Acosh](https://learn.microsoft.com/dotnet/api/system.mathf.acosh)(float x)
+  * float [Atanh](https://learn.microsoft.com/dotnet/api/system.mathf.atanh)(float x)
 
 * System.DateTime
   * DateTime [UnixEpoch](https://learn.microsoft.com/dotnet/api/system.datetime.unixepoch)
