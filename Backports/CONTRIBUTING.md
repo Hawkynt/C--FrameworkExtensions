@@ -6,22 +6,32 @@ Thank you for your interest in contributing to Backports! This guide explains ho
 
 The goal of **FrameworkExtensions.Backports** is to make modern .NET features available across all target frameworks, from .NET Framework 2.0 to .NET 9.0. We aim to be:
 
-- **Compiler-complete**: Code that compiles on .NET 9.0 should compile on older targets when referencing this package
+- **Compiler-complete**: Code that compiles on **.NET 10** should compile on older targets when referencing this package
 - **Runtime-functional**: Backported features should behave identically to their official implementations
 - **Non-conflicting**: When official implementations exist (via NuGet packages or the runtime), our polyfills should be excluded
+- **Language level**: All targets compile with **C# 14**. You may use modern syntax everywhere (extension members, target-typed new, records, primary ctors, etc.). Do not add language guards.
+
+## Non-negotiable rules (read this first)
+
+- **Consumer code is feature-flag free**. The whole point is: code written against the latest API compiles and behaves the same everywhere.
+- **Do not add “compiler feature” guards**. We always build with C# 14 for all targets. Never introduce SUPPORTS_EXTENSION_MEMBERS, language-version checks, or alternatives that avoid extension members. Use extension members freely (including extension properties/operators and extending static classes).
+- **Do not re-guard already polyfilled features**. If a feature is polyfilled in this repo, consumer-facing code must use it directly (e.g., Span, Memory, async/await, Task/ValueTask, Index/Range, intrinsics). If a type exists anywhere in Backports (native, official, or polyfill), treat it as always available. Never guard its usage again.
+- **No conditional compilation in tests**. Tests target the final API surface only. No #if SUPPORTS_*, no #if FEATURE_*, no referencing polyfill/internal types.
 
 ## Architecture Overview
 
 ### Target Frameworks
 
 The package targets multiple frameworks simultaneously:
+
 - .NET Framework: net20, net35, net40, net45, net48
 - .NET Standard: netstandard2.0, netstandard2.1
-- .NET Core/.NET: netcoreapp3.1, net5.0, net6.0, net7.0, net8.0, net9.0
+- .NET Core/.NET: netcoreapp3.1, net5.0, net6.0, net7.0, net8.0, net9.0, net10.0
 
-### Conditional Compilation
+### Conditional Compilation (implementation-only)
 
-We use **feature flags** (conditional compilation symbols) to include/exclude code based on what each target framework supports natively.
+We use **feature flags** to model API surface availability (native runtime or official package). Flags are not a place for fine-grained “missing member” logic beyond the wave model.
+They are used only inside the Backports project to exclude polyfill code when the runtime or an official package provides the API. Flags **must not appear** in tests or consumer code.
 
 ## Feature Flags Convention
 
@@ -60,14 +70,17 @@ When we reference official Microsoft NuGet packages, we use `OFFICIAL_` flags:
 Use feature flags to describe **runtime/API capability**, not "where the code lives". Two patterns:
 
 - **All-or-nothing features**: use a single flag like `SUPPORTS_MATHF`. Either the runtime provides the full type/API or it doesn't.
-- **Layered features**: use **waves** (`FEATURE_<NAME>_WAVE1`, `FEATURE_<NAME>_WAVE2`, ...) for features that evolve across multiple .NET versions. See [Feature Waves](#feature-waves) below.
+- **Layered features**: use **waves** (`SUPPORTS_<NAME>_WAVE1`, `SUPPORTS_<NAME>_WAVE2`, ...) for features that evolve across multiple .NET versions. See [Feature Waves](#feature-waves) below.
+- **Never combine support flags to describe partial APIs**. If it’s partial, it’s a wave. If it’s not partial, it’s a single flag.
 
 Key rules:
 
 - **Flags are monotonic**: newer runtimes define *all* relevant flags for a feature (WAVE1 + WAVE2 + ...), never just the latest one.
 - **Polyfill logic**:
-  - Base type polyfill is guarded by `#if !FEATURE_<NAME>_WAVE1`.
-  - Extension layers for additional members are guarded by `#if !FEATURE_<NAME>_WAVE2`, `#if !FEATURE_<NAME>_WAVE3`, etc.
+  - Base type polyfill is guarded by `#if !SUPPORTS_<NAME>_WAVE1`.
+  - Extension layers for additional members are guarded by `#if !SUPPORTS_<NAME>_WAVE2`, `#if !SUPPORTS_<NAME>_WAVE3`, etc.
+  - If the official API documentation shows the type growing across multiple .NET releases, use waves.
+  - If the type appears once and stays stable, use a single flag.
 - **Official packages**: use `OFFICIAL_<FEATURE>` flags only to express "the API is provided by a package instead of the runtime".
 
 ### Feature Waves
@@ -76,7 +89,7 @@ For features that evolve significantly across multiple .NET versions (like SIMD 
 
 #### Wave Naming Convention
 
-- **Flag format**: `FEATURE_<TYPE>_WAVE<k>` where `<k>` is a positive integer (1, 2, 3, ...)
+- **Flag format**: `SUPPORTS_<TYPE>_WAVE<k>` where `<k>` is a positive integer (1, 2, 3, ...)
 - **One type = one wave series**: Each wave series is tied to exactly one type. A generic struct like `Vector128<T>` and its companion static class `Vector128` are **separate** wave series.
 - **One wave series = one folder = one file**: Each type gets its own folder containing exactly one file with all waves.
 - **File organization**: All waves reside in the **same file**, ordered from top to bottom (Wave 1 first, then Wave 2, etc.)
@@ -85,13 +98,13 @@ For features that evolve significantly across multiple .NET versions (like SIMD 
 
 1. **Wave 1 is the baseline**: Contains the core type and minimal API that was introduced after .NET 2.0. This is the lowest common denominator across all targets where the feature first appeared.
 
-2. **Waves are monotonic**: If a target defines `FEATURE_<TYPE>_WAVE3`, it **must** also define `FEATURE_<TYPE>_WAVE1` and `FEATURE_<TYPE>_WAVE2`. Each wave implies all previous waves are available.
+2. **Waves are monotonic**: If a target defines `SUPPORTS_<TYPE>_WAVE3`, it **must** also define `SUPPORTS_<TYPE>_WAVE1` and `SUPPORTS_<TYPE>_WAVE2`. Each wave implies all previous waves are available.
 
 3. **Each wave layers functionality**: Higher waves add methods, properties, operators, or overloads using extension syntax. The base type is defined only in Wave 1.
 
 4. **One type per wave series**: Do not mix multiple types in a single wave series. For example:
-   - `Vector128<T>` (the struct) → `FEATURE_VECTOR128_WAVE<k>`
-   - `Vector128` (the static class) → `FEATURE_VECTOR128STATIC_WAVE<k>`
+   - `Vector128<T>` (the struct) → `SUPPORTS_VECTOR128_WAVE<k>`
+   - `Vector128` (the static class) → `SUPPORTS_VECTOR128STATIC_WAVE<k>`
 
    ```
    Features/
@@ -113,7 +126,7 @@ For features that evolve significantly across multiple .NET versions (like SIMD 
 namespace System.Runtime.Intrinsics;
 
 // Wave 1: Core struct (e.g., .NET Core 3.0)
-#if !FEATURE_VECTOR128_WAVE1
+#if !SUPPORTS_VECTOR128_WAVE1
 
 public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct {
   internal readonly ulong _v0, _v1;
@@ -127,7 +140,7 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
 #endif
 
 // Wave 2: Instance members added later (e.g., .NET 7.0)
-#if !FEATURE_VECTOR128_WAVE2
+#if !SUPPORTS_VECTOR128_WAVE2
 
 public static partial class Vector128Polyfills {
 
@@ -140,7 +153,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 3: More instance members (e.g., .NET 9.0)
-#if !FEATURE_VECTOR128_WAVE3
+#if !SUPPORTS_VECTOR128_WAVE3
 
 public static partial class Vector128Polyfills {
 
@@ -163,7 +176,7 @@ public static partial class Vector128Polyfills {
 namespace System.Runtime.Intrinsics;
 
 // Wave 1: Core static methods (e.g., .NET Core 3.0)
-#if !FEATURE_VECTOR128STATIC_WAVE1
+#if !SUPPORTS_VECTOR128STATIC_WAVE1
 
 public static class Vector128 {
   public static Vector128<byte> Create(byte value) => /* ... */;
@@ -174,7 +187,7 @@ public static class Vector128 {
 #endif
 
 // Wave 2: Conversions and System.Numerics interop (e.g., .NET 5.0)
-#if !FEATURE_VECTOR128STATIC_WAVE2
+#if !SUPPORTS_VECTOR128STATIC_WAVE2
 
 public static partial class Vector128Polyfills {
 
@@ -188,7 +201,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 3: Arithmetic and comparison (e.g., .NET 7.0)
-#if !FEATURE_VECTOR128STATIC_WAVE3
+#if !SUPPORTS_VECTOR128STATIC_WAVE3
 
 public static partial class Vector128Polyfills {
 
@@ -203,7 +216,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 4: Generic factory methods (e.g., .NET 8.0)
-#if !FEATURE_VECTOR128STATIC_WAVE4
+#if !SUPPORTS_VECTOR128STATIC_WAVE4
 
 public static partial class Vector128Polyfills {
 
@@ -217,7 +230,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 5: Math functions (e.g., .NET 9.0)
-#if !FEATURE_VECTOR128STATIC_WAVE5
+#if !SUPPORTS_VECTOR128STATIC_WAVE5
 
 public static partial class Vector128Polyfills {
 
@@ -231,7 +244,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 6: Newest APIs (e.g., .NET 10.0)
-#if !FEATURE_VECTOR128STATIC_WAVE6
+#if !SUPPORTS_VECTOR128STATIC_WAVE6
 
 public static partial class Vector128Polyfills {
 
@@ -251,19 +264,19 @@ Configure wave flags monotonically per target framework. Each type has its own w
 
 ```xml
 <!-- .NET Core 3.0/3.1: Wave 1 for both struct and static -->
-<DefineConstants Condition="...netcoreapp3...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE1;                    </DefineConstants>
+<DefineConstants Condition="...netcoreapp3...">$(DefineConstants);                    SUPPORTS_VECTOR128_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE1;                    </DefineConstants>
 
 <!-- .NET 5.0: Add Wave 2 for static (Numerics interop) -->
-<DefineConstants Condition="...net5.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    </DefineConstants>
+<DefineConstants Condition="...net5.0...">$(DefineConstants);                    SUPPORTS_VECTOR128_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE2;                    </DefineConstants>
 
 <!-- .NET 7.0: Add Wave 2 for struct, Wave 3 for static -->
-<DefineConstants Condition="...net7.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    </DefineConstants>
+<DefineConstants Condition="...net7.0...">$(DefineConstants);                    SUPPORTS_VECTOR128_WAVE1;                    SUPPORTS_VECTOR128_WAVE2;                    SUPPORTS_VECTOR128STATIC_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE2;                    SUPPORTS_VECTOR128STATIC_WAVE3;                    </DefineConstants>
 
 <!-- .NET 9.0: Add Wave 3 for struct, Waves 4-5 for static -->
-<DefineConstants Condition="...net9.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE4;                    FEATURE_VECTOR128STATIC_WAVE5;                    </DefineConstants>
+<DefineConstants Condition="...net9.0...">$(DefineConstants);                    SUPPORTS_VECTOR128_WAVE1;                    SUPPORTS_VECTOR128_WAVE2;                    SUPPORTS_VECTOR128_WAVE3;                    SUPPORTS_VECTOR128STATIC_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE2;                    SUPPORTS_VECTOR128STATIC_WAVE3;                    SUPPORTS_VECTOR128STATIC_WAVE4;                    SUPPORTS_VECTOR128STATIC_WAVE5;                    </DefineConstants>
 
 <!-- .NET 10.0: All waves for both -->
-<DefineConstants Condition="...net10.0...">$(DefineConstants);                    FEATURE_VECTOR128_WAVE1;                    FEATURE_VECTOR128_WAVE2;                    FEATURE_VECTOR128_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE1;                    FEATURE_VECTOR128STATIC_WAVE2;                    FEATURE_VECTOR128STATIC_WAVE3;                    FEATURE_VECTOR128STATIC_WAVE4;                    FEATURE_VECTOR128STATIC_WAVE5;                    FEATURE_VECTOR128STATIC_WAVE6;                    </DefineConstants>
+<DefineConstants Condition="...net10.0...">$(DefineConstants);                    SUPPORTS_VECTOR128_WAVE1;                    SUPPORTS_VECTOR128_WAVE2;                    SUPPORTS_VECTOR128_WAVE3;                    SUPPORTS_VECTOR128STATIC_WAVE1;                    SUPPORTS_VECTOR128STATIC_WAVE2;                    SUPPORTS_VECTOR128STATIC_WAVE3;                    SUPPORTS_VECTOR128STATIC_WAVE4;                    SUPPORTS_VECTOR128STATIC_WAVE5;                    SUPPORTS_VECTOR128STATIC_WAVE6;                    </DefineConstants>
 ```
 
 Note: The struct and static class may have different numbers of waves since they evolve independently.
@@ -293,8 +306,8 @@ In practice, feature flags are named after **logical capability blocks**. The un
 
 2. **Wave flags (layered features)**
    Features that grow across .NET versions use numbered waves. Each wave represents a generation of API additions.
-   - Example: `FEATURE_VECTOR128_WAVE1` through `FEATURE_VECTOR128_WAVE6`
-   - Example: `FEATURE_SPAN_WAVE1`, `FEATURE_SPAN_WAVE2`, etc.
+   - Example: `SUPPORTS_VECTOR128_WAVE1` through `SUPPORTS_VECTOR128_WAVE6`
+   - Example: `SUPPORTS_SPAN_WAVE1`, `SUPPORTS_SPAN_WAVE2`, etc.
 
    Older runtimes define no wave flags (get full polyfill), mid-tier runtimes define early waves only, newest runtimes define all waves.
 
@@ -310,7 +323,7 @@ When a type exists only in a reduced form on some targets and is missing entirel
 
 ```csharp
 // Wave 1: minimal type for targets lacking any implementation.
-#if !FEATURE_EXAMPLE_WAVE1
+#if !SUPPORTS_EXAMPLE_WAVE1
 
 namespace System;
 
@@ -323,7 +336,7 @@ public readonly struct Example(int value) : IEquatable<Example> {
 #endif
 
 // Wave 2: APIs added in a later .NET version.
-#if !FEATURE_EXAMPLE_WAVE2
+#if !SUPPORTS_EXAMPLE_WAVE2
 
 public static class ExamplePolyfills {
 
@@ -345,7 +358,7 @@ public static class ExamplePolyfills {
 #endif
 
 // Wave 3: newest APIs, added in the most recent .NET version.
-#if !FEATURE_EXAMPLE_WAVE3
+#if !SUPPORTS_EXAMPLE_WAVE3
 
 public static partial class ExamplePolyfills {
 
@@ -370,8 +383,8 @@ This pattern scales cleanly, keeps each wave isolated, and allows complete recon
 In `VersionSpecificSymbols.Common.prop` you wire the flags monotonically:
 
 - Old targets: no flags → get the base struct + all extension layers.
-- Targets with partial runtime support: `FEATURE_EXAMPLE_WAVE1` only → skip the struct, but still get Wave 2 and Wave 3 extensions.
-- Targets with full runtime support: `FEATURE_EXAMPLE_WAVE1`, `FEATURE_EXAMPLE_WAVE2`, and `FEATURE_EXAMPLE_WAVE3` → skip all polyfill layers entirely.
+- Targets with partial runtime support: `SUPPORTS_EXAMPLE_WAVE1` only → skip the struct, but still get Wave 2 and Wave 3 extensions.
+- Targets with full runtime support: `SUPPORTS_EXAMPLE_WAVE1`, `SUPPORTS_EXAMPLE_WAVE2`, and `SUPPORTS_EXAMPLE_WAVE3` → skip all polyfill layers entirely.
 
 ## Folder Structure
 
@@ -422,8 +435,8 @@ Backports/
 
 For wave-based features, all waves live in a **single file** to maintain logical structure and make the API evolution visible at a glance:
 
-- Wave 1 defines the **base type or minimal API** (e.g., `#if !FEATURE_VECTOR128_WAVE1`).
-- Subsequent waves add **extension blocks** for additional members (e.g., `#if !FEATURE_VECTOR128_WAVE2`, etc.).
+- Wave 1 defines the **base type or minimal API** (e.g., `#if !SUPPORTS_VECTOR128_WAVE1`).
+- Subsequent waves add **extension blocks** for additional members (e.g., `#if !SUPPORTS_VECTOR128_WAVE2`, etc.).
 
 This approach keeps the complete API evolution for one type in one place, ordered chronologically from oldest to newest.
 
@@ -436,6 +449,59 @@ This approach keeps the complete API evolution for one type in one place, ordere
 5. **One file per folder**: Each folder contains exactly one `.cs` file with all waves for that type
 6. **Wave ordering**: Waves are ordered top to bottom by wave number within the file
 
+## Common anti-patterns (do NOT do this)
+
+### A) Redundant re-guarding of polyfilled features
+
+```csharp
+#if !SUPPORTS_SPAN
+// alternative implementation
+#endif
+```
+
+Instead: assume Span exists (native/package/polyfill) and just use it.
+
+### B) “Compiler capability” flags
+
+```csharp
+#if SUPPORTS_EXTENSION_MEMBERS
+// …
+#endif
+```
+
+Instead: always use C# 14 extension members. No guard.
+
+### C) Boolean algebra in flags
+
+```csharp
+#if SUPPORTS_MATHF && !SUPPORTS_MATH_TANH
+#endif
+```
+
+Instead: either SUPPORTS_MATHF is “full MathF”, or it becomes SUPPORTS_MATHF_WAVEk.
+
+### D) Tests adapting to the target
+
+```csharp
+#if SUPPORTS_…
+Assert.Inconclusive();
+#endif
+```
+
+Instead: tests compile once, run everywhere, against public APIs only.
+
+### E) Nesting flags
+
+```csharp
+#if !SUPPORTS_SPAN  
+  #if !SUPPORTS_MEMORY
+  // …
+  #endif
+#endif
+```
+
+Instead: each feature is independent. Use separate files/sections if needed.
+
 ## Adding a New Backport
 
 ### Step 1: Check if Official Package Exists
@@ -447,7 +513,14 @@ Before implementing a polyfill, check if Microsoft provides an official backport
 - [System.ValueTuple](https://www.nuget.org/packages/System.ValueTuple) - ValueTuple types
 - [Microsoft.Bcl.HashCode](https://www.nuget.org/packages/Microsoft.Bcl.HashCode) - HashCode
 
-If an official package exists, prefer referencing it for frameworks where it's available.
+Official package first (decision order):
+
+- If the runtime provides the API → define the relevant SUPPORTS_* flags in VersionSpecificSymbols and ship nothing.
+- Else if Microsoft provides an official package for that target → reference it and define OFFICIAL_* inside the csproj.
+- Else → polyfill in this repo guarded by !SUPPORTS_* and !OFFICIAL_*.
+
+And one more **hard rule**:
+Never implement a polyfill for an API that is already present via official package on that target. **The package wins**.
 
 ### Step 2: Create the Feature Folder
 
@@ -649,7 +722,7 @@ public void LeadingZeroCount_WithZero_Returns32() { ... }
 public void LeadingZeroCount_WithMaxValue_ReturnsZero() { ... }
 ```
 
-### Test Design (No Feature Flags, No Target Switches, No access to Polyfill classes)
+### Test Design (No Feature Flags, No Target Switches)
 
 Tests must validate that **the final API surface and behavior are identical** regardless of whether it comes from the runtime, from official packages, or from polyfills.
 
@@ -657,9 +730,9 @@ That means:
 
 - **Do not use `#if` in tests** for `SUPPORTS_*`, `OFFICIAL_*`, or `TargetFramework` checks.
 - **Do not skip tests on old frameworks** just because a feature is polyfilled there.
-- **Do not reference polyfill classes or internal implementation details** in tests; only use the public API as documented by Microsoft.
-- **Do not write tests that depend on internal implementation details or polyfill-specific behavior**.
-- **Do not exclude tests for certain targets**; all tests must run on all targets.
+- **Do not exclude tests on new frameworks** just because the feature is natively available there.
+- **Do not exclude test files from certain target frameworks** in the test project file.
+- **Never reference *Polyfills classes** (or any internal polyfill type) outside the Backports assembly implementing that type.
 - **Write tests only against the public API** as documented by Microsoft; the tests must pass:
   - when the API is fully native,
   - when the API is fully implemented using official NuGet packages,
@@ -667,22 +740,11 @@ That means:
   - when the API is partially native + partially official packages + partially polyfilled,
   - when the API is partially native + partially polyfilled via extensions,
   - when the API is fully polyfilled.
-- The only exceptions where it is allowed to use `#if` is for:
-  - testing polyfilled scalar types in bcl vectors before they are natively available (e.g., `Vector<T>` with `T` being `System.Half`, `System.Int128`, `System.UIn128`),
-  - indexer access as that can't be polyfilled right now:
-
-```csharp
-#if !SUPPORTS_FEATURE_NAME_INDEXER
-  var value = instance.get_Item(index);
-#else
-  var value = instance[index];
-#endif
-```
 
 Bad test example (do **not** do this):
 
 ```csharp
-#if FEATURE_EXAMPLE_WAVE1
+#if SUPPORTS_EXAMPLE_WAVE1
 [Test]
 public void Example_Zero_IsZero() {
   Assert.That(Example.Zero.IsZero, Is.True);
@@ -832,10 +894,10 @@ public readonly struct YourStruct<T> : IEquatable<YourStruct<T>> where T : struc
 
 - [ ] Feature flags added to `VersionSpecificSymbols.Common.prop`:
   - `SUPPORTS_<FEATURE>` for all-or-nothing features
-  - `FEATURE_<NAME>_WAVE1/WAVE2/...` for layered features (monotonically defined)
+  - `SUPPORTS_<NAME>_WAVE1/WAVE2/...` for layered features (monotonically defined)
 - [ ] Polyfill files guarded with appropriate conditions:
   - `#if !SUPPORTS_<FEATURE>` for single-flag features
-  - `#if !FEATURE_<NAME>_WAVE<k>` for wave-based features
+  - `#if !SUPPORTS_<NAME>_WAVE<k>` for wave-based features
 - [ ] Wave-based features: all waves in single file, ordered top to bottom
 - [ ] File header with license included
 - [ ] Namespace matches official .NET namespace
