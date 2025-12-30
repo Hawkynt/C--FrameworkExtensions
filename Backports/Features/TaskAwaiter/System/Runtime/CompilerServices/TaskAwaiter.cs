@@ -36,13 +36,15 @@ public readonly struct TaskAwaiter(Task task) : ICriticalNotifyCompletion {
   }
 
   public void UnsafeOnCompleted(Action continuation) => this.OnCompleted(continuation);
-  
-  public void GetResult() {
-    if (this._task.IsFaulted)
-      throw this._task.Exception!.InnerException!;
 
-    if (this._task.IsCanceled)
-      throw new TaskCanceledException(this._task);
+  public void GetResult() {
+    // Wait for the task to complete if it hasn't already
+    try {
+      this._task.Wait();
+    } catch (AggregateException ae) {
+      // Unwrap the AggregateException to match BCL behavior - throw the first inner exception
+      throw ae.InnerExceptions.Count == 1 ? ae.InnerExceptions[0] : ae;
+    }
   }
 }
 
@@ -61,11 +63,13 @@ public readonly struct TaskAwaiter<TResult>(Task<TResult> task) : ICriticalNotif
   public void UnsafeOnCompleted(Action continuation) => this.OnCompleted(continuation);
 
   public TResult GetResult() {
-    if (this._task.IsFaulted)
-      throw this._task.Exception!.InnerException!;
-
-    if (this._task.IsCanceled)
-      throw new TaskCanceledException(this._task);
+    // Wait for the task to complete if it hasn't already
+    try {
+      this._task.Wait();
+    } catch (AggregateException ae) {
+      // Unwrap the AggregateException to match BCL behavior - throw the first inner exception
+      throw ae.InnerExceptions.Count == 1 ? ae.InnerExceptions[0] : ae;
+    }
 
     return this._task.Result;
   }

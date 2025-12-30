@@ -90,6 +90,14 @@ public readonly ref struct ReadOnlySpan<T> : IEnumerable<T> {
     }
   }
 
+  public ReadOnlySpan<T> this[Range range] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get {
+      var (start, length) = range.GetOffsetAndLength(this.Length);
+      return this.Slice(start, length);
+    }
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ReadOnlySpan<T> Slice(int start) {
     ArgumentOutOfRangeException.ThrowIfGreaterThan((uint)start,(uint)this.Length);

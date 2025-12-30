@@ -36,12 +36,6 @@
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
 
   <ItemGroup>
-    <Compile Remove="Features\Vector\**" />
-    <EmbeddedResource Remove="Features\Vector\**" />
-    <None Remove="Features\Vector\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Corlib.Extensions\Guard\Against.cs" Link="Guard\Against.cs" />
     <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
     <Compile Include="..\Corlib.Extensions\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
@@ -58,21 +52,11 @@
   <!-- These are included as dependencies so users only need to reference FrameworkExtensions.Backports -->
   <!-- Each package has its own PropertyGroup (for compilation symbols) and ItemGroup (for package references) -->
 
-  <!-- Microsoft.Bcl - Provides CallerMemberName, IProgress, Tuple extensions for .NET 4.0 (DEPRECATED but still relevant) -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_CALLER_MEMBER_NAME</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PackageReference Include="Microsoft.Bcl" Version="1.1.10" />
-  </ItemGroup>
-
-  <!-- Microsoft.Bcl.Async - Provides TaskAwaiter and async/await support for .NET 4.0 (DEPRECATED but still relevant) -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_TASK_AWAITER</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PackageReference Include="Microsoft.Bcl.Async" Version="1.0.168" />
-  </ItemGroup>
+  <!-- Note: Microsoft.Bcl and Microsoft.Bcl.Async are NOT used because their types are not properly
+       accessible in SDK-style projects. Instead, we use the Backports polyfills for:
+       - CallerMemberName attribute
+       - TaskAwaiter and async/await support
+       These polyfills provide equivalent functionality without package dependency issues. -->
 
   <!-- System.ValueTuple - Provides ValueTuple types for older frameworks -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
@@ -82,14 +66,14 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
-  <!-- System.Memory - Provides Span<T>, ReadOnlySpan<T>, Memory<T>, MemoryMarshal -->
+  <!-- System.Memory - Provides Span<T>, ReadOnlySpan<T>, Memory<T>, MemoryMarshal, Base64 -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_SPAN;OFFICIAL_MEMORY</DefineConstants>
+    <DefineConstants>$(DefineConstants);OFFICIAL_SPAN;OFFICIAL_MEMORY;OFFICIAL_BASE64</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
-
+  
   <!-- System.Buffers - Provides ArrayPool<T> -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);OFFICIAL_ARRAYPOOL</DefineConstants>
@@ -142,6 +126,14 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <!-- System.IO.Hashing from Net8+ -->
+  <PropertyGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
+    <DefineConstants>$(DefineConstants);OFFICIAL_CRC32;OFFICIAL_CRC64;OFFICIAL_XXHASH32;OFFICIAL_XXHASH64;OFFICIAL_XXHASH128</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
+    <PackageReference Include="System.IO.Hashing" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

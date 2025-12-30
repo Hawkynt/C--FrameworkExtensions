@@ -188,8 +188,6 @@ public class ZipFileTests {
     Assert.That(actualContent, Is.EqualTo(expectedContent));
   }
 
-#if !SUPPORTS_ZIPARCHIVE
-
   [Test]
   [Category("HappyPath")]
   public void ExtractToDirectory_OverwriteTrue_OverwritesExisting() {
@@ -227,8 +225,6 @@ public class ZipFileTests {
 
     Assert.Throws<IOException>(() => ZipFile.ExtractToDirectory(zipPath, extractDir, overwriteFiles: false));
   }
-
-#endif
 
   [Test]
   [Category("Exception")]
@@ -461,8 +457,6 @@ public class ZipFileTests {
 
   #region Zip Slip Protection
 
-#if !SUPPORTS_ZIPARCHIVE
-
   [Test]
   [Category("Exception")]
   [Category("Security")]
@@ -481,8 +475,6 @@ public class ZipFileTests {
 
     Assert.Throws<IOException>(() => ZipFile.ExtractToDirectory(zipPath, extractDir));
   }
-
-#endif
 
   #endregion
 

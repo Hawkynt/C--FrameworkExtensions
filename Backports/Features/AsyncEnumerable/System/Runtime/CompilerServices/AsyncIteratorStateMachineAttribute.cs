@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_ITERATOR_STATE_MACHINE_ATTRIBUTE
 
-#if SUPPORTS_TASK_AWAITER || OFFICIAL_TASK_AWAITER
-
 namespace System.Runtime.CompilerServices;
 
 /// <summary>
@@ -35,7 +33,5 @@ public sealed class AsyncIteratorStateMachineAttribute : StateMachineAttribute {
   public AsyncIteratorStateMachineAttribute(Type stateMachineType)
     : base(stateMachineType) { }
 }
-
-#endif
 
 #endif

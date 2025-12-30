@@ -150,6 +150,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Matrix4x4](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4)
   * [Plane](https://learn.microsoft.com/dotnet/api/system.numerics.plane)
   * [Quaternion](https://learn.microsoft.com/dotnet/api/system.numerics.quaternion)
+  * [Vector](https://learn.microsoft.com/dotnet/api/system.numerics.vector)
+  * [Vector](https://learn.microsoft.com/dotnet/api/system.numerics.vector-1)&lt;T&gt;
   * [Vector2](https://learn.microsoft.com/dotnet/api/system.numerics.vector2)
   * [Vector3](https://learn.microsoft.com/dotnet/api/system.numerics.vector3)
   * [Vector4](https://learn.microsoft.com/dotnet/api/system.numerics.vector4)
@@ -228,6 +230,13 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System
   * [AggregateException](https://learn.microsoft.com/dotnet/api/system.aggregateexception)
 
+* System.IO.Hashing
+  * [Crc32](https://learn.microsoft.com/dotnet/api/system.io.hashing.crc32)
+  * [Crc64](https://learn.microsoft.com/dotnet/api/system.io.hashing.crc64)
+  * [XxHash32](https://learn.microsoft.com/dotnet/api/system.io.hashing.xxhash32)
+  * [XxHash64](https://learn.microsoft.com/dotnet/api/system.io.hashing.xxhash64)
+  * [XxHash128](https://learn.microsoft.com/dotnet/api/system.io.hashing.xxhash128)
+
 ### Attributes
 
 * System.Diagnostics
@@ -300,6 +309,18 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * bool [IsAsciiHexDigit](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigit)(char c)
   * bool [IsAsciiHexDigitLower](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigitlower)(char c)
   * bool [IsAsciiHexDigitUpper](https://learn.microsoft.com/dotnet/api/system.char.isasciihexdigitupper)(char c)
+
+* System.Buffers.Text.Base64
+  * bool [IsValid](https://learn.microsoft.com/dotnet/api/system.buffers.text.base64.isvalid#system-buffers-text-base64-isvalid%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; base64Text)
+  * bool [IsValid](https://learn.microsoft.com/dotnet/api/system.buffers.text.base64.isvalid#system-buffers-text-base64-isvalid%28system-readonlyspan%28%28system-char%29%29-system-int32%40%29)(ReadOnlySpan&lt;char&gt; base64Text, out int decodedLength)
+  * bool [IsValid](https://learn.microsoft.com/dotnet/api/system.buffers.text.base64.isvalid#system-buffers-text-base64-isvalid%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; base64TextUtf8)
+  * bool [IsValid](https://learn.microsoft.com/dotnet/api/system.buffers.text.base64.isvalid#system-buffers-text-base64-isvalid%28system-readonlyspan%28%28system-byte%29%29-system-int32%40%29)(ReadOnlySpan&lt;byte&gt; base64TextUtf8, out int decodedLength)
+
+* System.Collections.ObjectModel.ReadOnlyCollection&lt;T&gt;
+  * ReadOnlyCollection&lt;T&gt; [Empty](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlycollection-1.empty) (static property)
+
+* System.Collections.ObjectModel.ReadOnlyDictionary&lt;TKey,TValue&gt;
+  * ReadOnlyDictionary&lt;TKey,TValue&gt; [Empty](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2.empty) (static property)
 
 * System.Convert
   * string [ToHexString](https://learn.microsoft.com/dotnet/api/system.convert.tohexstring)(byte[] inArray)
@@ -456,6 +477,16 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, object instance)
   * void [ThrowIf](https://learn.microsoft.com/dotnet/api/system.objectdisposedexception.throwif)(bool condition, Type type)
 
+* System.Threading.Tasks.ParallelAsync
+  * Task [ForAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.forasync#system-threading-tasks-parallel-forasync%28system-int32-system-int32-system-func%28%28system-int32-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)(int fromInclusive, int toExclusive, Func&lt;int, CancellationToken, ValueTask&gt; body)
+  * Task [ForAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.forasync#system-threading-tasks-parallel-forasync%28system-int32-system-int32-system-threading-tasks-paralleloptions-system-func%28%28system-int32-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)(int fromInclusive, int toExclusive, ParallelOptions parallelOptions, Func&lt;int, CancellationToken, ValueTask&gt; body)
+  * Task [ForAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.forasync#system-threading-tasks-parallel-forasync%28system-int64-system-int64-system-func%28%28system-int64-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)(long fromInclusive, long toExclusive, Func&lt;long, CancellationToken, ValueTask&gt; body)
+  * Task [ForAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.forasync#system-threading-tasks-parallel-forasync%28system-int64-system-int64-system-threading-tasks-paralleloptions-system-func%28%28system-int64-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)(long fromInclusive, long toExclusive, ParallelOptions parallelOptions, Func&lt;long, CancellationToken, ValueTask&gt; body)
+  * Task [ForEachAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.foreachasync#system-threading-tasks-parallel-foreachasync-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-func%28%28-0-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)&lt;TSource&gt;(IEnumerable&lt;TSource&gt; source, Func&lt;TSource, CancellationToken, ValueTask&gt; body)
+  * Task [ForEachAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.foreachasync#system-threading-tasks-parallel-foreachasync-1%28system-collections-generic-ienumerable%28%28-0%29%29-system-threading-tasks-paralleloptions-system-func%28%28-0-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)&lt;TSource&gt;(IEnumerable&lt;TSource&gt; source, ParallelOptions parallelOptions, Func&lt;TSource, CancellationToken, ValueTask&gt; body)
+  * Task [ForEachAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.foreachasync#system-threading-tasks-parallel-foreachasync-1%28system-collections-generic-iasyncenumerable%28%28-0%29%29-system-func%28%28-0-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)&lt;TSource&gt;(IAsyncEnumerable&lt;TSource&gt; source, Func&lt;TSource, CancellationToken, ValueTask&gt; body)
+  * Task [ForEachAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.parallel.foreachasync#system-threading-tasks-parallel-foreachasync-1%28system-collections-generic-iasyncenumerable%28%28-0%29%29-system-threading-tasks-paralleloptions-system-func%28%28-0-system-threading-cancellationtoken-system-threading-tasks-valuetask%29%29%29)&lt;TSource&gt;(IAsyncEnumerable&lt;TSource&gt; source, ParallelOptions parallelOptions, Func&lt;TSource, CancellationToken, ValueTask&gt; body)
+
 * System.Threading.Interlocked
   * int [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-int32%40-system-int32%29)(ref int location1, int value)
   * long [And](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.and#system-threading-interlocked-and%28system-int64%40-system-int64%29)(ref long location1, long value)
@@ -538,6 +569,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * List&lt;T&gt; [Slice](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.slice)&lt;T&gt;(this List&lt;T&gt; @this, int start, int length)
   * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.ensurecapacity)&lt;T&gt;(this List&lt;T&gt; @this, int capacity)
 
+* System.Collections.Generic.CollectionExtensions
+  * ReadOnlyCollection&lt;T&gt; [AsReadOnly](https://learn.microsoft.com/dotnet/api/system.collections.generic.collectionextensions.asreadonly#system-collections-generic-collectionextensions-asreadonly-1%28system-collections-generic-ilist%28%28-0%29%29%29)&lt;T&gt;(this IList&lt;T&gt; list)
+  * ReadOnlyDictionary&lt;TKey, TValue&gt; [AsReadOnly](https://learn.microsoft.com/dotnet/api/system.collections.generic.collectionextensions.asreadonly#system-collections-generic-collectionextensions-asreadonly-2%28system-collections-generic-idictionary%28%28-0-1%29%29%29)&lt;TKey, TValue&gt;(this IDictionary&lt;TKey, TValue&gt; dictionary)
+
 * System.DateTime
   * int [Microsecond](https://learn.microsoft.com/dotnet/api/system.datetime.microsecond)(this DateTime @this)
   * int [Nanosecond](https://learn.microsoft.com/dotnet/api/system.datetime.nanosecond)(this DateTime @this)
@@ -554,6 +589,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * void [Restart](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.restart)(this Stopwatch @this)
   * TimeSpan [GetElapsedTime](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.getelapsedtime#system-diagnostics-stopwatch-getelapsedtime%28system-int64%29)(long startingTimestamp)
   * TimeSpan [GetElapsedTime](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.getelapsedtime#system-diagnostics-stopwatch-getelapsedtime%28system-int64-system-int64%29)(long startingTimestamp, long endingTimestamp)
+  * string [ToString](https://learn.microsoft.com/dotnet/api/system.diagnostics.stopwatch.tostring)(this Stopwatch @this)
 
 * System.Environment
   * long [TickCount64](https://learn.microsoft.com/dotnet/api/system.environment.tickcount64)
@@ -580,6 +616,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.IO.FileInfo
   * void [MoveTo](https://learn.microsoft.com/dotnet/api/system.io.fileinfo.moveto#system-io-fileinfo-moveto%28system-string-system-boolean%29)(this FileInfo @this, string destFileName, bool overwrite)
+
+* System.IO.BinaryReader
+  * byte[] [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.binaryreader.readexactly#system-io-binaryreader-readexactly%28system-int32%29)(this BinaryReader @this, int count)
+  * void [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.binaryreader.readexactly#system-io-binaryreader-readexactly%28system-span%28%28system-byte%29%29%29)(this BinaryReader @this, Span&lt;byte&gt; buffer)
 
 * System.IO.Stream
   * void [CopyTo](https://learn.microsoft.com/dotnet/api/system.io.stream.copyto#system-io-stream-copyto%28system-io-stream%29)(this Stream @this, Stream target)

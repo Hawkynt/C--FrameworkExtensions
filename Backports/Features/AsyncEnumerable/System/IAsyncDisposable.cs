@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_DISPOSABLE && !OFFICIAL_ASYNC_DISPOSABLE
 
-#if SUPPORTS_TASK_AWAITER || OFFICIAL_TASK_AWAITER
-
 using System.Threading.Tasks;
 
 namespace System;
@@ -33,13 +31,7 @@ public interface IAsyncDisposable {
   /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.
   /// </summary>
   /// <returns>A task that represents the asynchronous dispose operation.</returns>
-#if SUPPORTS_VALUE_TASK || OFFICIAL_VALUETASK
   ValueTask DisposeAsync();
-#else
-  Task DisposeAsync();
-#endif
 }
-
-#endif
 
 #endif

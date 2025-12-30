@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_ENUMERABLE && !OFFICIAL_ASYNC_ENUMERABLE
 
-#if SUPPORTS_TASK_AWAITER || OFFICIAL_TASK_AWAITER
-
 using System.Threading;
 
 namespace System.Collections.Generic;
@@ -37,7 +35,5 @@ public interface IAsyncEnumerable<out T> {
   /// <returns>An enumerator that can be used to iterate asynchronously through the collection.</returns>
   IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default);
 }
-
-#endif
 
 #endif

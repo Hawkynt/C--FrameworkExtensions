@@ -101,7 +101,7 @@ public abstract class OrderablePartitioner<TSource> : Partitioner<TSource> {
   private sealed class _KeyValuePairUnwrapper(IEnumerator<KeyValuePair<long, TSource>> source) : IEnumerator<TSource> {
 
     public TSource Current => source.Current.Value;
-    object IEnumerator.Current => this.Current;
+    object? IEnumerator.Current => this.Current;
     public bool MoveNext() => source.MoveNext();
     public void Reset() => source.Reset();
     public void Dispose() => source.Dispose();

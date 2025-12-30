@@ -23,6 +23,7 @@
 #if !SUPPORTS_FROZEN_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -102,7 +103,9 @@ public class FrozenDictionary<TKey, TValue> :
   /// Gets the value associated with the specified key.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool TryGetValue(TKey key, out TValue value) => this._dictionary.TryGetValue(key, out value);
+#pragma warning disable CS8767 // Nullability mismatch with interface (older framework interfaces lack proper nullable annotations)
+  public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) => this._dictionary.TryGetValue(key, out value!);
+#pragma warning restore CS8767
 
   /// <summary>
   /// Copies the elements of the dictionary to an array.

@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_ITERATOR_METHOD_BUILDER
 
-#if SUPPORTS_TASK_AWAITER || OFFICIAL_TASK_AWAITER
-
 namespace System.Runtime.CompilerServices;
 
 /// <summary>
@@ -74,7 +72,5 @@ public struct AsyncIteratorMethodBuilder {
   /// </summary>
   public void Complete() { }
 }
-
-#endif
 
 #endif

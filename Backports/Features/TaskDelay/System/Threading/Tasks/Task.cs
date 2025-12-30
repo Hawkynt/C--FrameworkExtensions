@@ -32,6 +32,18 @@ public static partial class TaskPolyfills {
   extension(Task) {
 
     /// <summary>
+    /// Creates an awaitable task that asynchronously yields back to the current context when awaited.
+    /// </summary>
+    /// <returns>
+    /// A context that, when awaited, will asynchronously transition back into the current context at the
+    /// time of the await. If the current <see cref="SynchronizationContext"/> is non-null, it is treated
+    /// as the current context. Otherwise, the task scheduler that is associated with the currently executing
+    /// task is treated as the current context.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static YieldAwaitable Yield() => default;
+
+    /// <summary>
     /// Creates a task that completes after a specified time interval.
     /// </summary>
     /// <param name="delay">The time span to wait before completing the returned task.</param>
@@ -262,6 +274,48 @@ public static partial class TaskPolyfills {
       ArgumentNullException.ThrowIfNull(function);
 
       return Task.Factory.StartNew(function, cancellationToken, TaskCreationOptions.None, TaskScheduler.Default);
+    }
+
+    /// <summary>
+    /// Queues the specified work to run on the thread pool and returns a proxy for the task returned by <paramref name="function"/>.
+    /// </summary>
+    /// <param name="function">The work to execute asynchronously.</param>
+    /// <returns>A task that represents a proxy for the task returned by <paramref name="function"/>.</returns>
+    public static Task Run(Func<Task> function)
+      => Run(function, CancellationToken.None);
+
+    /// <summary>
+    /// Queues the specified work to run on the thread pool and returns a proxy for the task returned by <paramref name="function"/>.
+    /// </summary>
+    /// <param name="function">The work to execute asynchronously.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the work.</param>
+    /// <returns>A task that represents a proxy for the task returned by <paramref name="function"/>.</returns>
+    public static Task Run(Func<Task> function, CancellationToken cancellationToken) {
+      ArgumentNullException.ThrowIfNull(function);
+
+      return Task.Factory.StartNew(function, cancellationToken, TaskCreationOptions.None, TaskScheduler.Default).Unwrap();
+    }
+
+    /// <summary>
+    /// Queues the specified work to run on the thread pool and returns a proxy for the <see cref="Task{TResult}"/> returned by <paramref name="function"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result returned by the proxy task.</typeparam>
+    /// <param name="function">The work to execute asynchronously.</param>
+    /// <returns>A <see cref="Task{TResult}"/> that represents a proxy for the <see cref="Task{TResult}"/> returned by <paramref name="function"/>.</returns>
+    public static Task<TResult> Run<TResult>(Func<Task<TResult>> function)
+      => Run(function, CancellationToken.None);
+
+    /// <summary>
+    /// Queues the specified work to run on the thread pool and returns a proxy for the <see cref="Task{TResult}"/> returned by <paramref name="function"/>.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result returned by the proxy task.</typeparam>
+    /// <param name="function">The work to execute asynchronously.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the work.</param>
+    /// <returns>A <see cref="Task{TResult}"/> that represents a proxy for the <see cref="Task{TResult}"/> returned by <paramref name="function"/>.</returns>
+    public static Task<TResult> Run<TResult>(Func<Task<TResult>> function, CancellationToken cancellationToken) {
+      ArgumentNullException.ThrowIfNull(function);
+
+      return Task.Factory.StartNew(function, cancellationToken, TaskCreationOptions.None, TaskScheduler.Default).Unwrap();
     }
 
   }

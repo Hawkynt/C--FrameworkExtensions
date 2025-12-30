@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_ENUMERABLE && !OFFICIAL_ASYNC_ENUMERABLE
 
-#if SUPPORTS_TASK_AWAITER || OFFICIAL_TASK_AWAITER
-
 using System.Threading.Tasks;
 
 namespace System.Collections.Generic;
@@ -43,13 +41,7 @@ public interface IAsyncEnumerator<out T> : IAsyncDisposable {
   /// was successfully advanced to the next element, or <c>false</c> if the enumerator has passed the end
   /// of the collection.
   /// </returns>
-#if SUPPORTS_VALUE_TASK || OFFICIAL_VALUETASK
   ValueTask<bool> MoveNextAsync();
-#else
-  Task<bool> MoveNextAsync();
-#endif
 }
-
-#endif
 
 #endif

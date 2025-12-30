@@ -253,7 +253,7 @@ public static class Partitioner {
       ) {
 
     private readonly object _lock = new();
-    private IEnumerator<TSource> _enumerator;
+    private IEnumerator<TSource>? _enumerator;
     private long _currentIndex = -1;
     private bool _exhausted;
 
@@ -297,7 +297,7 @@ public static class Partitioner {
             yield break;
 
           for (var i = 0; i < bufferSize && !this._exhausted; ++i) {
-            if (this._enumerator.MoveNext()) {
+            if (this._enumerator!.MoveNext()) {
               ++this._currentIndex;
               buffer.Add(new(this._currentIndex, this._enumerator.Current));
             } else

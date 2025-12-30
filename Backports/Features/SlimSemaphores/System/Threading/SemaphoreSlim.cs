@@ -17,15 +17,13 @@
 
 #endregion
 
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
+using System.Threading.Tasks;
+
 #if !SUPPORTS_SLIM_SEMAPHORES
 
-using System.Runtime.CompilerServices;
-#if SUPPORTS_TASK_RUN
-using System.Threading.Tasks;
-#endif
-using MethodImplOptions = Utilities.MethodImplOptions;
-
-namespace System.Threading;
+namespace System.Threading {
 
 /// <summary>
 /// Represents a lightweight alternative to <see cref="Semaphore"/> that limits the number of threads
@@ -199,73 +197,6 @@ public class SemaphoreSlim : IDisposable {
     }
   }
 
-#if SUPPORTS_TASK_RUN
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>.
-  /// </summary>
-  /// <returns>A task that will complete when the semaphore has been entered.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Task WaitAsync() => this.WaitAsync(Timeout.Infinite, CancellationToken.None);
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, while observing a <see cref="CancellationToken"/>.
-  /// </summary>
-  /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
-  /// <returns>A task that will complete when the semaphore has been entered.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Task WaitAsync(CancellationToken cancellationToken) => this.WaitAsync(Timeout.Infinite, cancellationToken);
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a 32-bit signed integer to specify the timeout.
-  /// </summary>
-  /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait indefinitely.</param>
-  /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Task<bool> WaitAsync(int millisecondsTimeout) => this.WaitAsync(millisecondsTimeout, CancellationToken.None);
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a <see cref="TimeSpan"/> to specify the timeout.
-  /// </summary>
-  /// <param name="timeout">A <see cref="TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
-  /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Task<bool> WaitAsync(TimeSpan timeout) => this.WaitAsync((int)timeout.TotalMilliseconds, CancellationToken.None);
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a <see cref="TimeSpan"/> to specify the timeout, while observing a <see cref="CancellationToken"/>.
-  /// </summary>
-  /// <param name="timeout">A <see cref="TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
-  /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
-  /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken) => this.WaitAsync((int)timeout.TotalMilliseconds, cancellationToken);
-
-  /// <summary>
-  /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a 32-bit signed integer to specify the timeout, while observing a <see cref="CancellationToken"/>.
-  /// </summary>
-  /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait indefinitely.</param>
-  /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
-  /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
-  public Task<bool> WaitAsync(int millisecondsTimeout, CancellationToken cancellationToken) {
-    this._ThrowIfDisposed();
-
-    if (millisecondsTimeout < -1)
-      throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout), millisecondsTimeout, "The timeout must be a non-negative number or -1.");
-
-    // Try to acquire synchronously first
-    if (this._TryAcquire())
-      return Task.FromResult(true);
-
-    if (millisecondsTimeout == 0)
-      return Task.FromResult(false);
-
-    // Fall back to running Wait on a thread pool thread
-    return Task.Run(() => this.Wait(millisecondsTimeout, cancellationToken), cancellationToken);
-  }
-
-#endif
-
   /// <summary>
   /// Releases the <see cref="SemaphoreSlim"/> object once.
   /// </summary>
@@ -358,6 +289,87 @@ public class SemaphoreSlim : IDisposable {
     this._semaphore.Close();
     this._availableWaitHandle?.Close();
   }
+}
+
+}
+
+#endif
+
+#if !SUPPORTS_SEMAPHORESLIM_WAITASYNC
+
+namespace System.Threading {
+
+/// <summary>
+/// Provides WaitAsync extension methods for <see cref="SemaphoreSlim"/>.
+/// </summary>
+public static class SemaphoreSlimPolyfills {
+
+  /// <param name="this">The <see cref="SemaphoreSlim"/> instance.</param>
+  extension(SemaphoreSlim @this) {
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>.
+    /// </summary>
+    /// <returns>A task that will complete when the semaphore has been entered.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task WaitAsync() => @this.WaitAsync(Timeout.Infinite, CancellationToken.None);
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, while observing a <see cref="CancellationToken"/>.
+    /// </summary>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A task that will complete when the semaphore has been entered.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task WaitAsync(CancellationToken cancellationToken) => @this.WaitAsync(Timeout.Infinite, cancellationToken);
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a 32-bit signed integer to specify the timeout.
+    /// </summary>
+    /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait indefinitely.</param>
+    /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<bool> WaitAsync(int millisecondsTimeout) => @this.WaitAsync(millisecondsTimeout, CancellationToken.None);
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a <see cref="TimeSpan"/> to specify the timeout.
+    /// </summary>
+    /// <param name="timeout">A <see cref="TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
+    /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<bool> WaitAsync(TimeSpan timeout) => @this.WaitAsync((int)timeout.TotalMilliseconds, CancellationToken.None);
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a <see cref="TimeSpan"/> to specify the timeout, while observing a <see cref="CancellationToken"/>.
+    /// </summary>
+    /// <param name="timeout">A <see cref="TimeSpan"/> that represents the number of milliseconds to wait, or a <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken) => @this.WaitAsync((int)timeout.TotalMilliseconds, cancellationToken);
+
+    /// <summary>
+    /// Asynchronously waits to enter the <see cref="SemaphoreSlim"/>, using a 32-bit signed integer to specify the timeout, while observing a <see cref="CancellationToken"/>.
+    /// </summary>
+    /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait indefinitely.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
+    /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
+    public Task<bool> WaitAsync(int millisecondsTimeout, CancellationToken cancellationToken) {
+      if (millisecondsTimeout < -1)
+        throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout), millisecondsTimeout, "The timeout must be a non-negative number or -1.");
+
+      // Try to acquire synchronously first
+      if (@this.Wait(0))
+        return Task.FromResult(true);
+
+      if (millisecondsTimeout == 0)
+        return Task.FromResult(false);
+
+      // Fall back to running Wait on a thread pool thread
+      return Task.Run(() => @this.Wait(millisecondsTimeout, cancellationToken), cancellationToken);
+    }
+  }
+}
+
 }
 
 #endif

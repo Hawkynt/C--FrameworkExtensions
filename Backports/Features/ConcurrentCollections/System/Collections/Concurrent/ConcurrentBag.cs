@@ -31,10 +31,23 @@ public class ConcurrentBag<T> {
 
   public bool IsEmpty => !this.Any();
 
+  public int Count {
+    get {
+      lock (this._items)
+        return this._items.Count;
+    }
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Any() {
     lock (this._items)
       return this._items.Count > 0;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Contains(T item) {
+    lock (this._items)
+      return this._items.Contains(item);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

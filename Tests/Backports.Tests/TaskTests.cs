@@ -464,7 +464,6 @@ public class TaskTests {
     Assert.That(callbackCalled, Is.True);
   }
 
-#if NET45_OR_GREATER || NETCOREAPP || NETSTANDARD || !SUPPORTS_CANCELLATIONTOKENSOURCE
   [Test]
   [Category("HappyPath")]
   public void CancellationTokenSource_CancelAfter_CancelsAfterDelay() {
@@ -474,7 +473,6 @@ public class TaskTests {
     Thread.Sleep(100);
     Assert.That(cts.Token.IsCancellationRequested, Is.True);
   }
-#endif
 
   [Test]
   [Category("Exception")]

@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ASYNC_ENUMERABLE && !OFFICIAL_ASYNC_ENUMERABLE
 
-#if SUPPORTS_TASK_AWAITER
-
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -92,28 +90,44 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
     /// if the enumerator was successfully advanced to the next element, or <c>false</c> if the enumerator has
     /// passed the end of the collection.
     /// </returns>
-#if SUPPORTS_VALUE_TASK || OFFICIAL_VALUETASK
     public ConfiguredValueTaskAwaitable<bool> MoveNextAsync()
       => _enumerator.MoveNextAsync().ConfigureAwait(_continueOnCapturedContext);
-#else
-    public ConfiguredTaskAwaitable<bool> MoveNextAsync()
-      => _enumerator.MoveNextAsync().ConfigureAwait(_continueOnCapturedContext);
-#endif
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.
     /// </summary>
     /// <returns>A task that represents the asynchronous dispose operation.</returns>
-#if SUPPORTS_VALUE_TASK || OFFICIAL_VALUETASK
     public ConfiguredValueTaskAwaitable DisposeAsync()
       => _enumerator.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
-#else
-    public ConfiguredTaskAwaitable DisposeAsync()
-      => _enumerator.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
-#endif
   }
 }
 
-#endif
+/// <summary>
+/// Provides extension methods for <see cref="IAsyncEnumerable{T}"/>.
+/// </summary>
+public static class AsyncEnumerableExtensions {
+  /// <summary>
+  /// Configures how awaits on the tasks returned from an async iteration will be performed.
+  /// </summary>
+  /// <typeparam name="T">The type of values to enumerate.</typeparam>
+  /// <param name="source">The source enumerable being iterated.</param>
+  /// <param name="continueOnCapturedContext">
+  /// <see langword="true"/> to capture and marshal back to the current context; otherwise, <see langword="false"/>.
+  /// </param>
+  /// <returns>The configured enumerable.</returns>
+  public static ConfiguredCancelableAsyncEnumerable<T> ConfigureAwait<T>(this IAsyncEnumerable<T> source, bool continueOnCapturedContext)
+    => new(source, default, continueOnCapturedContext);
+
+  /// <summary>
+  /// Sets the <see cref="CancellationToken"/> to be passed to <see cref="IAsyncEnumerable{T}.GetAsyncEnumerator"/>
+  /// when iterating.
+  /// </summary>
+  /// <typeparam name="T">The type of values to enumerate.</typeparam>
+  /// <param name="source">The source enumerable being iterated.</param>
+  /// <param name="cancellationToken">The <see cref="CancellationToken"/> to use.</param>
+  /// <returns>The configured enumerable.</returns>
+  public static ConfiguredCancelableAsyncEnumerable<T> WithCancellation<T>(this IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+    => new(source, cancellationToken, true);
+}
 
 #endif

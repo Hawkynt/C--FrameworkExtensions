@@ -58,7 +58,7 @@ public static partial class TimeSpanPolyfills {
       return format switch {
         "g" => FormatGeneralShort(@this, decimalSeparator),
         "G" => FormatGeneralLong(@this, decimalSeparator),
-        _ => FormatCustom(@this, format, decimalSeparator)
+        _ => FormatCustom(@this, format!, decimalSeparator)
       };
     }
 

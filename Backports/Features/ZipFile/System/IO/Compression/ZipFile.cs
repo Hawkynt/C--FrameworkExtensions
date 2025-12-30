@@ -22,7 +22,7 @@
 using System.Text;
 using Guard;
 
-namespace System.IO.Compression;
+namespace System.IO.Compression {
 
 /// <summary>
 /// Provides static methods for creating, extracting, and opening zip archives.
@@ -102,7 +102,7 @@ public static class ZipFile {
   /// <param name="sourceArchiveFileName">The path to the archive that is to be extracted.</param>
   /// <param name="destinationDirectoryName">The path to the directory in which to place the extracted files, specified as a relative or absolute path.</param>
   public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName)
-    => ExtractToDirectory(sourceArchiveFileName, destinationDirectoryName, entryNameEncoding: null, overwriteFiles: false);
+    => ExtractToDirectory(sourceArchiveFileName, destinationDirectoryName, entryNameEncoding: null);
 
   /// <summary>
   /// Extracts all the files in the specified zip archive to a directory on the file system and uses the specified character encoding for entry names.
@@ -110,26 +110,7 @@ public static class ZipFile {
   /// <param name="sourceArchiveFileName">The path to the archive that is to be extracted.</param>
   /// <param name="destinationDirectoryName">The path to the directory in which to place the extracted files, specified as a relative or absolute path.</param>
   /// <param name="entryNameEncoding">The encoding to use when reading entry names in this archive.</param>
-  public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, Encoding? entryNameEncoding)
-    => ExtractToDirectory(sourceArchiveFileName, destinationDirectoryName, entryNameEncoding, overwriteFiles: false);
-
-  /// <summary>
-  /// Extracts all the files in the specified archive to a directory on the file system.
-  /// </summary>
-  /// <param name="sourceArchiveFileName">The path on the file system to the archive that is to be extracted.</param>
-  /// <param name="destinationDirectoryName">The path to the destination directory on the file system.</param>
-  /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
-  public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, bool overwriteFiles)
-    => ExtractToDirectory(sourceArchiveFileName, destinationDirectoryName, entryNameEncoding: null, overwriteFiles);
-
-  /// <summary>
-  /// Extracts all the files in the specified archive to a directory on the file system.
-  /// </summary>
-  /// <param name="sourceArchiveFileName">The path on the file system to the archive that is to be extracted.</param>
-  /// <param name="destinationDirectoryName">The path to the destination directory on the file system.</param>
-  /// <param name="entryNameEncoding">The encoding to use when reading entry names in this archive.</param>
-  /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
-  public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, Encoding? entryNameEncoding, bool overwriteFiles) {
+  public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, Encoding? entryNameEncoding) {
     Against.ArgumentIsNull(sourceArchiveFileName);
     Against.ArgumentIsNull(destinationDirectoryName);
 
@@ -140,7 +121,7 @@ public static class ZipFile {
       throw new FileNotFoundException($"Could not find file '{sourceArchiveFileName}'.", sourceArchiveFileName);
 
     using var archive = Open(sourceArchiveFileName, ZipArchiveMode.Read, entryNameEncoding);
-    archive.ExtractToDirectory(destinationDirectoryName, overwriteFiles);
+    archive.ExtractToDirectory(destinationDirectoryName);
   }
 
   #endregion
@@ -221,6 +202,86 @@ public static class ZipFile {
   }
 
   #endregion
+}
+
+}
+
+#endif
+
+#if !SUPPORTS_ZIPFILE_EXTRACT_OVERWRITE
+
+namespace System.IO.Compression {
+
+public static partial class ZipFilePolyfills {
+
+  extension(ZipFile) {
+
+    /// <summary>
+    /// Extracts all the files in the specified archive to a directory on the file system.
+    /// </summary>
+    /// <param name="sourceArchiveFileName">The path on the file system to the archive that is to be extracted.</param>
+    /// <param name="destinationDirectoryName">The path to the destination directory on the file system.</param>
+    /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
+    public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, bool overwriteFiles)
+      => ExtractToDirectory(sourceArchiveFileName, destinationDirectoryName, entryNameEncoding: null, overwriteFiles);
+
+    /// <summary>
+    /// Extracts all the files in the specified archive to a directory on the file system.
+    /// </summary>
+    /// <param name="sourceArchiveFileName">The path on the file system to the archive that is to be extracted.</param>
+    /// <param name="destinationDirectoryName">The path to the destination directory on the file system.</param>
+    /// <param name="entryNameEncoding">The encoding to use when reading entry names in this archive.</param>
+    /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
+    public static void ExtractToDirectory(string sourceArchiveFileName, string destinationDirectoryName, global::System.Text.Encoding? entryNameEncoding, bool overwriteFiles) {
+      Guard.Against.ArgumentIsNull(sourceArchiveFileName);
+      Guard.Against.ArgumentIsNull(destinationDirectoryName);
+
+      sourceArchiveFileName = IO.Path.GetFullPath(sourceArchiveFileName);
+      destinationDirectoryName = IO.Path.GetFullPath(destinationDirectoryName);
+
+      if (!IO.File.Exists(sourceArchiveFileName))
+        throw new IO.FileNotFoundException($"Could not find file '{sourceArchiveFileName}'.", sourceArchiveFileName);
+
+      using var archive = ZipFile.Open(sourceArchiveFileName, ZipArchiveMode.Read, entryNameEncoding);
+      archive.ExtractToDirectory(destinationDirectoryName, overwriteFiles);
+    }
+  }
+
+  /// <param name="archive">The zip archive to extract.</param>
+  extension(ZipArchive archive) {
+
+    /// <summary>
+    /// Extracts all the files in the zip archive to a directory on the file system and optionally allows overwriting.
+    /// </summary>
+    /// <param name="destinationDirectoryName">The path to the directory to place the extracted files in.</param>
+    /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
+    public void ExtractToDirectory(string destinationDirectoryName, bool overwriteFiles) {
+      Guard.Against.ArgumentIsNull(archive);
+      Guard.Against.ArgumentIsNull(destinationDirectoryName);
+
+      destinationDirectoryName = IO.Path.GetFullPath(destinationDirectoryName);
+
+      if (!IO.Directory.Exists(destinationDirectoryName))
+        IO.Directory.CreateDirectory(destinationDirectoryName);
+
+      foreach (var entry in archive.Entries) {
+        if (string.IsNullOrEmpty(entry.Name))
+          continue;
+
+        var destinationPath = IO.Path.GetFullPath(IO.Path.Combine(destinationDirectoryName, entry.FullName));
+
+        // Security: Prevent Zip Slip vulnerability
+        if (!destinationPath.StartsWith(destinationDirectoryName + IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+            !destinationPath.Equals(destinationDirectoryName, StringComparison.OrdinalIgnoreCase))
+          throw new IO.IOException($"Extracting Zip entry would have resulted in a file outside the specified destination directory: {entry.FullName}");
+
+        entry.ExtractToFile(destinationPath, overwriteFiles);
+      }
+    }
+  }
+
+}
+
 }
 
 #endif

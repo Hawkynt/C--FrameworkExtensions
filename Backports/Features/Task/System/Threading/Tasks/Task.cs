@@ -435,4 +435,90 @@ public class Task : IDisposable {
 
 }
 
+/// <summary>
+/// Provides extension methods for <see cref="Task"/> types.
+/// </summary>
+public static class TaskExtensions {
+
+  /// <summary>
+  /// Creates a proxy <see cref="Task"/> that represents the asynchronous operation of a <see cref="Task{TResult}"/>.
+  /// </summary>
+  /// <param name="task">The <see cref="Task{TResult}"/> to unwrap.</param>
+  /// <returns>A <see cref="Task"/> that represents the asynchronous operation of the wrapped task.</returns>
+  public static Task Unwrap(this Task<Task> task) {
+    ArgumentNullException.ThrowIfNull(task);
+
+    var tcs = new TaskCompletionSource<object?>();
+
+    task.ContinueWith(
+      outer => {
+        if (outer.IsFaulted)
+          tcs.SetException(outer.Exception!.InnerExceptions);
+        else if (outer.IsCanceled)
+          tcs.SetCanceled();
+        else
+          outer.Result.ContinueWith(
+            inner => {
+              if (inner.IsFaulted)
+                tcs.SetException(inner.Exception!.InnerExceptions);
+              else if (inner.IsCanceled)
+                tcs.SetCanceled();
+              else
+                tcs.SetResult(null);
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default
+          );
+      },
+      CancellationToken.None,
+      TaskContinuationOptions.ExecuteSynchronously,
+      TaskScheduler.Default
+    );
+
+    return tcs.Task;
+  }
+
+  /// <summary>
+  /// Creates a proxy <see cref="Task{TResult}"/> that represents the asynchronous operation of a <see cref="Task{TResult}"/>.
+  /// </summary>
+  /// <typeparam name="TResult">The type of the result produced by the wrapped task.</typeparam>
+  /// <param name="task">The <see cref="Task{TResult}"/> to unwrap.</param>
+  /// <returns>A <see cref="Task{TResult}"/> that represents the asynchronous operation of the wrapped task.</returns>
+  public static Task<TResult> Unwrap<TResult>(this Task<Task<TResult>> task) {
+    ArgumentNullException.ThrowIfNull(task);
+
+    var tcs = new TaskCompletionSource<TResult>();
+
+    task.ContinueWith(
+      outer => {
+        if (outer.IsFaulted)
+          tcs.SetException(outer.Exception!.InnerExceptions);
+        else if (outer.IsCanceled)
+          tcs.SetCanceled();
+        else
+          outer.Result.ContinueWith(
+            inner => {
+              if (inner.IsFaulted)
+                tcs.SetException(inner.Exception!.InnerExceptions);
+              else if (inner.IsCanceled)
+                tcs.SetCanceled();
+              else
+                tcs.SetResult(inner.Result);
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default
+          );
+      },
+      CancellationToken.None,
+      TaskContinuationOptions.ExecuteSynchronously,
+      TaskScheduler.Default
+    );
+
+    return tcs.Task;
+  }
+
+}
+
 #endif

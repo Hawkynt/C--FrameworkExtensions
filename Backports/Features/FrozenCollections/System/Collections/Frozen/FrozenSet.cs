@@ -23,6 +23,7 @@
 #if !SUPPORTS_FROZEN_COLLECTIONS
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -80,7 +81,7 @@ public class FrozenSet<T> :
   /// <summary>
   /// Searches the set for a given value and returns the equal value it finds, if any.
   /// </summary>
-  public bool TryGetValue(T equalValue, out T actualValue) => this._set.TryGetValue(equalValue, out actualValue);
+  public bool TryGetValue(T equalValue, [MaybeNullWhen(false)] out T actualValue) => this._set.TryGetValue(equalValue, out actualValue!);
 
   /// <summary>
   /// Determines whether the current set is a proper subset of a specified collection.

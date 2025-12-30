@@ -326,6 +326,7 @@ public class OrderedDictionary<TKey, TValue> :
   /// <param name="key">The key of the value to get.</param>
   /// <param name="value">When this method returns, contains the value associated with the specified key, if the key is found; otherwise, the default value.</param>
   /// <returns><see langword="true"/> if the dictionary contains an element with the specified key; otherwise, <see langword="false"/>.</returns>
+#pragma warning disable CS8767 // Nullability mismatch with interface (older framework interfaces lack proper nullable annotations)
   public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value) {
     this._EnsureIndicesValid();
     if (this._keyIndexMap.TryGetValue(key, out var index)) {
@@ -335,6 +336,7 @@ public class OrderedDictionary<TKey, TValue> :
     value = default;
     return false;
   }
+#pragma warning restore CS8767
 
   /// <summary>
   /// Removes the value with the specified key from the dictionary.

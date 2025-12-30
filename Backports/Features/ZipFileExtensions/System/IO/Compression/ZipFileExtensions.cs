@@ -65,7 +65,7 @@ public static class ZipFileExtensionsPolyfills {
       // Copy file content
       using var source = new FileStream(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
       using var entryStream = entry.Open();
-      _CopyStream(source, entryStream);
+      source.CopyTo(entryStream);
 
       return entry;
     }
@@ -75,38 +75,7 @@ public static class ZipFileExtensionsPolyfills {
     /// </summary>
     /// <param name="destinationDirectoryName">The path to the directory to place the extracted files in.</param>
     public void ExtractToDirectory(string destinationDirectoryName)
-      => ExtractToDirectory(destination, destinationDirectoryName, overwriteFiles: false);
-
-    /// <summary>
-    /// Extracts all the files in the zip archive to a directory on the file system and optionally allows overwriting.
-    /// </summary>
-    /// <param name="destinationDirectoryName">The path to the directory to place the extracted files in.</param>
-    /// <param name="overwriteFiles">true to overwrite existing files; false otherwise.</param>
-    public void ExtractToDirectory(string destinationDirectoryName, bool overwriteFiles) {
-      Against.ArgumentIsNull(destination);
-      Against.ArgumentIsNull(destinationDirectoryName);
-
-      destinationDirectoryName = Path.GetFullPath(destinationDirectoryName);
-
-      // Create destination directory if it doesn't exist
-      if (!Directory.Exists(destinationDirectoryName))
-        Directory.CreateDirectory(destinationDirectoryName);
-
-      foreach (var entry in destination.Entries) {
-        // Skip directory entries
-        if (string.IsNullOrEmpty(entry.Name))
-          continue;
-
-        var destinationPath = Path.GetFullPath(Path.Combine(destinationDirectoryName, entry.FullName));
-
-        // Security check: Prevent Zip Slip vulnerability
-        if (!destinationPath.StartsWith(destinationDirectoryName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-            !destinationPath.Equals(destinationDirectoryName, StringComparison.OrdinalIgnoreCase))
-          throw new IOException($"Extracting Zip entry would have resulted in a file outside the specified destination directory: {entry.FullName}");
-
-        entry.ExtractToFile(destinationPath, overwriteFiles);
-      }
-    }
+      => destination.ExtractToDirectory(destinationDirectoryName, overwriteFiles: false);
   }
 
   /// <param name="source">The zip archive entry to extract.</param>
@@ -117,7 +86,7 @@ public static class ZipFileExtensionsPolyfills {
     /// </summary>
     /// <param name="destinationFileName">The path of the file to create from the contents of the entry.</param>
     public void ExtractToFile(string destinationFileName)
-      => ExtractToFile(source, destinationFileName, overwrite: false);
+      => source.ExtractToFile(destinationFileName, overwrite: false);
 
     /// <summary>
     /// Extracts an entry in the zip archive to a file, and optionally overwrites an existing file that has the same name.
@@ -132,26 +101,16 @@ public static class ZipFileExtensionsPolyfills {
 
       var fileMode = overwrite ? FileMode.Create : FileMode.CreateNew;
 
-      // Create directory if it doesn't exist
       var directory = Path.GetDirectoryName(destinationFileName);
       if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         Directory.CreateDirectory(directory);
 
       using (var entryStream = source.Open())
-      using (var fileStream = new FileStream(destinationFileName, fileMode, FileAccess.Write, FileShare.None)) {
-        _CopyStream(entryStream, fileStream);
-      }
+      using (var fileStream = new FileStream(destinationFileName, fileMode, FileAccess.Write, FileShare.None))
+        entryStream.CopyTo(fileStream);
 
-      // Restore last write time
       File.SetLastWriteTime(destinationFileName, source.LastWriteTime.DateTime);
     }
-  }
-
-  private static void _CopyStream(Stream source, Stream destination) {
-    var buffer = new byte[81920];
-    int bytesRead;
-    while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
-      destination.Write(buffer, 0, bytesRead);
   }
 }
 

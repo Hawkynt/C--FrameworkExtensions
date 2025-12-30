@@ -649,7 +649,7 @@ public void LeadingZeroCount_WithZero_Returns32() { ... }
 public void LeadingZeroCount_WithMaxValue_ReturnsZero() { ... }
 ```
 
-### Test Design (No Feature Flags, No Target Switches)
+### Test Design (No Feature Flags, No Target Switches, No access to Polyfill classes)
 
 Tests must validate that **the final API surface and behavior are identical** regardless of whether it comes from the runtime, from official packages, or from polyfills.
 
@@ -657,6 +657,9 @@ That means:
 
 - **Do not use `#if` in tests** for `SUPPORTS_*`, `OFFICIAL_*`, or `TargetFramework` checks.
 - **Do not skip tests on old frameworks** just because a feature is polyfilled there.
+- **Do not reference polyfill classes or internal implementation details** in tests; only use the public API as documented by Microsoft.
+- **Do not write tests that depend on internal implementation details or polyfill-specific behavior**.
+- **Do not exclude tests for certain targets**; all tests must run on all targets.
 - **Write tests only against the public API** as documented by Microsoft; the tests must pass:
   - when the API is fully native,
   - when the API is fully implemented using official NuGet packages,
@@ -664,6 +667,17 @@ That means:
   - when the API is partially native + partially official packages + partially polyfilled,
   - when the API is partially native + partially polyfilled via extensions,
   - when the API is fully polyfilled.
+- The only exceptions where it is allowed to use `#if` is for:
+  - testing polyfilled scalar types in bcl vectors before they are natively available (e.g., `Vector<T>` with `T` being `System.Half`, `System.Int128`, `System.UIn128`),
+  - indexer access as that can't be polyfilled right now:
+
+```csharp
+#if !SUPPORTS_FEATURE_NAME_INDEXER
+  var value = instance.get_Item(index);
+#else
+  var value = instance[index];
+#endif
+```
 
 Bad test example (do **not** do this):
 
