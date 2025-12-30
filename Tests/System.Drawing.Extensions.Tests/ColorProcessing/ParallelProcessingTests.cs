@@ -18,9 +18,9 @@
 #endregion
 
 using System.Collections.Concurrent;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.Pipeline;
 using NUnit.Framework;
 
 namespace System.Drawing.Tests.ColorProcessing;

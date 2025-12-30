@@ -19,9 +19,9 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Pipeline;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.Drawing.Lockers;

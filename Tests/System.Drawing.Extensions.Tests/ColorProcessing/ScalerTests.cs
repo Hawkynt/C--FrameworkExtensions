@@ -19,7 +19,8 @@
 
 using System.Drawing;
 using System.Drawing.Imaging;
-using Hawkynt.ColorProcessing.Scalers;
+using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Resizing.Rescalers;
 using Hawkynt.Drawing;
 using NUnit.Framework;
 

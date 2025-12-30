@@ -17,26 +17,21 @@
 
 #endregion
 
-using System;
-using System.Drawing.Extensions.ColorProcessing.Resizing;
-
-namespace Hawkynt.Drawing.Lockers;
+namespace Hawkynt.ColorProcessing.Resizing;
 
 /// <summary>
-/// Provides access to pixel data as a frame with typed pixel access.
+/// Base interface for all image scaling algorithms.
 /// </summary>
-/// <typeparam name="TPixel">The pixel type.</typeparam>
-internal interface IFrameAccessor<TPixel> : IBitmapLocker where TPixel : unmanaged {
-  /// <summary>Stride in pixels.</summary>
-  int Stride { get; }
+/// <remarks>
+/// Provides the fundamental <see cref="Scale"/> property that defines
+/// the scaling factor. Extended by <see cref="IPixelScaler"/> for
+/// discrete pixel-art scalers and <see cref="IResampler"/> for
+/// continuous-scale resamplers.
+/// </remarks>
+public interface IScalerInfo {
 
   /// <summary>
-  /// Gets the pixel data as a span.
+  /// Gets the scaling factor for this scaler instance.
   /// </summary>
-  Span<TPixel> Pixels { get; }
-
-  /// <summary>
-  /// Creates a PixelFrame view over this accessor.
-  /// </summary>
-  PixelFrame<TPixel> AsFrame();
+  ScaleFactor Scale { get; }
 }

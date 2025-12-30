@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
@@ -27,8 +28,7 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Metrics.Rgb;
-using Hawkynt.ColorProcessing.Pipeline;
-using Hawkynt.ColorProcessing.Scalers;
+using Hawkynt.ColorProcessing.Resizing;
 using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
@@ -485,7 +485,7 @@ public static class BitmapScalerExtensions {
   }
 
   /// <summary>
-  /// Resamples a bitmap using a kernel with arbitrary pixel access.
+  /// Resamples a bitmap using a kernel with arbitrary pixel access and target dimensions.
   /// </summary>
   /// <typeparam name="TWork">The working color type (for accumulation).</typeparam>
   /// <typeparam name="TKey">The key color type (for NeighborFrame compatibility).</typeparam>
@@ -494,8 +494,10 @@ public static class BitmapScalerExtensions {
   /// <typeparam name="TEncode">The encoder type (TWork → Bgra8888).</typeparam>
   /// <typeparam name="TKernel">The resampling kernel type.</typeparam>
   /// <param name="source">The source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
   /// <param name="kernel">The resampling kernel instance.</param>
-  /// <returns>A new bitmap scaled according to the kernel's factors.</returns>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
   /// <remarks>
   /// <para>
   /// Unlike pixel-art scalers that use the fixed 5x5 NeighborWindow,
@@ -507,18 +509,18 @@ public static class BitmapScalerExtensions {
   /// </para>
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static unsafe Bitmap Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(Bitmap source, TKernel kernel)
+  internal static unsafe Bitmap Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    TKernel kernel)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<Bgra8888, TWork>
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, Bgra8888>
     where TKernel : struct, IResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode> {
-    var scaleX = kernel.ScaleX;
-    var scaleY = kernel.ScaleY;
-    var destWidth = source.Width * scaleX;
-    var destHeight = source.Height * scaleY;
-    var result = new Bitmap(destWidth, destHeight, PixelFormat.Format32bppArgb);
+    var result = new Bitmap(targetWidth, targetHeight, PixelFormat.Format32bppArgb);
 
     using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
     using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
@@ -534,11 +536,89 @@ public static class BitmapScalerExtensions {
         TKernel
       >(
         srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride,
-        dstPtr, dstFrame.Stride,
+        dstPtr, targetWidth, targetHeight, dstFrame.Stride,
         kernel
       );
 
     return result;
   }
+
+  /// <summary>
+  /// Callback that receives a concrete resampler kernel and executes the resample pipeline.
+  /// </summary>
+  private sealed class ResampleCallback<TWork, TKey, TDecode, TProject, TEncode>(Bitmap source, int targetWidth, int targetHeight)
+    : IResampleKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, Bitmap>
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888> {
+
+    public Bitmap Invoke<TKernel>(TKernel kernel)
+      where TKernel : struct, IResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode>
+      => Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(source, targetWidth, targetHeight, kernel);
+  }
+
+  /// <summary>
+  /// Resamples a bitmap to target dimensions using a resampler with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The resampler type (e.g., Lanczos3, Bicubic).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight)
+    where TResampler : struct, IResampler
+    => source.Resample(default(TResampler), targetWidth, targetHeight);
+
+  /// <summary>
+  /// Resamples a bitmap to target dimensions using a resampler with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The resampler type (e.g., Lanczos3, Bicubic).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, Size targetSize)
+    where TResampler : struct, IResampler
+    => source.Resample<TResampler>(targetSize.Width, targetSize.Height);
+
+  /// <summary>
+  /// Resamples a bitmap to target dimensions using a configured resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The resampler type (e.g., Lanczos3, Bicubic).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance with custom configuration.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight)
+    where TResampler : struct, IResampler {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var callback = new ResampleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source, targetWidth, targetHeight);
+    return resampler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32, Bitmap>(
+      callback, source.Width, source.Height, targetWidth, targetHeight);
+  }
+
+  /// <summary>
+  /// Resamples a bitmap to target dimensions using a configured resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The resampler type (e.g., Lanczos3, Bicubic).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance with custom configuration.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, Size targetSize)
+    where TResampler : struct, IResampler
+    => source.Resample(resampler, targetSize.Width, targetSize.Height);
 
 }

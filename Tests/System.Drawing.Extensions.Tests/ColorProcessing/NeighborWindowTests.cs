@@ -17,9 +17,9 @@
 
 #endregion
 
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.Pipeline;
 using NUnit.Framework;
 
 namespace System.Drawing.Tests.ColorProcessing;

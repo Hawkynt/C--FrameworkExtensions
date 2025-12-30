@@ -19,11 +19,11 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
-using Hawkynt.ColorProcessing.Pipeline;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.Drawing.Lockers;
 using MethodImplOptions = Utilities.MethodImplOptions;

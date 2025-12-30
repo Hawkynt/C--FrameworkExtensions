@@ -17,26 +17,34 @@
 
 #endregion
 
-using System;
-using System.Drawing.Extensions.ColorProcessing.Resizing;
-
-namespace Hawkynt.Drawing.Lockers;
+namespace System.Drawing.Extensions.ColorProcessing.Resizing;
 
 /// <summary>
-/// Provides access to pixel data as a frame with typed pixel access.
+/// Specifies how to handle pixel access beyond image boundaries.
 /// </summary>
-/// <typeparam name="TPixel">The pixel type.</typeparam>
-internal interface IFrameAccessor<TPixel> : IBitmapLocker where TPixel : unmanaged {
-  /// <summary>Stride in pixels.</summary>
-  int Stride { get; }
+public enum OutOfBoundsMode {
+  /// <summary>
+  /// Extends edge pixels: aaa|abcde|eee
+  /// </summary>
+  Const,
 
   /// <summary>
-  /// Gets the pixel data as a span.
+  /// Mirrors at half-pixel positions: cba|abcde|edc
   /// </summary>
-  Span<TPixel> Pixels { get; }
+  Half,
 
   /// <summary>
-  /// Creates a PixelFrame view over this accessor.
+  /// Mirrors at pixel centers: dcb|abcde|dcb
   /// </summary>
-  PixelFrame<TPixel> AsFrame();
+  Whole,
+
+  /// <summary>
+  /// Wraps around (tileable): cde|abcde|abc
+  /// </summary>
+  Wrap,
+
+  /// <summary>
+  /// Returns transparent/zero pixels: 000|abcde|000
+  /// </summary>
+  Transparent
 }
