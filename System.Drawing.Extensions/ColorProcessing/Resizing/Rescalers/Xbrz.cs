@@ -362,8 +362,8 @@ file static class RotationLookup {
       return (i, j);
 
     var (prevI, prevJ) = BuildRotation(rotDeg - 1, i, j, n);
-    // Rotate 90 degrees clockwise: (i,j) -> (j, n-1-i)
-    return (prevJ, n - 1 - prevI);
+    // Rotate 90 degrees clockwise: (row, col) -> (n-1-col, row)
+    return (n - 1 - prevJ, prevI);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1102,14 +1102,14 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var (ri45i, ri45j) = RotationLookup.Get(6, rotDeg, 4, 5);
 
     if (!doLineBlend) {
-      // BlendCorner for 6x (extrapolated from 5x)
-      dest[ri55i * destStride + ri55j] = encoder.Encode(lerp.Lerp(we, px, 0.92f));
-      dest[ri54i * destStride + ri54j] = encoder.Encode(lerp.Lerp(we, px, 0.32f));
-      dest[ri45i * destStride + ri45j] = encoder.Encode(lerp.Lerp(we, px, 0.32f));
+      // BlendCorner for 6x - exact weights from reference: 97/100, 42/100, 6/100
+      dest[ri55i * destStride + ri55j] = encoder.Encode(lerp.Lerp(we, px, 0.97f));
+      dest[ri54i * destStride + ri54j] = encoder.Encode(lerp.Lerp(we, px, 0.42f));
+      dest[ri45i * destStride + ri45j] = encoder.Encode(lerp.Lerp(we, px, 0.42f));
       var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
       var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
-      dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.05f));
-      dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.05f));
+      dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.06f));
+      dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.06f));
       return;
     }
 
@@ -1121,31 +1121,41 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (haveShallowLine) {
       if (haveSteepLine) {
-        // BlendLineSteepAndShallow for 6x (extrapolated)
+        // BlendLineSteepAndShallow for 6x - from reference
         var (ri05i, ri05j) = RotationLookup.Get(6, rotDeg, 0, 5);
-        var (ri25i, ri25j) = RotationLookup.Get(6, rotDeg, 2, 5);
+        var (ri24i, ri24j) = RotationLookup.Get(6, rotDeg, 2, 4);
         var (ri15i, ri15j) = RotationLookup.Get(6, rotDeg, 1, 5);
+        var (ri34i, ri34j) = RotationLookup.Get(6, rotDeg, 3, 4);
         var (ri50i, ri50j) = RotationLookup.Get(6, rotDeg, 5, 0);
-        var (ri52i, ri52j) = RotationLookup.Get(6, rotDeg, 5, 2);
+        var (ri42i, ri42j) = RotationLookup.Get(6, rotDeg, 4, 2);
         var (ri51i, ri51j) = RotationLookup.Get(6, rotDeg, 5, 1);
-        var (ri35s, rj35s) = RotationLookup.Get(6, rotDeg, 3, 5);
-        var (ri53s, rj53s) = RotationLookup.Get(6, rotDeg, 5, 3);
+        var (ri43i, ri43j) = RotationLookup.Get(6, rotDeg, 4, 3);
+        var (ri25i, ri25j) = RotationLookup.Get(6, rotDeg, 2, 5);
+        var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
         var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
+        var (ri52i, ri52j) = RotationLookup.Get(6, rotDeg, 5, 2);
+        var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
 
+        // Gradient blends
         dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri25i * destStride + ri25j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
         dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri52i * destStride + ri52j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri35s * destStride + rj35s] = encoder.Encode(px);
+        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        // Solid fills
+        dest[ri25i * destStride + ri25j] = encoder.Encode(px);
+        dest[ri35i * destStride + ri35j] = encoder.Encode(px);
         dest[ri45i * destStride + ri45j] = encoder.Encode(px);
-        dest[ri53s * destStride + rj53s] = encoder.Encode(px);
-        dest[ri54i * destStride + ri54j] = encoder.Encode(px);
         dest[ri55i * destStride + ri55j] = encoder.Encode(px);
-        dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px, 2f / 3f));
+        dest[ri44i * destStride + ri44j] = encoder.Encode(px);
+        dest[ri54i * destStride + ri54j] = encoder.Encode(px);
+        dest[ri52i * destStride + ri52j] = encoder.Encode(px);
+        dest[ri53i * destStride + ri53j] = encoder.Encode(px);
       } else {
-        // BlendLineShallow for 6x
+        // BlendLineShallow for 6x - from reference
         var (ri50i, ri50j) = RotationLookup.Get(6, rotDeg, 5, 0);
         var (ri42i, ri42j) = RotationLookup.Get(6, rotDeg, 4, 2);
         var (ri34i, ri34j) = RotationLookup.Get(6, rotDeg, 3, 4);
@@ -1154,22 +1164,26 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
         var (ri52i, ri52j) = RotationLookup.Get(6, rotDeg, 5, 2);
         var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
+        var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
 
+        // Gradient blends
         dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
         dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
         dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        // Solid fills
         dest[ri52i * destStride + ri52j] = encoder.Encode(px);
         dest[ri53i * destStride + ri53j] = encoder.Encode(px);
         dest[ri54i * destStride + ri54j] = encoder.Encode(px);
         dest[ri55i * destStride + ri55j] = encoder.Encode(px);
+        dest[ri44i * destStride + ri44j] = encoder.Encode(px);
         dest[ri45i * destStride + ri45j] = encoder.Encode(px);
       }
     } else {
       if (haveSteepLine) {
-        // BlendLineSteep for 6x
+        // BlendLineSteep for 6x - from reference
         var (ri05i, ri05j) = RotationLookup.Get(6, rotDeg, 0, 5);
         var (ri24i, ri24j) = RotationLookup.Get(6, rotDeg, 2, 4);
         var (ri43i, ri43j) = RotationLookup.Get(6, rotDeg, 4, 3);
@@ -1178,38 +1192,36 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
         var (ri25i, ri25j) = RotationLookup.Get(6, rotDeg, 2, 5);
         var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
+        var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
 
+        // Gradient blends
         dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
         dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
         dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
         dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        // Solid fills
         dest[ri25i * destStride + ri25j] = encoder.Encode(px);
         dest[ri35i * destStride + ri35j] = encoder.Encode(px);
         dest[ri45i * destStride + ri45j] = encoder.Encode(px);
         dest[ri55i * destStride + ri55j] = encoder.Encode(px);
+        dest[ri44i * destStride + ri44j] = encoder.Encode(px);
         dest[ri54i * destStride + ri54j] = encoder.Encode(px);
       } else {
-        // BlendLineDiagonal for 6x
-        var (ri52i, ri52j) = RotationLookup.Get(6, rotDeg, 5, 2);
-        var (ri43i, ri43j) = RotationLookup.Get(6, rotDeg, 4, 3);
-        var (ri34i, ri34j) = RotationLookup.Get(6, rotDeg, 3, 4);
-        var (ri25i, ri25j) = RotationLookup.Get(6, rotDeg, 2, 5);
+        // BlendLineDiagonal for 6x - from reference
         var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
         var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
         var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
 
-        dest[ri52i * destStride + ri52j] = encoder.Encode(lerp.Lerp(we, px, 0.1f));
-        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.1f));
-        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.1f));
-        dest[ri25i * destStride + ri25j] = encoder.Encode(lerp.Lerp(we, px, 0.1f));
+        // Gradient blends (1/2 weight)
         dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
         dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
         dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
-        dest[ri54i * destStride + ri54j] = encoder.Encode(lerp.Lerp(we, px, 0.9f));
-        dest[ri45i * destStride + ri45j] = encoder.Encode(lerp.Lerp(we, px, 0.9f));
+        // Solid fills
+        dest[ri45i * destStride + ri45j] = encoder.Encode(px);
         dest[ri55i * destStride + ri55j] = encoder.Encode(px);
+        dest[ri54i * destStride + ri54j] = encoder.Encode(px);
       }
     }
   }
