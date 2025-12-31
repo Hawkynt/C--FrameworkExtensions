@@ -234,16 +234,16 @@ file readonly struct Des2Kernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(
 
     // Directional blends with center (3:1 ratio)
     var cx = center;
-    var ce = lerp.Lerp(center, e.Work, 0.25f);  // 3:1 = 75% center, 25% east
-    var cs = lerp.Lerp(center, s.Work, 0.25f);  // 3:1 = 75% center, 25% south
-    var cse = lerp.Lerp(center, se.Work, 0.25f); // 3:1 = 75% center, 25% southeast
+    var ce = lerp.Lerp(center, e.Work, 3, 1);  // 3:1 = 75% center, 25% east
+    var cs = lerp.Lerp(center, s.Work, 3, 1);  // 3:1 = 75% center, 25% south
+    var cse = lerp.Lerp(center, se.Work, 3, 1); // 3:1 = 75% center, 25% southeast
 
     // Final output: blend corner potential with directional blend (3:1 ratio)
     // Reference: sPixel.Interpolate(p0, cx, 3, 1) = 75% p0, 25% cx
-    var d0 = lerp.Lerp(cx, p0, 0.75f);   // 3:1 = 25% cx, 75% p0
-    var d1 = lerp.Lerp(ce, p1, 0.75f);   // 3:1 = 25% ce, 75% p1
-    var d2 = lerp.Lerp(cs, p2, 0.75f);   // 3:1 = 25% cs, 75% p2
-    var d3 = lerp.Lerp(cse, p3, 0.75f);  // 3:1 = 25% cse, 75% p3
+    var d0 = lerp.Lerp(cx, p0, 1, 3);   // 3:1 = 25% cx, 75% p0
+    var d1 = lerp.Lerp(ce, p1, 1, 3);   // 3:1 = 25% ce, 75% p1
+    var d2 = lerp.Lerp(cs, p2, 1, 3);   // 3:1 = 25% cs, 75% p2
+    var d3 = lerp.Lerp(cse, p3, 1, 3);  // 3:1 = 25% cse, 75% p3
 
     // Write 2x2 output
     var row0 = destTopLeft;

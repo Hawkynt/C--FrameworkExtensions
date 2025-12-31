@@ -89,28 +89,37 @@ public readonly struct ThresholdEquality3B<TKey>(byte d1, byte d2, byte d3) : IC
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-       && MathF.Abs(a.C2 - b.C2) < d2
-       && MathF.Abs(a.C3 - b.C3) < d3;
+    => _AbsDiff(a.C1, b.C1) < d1
+       && _AbsDiff(a.C2, b.C2) < d2
+       && _AbsDiff(a.C3, b.C3) < d3;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
 }
 
 public readonly struct ThresholdEquality4B<TKey>(byte d1, byte d2, byte d3, byte d4) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace4B<TKey> {
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-       && MathF.Abs(a.C2 - b.C2) < d2
-       && MathF.Abs(a.C3 - b.C3) < d3
-       && MathF.Abs(a.A - b.A) < d4;
+    => _AbsDiff(a.C1, b.C1) < d1
+       && _AbsDiff(a.C2, b.C2) < d2
+       && _AbsDiff(a.C3, b.C3) < d3
+       && _AbsDiff(a.A, b.A) < d4;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
 }
 
 public readonly struct ThresholdEquality5B<TKey>(byte d1, byte d2, byte d3, byte d4, byte d5) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace5B<TKey> {
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-       && MathF.Abs(a.C2 - b.C2) < d2
-       && MathF.Abs(a.C3 - b.C3) < d3
-       && MathF.Abs(a.C4 - b.C4) < d4
-       && MathF.Abs(a.A - b.A) < d5;
+    => _AbsDiff(a.C1, b.C1) < d1
+       && _AbsDiff(a.C2, b.C2) < d2
+       && _AbsDiff(a.C3, b.C3) < d3
+       && _AbsDiff(a.C4, b.C4) < d4
+       && _AbsDiff(a.A, b.A) < d5;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
 }

@@ -20,6 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Spaces.Cmyk;
 using Hawkynt.ColorProcessing.Spaces.Cylindrical;
 using Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -72,6 +73,43 @@ public static class ColorConverter {
     // Fallback via interface
     return _GetLuminanceFallback(color, highQuality);
   }
+
+  /// <summary>
+  /// Gets the BT.601 luminance of a color using pure integer arithmetic.
+  /// </summary>
+  /// <param name="r">Red component (0-255).</param>
+  /// <param name="g">Green component (0-255).</param>
+  /// <param name="b">Blue component (0-255).</param>
+  /// <returns>Luminance value in 0-255 range.</returns>
+  /// <remarks>
+  /// Uses 16.16 fixed-point BT.601 coefficients for fast integer-only calculation.
+  /// Result is equivalent to: (int)(0.299 * r + 0.587 * g + 0.114 * b)
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte GetLuminanceInt(byte r, byte g, byte b)
+    => (byte)((FixedPointMath.YCbCr_Y_R * r + FixedPointMath.YCbCr_Y_G * g + FixedPointMath.YCbCr_Y_B * b) >> 16);
+
+  /// <summary>
+  /// Gets the BT.601 luminance of a 3-component byte color using pure integer arithmetic.
+  /// </summary>
+  /// <typeparam name="TWork">The working color type implementing IColorSpace3B.</typeparam>
+  /// <param name="color">The color to analyze.</param>
+  /// <returns>Luminance value in 0-255 range.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte GetLuminanceInt<TWork>(in TWork color)
+    where TWork : unmanaged, IColorSpace3B<TWork>
+    => GetLuminanceInt(color.C1, color.C2, color.C3);
+
+  /// <summary>
+  /// Gets the BT.601 luminance of a 4-component byte color using pure integer arithmetic.
+  /// </summary>
+  /// <typeparam name="TWork">The working color type implementing IColorSpace4B.</typeparam>
+  /// <param name="color">The color to analyze.</param>
+  /// <returns>Luminance value in 0-255 range (alpha is ignored).</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte GetLuminanceInt4B<TWork>(in TWork color)
+    where TWork : unmanaged, IColorSpace4B<TWork>
+    => GetLuminanceInt(color.C1, color.C2, color.C3);
 
   /// <summary>
   /// Gets normalized RGB components (0.0-1.0 range) from a color.

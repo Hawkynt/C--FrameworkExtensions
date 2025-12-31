@@ -221,6 +221,7 @@ public static class BitmapScalerExtensions {
 
   /// <summary>
   /// Fast quality path using identity codecs (Bgra8888 throughout).
+  /// Uses integer-only lerp and squared distance metric (no sqrt) for maximum performance.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleFast<TScaler>(Bitmap source, TScaler scaler)
@@ -230,8 +231,8 @@ public static class BitmapScalerExtensions {
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
     return scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
-      CompuPhase4<Bgra8888>, ExactEquality<Bgra8888>,
-      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+      CompuPhaseSquared4<Bgra8888>, ExactEquality<Bgra8888>,
+      Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
   }
 
   /// <summary>
@@ -268,7 +269,7 @@ public static class BitmapScalerExtensions {
   }
 
   /// <summary>
-  /// Equality-only path: uses Bgra8888 identity codecs, CompuPhase4, Color4BLerp.
+  /// Equality-only path: uses Bgra8888 identity codecs, CompuPhaseSquared4, Color4BLerp.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithEquality<TScaler, TEquality>(Bitmap source, TScaler scaler, TEquality equality)
@@ -279,12 +280,12 @@ public static class BitmapScalerExtensions {
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
     return scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
-      CompuPhase4<Bgra8888>, TEquality,
+      CompuPhaseSquared4<Bgra8888>, TEquality,
       Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback, equality);
   }
 
   /// <summary>
-  /// Lerp-only path: uses Bgra8888 identity codecs, CompuPhase4, ExactEquality.
+  /// Lerp-only path: uses Bgra8888 identity codecs, CompuPhaseSquared4, ExactEquality.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithLerp<TScaler, TLerp>(Bitmap source, TScaler scaler, TLerp lerp)
@@ -295,7 +296,7 @@ public static class BitmapScalerExtensions {
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
     return scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
-      CompuPhase4<Bgra8888>, ExactEquality<Bgra8888>,
+      CompuPhaseSquared4<Bgra8888>, ExactEquality<Bgra8888>,
       TLerp, IdentityEncode<Bgra8888>, Bitmap>(callback, default, lerp);
   }
 

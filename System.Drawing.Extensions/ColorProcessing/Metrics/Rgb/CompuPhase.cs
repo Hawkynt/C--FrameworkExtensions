@@ -98,10 +98,50 @@ public readonly struct CompuPhase4<TKey> : IColorMetric<TKey>
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Omits the square root for faster comparisons when only relative distances matter.
+/// <para>Omits the square root for faster comparisons when only relative distances matter.</para>
+/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
+/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
+/// in integer-only pipelines.</para>
+/// <para>The integer version uses weights scaled by 510 to avoid fractional arithmetic.
+/// Maximum distance: ~298 million (fits in int32).</para>
 /// </remarks>
-public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>
+public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  /// <summary>
+  /// Internal integer calculation using scaled weights.
+  /// </summary>
+  /// <remarks>
+  /// <para>Original formula (normalized):</para>
+  /// <code>
+  /// rMean = (rA + rB) / 510
+  /// result = (2 + rMean) * dR² + 4 * dG² + (3 - rMean) * dB²
+  /// </code>
+  /// <para>Scaled by 510 to eliminate division:</para>
+  /// <code>
+  /// weightR = 1020 + rA + rB  (range [1020, 1530])
+  /// weightG = 2040            (constant)
+  /// weightB = 1530 - rA - rB  (range [1020, 1530])
+  /// </code>
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static int _CalculateInt(in TKey a, in TKey b) {
+    // Weights scaled by 510 to stay in integer domain
+    var rSum = a.C1 + b.C1;  // [0, 510]
+    var weightR = 1020 + rSum;  // 2*510 + rSum
+    const int weightG = 2040;   // 4*510
+    var weightB = 1530 - rSum;  // 3*510 - rSum
+
+    var dR = a.C1 - b.C1;
+    var dG = a.C2 - b.C2;
+    var dB = a.C3 - b.C3;
+
+    return weightR * dR * dR + weightG * dG * dG + weightB * dB * dB;
+  }
+
+  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _CalculateInt(a, b);
 
   /// <summary>
   /// Calculates the squared CompuPhase distance between two colors.

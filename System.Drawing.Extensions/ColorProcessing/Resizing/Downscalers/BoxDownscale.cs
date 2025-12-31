@@ -176,10 +176,10 @@ file readonly struct Box2x2Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKern
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
     Accum4F<TWork> acc = default;
-    acc.AddMul(w.P0P0.Work, 1f);
-    acc.AddMul(w.P0P1.Work, 1f);
-    acc.AddMul(w.P1P0.Work, 1f);
-    acc.AddMul(w.P1P1.Work, 1f);
+    acc.Add(w.P0P0.Work);
+    acc.Add(w.P0P1.Work);
+    acc.Add(w.P1P0.Work);
+    acc.Add(w.P1P1.Work);
     return encoder.Encode(acc.Result);
   }
 }
@@ -208,17 +208,17 @@ file readonly struct Box3x3Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKern
   public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
     Accum4F<TWork> acc = default;
     // Row M1 (y = -1)
-    acc.AddMul(w.M1M1.Work, 1f);
-    acc.AddMul(w.M1P0.Work, 1f);
-    acc.AddMul(w.M1P1.Work, 1f);
+    acc.Add(w.M1M1.Work);
+    acc.Add(w.M1P0.Work);
+    acc.Add(w.M1P1.Work);
     // Row P0 (y = 0)
-    acc.AddMul(w.P0M1.Work, 1f);
-    acc.AddMul(w.P0P0.Work, 1f);
-    acc.AddMul(w.P0P1.Work, 1f);
+    acc.Add(w.P0M1.Work);
+    acc.Add(w.P0P0.Work);
+    acc.Add(w.P0P1.Work);
     // Row P1 (y = 1)
-    acc.AddMul(w.P1M1.Work, 1f);
-    acc.AddMul(w.P1P0.Work, 1f);
-    acc.AddMul(w.P1P1.Work, 1f);
+    acc.Add(w.P1M1.Work);
+    acc.Add(w.P1P0.Work);
+    acc.Add(w.P1P1.Work);
     return encoder.Encode(acc.Result);
   }
 }
@@ -247,25 +247,25 @@ file readonly struct Box4x4Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKern
   public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
     Accum4F<TWork> acc = default;
     // Row M1 (y = -1)
-    acc.AddMul(w.M1M1.Work, 1f);
-    acc.AddMul(w.M1P0.Work, 1f);
-    acc.AddMul(w.M1P1.Work, 1f);
-    acc.AddMul(w.M1P2.Work, 1f);
+    acc.Add(w.M1M1.Work);
+    acc.Add(w.M1P0.Work);
+    acc.Add(w.M1P1.Work);
+    acc.Add(w.M1P2.Work);
     // Row P0 (y = 0)
-    acc.AddMul(w.P0M1.Work, 1f);
-    acc.AddMul(w.P0P0.Work, 1f);
-    acc.AddMul(w.P0P1.Work, 1f);
-    acc.AddMul(w.P0P2.Work, 1f);
+    acc.Add(w.P0M1.Work);
+    acc.Add(w.P0P0.Work);
+    acc.Add(w.P0P1.Work);
+    acc.Add(w.P0P2.Work);
     // Row P1 (y = 1)
-    acc.AddMul(w.P1M1.Work, 1f);
-    acc.AddMul(w.P1P0.Work, 1f);
-    acc.AddMul(w.P1P1.Work, 1f);
-    acc.AddMul(w.P1P2.Work, 1f);
+    acc.Add(w.P1M1.Work);
+    acc.Add(w.P1P0.Work);
+    acc.Add(w.P1P1.Work);
+    acc.Add(w.P1P2.Work);
     // Row P2 (y = 2)
-    acc.AddMul(w.P2M1.Work, 1f);
-    acc.AddMul(w.P2P0.Work, 1f);
-    acc.AddMul(w.P2P1.Work, 1f);
-    acc.AddMul(w.P2P2.Work, 1f);
+    acc.Add(w.P2M1.Work);
+    acc.Add(w.P2P0.Work);
+    acc.Add(w.P2P1.Work);
+    acc.Add(w.P2P2.Work);
     return encoder.Encode(acc.Result);
   }
 }
@@ -294,35 +294,35 @@ file readonly struct Box5x5Kernel<TWork, TKey, TPixel, TEncode> : IDownscaleKern
   public TPixel Average(in NeighborWindow<TWork, TKey> w, in TEncode encoder) {
     Accum4F<TWork> acc = default;
     // Row M2 (y = -2)
-    acc.AddMul(w.M2M2.Work, 1f);
-    acc.AddMul(w.M2M1.Work, 1f);
-    acc.AddMul(w.M2P0.Work, 1f);
-    acc.AddMul(w.M2P1.Work, 1f);
-    acc.AddMul(w.M2P2.Work, 1f);
+    acc.Add(w.M2M2.Work);
+    acc.Add(w.M2M1.Work);
+    acc.Add(w.M2P0.Work);
+    acc.Add(w.M2P1.Work);
+    acc.Add(w.M2P2.Work);
     // Row M1 (y = -1)
-    acc.AddMul(w.M1M2.Work, 1f);
-    acc.AddMul(w.M1M1.Work, 1f);
-    acc.AddMul(w.M1P0.Work, 1f);
-    acc.AddMul(w.M1P1.Work, 1f);
-    acc.AddMul(w.M1P2.Work, 1f);
+    acc.Add(w.M1M2.Work);
+    acc.Add(w.M1M1.Work);
+    acc.Add(w.M1P0.Work);
+    acc.Add(w.M1P1.Work);
+    acc.Add(w.M1P2.Work);
     // Row P0 (y = 0)
-    acc.AddMul(w.P0M2.Work, 1f);
-    acc.AddMul(w.P0M1.Work, 1f);
-    acc.AddMul(w.P0P0.Work, 1f);
-    acc.AddMul(w.P0P1.Work, 1f);
-    acc.AddMul(w.P0P2.Work, 1f);
+    acc.Add(w.P0M2.Work);
+    acc.Add(w.P0M1.Work);
+    acc.Add(w.P0P0.Work);
+    acc.Add(w.P0P1.Work);
+    acc.Add(w.P0P2.Work);
     // Row P1 (y = 1)
-    acc.AddMul(w.P1M2.Work, 1f);
-    acc.AddMul(w.P1M1.Work, 1f);
-    acc.AddMul(w.P1P0.Work, 1f);
-    acc.AddMul(w.P1P1.Work, 1f);
-    acc.AddMul(w.P1P2.Work, 1f);
+    acc.Add(w.P1M2.Work);
+    acc.Add(w.P1M1.Work);
+    acc.Add(w.P1P0.Work);
+    acc.Add(w.P1P1.Work);
+    acc.Add(w.P1P2.Work);
     // Row P2 (y = 2)
-    acc.AddMul(w.P2M2.Work, 1f);
-    acc.AddMul(w.P2M1.Work, 1f);
-    acc.AddMul(w.P2P0.Work, 1f);
-    acc.AddMul(w.P2P1.Work, 1f);
-    acc.AddMul(w.P2P2.Work, 1f);
+    acc.Add(w.P2M2.Work);
+    acc.Add(w.P2M1.Work);
+    acc.Add(w.P2P0.Work);
+    acc.Add(w.P2P1.Work);
+    acc.Add(w.P2P2.Work);
     return encoder.Encode(acc.Result);
   }
 }

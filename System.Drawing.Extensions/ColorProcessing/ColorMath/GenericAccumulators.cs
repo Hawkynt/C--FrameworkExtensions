@@ -43,6 +43,24 @@ public struct Accum3F<TColor> : IAccum<Accum3F<TColor>, TColor>
   }
 
   /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    ++this._weightSum;
+  }
+
+  /// <inheritdoc />
   public TColor Result {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
@@ -69,6 +87,26 @@ public struct Accum4F<TColor> : IAccum<Accum4F<TColor>, TColor>
     this._c3 += color.C3 * weight;
     this._a += color.A * weight;
     this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._a += color.A * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    this._a += color.A;
+    ++this._weightSum;
   }
 
   /// <inheritdoc />
@@ -99,6 +137,28 @@ public struct Accum5F<TColor> : IAccum<Accum5F<TColor>, TColor>
     this._c4 += color.C4 * weight;
     this._a += color.A * weight;
     this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._c4 += color.C4 * weight;
+    this._a += color.A * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    this._c4 += color.C4;
+    this._a += color.A;
+    ++this._weightSum;
   }
 
   /// <inheritdoc />
@@ -134,6 +194,24 @@ public struct Accum3B<TColor> : IAccum<Accum3B<TColor>, TColor>
     this._c2 += color.C2 * weight;
     this._c3 += color.C3 * weight;
     this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    ++this._weightSum;
   }
 
   /// <inheritdoc />
@@ -176,6 +254,26 @@ public struct Accum4B<TColor> : IAccum<Accum4B<TColor>, TColor>
   }
 
   /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._a += color.A * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    this._a += color.A;
+    ++this._weightSum;
+  }
+
+  /// <inheritdoc />
   public TColor Result {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
@@ -214,6 +312,28 @@ public struct Accum5B<TColor> : IAccum<Accum5B<TColor>, TColor>
     this._c4 += color.C4 * weight;
     this._a += color.A * weight;
     this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void AddMul(in TColor color, int weight) {
+    this._c1 += color.C1 * weight;
+    this._c2 += color.C2 * weight;
+    this._c3 += color.C3 * weight;
+    this._c4 += color.C4 * weight;
+    this._a += color.A * weight;
+    this._weightSum += weight;
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void Add(in TColor color) {
+    this._c1 += color.C1;
+    this._c2 += color.C2;
+    this._c3 += color.C3;
+    this._c4 += color.C4;
+    this._a += color.A;
+    ++this._weightSum;
   }
 
   /// <inheritdoc />

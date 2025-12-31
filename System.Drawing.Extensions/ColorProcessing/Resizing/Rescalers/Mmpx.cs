@@ -127,48 +127,48 @@ file readonly struct Mmpx2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode
         if (equality.Equals(kD, kB) && equality.Equals(kD, kE) && !equality.Equals(kF, kE) && !equality.Equals(kH, kE))
           e0 = d.Work;
         else if (equality.Equals(kD, kB) && !equality.Equals(kD, kE))
-          e0 = lerp.Lerp(d.Work, wE, 0.5f);
+          e0 = lerp.Lerp(d.Work, wE);
 
         // Top-right corner (e1)
         if (equality.Equals(kB, kF) && equality.Equals(kB, kE) && !equality.Equals(kD, kE) && !equality.Equals(kH, kE))
           e1 = b.Work;
         else if (equality.Equals(kB, kF) && !equality.Equals(kB, kE))
-          e1 = lerp.Lerp(b.Work, wE, 0.5f);
+          e1 = lerp.Lerp(b.Work, wE);
 
         // Bottom-left corner (e2)
         if (equality.Equals(kD, kH) && equality.Equals(kD, kE) && !equality.Equals(kB, kE) && !equality.Equals(kF, kE))
           e2 = d.Work;
         else if (equality.Equals(kD, kH) && !equality.Equals(kD, kE))
-          e2 = lerp.Lerp(d.Work, wE, 0.5f);
+          e2 = lerp.Lerp(d.Work, wE);
 
         // Bottom-right corner (e3)
         if (equality.Equals(kF, kH) && equality.Equals(kF, kE) && !equality.Equals(kB, kE) && !equality.Equals(kD, kE))
           e3 = f.Work;
         else if (equality.Equals(kF, kH) && !equality.Equals(kF, kE))
-          e3 = lerp.Lerp(f.Work, wE, 0.5f);
+          e3 = lerp.Lerp(f.Work, wE);
 
         // Rule: Diagonal line reconstruction
         // Top-left to bottom-right diagonal
         if (equality.Equals(a.Key, kE) && equality.Equals(i.Key, kE) && !equality.Equals(kB, kE) && !equality.Equals(kH, kE)) {
-          e0 = lerp.Lerp(a.Work, wE, 0.5f);
-          e3 = lerp.Lerp(i.Work, wE, 0.5f);
+          e0 = lerp.Lerp(a.Work, wE);
+          e3 = lerp.Lerp(i.Work, wE);
         }
 
         // Top-right to bottom-left diagonal
         if (equality.Equals(c.Key, kE) && equality.Equals(g.Key, kE) && !equality.Equals(kB, kE) && !equality.Equals(kH, kE)) {
-          e1 = lerp.Lerp(c.Work, wE, 0.5f);
-          e2 = lerp.Lerp(g.Work, wE, 0.5f);
+          e1 = lerp.Lerp(c.Work, wE);
+          e2 = lerp.Lerp(g.Work, wE);
         }
 
         // Rule: 2:1 slope edges
         if (equality.Equals(kB, kE) && equality.Equals(kF, i.Key) && !equality.Equals(kF, kE)) {
-          e1 = lerp.Lerp(b.Work, f.Work, 0.5f);
-          e3 = lerp.Lerp(wE, f.Work, 0.5f);
+          e1 = lerp.Lerp(b.Work, f.Work);
+          e3 = lerp.Lerp(wE, f.Work);
         }
 
         if (equality.Equals(kD, kE) && equality.Equals(kH, g.Key) && !equality.Equals(kH, kE)) {
-          e2 = lerp.Lerp(d.Work, h.Work, 0.5f);
-          e3 = lerp.Lerp(wE, h.Work, 0.5f);
+          e2 = lerp.Lerp(d.Work, h.Work);
+          e3 = lerp.Lerp(wE, h.Work);
         }
 
         // Rule: Preserve sharp corners

@@ -504,22 +504,22 @@ file readonly struct Xbrz2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     if (haveShallowLine) {
       if (haveSteepLine) {
         // BlendLineSteepAndShallow
-        dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri1_0 * destStride + rj0] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
+        dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri1_0 * destStride + rj0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
         dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 5f / 6f));
       } else {
         // BlendLineShallow
-        dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
       }
     } else {
       if (haveSteepLine) {
         // BlendLineSteep
-        dest[ri1_0 * destStride + rj0] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri1_0 * destStride + rj0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
       } else {
         // BlendLineDiagonal
-        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
+        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px));
       }
     }
   }
@@ -632,10 +632,10 @@ file readonly struct Xbrz3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri21, rj21) = RotationLookup.Get(3, rotDeg, 2, 1);
         var (ri12, rj12) = RotationLookup.Get(3, rotDeg, 1, 2);
 
-        dest[ri20 * destStride + rj20] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri02 * destStride + rj02] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri20 * destStride + rj20] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri02 * destStride + rj02] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(px);
       } else {
         // BlendLineShallow for 3x
@@ -643,9 +643,9 @@ file readonly struct Xbrz3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri12, rj12) = RotationLookup.Get(3, rotDeg, 1, 2);
         var (ri21, rj21) = RotationLookup.Get(3, rotDeg, 2, 1);
 
-        dest[ri20 * destStride + rj20] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri20 * destStride + rj20] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(px);
       }
     } else {
@@ -655,18 +655,18 @@ file readonly struct Xbrz3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri21, rj21) = RotationLookup.Get(3, rotDeg, 2, 1);
         var (ri12, rj12) = RotationLookup.Get(3, rotDeg, 1, 2);
 
-        dest[ri02 * destStride + rj02] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri02 * destStride + rj02] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(px);
       } else {
         // BlendLineDiagonal for 3x
         var (ri12, rj12) = RotationLookup.Get(3, rotDeg, 1, 2);
         var (ri21, rj21) = RotationLookup.Get(3, rotDeg, 2, 1);
 
-        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 0.125f));
-        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 0.125f));
-        dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(lerp.Lerp(we, px, 0.875f));
+        dest[ri12 * destStride + rj12] = encoder.Encode(lerp.Lerp(we, px, 7, 1));
+        dest[ri21 * destStride + rj21] = encoder.Encode(lerp.Lerp(we, px, 7, 1));
+        dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(lerp.Lerp(we, px, 1, 7));
       }
     }
   }
@@ -783,10 +783,10 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri03i, ri03j) = RotationLookup.Get(4, rotDeg, 0, 3);
         var (ri22i, ri22j) = RotationLookup.Get(4, rotDeg, 2, 2);
 
-        dest[ri31i * destStride + ri31j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri13i * destStride + ri13j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri30i * destStride + ri30j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri03i * destStride + ri03j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
+        dest[ri31i * destStride + ri31j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri13i * destStride + ri13j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri30i * destStride + ri30j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri03i * destStride + ri03j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
         dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 1f / 3f));
         dest[ri33i * destStride + ri33j] = encoder.Encode(px);
         dest[ri32i * destStride + ri32j] = encoder.Encode(px);
@@ -798,10 +798,10 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri31i, ri31j) = RotationLookup.Get(4, rotDeg, 3, 1);
         var (ri23i2, ri23j2) = RotationLookup.Get(4, rotDeg, 2, 3);
 
-        dest[ri30i * destStride + ri30j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri31i * destStride + ri31j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri23i2 * destStride + ri23j2] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri30i * destStride + ri30j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri31i * destStride + ri31j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri23i2 * destStride + ri23j2] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri32i * destStride + ri32j] = encoder.Encode(px);
         dest[ri33i * destStride + ri33j] = encoder.Encode(px);
       }
@@ -813,10 +813,10 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri13i, ri13j) = RotationLookup.Get(4, rotDeg, 1, 3);
         var (ri32i2, ri32j2) = RotationLookup.Get(4, rotDeg, 3, 2);
 
-        dest[ri03i * destStride + ri03j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri13i * destStride + ri13j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri32i2 * destStride + ri32j2] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri03i * destStride + ri03j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri13i * destStride + ri13j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri32i2 * destStride + ri32j2] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri23i * destStride + ri23j] = encoder.Encode(px);
         dest[ri33i * destStride + ri33j] = encoder.Encode(px);
       } else {
@@ -824,8 +824,8 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri32d, rj32d) = RotationLookup.Get(4, rotDeg, 3, 2);
         var (ri23d, rj23d) = RotationLookup.Get(4, rotDeg, 2, 3);
 
-        dest[ri32d * destStride + rj32d] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
-        dest[ri23d * destStride + rj23d] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
+        dest[ri32d * destStride + rj32d] = encoder.Encode(lerp.Lerp(we, px));
+        dest[ri23d * destStride + rj23d] = encoder.Encode(lerp.Lerp(we, px));
         dest[ri33i * destStride + ri33j] = encoder.Encode(px);
       }
     }
@@ -946,12 +946,12 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri24s, rj24s) = RotationLookup.Get(5, rotDeg, 2, 4);
         var (ri33i, ri33j) = RotationLookup.Get(5, rotDeg, 3, 3);
 
-        dest[ri04i * destStride + ri04j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri14i * destStride + ri14j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri40i * destStride + ri40j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri41i * destStride + ri41j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri04i * destStride + ri04j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri14i * destStride + ri14j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri40i * destStride + ri40j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri41i * destStride + ri41j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri24s * destStride + rj24s] = encoder.Encode(px);
         dest[ri34i * destStride + ri34j] = encoder.Encode(px);
         dest[ri43i * destStride + ri43j] = encoder.Encode(px);
@@ -966,11 +966,11 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri33i, ri33j) = RotationLookup.Get(5, rotDeg, 3, 3);
         var (ri42i, ri42j) = RotationLookup.Get(5, rotDeg, 4, 2);
 
-        dest[ri40i * destStride + ri40j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri32i * destStride + ri32j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri41i * destStride + ri41j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri40i * destStride + ri40j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri32i * destStride + ri32j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri41i * destStride + ri41j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri42i * destStride + ri42j] = encoder.Encode(px);
         dest[ri43i * destStride + ri43j] = encoder.Encode(px);
         dest[ri44i * destStride + ri44j] = encoder.Encode(px);
@@ -986,11 +986,11 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri33i, ri33j) = RotationLookup.Get(5, rotDeg, 3, 3);
         var (ri24i, ri24j) = RotationLookup.Get(5, rotDeg, 2, 4);
 
-        dest[ri04i * destStride + ri04j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri23i * destStride + ri23j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri14i * destStride + ri14j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri04i * destStride + ri04j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri23i * destStride + ri23j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri14i * destStride + ri14j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri24i * destStride + ri24j] = encoder.Encode(px);
         dest[ri34i * destStride + ri34j] = encoder.Encode(px);
         dest[ri44i * destStride + ri44j] = encoder.Encode(px);
@@ -1001,11 +1001,11 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri33i, ri33j) = RotationLookup.Get(5, rotDeg, 3, 3);
         var (ri24i, ri24j) = RotationLookup.Get(5, rotDeg, 2, 4);
 
-        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.125f));
-        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 0.125f));
-        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.125f));
-        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.875f));
-        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.875f));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 7, 1));
+        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 7, 1));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 7, 1));
+        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 1, 7));
+        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 1, 7));
         dest[ri44i * destStride + ri44j] = encoder.Encode(px);
       }
     }
@@ -1137,14 +1137,14 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
 
         // Gradient blends
-        dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         // Solid fills
         dest[ri25i * destStride + ri25j] = encoder.Encode(px);
         dest[ri35i * destStride + ri35j] = encoder.Encode(px);
@@ -1167,12 +1167,12 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
 
         // Gradient blends
-        dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri50i * destStride + ri50j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri42i * destStride + ri42j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri51i * destStride + ri51j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         // Solid fills
         dest[ri52i * destStride + ri52j] = encoder.Encode(px);
         dest[ri53i * destStride + ri53j] = encoder.Encode(px);
@@ -1195,12 +1195,12 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri44i, ri44j) = RotationLookup.Get(6, rotDeg, 4, 4);
 
         // Gradient blends
-        dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.25f));
-        dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
-        dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.75f));
+        dest[ri05i * destStride + ri05j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri24i * destStride + ri24j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
+        dest[ri15i * destStride + ri15j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
+        dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         // Solid fills
         dest[ri25i * destStride + ri25j] = encoder.Encode(px);
         dest[ri35i * destStride + ri35j] = encoder.Encode(px);
@@ -1215,9 +1215,9 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
 
         // Gradient blends (1/2 weight)
-        dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
-        dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
-        dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.5f));
+        dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px));
+        dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px));
+        dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px));
         // Solid fills
         dest[ri45i * destStride + ri45j] = encoder.Encode(px);
         dest[ri55i * destStride + ri55j] = encoder.Encode(px);
