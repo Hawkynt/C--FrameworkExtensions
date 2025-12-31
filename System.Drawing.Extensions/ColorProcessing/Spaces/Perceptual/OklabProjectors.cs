@@ -20,6 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
+using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Working;
 using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -38,9 +39,9 @@ public readonly struct LinearRgbFToOklabF : IProject<LinearRgbF, OklabF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklabF Project(in LinearRgbF work) {
     // Linear sRGB to LMS
-    var l = 0.4122214708f * work.R + 0.5363325363f * work.G + 0.0514459929f * work.B;
-    var m = 0.2119034982f * work.R + 0.6806995451f * work.G + 0.1073969566f * work.B;
-    var s = 0.0883024619f * work.R + 0.2817188376f * work.G + 0.6299787005f * work.B;
+    var l = ColorConstants.Oklab_L_R * work.R + ColorConstants.Oklab_L_G * work.G + ColorConstants.Oklab_L_B * work.B;
+    var m = ColorConstants.Oklab_M_R * work.R + ColorConstants.Oklab_M_G * work.G + ColorConstants.Oklab_M_B * work.B;
+    var s = ColorConstants.Oklab_S_R * work.R + ColorConstants.Oklab_S_G * work.G + ColorConstants.Oklab_S_B * work.B;
 
     // Cube root
     var l_ = MathF.Cbrt(l);
@@ -63,9 +64,9 @@ public readonly struct LinearRgbaFToOklabF : IProject<LinearRgbaF, OklabF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklabF Project(in LinearRgbaF work) {
-    var l = 0.4122214708f * work.R + 0.5363325363f * work.G + 0.0514459929f * work.B;
-    var m = 0.2119034982f * work.R + 0.6806995451f * work.G + 0.1073969566f * work.B;
-    var s = 0.0883024619f * work.R + 0.2817188376f * work.G + 0.6299787005f * work.B;
+    var l = ColorConstants.Oklab_L_R * work.R + ColorConstants.Oklab_L_G * work.G + ColorConstants.Oklab_L_B * work.B;
+    var m = ColorConstants.Oklab_M_R * work.R + ColorConstants.Oklab_M_G * work.G + ColorConstants.Oklab_M_B * work.B;
+    var s = ColorConstants.Oklab_S_R * work.R + ColorConstants.Oklab_S_G * work.G + ColorConstants.Oklab_S_B * work.B;
 
     var l_ = MathF.Cbrt(l);
     var m_ = MathF.Cbrt(m);
