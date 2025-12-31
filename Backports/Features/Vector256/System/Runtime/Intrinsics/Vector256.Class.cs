@@ -23,7 +23,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 // ========== WAVE 1 ==========
 
-#if !FEATURE_VECTOR256STATIC_WAVE1
+#if !SUPPORTS_VECTOR256STATIC_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -315,11 +315,11 @@ public static partial class Vector256 {
 
 // ========== WAVE 3 ==========
 
-#if !FEATURE_VECTOR256STATIC_WAVE3
+#if !SUPPORTS_VECTOR256STATIC_WAVE3
 
 namespace System.Runtime.Intrinsics {
 
-#if !FEATURE_VECTOR256STATIC_WAVE1
+#if !SUPPORTS_VECTOR256STATIC_WAVE1
 public static partial class Vector256 {
 #else
 public static partial class Vector256Polyfills {
@@ -450,7 +450,7 @@ public static partial class Vector256Polyfills {
       }
     }
 
-#if !FEATURE_VECTOR256STATIC_WAVE1
+#if !SUPPORTS_VECTOR256STATIC_WAVE1
     // If Base is not supported, we defined Vector256 in Base.
     // Base doesn't have CreateScalar (checked earlier).
     // If BCL supports Vector256 (e.g. netcoreapp3.1), it lacks CreateScalar.
@@ -473,7 +473,7 @@ public static partial class Vector256Polyfills {
     // Wave 3 methods that are DUPLICATES of Wave 1
     // Only needed as extensions for WAVE1 frameworks
     // (for !WAVE1, these are already provided by Wave 1 polyfill)
-#if FEATURE_VECTOR256STATIC_WAVE1
+#if SUPPORTS_VECTOR256STATIC_WAVE1
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector256<T> Create<T>(T value) where T : struct {
@@ -1038,7 +1038,7 @@ public static partial class Vector256Polyfills {
 
     // ===== TOSCALAR (for BCL case) =====
 
-#if FEATURE_VECTOR256STATIC_WAVE1
+#if SUPPORTS_VECTOR256STATIC_WAVE1
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ToScalar<T>(Vector256<T> vector) where T : struct
       => Vector256.GetElement(vector, 0);
@@ -1387,7 +1387,7 @@ public static partial class Vector256Polyfills {
 
     // ===== AS VECTOR METHODS =====
 
-#if FEATURE_SYSTEM_NUMERICS_VECTOR
+#if SUPPORTS_SYSTEM_NUMERICS_VECTOR
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Numerics.Vector<T> AsVector<T>(Vector256<T> vector) where T : struct {
       if (Numerics.Vector<T>.Count != Vector256<T>.Count)
@@ -1403,7 +1403,7 @@ public static partial class Vector256Polyfills {
     }
 #endif
 
-#if FEATURE_VECTOR256STATIC_WAVE1
+#if SUPPORTS_VECTOR256STATIC_WAVE1
   }
 }
 #else
@@ -1416,7 +1416,7 @@ public static partial class Vector256Polyfills {
 
 // ========== WAVE 5 ==========
 
-#if !FEATURE_VECTOR256STATIC_WAVE5
+#if !SUPPORTS_VECTOR256STATIC_WAVE5
 
 namespace System.Runtime.Intrinsics {
 

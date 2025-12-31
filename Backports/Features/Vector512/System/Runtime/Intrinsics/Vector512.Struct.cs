@@ -23,7 +23,7 @@ using System.Text;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-#if !FEATURE_VECTOR512_WAVE1
+#if !SUPPORTS_VECTOR512_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -409,7 +409,7 @@ public readonly struct Vector512<T> : IEquatable<Vector512<T>> where T : struct 
 }
 #endif
 
-#if !FEATURE_VECTOR512_WAVE2
+#if !SUPPORTS_VECTOR512_WAVE2
 
 namespace System.Runtime.Intrinsics {
 

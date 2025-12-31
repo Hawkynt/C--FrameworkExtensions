@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-#if !FEATURE_VECTOR512STATIC_WAVE1
+#if !SUPPORTS_VECTOR512STATIC_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -945,7 +945,7 @@ public static partial class Vector512 {
 }
 #endif
 
-#if !FEATURE_VECTOR512STATIC_WAVE2
+#if !SUPPORTS_VECTOR512STATIC_WAVE2
 
 namespace System.Runtime.Intrinsics {
 
@@ -1397,7 +1397,7 @@ public static partial class Vector512AdvancedPolyfills {
 }
 
 
-#if !FEATURE_VECTOR512STATIC_WAVE5
+#if !SUPPORTS_VECTOR512STATIC_WAVE5
 
 namespace System.Runtime.Intrinsics {
 

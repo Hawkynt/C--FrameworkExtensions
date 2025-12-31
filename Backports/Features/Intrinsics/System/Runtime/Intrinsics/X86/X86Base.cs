@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !FEATURE_X86BASE_WAVE1
+#if !SUPPORTS_X86BASE_WAVE1
 
 namespace System.Runtime.Intrinsics.X86;
 

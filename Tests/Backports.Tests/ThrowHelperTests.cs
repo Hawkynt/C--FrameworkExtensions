@@ -203,6 +203,42 @@ public class ThrowHelperTests {
 
   [Test]
   [Category("HappyPath")]
+  public void ThrowIfGreaterThanOrEqual_WithLesserValue_DoesNotThrow() {
+    Assert.DoesNotThrow(() => ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(5, 10));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void ThrowIfGreaterThanOrEqual_WithEqualValue_ThrowsArgumentOutOfRangeException() {
+    Assert.Throws<ArgumentOutOfRangeException>(() => ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(10, 10));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void ThrowIfGreaterThanOrEqual_WithGreaterValue_ThrowsArgumentOutOfRangeException() {
+    Assert.Throws<ArgumentOutOfRangeException>(() => ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(15, 10));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ThrowIfLessThanOrEqual_WithGreaterValue_DoesNotThrow() {
+    Assert.DoesNotThrow(() => ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(15, 10));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void ThrowIfLessThanOrEqual_WithEqualValue_ThrowsArgumentOutOfRangeException() {
+    Assert.Throws<ArgumentOutOfRangeException>(() => ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(10, 10));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void ThrowIfLessThanOrEqual_WithLesserValue_ThrowsArgumentOutOfRangeException() {
+    Assert.Throws<ArgumentOutOfRangeException>(() => ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(5, 10));
+  }
+
+  [Test]
+  [Category("HappyPath")]
   public void ThrowIfEqual_WithDifferentValue_DoesNotThrow() {
     Assert.DoesNotThrow(() => ArgumentOutOfRangeException.ThrowIfEqual(5, 10));
   }

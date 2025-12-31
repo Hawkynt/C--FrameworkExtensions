@@ -237,6 +237,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [XxHash64](https://learn.microsoft.com/dotnet/api/system.io.hashing.xxhash64)
   * [XxHash128](https://learn.microsoft.com/dotnet/api/system.io.hashing.xxhash128)
 
+* System.Diagnostics
+  * [UnreachableException](https://learn.microsoft.com/dotnet/api/system.diagnostics.unreachableexception)
+
 ### Attributes
 
 * System.Diagnostics
@@ -277,6 +280,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [OverloadResolutionPriority](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.overloadresolutionpriorityattribute)
   * [RefSafetyRules](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.refsafetyrulesattribute)
   * [RequiredMember](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.requiredmemberattribute)
+  * [SkipLocalsInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute)
   * [TupleElementNames](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.tupleelementnamesattribute)
 
 ### Delegates
@@ -359,6 +363,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * double [Asinh](https://learn.microsoft.com/dotnet/api/system.math.asinh)(double x)
   * double [Acosh](https://learn.microsoft.com/dotnet/api/system.math.acosh)(double x)
   * double [Atanh](https://learn.microsoft.com/dotnet/api/system.math.atanh)(double x)
+  * double [Cbrt](https://learn.microsoft.com/dotnet/api/system.math.cbrt)(double x)
+  * Int128 [BigMul](https://learn.microsoft.com/dotnet/api/system.math.bigmul#system-math-bigmul%28system-int64-system-int64%29)(long a, long b)
+  * UInt128 [BigMul](https://learn.microsoft.com/dotnet/api/system.math.bigmul#system-math-bigmul%28system-uint64-system-uint64%29)(ulong a, ulong b)
 
 * System.MathF
   * float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
@@ -368,6 +375,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * float [Asinh](https://learn.microsoft.com/dotnet/api/system.mathf.asinh)(float x)
   * float [Acosh](https://learn.microsoft.com/dotnet/api/system.mathf.acosh)(float x)
   * float [Atanh](https://learn.microsoft.com/dotnet/api/system.mathf.atanh)(float x)
+  * float [Cbrt](https://learn.microsoft.com/dotnet/api/system.mathf.cbrt)(float x)
 
 * System.DateTime
   * DateTime [UnixEpoch](https://learn.microsoft.com/dotnet/api/system.datetime.unixepoch)
@@ -534,6 +542,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;TKey, TValue&gt;(Span&lt;TKey&gt; keys, Span&lt;TValue&gt; items, Comparison&lt;TKey&gt; comparison)
   * void [Sort](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sort)&lt;TKey, TValue, TComparer&gt;(Span&lt;TKey&gt; keys, Span&lt;TValue&gt; items, TComparer comparer)
   * void [Reverse](https://learn.microsoft.com/dotnet/api/system.memoryextensions.reverse)&lt;T&gt;(Span&lt;T&gt; span)
+  * int [CommonPrefixLength](https://learn.microsoft.com/dotnet/api/system.memoryextensions.commonprefixlength)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
+  * int [CommonPrefixLength](https://learn.microsoft.com/dotnet/api/system.memoryextensions.commonprefixlength)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
+  * int [CommonPrefixLength](https://learn.microsoft.com/dotnet/api/system.memoryextensions.commonprefixlength)&lt;T&gt;(this ReadOnlySpan&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other, IEqualityComparer&lt;T&gt; comparer)
 
 * System.Collections.Concurrent.ConcurrentBag
   * void [Clear](https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentbag-1.clear)&lt;T&gt;(this ConcurrentBag&lt;T&gt;)
@@ -567,9 +578,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Collections.Generic.Dictionary
   * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2.ensurecapacity)&lt;TKey, TValue&gt;(this Dictionary&lt;TKey, TValue&gt; @this, int capacity)
+  * bool [TryAdd](https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2.tryadd)&lt;TKey, TValue&gt;(this Dictionary&lt;TKey, TValue&gt; @this, TKey key, TValue value)
 
 * System.Collections.Generic.HashSet
   * int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1.ensurecapacity)&lt;T&gt;(this HashSet&lt;T&gt; @this, int capacity)
+  * bool [TryGetValue](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1.trygetvalue)&lt;T&gt;(this HashSet&lt;T&gt; @this, T equalValue, out T actualValue)
 
 * System.Collections.Generic.List
   * List&lt;T&gt; [Slice](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.slice)&lt;T&gt;(this List&lt;T&gt; @this, int start, int length)
@@ -605,6 +618,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.GC
   * T[] [AllocateArray](https://learn.microsoft.com/dotnet/api/system.gc.allocatearray)&lt;T&gt;(int length, bool pinned = false)
+
+* System.Globalization.CompareInfo
+  * int [GetHashCode](https://learn.microsoft.com/dotnet/api/system.globalization.compareinfo.gethashcode#system-globalization-compareinfo-gethashcode%28system-string-system-globalization-compareoptions%29)(this CompareInfo @this, string source, CompareOptions options)
 
 * System.Enum
   * bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
@@ -881,6 +897,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.Threading.CancellationTokenSource
   * bool [TryReset](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.tryreset)(this CancellationTokenSource @this)
+  * void [CancelAfter](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.cancelafter#system-threading-cancellationtokensource-cancelafter%28system-int32%29)(this CancellationTokenSource @this, int millisecondsDelay)
+  * void [CancelAfter](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.cancelafter#system-threading-cancellationtokensource-cancelafter%28system-timespan%29)(this CancellationTokenSource @this, TimeSpan delay)
 
 * System.Threading.WaitHandle
   * void [Dispose](https://learn.microsoft.com/dotnet/api/system.threading.waithandle.dispose#system-threading-waithandle-dispose)(this WaitHandle @this)

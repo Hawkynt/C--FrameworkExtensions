@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_STRING_GETHASHCODE_COMPARISON
 
-#if SUPPORTS_COMPAREINFO_GETHASHCODE_COMPAREOPTIONS
-
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Guard;
@@ -40,9 +38,8 @@ public static partial class StringPolyfills {
     /// <exception cref="ArgumentException"><paramref name="comparisonType"/> is not a <see cref="StringComparison"/> value.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetHashCode(StringComparison comparisonType) {
-      if (value == null)
-        AlwaysThrow.ArgumentNullException(nameof(value));
-
+      ArgumentNullException.ThrowIfNull(value);
+      
       return comparisonType switch {
         StringComparison.CurrentCulture => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.None),
         StringComparison.CurrentCultureIgnoreCase => CultureInfo.CurrentCulture.CompareInfo.GetHashCode(value, CompareOptions.IgnoreCase),
@@ -55,7 +52,5 @@ public static partial class StringPolyfills {
     }
   }
 }
-
-#endif
 
 #endif

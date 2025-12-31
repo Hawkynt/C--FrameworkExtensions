@@ -23,7 +23,7 @@ using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 // Wave 1: Vector128 static class definition
-#if !FEATURE_VECTOR128STATIC_WAVE1
+#if !SUPPORTS_VECTOR128STATIC_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -448,11 +448,11 @@ public static partial class Vector128 {
 #endif
 
 // Wave 3: Load/Store and Create methods
-#if !FEATURE_VECTOR128STATIC_WAVE3
+#if !SUPPORTS_VECTOR128STATIC_WAVE3
 
 namespace System.Runtime.Intrinsics {
 
-#if !FEATURE_VECTOR128STATIC_WAVE1
+#if !SUPPORTS_VECTOR128STATIC_WAVE1
 public static partial class Vector128 {
 #else
 public static partial class Vector128Polyfills {
@@ -578,7 +578,7 @@ public static partial class Vector128Polyfills {
       }
     }
 
-#if !FEATURE_VECTOR128STATIC_WAVE1
+#if !SUPPORTS_VECTOR128STATIC_WAVE1
 #else
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<T> CreateScalar<T>(T value) where T : struct {
@@ -596,7 +596,7 @@ public static partial class Vector128Polyfills {
 #endif
 
     // Only add these methods when BCL has Vector128 but lacks these operations
-    #if FEATURE_VECTOR128STATIC_WAVE1
+    #if SUPPORTS_VECTOR128STATIC_WAVE1
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<T> Create<T>(T value) where T : struct {
@@ -930,7 +930,7 @@ public static partial class Vector128Polyfills {
     #endif
 
     // GreaterThanOrEqual and LessThanOrEqual: only when we define Vector128 ourselves
-    #if !FEATURE_VECTOR128STATIC_WAVE1
+    #if !SUPPORTS_VECTOR128STATIC_WAVE1
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<T> GreaterThanOrEqual<T>(Vector128<T> left, Vector128<T> right) where T : struct {
@@ -1135,7 +1135,7 @@ public static partial class Vector128Polyfills {
 
     // ===== TOSCALAR (for BCL case) =====
 
-#if FEATURE_VECTOR128STATIC_WAVE1
+#if SUPPORTS_VECTOR128STATIC_WAVE1
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ToScalar<T>(Vector128<T> vector) where T : struct
       => Vector128.GetElement(vector, 0);
@@ -1444,7 +1444,7 @@ public static partial class Vector128Polyfills {
       return result;
     }
 
-#if FEATURE_VECTOR128STATIC_WAVE1
+#if SUPPORTS_VECTOR128STATIC_WAVE1
   }
 
   // Extension operators for Vector128<T>
@@ -1485,7 +1485,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 5: Advanced polyfills
-#if !FEATURE_VECTOR128STATIC_WAVE5
+#if !SUPPORTS_VECTOR128STATIC_WAVE5
 
 namespace System.Runtime.Intrinsics {
 

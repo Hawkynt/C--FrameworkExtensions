@@ -19,7 +19,7 @@ using Guard;
 using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-#if !FEATURE_VECTOR64STATIC_WAVE1
+#if !SUPPORTS_VECTOR64STATIC_WAVE1
 namespace System.Runtime.Intrinsics {
 
 /// <summary>
@@ -2511,21 +2511,21 @@ public static partial class Vector64 {
 }
 #endif
 
-#if !FEATURE_VECTOR64STATIC_WAVE3
+#if !SUPPORTS_VECTOR64STATIC_WAVE3
 
 namespace System.Runtime.Intrinsics {
 
 /// <summary>
 /// Polyfill for Vector64 full API (operators, advanced methods) added in .NET 7.0.
 /// </summary>
-#if !FEATURE_VECTOR64STATIC_WAVE1
+#if !SUPPORTS_VECTOR64STATIC_WAVE1
 public static partial class Vector64 {
 #else
 public static partial class Vector64Polyfills {
   extension(Vector64) {
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
     // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
     // Only needed as extensions for WAVE1 frameworks
 
@@ -2566,7 +2566,7 @@ public static partial class Vector64Polyfills {
     }
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
   }
 
   // Extension operators for Vector64<T> - only needed on newer frameworks
@@ -2644,7 +2644,7 @@ public static partial class Vector64Polyfills {
   extension(Vector64) {
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
     // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
     // Only needed as extensions for WAVE1 frameworks
 
@@ -2757,7 +2757,7 @@ public static partial class Vector64Polyfills {
     }
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
     // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
     // Only needed as extensions for WAVE1 frameworks
 
@@ -2860,7 +2860,7 @@ public static partial class Vector64Polyfills {
     }
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
     // These methods are already in Wave 1 polyfill for !WAVE1 frameworks
     // Only needed as extensions for WAVE1 frameworks
 
@@ -2927,7 +2927,7 @@ public static partial class Vector64Polyfills {
     }
 #endif
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
   }
 }
 #else
@@ -2937,11 +2937,11 @@ public static partial class Vector64Polyfills {
 }
 #endif
 
-#if !FEATURE_VECTOR64STATIC_WAVE5
+#if !SUPPORTS_VECTOR64STATIC_WAVE5
 
 namespace System.Runtime.Intrinsics {
 
-#if !FEATURE_VECTOR64STATIC_WAVE1
+#if !SUPPORTS_VECTOR64STATIC_WAVE1
 public static partial class Vector64 {
 #else
 public static partial class Vector64Polyfills {
@@ -3535,7 +3535,7 @@ public static partial class Vector64Polyfills {
       return (sin, cos);
     }
 
-#if FEATURE_VECTOR64STATIC_WAVE1
+#if SUPPORTS_VECTOR64STATIC_WAVE1
   }
 }
 #else

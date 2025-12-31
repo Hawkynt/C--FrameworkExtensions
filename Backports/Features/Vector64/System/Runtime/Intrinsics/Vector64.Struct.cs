@@ -20,7 +20,7 @@ using Guard;
 using Utilities;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-#if !FEATURE_VECTOR64_WAVE1
+#if !SUPPORTS_VECTOR64_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -332,7 +332,7 @@ public readonly struct Vector64<T> : IEquatable<Vector64<T>> {
 }
 #endif
 
-#if !FEATURE_VECTOR64_WAVE2
+#if !SUPPORTS_VECTOR64_WAVE2
 
 namespace System.Runtime.Intrinsics {
 
@@ -354,7 +354,7 @@ public static class Vector64AllBitsSetPolyfills {
 }
 #endif
 
-#if FEATURE_VECTOR64_WAVE1 && !FEATURE_VECTOR64_WAVE4
+#if SUPPORTS_VECTOR64_WAVE1 && !SUPPORTS_VECTOR64_WAVE4
 
 namespace System.Runtime.Intrinsics {
 

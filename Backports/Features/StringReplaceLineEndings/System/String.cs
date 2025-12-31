@@ -60,8 +60,6 @@ public static partial class StringPolyfills {
               ++i;
             break;
           case '\n':
-          case '\v':
-          case '\f':
           case '\u0085': // Next Line
           case '\u2028': // Line Separator
           case '\u2029': // Paragraph Separator

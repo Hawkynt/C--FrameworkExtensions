@@ -27,7 +27,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace System.Runtime.Intrinsics;
 
 // Wave 1: Vector128<T> struct definition
-#if !FEATURE_VECTOR128_WAVE1
+#if !SUPPORTS_VECTOR128_WAVE1
 
 public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct {
 
@@ -328,7 +328,7 @@ public readonly struct Vector128<T> : IEquatable<Vector128<T>> where T : struct 
 #endif
 
 // Wave 2: AllBitsSet property polyfill
-#if !FEATURE_VECTOR128_WAVE2
+#if !SUPPORTS_VECTOR128_WAVE2
 
 /// <summary>
 /// Polyfill for Vector128 AllBitsSet property (added in .NET 5.0).
@@ -348,7 +348,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 4: One property polyfill
-#if !FEATURE_VECTOR128_WAVE4
+#if !SUPPORTS_VECTOR128_WAVE4
 
 public static partial class Vector128Polyfills {
   extension<T>(Vector128<T>) where T : struct {
@@ -373,7 +373,7 @@ public static partial class Vector128Polyfills {
 #endif
 
 // Wave 5: Indices property polyfill
-#if !FEATURE_VECTOR128_WAVE5
+#if !SUPPORTS_VECTOR128_WAVE5
 
 public static partial class Vector128Polyfills {
   extension<T>(Vector128<T>) where T : struct {

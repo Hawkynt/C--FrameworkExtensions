@@ -362,4 +362,240 @@ public class MathTests {
 
   #endregion
 
+  #region Math.BigMul (Int128)
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigMul_Long_PositiveNumbers_ReturnsCorrectResult() {
+    var result = Math.BigMul(1000000L, 1000000L);
+    Assert.That((long)result, Is.EqualTo(1000000000000L));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigMul_Long_WithNegative_ReturnsCorrectResult() {
+    var result = Math.BigMul(-100L, 100L);
+    Assert.That((long)result, Is.EqualTo(-10000L));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigMul_Long_MaxValues_DoesNotOverflow() {
+    var result = Math.BigMul(long.MaxValue, 2L);
+    // The result should be larger than what fits in long
+    Assert.That(result > long.MaxValue, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigMul_Long_Zero_ReturnsZero() {
+    var result = Math.BigMul(12345L, 0L);
+    Assert.That((long)result, Is.EqualTo(0L));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigMul_ULong_PositiveNumbers_ReturnsCorrectResult() {
+    var result = Math.BigMul(1000000UL, 1000000UL);
+    Assert.That((ulong)result, Is.EqualTo(1000000000000UL));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigMul_ULong_MaxValues_DoesNotOverflow() {
+    var result = Math.BigMul(ulong.MaxValue, 2UL);
+    // The result should be larger than what fits in ulong
+    Assert.That(result > ulong.MaxValue, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigMul_Long_WithOutLow_ReturnsHighAndLow() {
+    var high = Math.BigMul(0x100000000L, 0x100000000L, out var low);
+    // 2^32 * 2^32 = 2^64, so high = 1, low = 0
+    Assert.That(high, Is.EqualTo(1L));
+    Assert.That(low, Is.EqualTo(0L));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigMul_ULong_WithOutLow_ReturnsHighAndLow() {
+    var high = Math.BigMul(0x100000000UL, 0x100000000UL, out var low);
+    // 2^32 * 2^32 = 2^64, so high = 1, low = 0
+    Assert.That(high, Is.EqualTo(1UL));
+    Assert.That(low, Is.EqualTo(0UL));
+  }
+
+  #endregion
+
+  #region Math.FusedMultiplyAdd
+
+  [Test]
+  [Category("HappyPath")]
+  public void FusedMultiplyAdd_Double_BasicOperation_ReturnsCorrectResult() {
+    var result = Math.FusedMultiplyAdd(2.0, 3.0, 4.0);
+    Assert.That(result, Is.EqualTo(10.0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void FusedMultiplyAdd_Double_WithNegatives_ReturnsCorrectResult() {
+    var result = Math.FusedMultiplyAdd(-2.0, 3.0, 10.0);
+    Assert.That(result, Is.EqualTo(4.0));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void FusedMultiplyAdd_Double_ZeroMultiplier_ReturnsAddend() {
+    var result = Math.FusedMultiplyAdd(0.0, 100.0, 5.0);
+    Assert.That(result, Is.EqualTo(5.0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void FusedMultiplyAdd_Float_BasicOperation_ReturnsCorrectResult() {
+    var result = MathF.FusedMultiplyAdd(2.0f, 3.0f, 4.0f);
+    Assert.That(result, Is.EqualTo(10.0f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void FusedMultiplyAdd_Float_WithNegatives_ReturnsCorrectResult() {
+    var result = MathF.FusedMultiplyAdd(-2.0f, 3.0f, 10.0f);
+    Assert.That(result, Is.EqualTo(4.0f));
+  }
+
+  #endregion
+
+  #region Math.Asinh (Inverse Hyperbolic Sine)
+
+  [Test]
+  [Category("HappyPath")]
+  public void Asinh_Double_PositiveNumber_ReturnsCorrectResult() {
+    var result = Math.Asinh(1.0);
+    Assert.That(result, Is.EqualTo(0.881373587).Within(0.0001));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Asinh_Double_NegativeNumber_ReturnsCorrectResult() {
+    var result = Math.Asinh(-1.0);
+    Assert.That(result, Is.EqualTo(-0.881373587).Within(0.0001));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Asinh_Double_Zero_ReturnsZero() {
+    var result = Math.Asinh(0.0);
+    Assert.That(result, Is.EqualTo(0.0));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Asinh_Double_PositiveInfinity_ReturnsPositiveInfinity() {
+    var result = Math.Asinh(double.PositiveInfinity);
+    Assert.That(double.IsPositiveInfinity(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Asinh_Double_NegativeInfinity_ReturnsNegativeInfinity() {
+    var result = Math.Asinh(double.NegativeInfinity);
+    Assert.That(double.IsNegativeInfinity(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Asinh_Double_NaN_ReturnsNaN() {
+    var result = Math.Asinh(double.NaN);
+    Assert.That(double.IsNaN(result), Is.True);
+  }
+
+  #endregion
+
+  #region Math.Acosh (Inverse Hyperbolic Cosine)
+
+  [Test]
+  [Category("HappyPath")]
+  public void Acosh_Double_GreaterThanOne_ReturnsCorrectResult() {
+    var result = Math.Acosh(2.0);
+    Assert.That(result, Is.EqualTo(1.31695789).Within(0.0001));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Acosh_Double_One_ReturnsZero() {
+    var result = Math.Acosh(1.0);
+    Assert.That(result, Is.EqualTo(0.0));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Acosh_Double_LessThanOne_ReturnsNaN() {
+    var result = Math.Acosh(0.5);
+    Assert.That(double.IsNaN(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Acosh_Double_PositiveInfinity_ReturnsPositiveInfinity() {
+    var result = Math.Acosh(double.PositiveInfinity);
+    Assert.That(double.IsPositiveInfinity(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Acosh_Double_NaN_ReturnsNaN() {
+    var result = Math.Acosh(double.NaN);
+    Assert.That(double.IsNaN(result), Is.True);
+  }
+
+  #endregion
+
+  #region Math.Atanh (Inverse Hyperbolic Tangent)
+
+  [Test]
+  [Category("HappyPath")]
+  public void Atanh_Double_ValueInRange_ReturnsCorrectResult() {
+    var result = Math.Atanh(0.5);
+    Assert.That(result, Is.EqualTo(0.549306144).Within(0.0001));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Atanh_Double_Zero_ReturnsZero() {
+    var result = Math.Atanh(0.0);
+    Assert.That(result, Is.EqualTo(0.0));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Atanh_Double_One_ReturnsPositiveInfinity() {
+    var result = Math.Atanh(1.0);
+    Assert.That(double.IsPositiveInfinity(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Atanh_Double_MinusOne_ReturnsNegativeInfinity() {
+    var result = Math.Atanh(-1.0);
+    Assert.That(double.IsNegativeInfinity(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Atanh_Double_OutOfRange_ReturnsNaN() {
+    var result = Math.Atanh(2.0);
+    Assert.That(double.IsNaN(result), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Atanh_Double_NaN_ReturnsNaN() {
+    var result = Math.Atanh(double.NaN);
+    Assert.That(double.IsNaN(result), Is.True);
+  }
+
+  #endregion
+
 }

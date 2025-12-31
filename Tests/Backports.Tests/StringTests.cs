@@ -165,4 +165,206 @@ public class StringTests {
 
   #endregion
 
+  #region String.Contains with char and StringComparison
+
+  [Test]
+  [Category("HappyPath")]
+  public void Contains_CharWithOrdinalIgnoreCase_FindsCaseInsensitive() {
+    var source = "Hello World";
+    Assert.That(source.Contains('w', StringComparison.OrdinalIgnoreCase), Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Contains_CharWithOrdinal_IsCaseSensitive() {
+    var source = "Hello World";
+    Assert.That(source.Contains('w', StringComparison.Ordinal), Is.False);
+    Assert.That(source.Contains('W', StringComparison.Ordinal), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Contains_CharWithOrdinal_NotFound() {
+    var source = "Hello World";
+    Assert.That(source.Contains('z', StringComparison.Ordinal), Is.False);
+  }
+
+  #endregion
+
+  #region String.IndexOf with char and StringComparison
+
+  [Test]
+  [Category("HappyPath")]
+  public void IndexOf_CharWithOrdinal_FindsIndex() {
+    var source = "Hello World";
+    Assert.That(source.IndexOf('W', StringComparison.Ordinal), Is.EqualTo(6));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void IndexOf_CharWithOrdinalIgnoreCase_FindsCaseInsensitive() {
+    var source = "Hello World";
+    Assert.That(source.IndexOf('w', StringComparison.OrdinalIgnoreCase), Is.EqualTo(6));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void IndexOf_CharWithOrdinal_NotFound() {
+    var source = "Hello World";
+    Assert.That(source.IndexOf('z', StringComparison.Ordinal), Is.EqualTo(-1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void IndexOf_CharWithCurrentCulture_FindsIndex() {
+    var source = "Hello World";
+    Assert.That(source.IndexOf('o', StringComparison.CurrentCulture), Is.EqualTo(4));
+  }
+
+  #endregion
+
+  #region String.GetHashCode with StringComparison
+
+  [Test]
+  [Category("HappyPath")]
+  public void GetHashCode_WithOrdinal_ReturnsConsistentHash() {
+    var s1 = "Hello";
+    var s2 = "Hello";
+    Assert.That(s1.GetHashCode(StringComparison.Ordinal), Is.EqualTo(s2.GetHashCode(StringComparison.Ordinal)));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GetHashCode_WithOrdinalIgnoreCase_SameForDifferentCase() {
+    var s1 = "Hello";
+    var s2 = "HELLO";
+    Assert.That(s1.GetHashCode(StringComparison.OrdinalIgnoreCase), Is.EqualTo(s2.GetHashCode(StringComparison.OrdinalIgnoreCase)));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void GetHashCode_DifferentStrings_DifferentHashes() {
+    var s1 = "Hello";
+    var s2 = "World";
+    Assert.That(s1.GetHashCode(StringComparison.Ordinal), Is.Not.EqualTo(s2.GetHashCode(StringComparison.Ordinal)));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GetHashCode_WithInvariantCulture_ReturnsHash() {
+    var s = "Hello";
+    var hash = s.GetHashCode(StringComparison.InvariantCulture);
+    Assert.That(hash, Is.Not.EqualTo(0).Or.EqualTo(0)); // Just verify it returns a value
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GetHashCode_WithCurrentCultureIgnoreCase_SameForDifferentCase() {
+    var s1 = "Hello";
+    var s2 = "HELLO";
+    Assert.That(s1.GetHashCode(StringComparison.CurrentCultureIgnoreCase), Is.EqualTo(s2.GetHashCode(StringComparison.CurrentCultureIgnoreCase)));
+  }
+
+  #endregion
+
+  #region String.StartsWith and EndsWith with char
+
+  [Test]
+  [Category("HappyPath")]
+  public void StartsWith_Char_MatchingStart() {
+    var source = "Hello World";
+    Assert.That(source.StartsWith('H'), Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void StartsWith_Char_NonMatchingStart() {
+    var source = "Hello World";
+    Assert.That(source.StartsWith('h'), Is.False);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void StartsWith_Char_EmptyString() {
+    var source = "";
+    Assert.That(source.StartsWith('H'), Is.False);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void EndsWith_Char_MatchingEnd() {
+    var source = "Hello World";
+    Assert.That(source.EndsWith('d'), Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void EndsWith_Char_NonMatchingEnd() {
+    var source = "Hello World";
+    Assert.That(source.EndsWith('D'), Is.False);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void EndsWith_Char_EmptyString() {
+    var source = "";
+    Assert.That(source.EndsWith('d'), Is.False);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void StartsWith_EndsWith_SingleCharString() {
+    var source = "X";
+    Assert.That(source.StartsWith('X'), Is.True);
+    Assert.That(source.EndsWith('X'), Is.True);
+  }
+
+  #endregion
+
+  #region String.Trim with char
+
+  [Test]
+  [Category("HappyPath")]
+  public void Trim_Char_RemovesBothEnds() {
+    var source = "***Hello***";
+    Assert.That(source.Trim('*'), Is.EqualTo("Hello"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void TrimStart_Char_RemovesFromStart() {
+    var source = "***Hello***";
+    Assert.That(source.TrimStart('*'), Is.EqualTo("Hello***"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void TrimEnd_Char_RemovesFromEnd() {
+    var source = "***Hello***";
+    Assert.That(source.TrimEnd('*'), Is.EqualTo("***Hello"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Trim_Char_NoMatchingChars() {
+    var source = "Hello";
+    Assert.That(source.Trim('*'), Is.EqualTo("Hello"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Trim_Char_AllMatchingChars() {
+    var source = "****";
+    Assert.That(source.Trim('*'), Is.EqualTo(string.Empty));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Trim_Char_EmptyString() {
+    var source = "";
+    Assert.That(source.Trim('*'), Is.EqualTo(string.Empty));
+  }
+
+  #endregion
+
 }

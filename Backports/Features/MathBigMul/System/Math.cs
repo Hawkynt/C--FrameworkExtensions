@@ -36,7 +36,7 @@ public static partial class MathPolyfills {
     /// <returns>The full product of the specified numbers as an <see cref="Int128"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Int128 BigMul(long a, long b) {
-      var low = _BigMulUnsigned((ulong)a, (ulong)b, out var high);
+      var high = _BigMulUnsigned((ulong)a, (ulong)b, out var low);
 
       // Handle sign
       if (a < 0)
@@ -55,7 +55,7 @@ public static partial class MathPolyfills {
     /// <returns>The full product of the specified numbers as a <see cref="UInt128"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UInt128 BigMul(ulong a, ulong b) {
-      var low = _BigMulUnsigned(a, b, out var high);
+      var high = _BigMulUnsigned(a, b, out var low);
       return new(high, low);
     }
 
@@ -68,7 +68,7 @@ public static partial class MathPolyfills {
     /// <returns>The high 64 bits of the product.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long BigMul(long a, long b, out long low) {
-      var lowUnsigned = _BigMulUnsigned((ulong)a, (ulong)b, out var highUnsigned);
+      var highUnsigned = _BigMulUnsigned((ulong)a, (ulong)b, out var lowUnsigned);
 
       // Handle sign
       if (a < 0)

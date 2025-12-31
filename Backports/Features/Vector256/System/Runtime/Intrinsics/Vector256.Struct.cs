@@ -26,7 +26,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 // ========== WAVE 1 ==========
 
-#if !FEATURE_VECTOR256_WAVE1
+#if !SUPPORTS_VECTOR256_WAVE1
 
 namespace System.Runtime.Intrinsics {
 
@@ -364,7 +364,7 @@ public readonly struct Vector256<T> : IEquatable<Vector256<T>> where T : struct 
 
 // ========== WAVE 2 ==========
 
-#if !FEATURE_VECTOR256_WAVE2
+#if !SUPPORTS_VECTOR256_WAVE2
 
 namespace System.Runtime.Intrinsics {
 
@@ -388,7 +388,7 @@ public static class Vector256AllBitsSetPolyfills {
 
 // ========== WAVE 4 ==========
 
-#if FEATURE_VECTOR256_WAVE1 && !FEATURE_VECTOR256_WAVE4
+#if SUPPORTS_VECTOR256_WAVE1 && !SUPPORTS_VECTOR256_WAVE4
 
 namespace System.Runtime.Intrinsics {
 
@@ -417,7 +417,7 @@ public static partial class Vector256Polyfills {
 
 // ========== WAVE 5 ==========
 
-#if !FEATURE_VECTOR256_WAVE5
+#if !SUPPORTS_VECTOR256_WAVE5
 
 namespace System.Runtime.Intrinsics {
 

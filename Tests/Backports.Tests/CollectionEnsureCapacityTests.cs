@@ -79,6 +79,53 @@ public class CollectionEnsureCapacityTests {
     Assert.Throws<ArgumentOutOfRangeException>(() => queue.EnsureCapacity(-1));
   }
 
+  [Test]
+  [Category("HappyPath")]
+  public void Queue_EnsureCapacity_WrapAroundBuffer_PreservesOrder() {
+    var queue = new Queue<int>(4);
+    queue.Enqueue(1);
+    queue.Enqueue(2);
+    queue.Enqueue(3);
+    queue.Enqueue(4);
+    queue.Dequeue();
+    queue.Dequeue();
+    queue.Enqueue(5);
+    queue.Enqueue(6);
+
+    queue.EnsureCapacity(10);
+
+    Assert.That(queue.Count, Is.EqualTo(4));
+    Assert.That(queue.Dequeue(), Is.EqualTo(3));
+    Assert.That(queue.Dequeue(), Is.EqualTo(4));
+    Assert.That(queue.Dequeue(), Is.EqualTo(5));
+    Assert.That(queue.Dequeue(), Is.EqualTo(6));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Queue_EnsureCapacity_MultipleIncreases_WorksCorrectly() {
+    var queue = new Queue<int>();
+    queue.Enqueue(1);
+    queue.Enqueue(2);
+
+    var cap1 = queue.EnsureCapacity(50);
+    var cap2 = queue.EnsureCapacity(100);
+
+    Assert.That(cap1, Is.GreaterThanOrEqualTo(50));
+    Assert.That(cap2, Is.GreaterThanOrEqualTo(100));
+    Assert.That(queue.Dequeue(), Is.EqualTo(1));
+    Assert.That(queue.Dequeue(), Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Queue_EnsureCapacity_EmptyQueue_WorksCorrectly() {
+    var queue = new Queue<int>();
+    var result = queue.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+    Assert.That(queue.Count, Is.EqualTo(0));
+  }
+
   #endregion
 
   #region Stack<T>.EnsureCapacity
@@ -123,6 +170,39 @@ public class CollectionEnsureCapacityTests {
     Assert.Throws<ArgumentOutOfRangeException>(() => stack.EnsureCapacity(-1));
   }
 
+  [Test]
+  [Category("EdgeCase")]
+  public void Stack_EnsureCapacity_AlreadySufficient_ReturnsCurrentCapacity() {
+    var stack = new Stack<int>(200);
+    var result = stack.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Stack_EnsureCapacity_MultipleIncreases_WorksCorrectly() {
+    var stack = new Stack<int>();
+    stack.Push(1);
+    stack.Push(2);
+
+    var cap1 = stack.EnsureCapacity(50);
+    var cap2 = stack.EnsureCapacity(100);
+
+    Assert.That(cap1, Is.GreaterThanOrEqualTo(50));
+    Assert.That(cap2, Is.GreaterThanOrEqualTo(100));
+    Assert.That(stack.Pop(), Is.EqualTo(2));
+    Assert.That(stack.Pop(), Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Stack_EnsureCapacity_EmptyStack_WorksCorrectly() {
+    var stack = new Stack<int>();
+    var result = stack.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+    Assert.That(stack.Count, Is.EqualTo(0));
+  }
+
   #endregion
 
   #region HashSet<T>.EnsureCapacity
@@ -161,6 +241,39 @@ public class CollectionEnsureCapacityTests {
   public void HashSet_EnsureCapacity_NegativeCapacity_ThrowsArgumentOutOfRange() {
     var set = new HashSet<int>();
     Assert.Throws<ArgumentOutOfRangeException>(() => set.EnsureCapacity(-1));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void HashSet_EnsureCapacity_AlreadySufficient_ReturnsCurrentCapacity() {
+    var set = new HashSet<int>();
+    set.EnsureCapacity(200);
+    var result = set.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void HashSet_EnsureCapacity_MultipleIncreases_WorksCorrectly() {
+    var set = new HashSet<int> { 1, 2, 3 };
+
+    var cap1 = set.EnsureCapacity(50);
+    var cap2 = set.EnsureCapacity(100);
+
+    Assert.That(cap1, Is.GreaterThanOrEqualTo(50));
+    Assert.That(cap2, Is.GreaterThanOrEqualTo(100));
+    Assert.That(set.Contains(1), Is.True);
+    Assert.That(set.Contains(2), Is.True);
+    Assert.That(set.Contains(3), Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void HashSet_EnsureCapacity_EmptySet_WorksCorrectly() {
+    var set = new HashSet<int>();
+    var result = set.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+    Assert.That(set.Count, Is.EqualTo(0));
   }
 
   #endregion
@@ -205,6 +318,37 @@ public class CollectionEnsureCapacityTests {
   public void Dictionary_EnsureCapacity_NegativeCapacity_ThrowsArgumentOutOfRange() {
     var dict = new Dictionary<string, int>();
     Assert.Throws<ArgumentOutOfRangeException>(() => dict.EnsureCapacity(-1));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Dictionary_EnsureCapacity_AlreadySufficient_ReturnsCurrentCapacity() {
+    var dict = new Dictionary<string, int>(200);
+    var result = dict.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Dictionary_EnsureCapacity_MultipleIncreases_WorksCorrectly() {
+    var dict = new Dictionary<string, int> { ["one"] = 1, ["two"] = 2 };
+
+    var cap1 = dict.EnsureCapacity(50);
+    var cap2 = dict.EnsureCapacity(100);
+
+    Assert.That(cap1, Is.GreaterThanOrEqualTo(50));
+    Assert.That(cap2, Is.GreaterThanOrEqualTo(100));
+    Assert.That(dict["one"], Is.EqualTo(1));
+    Assert.That(dict["two"], Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Dictionary_EnsureCapacity_EmptyDictionary_WorksCorrectly() {
+    var dict = new Dictionary<string, int>();
+    var result = dict.EnsureCapacity(100);
+    Assert.That(result, Is.GreaterThanOrEqualTo(100));
+    Assert.That(dict.Count, Is.EqualTo(0));
   }
 
   #endregion

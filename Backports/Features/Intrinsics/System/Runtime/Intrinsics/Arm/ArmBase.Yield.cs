@@ -17,11 +17,7 @@
 
 #endregion
 
-// ArmBase.Yield (added in .NET 7.0)
-// On older frameworks without FEATURE_ARMBASE_WAVE1, the full polyfill includes Yield.
-// On net5.0-net6.0 (WAVE1 defined but not YIELD), this extension provides Yield.
-
-#if !FEATURE_ARMBASE_YIELD
+#if !SUPPORTS_ARMBASE_YIELD
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;

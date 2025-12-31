@@ -17,11 +17,7 @@
 
 #endregion
 
-// ArmBase.Arm64.MultiplyHigh (added in .NET 6.0)
-// On older frameworks without FEATURE_ARMBASE_WAVE1, the full polyfill includes MultiplyHigh.
-// On net5.0 (WAVE1 defined but not MULTIPLYHIGH), this extension provides MultiplyHigh.
-
-#if !FEATURE_ARMBASE_MULTIPLYHIGH
+#if !SUPPORTS_ARMBASE_MULTIPLYHIGH
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;

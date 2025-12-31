@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !FEATURE_ARMBASE_WAVE1
+#if !SUPPORTS_ARMBASE_WAVE1
 
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
