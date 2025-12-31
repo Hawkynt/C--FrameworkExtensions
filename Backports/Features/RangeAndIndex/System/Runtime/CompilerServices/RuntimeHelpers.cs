@@ -14,11 +14,11 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if !SUPPORTS_RANGE_AND_INDEX
+#if !SUPPORTS_RUNTIMEHELPERS_GETSUBARRAY
 
 namespace System.Runtime.CompilerServices;
 
-public static class RuntimeHelpers {
+public static partial class RuntimeHelpers {
   public static T[] GetSubArray<T>(T[] array, Range range) {
     ArgumentNullException.ThrowIfNull(array);
 

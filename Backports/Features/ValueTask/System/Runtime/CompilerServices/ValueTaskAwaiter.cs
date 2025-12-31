@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_VALUE_TASK && !OFFICIAL_VALUETASK
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -47,17 +45,7 @@ public readonly struct ValueTaskAwaiter : ICriticalNotifyCompletion {
   /// <summary>
   /// Ends the await on the completed operation.
   /// </summary>
-  public void GetResult() {
-    var task = this._value.AsTask();
-    if (task.IsFaulted)
-      _ThrowException(task.Exception!.InnerException!);
-    if (task.IsCanceled)
-      _ThrowException(new TaskCanceledException(task));
-  }
-
-  [DoesNotReturn]
-  [StackTraceHidden]
-  private static void _ThrowException(Exception e) => throw e;
+  public void GetResult() => this._value.AsTask().GetAwaiter().GetResult();
 
   /// <summary>
   /// Schedules the continuation action for the <see cref="ValueTask"/>.
@@ -98,19 +86,7 @@ public readonly struct ValueTaskAwaiter<TResult> : ICriticalNotifyCompletion {
   /// Ends the await on the completed operation.
   /// </summary>
   /// <returns>The result of the operation.</returns>
-  public TResult GetResult() {
-    var task = this._value.AsTask();
-    if (task.IsFaulted)
-      _ThrowException(task.Exception!.InnerException!);
-    if (task.IsCanceled)
-      _ThrowException(new TaskCanceledException(task));
-    
-    return task.Result;
-  }
-
-  [DoesNotReturn]
-  [StackTraceHidden]
-  private static void _ThrowException(Exception e) => throw e;
+  public TResult GetResult() => this._value.AsTask().GetAwaiter().GetResult();
 
   /// <summary>
   /// Schedules the continuation action for the <see cref="ValueTask{TResult}"/>.
