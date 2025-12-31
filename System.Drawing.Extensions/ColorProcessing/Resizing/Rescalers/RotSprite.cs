@@ -160,19 +160,19 @@ file readonly struct RotSprite2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
     if (diagDiff1 && diagDiff2) {
       // Top-left: N matches W
       if (equality.Equals(rotatedN.Key, rotatedW.Key))
-        e00 = lerp.Lerp(rotatedN.Work, rotatedW.Work, 0.5f);
+        e00 = lerp.Lerp(rotatedN.Work, rotatedW.Work);
 
       // Top-right: N matches E
       if (equality.Equals(rotatedN.Key, rotatedE.Key))
-        e01 = lerp.Lerp(rotatedN.Work, rotatedE.Work, 0.5f);
+        e01 = lerp.Lerp(rotatedN.Work, rotatedE.Work);
 
       // Bottom-left: S matches W
       if (equality.Equals(rotatedS.Key, rotatedW.Key))
-        e10 = lerp.Lerp(rotatedS.Work, rotatedW.Work, 0.5f);
+        e10 = lerp.Lerp(rotatedS.Work, rotatedW.Work);
 
       // Bottom-right: S matches E
       if (equality.Equals(rotatedS.Key, rotatedE.Key))
-        e11 = lerp.Lerp(rotatedS.Work, rotatedE.Work, 0.5f);
+        e11 = lerp.Lerp(rotatedS.Work, rotatedE.Work);
     }
 
     // Apply rotation to output positions
@@ -303,19 +303,19 @@ file readonly struct RotSprite3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
     if (!equality.Equals(rotatedW.Key, rotatedE.Key) && !equality.Equals(rotatedN.Key, rotatedS.Key)) {
       // Top-left corner
       if (equality.Equals(rotatedN.Key, rotatedW.Key))
-        e[0] = lerp.Lerp(rotatedN.Work, rotatedW.Work, 0.5f);
+        e[0] = lerp.Lerp(rotatedN.Work, rotatedW.Work);
 
       // Top-right corner
       if (equality.Equals(rotatedN.Key, rotatedE.Key))
-        e[2] = lerp.Lerp(rotatedN.Work, rotatedE.Work, 0.5f);
+        e[2] = lerp.Lerp(rotatedN.Work, rotatedE.Work);
 
       // Bottom-left corner
       if (equality.Equals(rotatedS.Key, rotatedW.Key))
-        e[6] = lerp.Lerp(rotatedS.Work, rotatedW.Work, 0.5f);
+        e[6] = lerp.Lerp(rotatedS.Work, rotatedW.Work);
 
       // Bottom-right corner
       if (equality.Equals(rotatedS.Key, rotatedE.Key))
-        e[8] = lerp.Lerp(rotatedS.Work, rotatedE.Work, 0.5f);
+        e[8] = lerp.Lerp(rotatedS.Work, rotatedE.Work);
     }
 
     // Apply rotation to output positions
@@ -428,19 +428,19 @@ file readonly struct RotSprite4xKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
     if (!equality.Equals(rotatedW.Key, rotatedE.Key) && !equality.Equals(rotatedN.Key, rotatedS.Key)) {
       // Top-left corner
       if (equality.Equals(rotatedN.Key, rotatedW.Key))
-        e[0] = lerp.Lerp(rotatedN.Work, rotatedW.Work, 0.5f);
+        e[0] = lerp.Lerp(rotatedN.Work, rotatedW.Work);
 
       // Top-right corner
       if (equality.Equals(rotatedN.Key, rotatedE.Key))
-        e[3] = lerp.Lerp(rotatedN.Work, rotatedE.Work, 0.5f);
+        e[3] = lerp.Lerp(rotatedN.Work, rotatedE.Work);
 
       // Bottom-left corner
       if (equality.Equals(rotatedS.Key, rotatedW.Key))
-        e[12] = lerp.Lerp(rotatedS.Work, rotatedW.Work, 0.5f);
+        e[12] = lerp.Lerp(rotatedS.Work, rotatedW.Work);
 
       // Bottom-right corner
       if (equality.Equals(rotatedS.Key, rotatedE.Key))
-        e[15] = lerp.Lerp(rotatedS.Work, rotatedE.Work, 0.5f);
+        e[15] = lerp.Lerp(rotatedS.Work, rotatedE.Work);
     }
 
     // Apply rotation to output positions

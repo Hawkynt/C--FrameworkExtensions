@@ -20,40 +20,26 @@
 namespace Hawkynt.ColorProcessing.ColorMath;
 
 /// <summary>
-/// Provides weighted accumulation for resampling operations.
+/// Provides integer-only weighted accumulation for fast resampling operations.
 /// </summary>
 /// <typeparam name="TAccum">The accumulator type (mutable, accumulates values).</typeparam>
 /// <typeparam name="TColor">The color type being accumulated.</typeparam>
 /// <remarks>
 /// <para>
-/// Used in convolution-based scaling algorithms (Lanczos, Bicubic, etc.)
-/// where multiple source pixels are weighted and summed.
+/// Used in fast/LQ scaling algorithms where float arithmetic is undesirable.
+/// All operations use pure integer math with no float conversions.
 /// </para>
 /// <para>
-/// The accumulator is mutable - <see cref="AddMul"/> modifies the accumulator in place
-/// for efficiency. Call <see cref="Result"/> to finalize and get the output color.
-/// </para>
-/// <para>
-/// For float-based color types (e.g., LinearRgbaF), the type can be its own accumulator
-/// where <typeparamref name="TAccum"/> equals <typeparamref name="TColor"/>.
-/// For byte-based types (e.g., Bgra8888), a separate float-precision accumulator
-/// prevents rounding errors during accumulation.
+/// Integer weights should be scaled appropriately (e.g., 0-256 or 0-65536)
+/// to maintain precision during accumulation.
 /// </para>
 /// </remarks>
-public interface IAccum<TAccum, TColor>
-  where TAccum : unmanaged, IAccum<TAccum, TColor>
+public interface IAccumInt<TAccum, TColor>
+  where TAccum : unmanaged, IAccumInt<TAccum, TColor>
   where TColor : unmanaged, IColorSpace {
 
   /// <summary>
-  /// Adds a weighted color to this accumulator: acc += color * weight.
-  /// </summary>
-  /// <param name="color">The color to add.</param>
-  /// <param name="weight">The weight to apply.</param>
-  /// <remarks>This method mutates the accumulator in place.</remarks>
-  void AddMul(in TColor color, float weight);
-
-  /// <summary>
-  /// Adds a weighted color to this accumulator using integer weight: acc += color * weight.
+  /// Adds a weighted color to this accumulator using integer weights: acc += color * weight.
   /// </summary>
   /// <param name="color">The color to add.</param>
   /// <param name="weight">The integer weight to apply.</param>
@@ -71,8 +57,7 @@ public interface IAccum<TAccum, TColor>
   /// Finalizes the accumulation and returns the result color.
   /// </summary>
   /// <remarks>
-  /// For byte-based accumulators, this is where clamping and rounding occurs.
-  /// For float-based self-accumulators, this may simply return the accumulator value.
+  /// Performs integer division by accumulated weight sum and clamps to valid range.
   /// </remarks>
   TColor Result { get; }
 }

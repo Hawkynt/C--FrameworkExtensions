@@ -227,8 +227,8 @@ file readonly struct Scl2xSuperKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var ks = s.Key;
 
     // Blended defaults (3:1 center:neighbor)
-    var cw = lerp.Lerp(center, wWork, 0.25f);
-    var ce = lerp.Lerp(center, eWork, 0.25f);
+    var cw = lerp.Lerp(center, wWork, 3, 1);
+    var ce = lerp.Lerp(center, eWork, 3, 1);
 
     // Compute corners: edge detection uses neighbor directly, non-edge uses blend
     var p0 = equality.Equals(kw, kn) && !equality.Equals(kn, ke) && !equality.Equals(kw, ks) ? wWork : cw;
@@ -339,8 +339,8 @@ file readonly struct Scl2xUltraKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var ks = s.Key;
 
     // Blended defaults (3:1 center:neighbor)
-    var cw = lerp.Lerp(center, wWork, 0.25f);
-    var ce = lerp.Lerp(center, eWork, 0.25f);
+    var cw = lerp.Lerp(center, wWork, 3, 1);
+    var ce = lerp.Lerp(center, eWork, 3, 1);
 
     // Compute corners like Super
     var p0 = equality.Equals(kw, kn) && !equality.Equals(kn, ke) && !equality.Equals(kw, ks) ? wWork : cw;

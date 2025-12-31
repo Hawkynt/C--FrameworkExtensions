@@ -20,31 +20,21 @@
 namespace Hawkynt.ColorProcessing.ColorMath;
 
 /// <summary>
-/// Provides linear interpolation between two colors.
+/// Provides integer-only linear interpolation between two colors.
 /// </summary>
 /// <typeparam name="T">The color type to interpolate.</typeparam>
 /// <remarks>
-/// <para>Used in scaling algorithms and color blending operations.</para>
-/// <para>Implementations should operate in linear color space for correct results.</para>
-/// <para>Includes both float and integer weight methods for flexibility and performance.</para>
+/// <para>Used in fast/LQ scaling algorithms where float arithmetic is undesirable.</para>
+/// <para>All operations use pure integer math with no float conversions.</para>
 /// </remarks>
-public interface ILerp<T> where T : unmanaged {
+public interface ILerpInt<T> where T : unmanaged {
 
   /// <summary>
-  /// Linearly interpolates between two colors.
-  /// </summary>
-  /// <param name="a">The start color (t=0).</param>
-  /// <param name="b">The end color (t=1).</param>
-  /// <param name="t">The interpolation factor (0.0 to 1.0).</param>
-  /// <returns>The interpolated color.</returns>
-  T Lerp(in T a, in T b, float t);
-
-  /// <summary>
-  /// Linearly interpolates between two colors at the midpoint (50/50 blend).
+  /// Linearly interpolates between two colors with equal weights (50/50 blend).
   /// </summary>
   /// <param name="a">The first color.</param>
   /// <param name="b">The second color.</param>
-  /// <returns>The color at the midpoint between a and b.</returns>
+  /// <returns>The blended color (a + b) / 2.</returns>
   T Lerp(in T a, in T b);
 
   /// <summary>
@@ -52,8 +42,8 @@ public interface ILerp<T> where T : unmanaged {
   /// </summary>
   /// <param name="a">The first color.</param>
   /// <param name="b">The second color.</param>
-  /// <param name="w1">The weight for the first color.</param>
-  /// <param name="w2">The weight for the second color.</param>
-  /// <returns>The weighted blend: (a * w1 + b * w2) / (w1 + w2).</returns>
+  /// <param name="w1">Weight for color a.</param>
+  /// <param name="w2">Weight for color b.</param>
+  /// <returns>The weighted blend (a * w1 + b * w2) / (w1 + w2).</returns>
   T Lerp(in T a, in T b, int w1, int w2);
 }

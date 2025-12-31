@@ -86,26 +86,34 @@ public readonly struct Euclidean3B<TKey> : IColorMetric<TKey>
 }
 
 /// <summary>
-/// Squared Euclidean distance metric for 3-component color spaces.
+/// Squared Euclidean distance metric for 3-component byte color spaces.
 /// </summary>
-/// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
+/// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Faster than Euclidean (no sqrt) when only relative comparison is needed.
-/// Use for nearest-neighbor search where absolute distance isn't required.
+/// <para>Faster than Euclidean (no sqrt) when only relative comparison is needed.
+/// Use for nearest-neighbor search where absolute distance isn't required.</para>
+/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
+/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
+/// in integer-only pipelines.</para>
+/// <para>Maximum distance: 3 × 255² = 195,075.</para>
 /// </remarks>
-public readonly struct EuclideanSquared3B<TKey> : IColorMetric<TKey>
+public readonly struct EuclideanSquared3B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
 
   /// <summary>
   /// Internal squared distance calculation.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static float _Calculate(in TKey a, in TKey b) {
+  internal static int _Calculate(in TKey a, in TKey b) {
     var d1 = a.C1 - b.C1;
     var d2 = a.C2 - b.C2;
     var d3 = a.C3 - b.C3;
     return d1 * d1 + d2 * d2 + d3 * d3;
   }
+
+  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
 
   /// <summary>
   /// Calculates the squared Euclidean distance between two colors.
@@ -184,25 +192,33 @@ public readonly struct Euclidean4B<TKey> : IColorMetric<TKey>
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Omits the square root for faster comparisons when only relative distances matter.
+/// <para>Omits the square root for faster comparisons when only relative distances matter.</para>
+/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
+/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
+/// in integer-only pipelines.</para>
+/// <para>Maximum distance: 4 × 255² = 260,100.</para>
 /// </remarks>
-public readonly struct EuclideanSquared4B<TKey> : IColorMetric<TKey>
+public readonly struct EuclideanSquared4B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
 
-  /// <summary>
-  /// Calculates the squared Euclidean distance between two colors.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  internal static float _Calculate(in TKey a, in TKey b) {
+  internal static int _Calculate(in TKey a, in TKey b) {
     var d1 = a.C1 - b.C1;
     var d2 = a.C2 - b.C2;
     var d3 = a.C3 - b.C3;
     var da = a.A - b.A;
     return d1 * d1 + d2 * d2 + d3 * d3 + da * da;
   }
+
+  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
+
+  /// <summary>
+  /// Calculates the squared Euclidean distance between two colors.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
 }
 
 #endregion

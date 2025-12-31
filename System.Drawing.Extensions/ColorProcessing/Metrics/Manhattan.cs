@@ -53,18 +53,29 @@ public readonly struct Manhattan3F<TKey> : IColorMetric<TKey>
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Sum of absolute differences. Faster than Euclidean and suitable for
-/// some perceptual comparisons.
+/// <para>Sum of absolute differences. Faster than Euclidean and suitable for
+/// some perceptual comparisons.</para>
+/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
+/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
+/// in integer-only pipelines.</para>
+/// <para>Maximum distance: 3 × 255 = 765.</para>
 /// </remarks>
-public readonly struct Manhattan3B<TKey> : IColorMetric<TKey>
+public readonly struct Manhattan3B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _Calculate(in TKey a, in TKey b)
+    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) + Math.Abs(a.C3 - b.C3);
+
+  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) + Math.Abs(a.C3 - b.C3);
+  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
 }
 
 #endregion
@@ -100,19 +111,30 @@ public readonly struct Manhattan4F<TKey> : IColorMetric<TKey>
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Sum of absolute differences across all four components including alpha.
-/// Faster than Euclidean and suitable for threshold-based comparisons.
+/// <para>Sum of absolute differences across all four components including alpha.
+/// Faster than Euclidean and suitable for threshold-based comparisons.</para>
+/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
+/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
+/// in integer-only pipelines.</para>
+/// <para>Maximum distance: 4 × 255 = 1,020.</para>
 /// </remarks>
-public readonly struct Manhattan4B<TKey> : IColorMetric<TKey>
+public readonly struct Manhattan4B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _Calculate(in TKey a, in TKey b)
+    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) +
+       Math.Abs(a.C3 - b.C3) + Math.Abs(a.A - b.A);
+
+  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) +
-       Math.Abs(a.C3 - b.C3) + Math.Abs(a.A - b.A);
+  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
 }
 
 #endregion
