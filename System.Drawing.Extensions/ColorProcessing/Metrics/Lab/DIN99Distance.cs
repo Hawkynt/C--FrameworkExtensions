@@ -20,7 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Spaces.Perceptual;
-using SysMath = System.Math;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Metrics.Lab;
@@ -29,27 +29,33 @@ namespace Hawkynt.ColorProcessing.Metrics.Lab;
 /// Calculates the Euclidean distance in DIN99 color space.
 /// </summary>
 /// <remarks>
-/// DIN99 is designed to be perceptually uniform, so Euclidean distance
-/// in this space is a good approximation of perceived color difference.
+/// <para>DIN99 is designed to be perceptually uniform, so Euclidean distance
+/// in this space is a good approximation of perceived color difference.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance of 100.</para>
 /// </remarks>
-public readonly struct DIN99Distance : IColorMetric<Din99F> {
+public readonly struct DIN99Distance : IColorMetric<Din99F>, INormalizedMetric {
+
+  // Practical max distance for normalization
+  private const float MaxDistance = 100f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in Din99F a, in Din99F b)
-#if SUPPORTS_MATHF
-    => MathF.Sqrt(DIN99DistanceSquared._Calculate(a, b));
-#else
-    => (float)SysMath.Sqrt(DIN99DistanceSquared._Calculate(a, b));
-#endif
+  public UNorm32 Distance(in Din99F a, in Din99F b) {
+    var raw = MathF.Sqrt(DIN99DistanceSquared._Calculate(a, b));
+    return UNorm32.FromFloatClamped(raw / MaxDistance);
+  }
 }
 
 /// <summary>
 /// Calculates the squared Euclidean distance in DIN99 color space.
 /// </summary>
 /// <remarks>
-/// Faster than DIN99Distance when only comparing distances (no sqrt).
+/// <para>Faster than DIN99Distance when only comparing distances (no sqrt).</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance² of 10000.</para>
 /// </remarks>
-public readonly struct DIN99DistanceSquared : IColorMetric<Din99F> {
+public readonly struct DIN99DistanceSquared : IColorMetric<Din99F>, INormalizedMetric {
+
+  // Practical max distance squared for normalization (100²)
+  private const float MaxDistanceSquared = 10000f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   internal static float _Calculate(in Din99F a, in Din99F b) {
@@ -60,5 +66,6 @@ public readonly struct DIN99DistanceSquared : IColorMetric<Din99F> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in Din99F a, in Din99F b) => _Calculate(a, b);
+  public UNorm32 Distance(in Din99F a, in Din99F b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b) / MaxDistanceSquared);
 }

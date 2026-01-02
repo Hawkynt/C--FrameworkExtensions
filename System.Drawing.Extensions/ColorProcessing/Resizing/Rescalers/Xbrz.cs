@@ -68,7 +68,7 @@ public readonly struct Xbrz : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
@@ -207,7 +207,7 @@ file static class XbrzHelpers {
   /// Compute color distance using YCbCr (ITU-R BT.709).
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float ColorDistance<TKey, TMetric>(in TKey c1, in TKey c2, TMetric metric)
+  public static UNorm32 ColorDistance<TKey, TMetric>(in TKey c1, in TKey c2, TMetric metric)
     where TKey : unmanaged, IColorSpace
     where TMetric : struct, IColorMetric<TKey>
     => metric.Distance(c1, c2);
@@ -249,18 +249,18 @@ file static class XbrzHelpers {
     if (equalFJ && equalGK)
       return;
 
-    const int weight = 4;
-    var jg = metric.Distance(i, f) + metric.Distance(f, c) + metric.Distance(n, k) + metric.Distance(k, h) + weight * metric.Distance(j, g);
-    var fk = metric.Distance(e, j) + metric.Distance(j, o) + metric.Distance(b, g) + metric.Distance(g, l) + weight * metric.Distance(f, k);
+    const uint weight = 4;
+    var jg = (ulong)metric.Distance(i, f).RawValue + metric.Distance(f, c).RawValue + metric.Distance(n, k).RawValue + metric.Distance(k, h).RawValue + weight * metric.Distance(j, g).RawValue;
+    var fk = (ulong)metric.Distance(e, j).RawValue + metric.Distance(j, o).RawValue + metric.Distance(b, g).RawValue + metric.Distance(g, l).RawValue + weight * metric.Distance(f, k).RawValue;
 
     if (jg < fk) {
-      var dominantGradient = DominantDirectionThreshold * jg < fk;
+      var dominantGradient = jg * 36 < fk * 10; // DominantDirectionThreshold (3.6) as integer ratio
       if (!equalFG || !equalFJ)
         blendResult.F = dominantGradient ? BlendType.Dominant : BlendType.Normal;
       if (!equalJK || !equalGK)
         blendResult.K = dominantGradient ? BlendType.Dominant : BlendType.Normal;
     } else if (fk < jg) {
-      var dominantGradient = DominantDirectionThreshold * fk < jg;
+      var dominantGradient = fk * 36 < jg * 10; // DominantDirectionThreshold (3.6) as integer ratio
       if (!equalFJ || !equalJK)
         blendResult.J = dominantGradient ? BlendType.Dominant : BlendType.Normal;
       if (!equalFG || !equalGK)
@@ -495,8 +495,8 @@ file readonly struct Xbrz2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var fg = metric.Distance(f, g);
     var hc = metric.Distance(h, c);
 
-    var haveShallowLine = XbrzHelpers.SteepDirectionThreshold * fg <= hc && !equality.Equals(e, g) && !equality.Equals(d, g);
-    var haveSteepLine = XbrzHelpers.SteepDirectionThreshold * hc <= fg && !equality.Equals(e, c) && !equality.Equals(b, c);
+    var haveShallowLine = (ulong)fg.RawValue * 22 <= (ulong)hc.RawValue * 10 && !equality.Equals(e, g) && !equality.Equals(d, g); // SteepDirectionThreshold (2.2) as integer ratio
+    var haveSteepLine = (ulong)hc.RawValue * 22 <= (ulong)fg.RawValue * 10 && !equality.Equals(e, c) && !equality.Equals(b, c); // SteepDirectionThreshold (2.2) as integer ratio
 
     var (ri0, rj1_0) = RotationLookup.Get(2, rotDeg, 1, 0);
     var (ri1_0, rj0) = RotationLookup.Get(2, rotDeg, 0, 1);
@@ -621,8 +621,8 @@ file readonly struct Xbrz3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var fg = metric.Distance(f, g);
     var hc = metric.Distance(h, c);
 
-    var haveShallowLine = XbrzHelpers.SteepDirectionThreshold * fg <= hc && !equality.Equals(e, g) && !equality.Equals(d, g);
-    var haveSteepLine = XbrzHelpers.SteepDirectionThreshold * hc <= fg && !equality.Equals(e, c) && !equality.Equals(b, c);
+    var haveShallowLine = (ulong)fg.RawValue * 22 <= (ulong)hc.RawValue * 10 && !equality.Equals(e, g) && !equality.Equals(d, g); // SteepDirectionThreshold (2.2) as integer ratio
+    var haveSteepLine = (ulong)hc.RawValue * 22 <= (ulong)fg.RawValue * 10 && !equality.Equals(e, c) && !equality.Equals(b, c); // SteepDirectionThreshold (2.2) as integer ratio
 
     if (haveShallowLine) {
       if (haveSteepLine) {
@@ -771,8 +771,8 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var fg = metric.Distance(f, g);
     var hc = metric.Distance(h, c);
 
-    var haveShallowLine = XbrzHelpers.SteepDirectionThreshold * fg <= hc && !equality.Equals(e, g) && !equality.Equals(d, g);
-    var haveSteepLine = XbrzHelpers.SteepDirectionThreshold * hc <= fg && !equality.Equals(e, c) && !equality.Equals(b, c);
+    var haveShallowLine = (ulong)fg.RawValue * 22 <= (ulong)hc.RawValue * 10 && !equality.Equals(e, g) && !equality.Equals(d, g); // SteepDirectionThreshold (2.2) as integer ratio
+    var haveSteepLine = (ulong)hc.RawValue * 22 <= (ulong)fg.RawValue * 10 && !equality.Equals(e, c) && !equality.Equals(b, c); // SteepDirectionThreshold (2.2) as integer ratio
 
     if (haveShallowLine) {
       if (haveSteepLine) {
@@ -931,8 +931,8 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var fg = metric.Distance(f, g);
     var hc = metric.Distance(h, c);
 
-    var haveShallowLine = XbrzHelpers.SteepDirectionThreshold * fg <= hc && !equality.Equals(e, g) && !equality.Equals(d, g);
-    var haveSteepLine = XbrzHelpers.SteepDirectionThreshold * hc <= fg && !equality.Equals(e, c) && !equality.Equals(b, c);
+    var haveShallowLine = (ulong)fg.RawValue * 22 <= (ulong)hc.RawValue * 10 && !equality.Equals(e, g) && !equality.Equals(d, g); // SteepDirectionThreshold (2.2) as integer ratio
+    var haveSteepLine = (ulong)hc.RawValue * 22 <= (ulong)fg.RawValue * 10 && !equality.Equals(e, c) && !equality.Equals(b, c); // SteepDirectionThreshold (2.2) as integer ratio
 
     if (haveShallowLine) {
       if (haveSteepLine) {
@@ -1116,8 +1116,8 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
     var fg = metric.Distance(f, g);
     var hc = metric.Distance(h, c);
 
-    var haveShallowLine = XbrzHelpers.SteepDirectionThreshold * fg <= hc && !equality.Equals(e, g) && !equality.Equals(d, g);
-    var haveSteepLine = XbrzHelpers.SteepDirectionThreshold * hc <= fg && !equality.Equals(e, c) && !equality.Equals(b, c);
+    var haveShallowLine = (ulong)fg.RawValue * 22 <= (ulong)hc.RawValue * 10 && !equality.Equals(e, g) && !equality.Equals(d, g); // SteepDirectionThreshold (2.2) as integer ratio
+    var haveSteepLine = (ulong)hc.RawValue * 22 <= (ulong)fg.RawValue * 10 && !equality.Equals(e, c) && !equality.Equals(b, c); // SteepDirectionThreshold (2.2) as integer ratio
 
     if (haveShallowLine) {
       if (haveSteepLine) {

@@ -30,8 +30,10 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Euclidean distance.
-/// Useful when different color channels have different perceptual importance.
+/// <para>Applies custom weights to each component before calculating Euclidean distance.
+/// Useful when different color channels have different perceptual importance.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclidean3F<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3F<TKey> {
@@ -40,8 +42,10 @@ public readonly struct WeightedEuclidean3F<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Sqrt(WeightedEuclideanSquared3F<TKey>._Calculate(a, b, w1, w2, w3));
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Sqrt(WeightedEuclideanSquared3F<TKey>._Calculate(a, b, w1, w2, w3));
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 /// <summary>
@@ -49,7 +53,9 @@ public readonly struct WeightedEuclidean3F<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// Faster than WeightedEuclidean3F (no sqrt) when only relative comparison is needed.
+/// <para>Faster than WeightedEuclidean3F (no sqrt) when only relative comparison is needed.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclideanSquared3F<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3F<TKey> {
@@ -69,7 +75,8 @@ public readonly struct WeightedEuclideanSquared3F<TKey>(float w1, float w2, floa
   /// Calculates the weighted squared Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b, w1, w2, w3);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b, w1, w2, w3));
 }
 
 #endregion
@@ -81,8 +88,10 @@ public readonly struct WeightedEuclideanSquared3F<TKey>(float w1, float w2, floa
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Euclidean distance.
-/// Useful when different color channels have different perceptual importance.
+/// <para>Applies custom weights to each component before calculating Euclidean distance.
+/// Useful when different color channels have different perceptual importance.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclidean3B<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
@@ -91,8 +100,10 @@ public readonly struct WeightedEuclidean3B<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Sqrt(WeightedEuclideanSquared3B<TKey>._Calculate(a, b, w1, w2, w3));
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Sqrt(WeightedEuclideanSquared3B<TKey>._Calculate(a, b, w1, w2, w3));
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 /// <summary>
@@ -100,7 +111,9 @@ public readonly struct WeightedEuclidean3B<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Faster than WeightedEuclidean3B (no sqrt) when only relative comparison is needed.
+/// <para>Faster than WeightedEuclidean3B (no sqrt) when only relative comparison is needed.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclideanSquared3B<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
@@ -120,7 +133,8 @@ public readonly struct WeightedEuclideanSquared3B<TKey>(float w1, float w2, floa
   /// Calculates the weighted squared Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b, w1, w2, w3);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b, w1, w2, w3));
 }
 
 #endregion
@@ -132,8 +146,10 @@ public readonly struct WeightedEuclideanSquared3B<TKey>(float w1, float w2, floa
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Euclidean distance.
-/// Useful when different color channels have different perceptual importance.
+/// <para>Applies custom weights to each component including alpha before calculating Euclidean distance.
+/// Useful when different color channels have different perceptual importance.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclidean4F<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4F<TKey> {
@@ -142,8 +158,10 @@ public readonly struct WeightedEuclidean4F<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Sqrt(WeightedEuclideanSquared4F<TKey>._Calculate(a, b, w1, w2, w3, wA));
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Sqrt(WeightedEuclideanSquared4F<TKey>._Calculate(a, b, w1, w2, w3, wA));
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 /// <summary>
@@ -151,7 +169,9 @@ public readonly struct WeightedEuclidean4F<TKey>(float w1, float w2, float w3, f
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4F.</typeparam>
 /// <remarks>
-/// Faster than WeightedEuclidean4F (no sqrt) when only relative comparison is needed.
+/// <para>Faster than WeightedEuclidean4F (no sqrt) when only relative comparison is needed.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclideanSquared4F<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4F<TKey> {
@@ -172,7 +192,8 @@ public readonly struct WeightedEuclideanSquared4F<TKey>(float w1, float w2, floa
   /// Calculates the weighted squared Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b, w1, w2, w3, wA);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b, w1, w2, w3, wA));
 }
 
 #endregion
@@ -184,8 +205,10 @@ public readonly struct WeightedEuclideanSquared4F<TKey>(float w1, float w2, floa
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Euclidean distance.
-/// Useful when different color channels have different perceptual importance.
+/// <para>Applies custom weights to each component including alpha before calculating Euclidean distance.
+/// Useful when different color channels have different perceptual importance.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclidean4B<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
@@ -194,8 +217,10 @@ public readonly struct WeightedEuclidean4B<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Sqrt(WeightedEuclideanSquared4B<TKey>._Calculate(a, b, w1, w2, w3, wA));
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Sqrt(WeightedEuclideanSquared4B<TKey>._Calculate(a, b, w1, w2, w3, wA));
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 /// <summary>
@@ -203,7 +228,9 @@ public readonly struct WeightedEuclidean4B<TKey>(float w1, float w2, float w3, f
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Faster than WeightedEuclidean4B (no sqrt) when only relative comparison is needed.
+/// <para>Faster than WeightedEuclidean4B (no sqrt) when only relative comparison is needed.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedEuclideanSquared4B<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
@@ -224,7 +251,8 @@ public readonly struct WeightedEuclideanSquared4B<TKey>(float w1, float w2, floa
   /// Calculates the weighted squared Euclidean distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b, w1, w2, w3, wA);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b, w1, w2, w3, wA));
 }
 
 #endregion

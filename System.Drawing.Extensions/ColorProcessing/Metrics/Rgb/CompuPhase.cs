@@ -20,6 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Working;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 // For IColorSpace4B
@@ -32,28 +33,36 @@ namespace Hawkynt.ColorProcessing.Metrics.Rgb;
 /// Calculates color distance using the CompuPhase low-cost approximation algorithm.
 /// </summary>
 /// <remarks>
-/// This algorithm provides a fast approximation of perceptual color difference
-/// by weighting RGB components based on the mean red value.
-/// The algorithm adjusts red and blue weights based on average red intensity:
-/// - Higher red values increase red weight and decrease blue weight
-/// - Lower red values decrease red weight and increase blue weight
-/// - Green is weighted consistently at 4x
-/// Reference: https://www.compuphase.com/cmetric.htm
+/// <para>This algorithm provides a fast approximation of perceptual color difference
+/// by weighting RGB components based on the mean red value.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Reference: https://www.compuphase.com/cmetric.htm</para>
 /// </remarks>
-public readonly struct CompuPhase : IColorMetric<LinearRgbF> {
+public readonly struct CompuPhase : IColorMetric<LinearRgbF>, INormalizedMetric {
+
+  // Max squared distance is 9.0 (when rMean=1, weights are 3,4,2 and all diffs are 1)
+  // sqrt(9) = 3, but normalized by /9 in squared version, so max = sqrt(1) = 1
+  private const float MaxDistance = 1f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in LinearRgbF a, in LinearRgbF b)
-    => MathF.Sqrt(CompuPhaseSquared._Calculate(a, b));
+  public UNorm32 Distance(in LinearRgbF a, in LinearRgbF b) {
+    var raw = MathF.Sqrt(CompuPhaseSquared._Calculate(a, b));
+    return UNorm32.FromFloatClamped(raw / MaxDistance);
+  }
 }
 
 /// <summary>
 /// Calculates squared color distance using the CompuPhase algorithm.
 /// </summary>
 /// <remarks>
-/// Faster than CompuPhase when only comparing distances (no sqrt).
+/// <para>Faster than CompuPhase when only comparing distances (no sqrt).</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
 /// </remarks>
-public readonly struct CompuPhaseSquared : IColorMetric<LinearRgbF> {
+public readonly struct CompuPhaseSquared : IColorMetric<LinearRgbF>, INormalizedMetric {
+
+  // Max raw is 9.0 (3*1 + 4*1 + 2*1 with max weights and max diffs)
+  // Normalized by /9 = 1.0
+  private const float MaxDistance = 1f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   internal static float _Calculate(in LinearRgbF a, in LinearRgbF b) {
@@ -66,11 +75,13 @@ public readonly struct CompuPhaseSquared : IColorMetric<LinearRgbF> {
     var bWeight = 3f - rMean;
     const float gWeight = 4f;
 
-    return rWeight * dr * dr + gWeight * dg * dg + bWeight * db * db;
+    // Normalize by max possible weight sum (9) to get 0-1 range
+    return (rWeight * dr * dr + gWeight * dg * dg + bWeight * db * db) / 9f;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in LinearRgbF a, in LinearRgbF b) => _Calculate(a, b);
+  public UNorm32 Distance(in LinearRgbF a, in LinearRgbF b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b) / MaxDistance);
 }
 
 /// <summary>
@@ -78,19 +89,24 @@ public readonly struct CompuPhaseSquared : IColorMetric<LinearRgbF> {
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Uses red-weighted distance formula for better perceptual matching.
-/// C1=R, C2=G, C3=B ordering is expected per IColorSpace4B convention.
-/// Reference: https://www.compuphase.com/cmetric.htm
+/// <para>Uses red-weighted distance formula for better perceptual matching.
+/// C1=R, C2=G, C3=B ordering is expected per IColorSpace4B convention.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Reference: https://www.compuphase.com/cmetric.htm</para>
 /// </remarks>
-public readonly struct CompuPhase4<TKey> : IColorMetric<TKey>
+public readonly struct CompuPhase4<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  private const float MaxDistance = 1f;
 
   /// <summary>
   /// Calculates the CompuPhase perceptual distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Sqrt(CompuPhaseSquared4<TKey>._Calculate(a, b));
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Sqrt(CompuPhaseSquared4<TKey>._Calculate(a, b));
+    return UNorm32.FromFloatClamped(raw / MaxDistance);
+  }
 }
 
 /// <summary>
@@ -99,14 +115,14 @@ public readonly struct CompuPhase4<TKey> : IColorMetric<TKey>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
 /// <para>Omits the square root for faster comparisons when only relative distances matter.</para>
-/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
-/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
-/// in integer-only pipelines.</para>
-/// <para>The integer version uses weights scaled by 510 to avoid fractional arithmetic.
-/// Maximum distance: ~298 million (fits in int32).</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>The integer version uses weights scaled by 510 to avoid fractional arithmetic.</para>
 /// </remarks>
-public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
+public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace4B<TKey> {
+
+  // Already normalized to 0-1 range by _Calculate (divides by 9)
+  private const float MaxDistance = 1f;
 
   /// <summary>
   /// Internal integer calculation using scaled weights.
@@ -139,15 +155,12 @@ public readonly struct CompuPhaseSquared4<TKey> : IColorMetric<TKey>, IColorMetr
     return weightR * dR * dR + weightG * dG * dG + weightB * dB * dB;
   }
 
-  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _CalculateInt(a, b);
-
   /// <summary>
   /// Calculates the squared CompuPhase distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b) / MaxDistance);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   internal static float _Calculate(in TKey a, in TKey b) {

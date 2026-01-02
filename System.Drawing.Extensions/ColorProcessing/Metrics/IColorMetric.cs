@@ -24,13 +24,21 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type for distance measurement.</typeparam>
 /// <remarks>
-/// Used in quantization for finding the nearest palette color.
+/// <para>Returns distance as <see cref="UNorm32"/>:</para>
+/// <list type="bullet">
+///   <item><c>Zero</c> = identical colors (0.0)</item>
+///   <item><c>One</c> = maximum distance (1.0) for normalized metrics</item>
+/// </list>
+/// <para>To convert to float: <c>(float)distance</c> (explicit cast).</para>
+/// <para>For comparisons, use <see cref="UNorm32"/> operators directly.</para>
+/// <para>
 /// Different metrics provide different perceptual accuracy:
 /// <list type="bullet">
 ///   <item><description>Euclidean in RGB: Fast but perceptually inaccurate</description></item>
 ///   <item><description>Euclidean in YUV: Good perceptual balance</description></item>
 ///   <item><description>Euclidean in Lab: Best perceptual uniformity</description></item>
 /// </list>
+/// </para>
 /// </remarks>
 public interface IColorMetric<TKey> where TKey : unmanaged {
 
@@ -39,6 +47,6 @@ public interface IColorMetric<TKey> where TKey : unmanaged {
   /// </summary>
   /// <param name="a">The first color.</param>
   /// <param name="b">The second color.</param>
-  /// <returns>The distance (lower = more similar).</returns>
-  float Distance(in TKey a, in TKey b);
+  /// <returns>The normalized distance (Zero = identical, One = maximum).</returns>
+  UNorm32 Distance(in TKey a, in TKey b);
 }

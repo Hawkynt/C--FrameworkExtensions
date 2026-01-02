@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -60,10 +62,23 @@ public readonly record struct JzCzhzF(float Jz, float Cz, float Hz) : IColorSpac
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static JzCzhzF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
-  /// <remarks>Jz, Cz (scaled), Hz are already in 0-1 range.</remarks>
+  /// <inheritdoc />
+  /// <remarks>Jz: 0-1 -> 0-1, Cz: 0-0.5 scaled by 2 -> 0-1, Hz: 0-1 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.Jz, this.Cz * 2f, this.Hz);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.Jz),
+    UNorm32.FromFloat(this.Cz * 2f),
+    UNorm32.FromFloat(this.Hz)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> Jz, C2: 0-1 -> Cz 0-0.5, C3: 0-1 -> Hz.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static JzCzhzF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat() * 0.5f,
+    c3.ToFloat()
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

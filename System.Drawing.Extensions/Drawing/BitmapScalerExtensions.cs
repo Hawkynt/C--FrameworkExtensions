@@ -139,7 +139,7 @@ public static class BitmapScalerExtensions {
       where TDecode : struct, IDecode<Bgra8888, TWork>
       where TProject : struct, IProject<TWork, TKey>
       where TEncode : struct, IEncode<TWork, Bgra8888>
-      where TMetric : struct, IColorMetric<TKey>
+      where TMetric : struct, IColorMetric<TKey>, INormalizedMetric
       where TEquality : struct, IColorEquality<TKey>
       where TLerp : struct, ILerp<TWork> {
       var callback = new UpscaleCallback<TWork, TKey, TDecode, TProject, TEncode>(@this);
@@ -159,7 +159,7 @@ public static class BitmapScalerExtensions {
     public Bitmap UpscaleWithMetric<TScaler, TMetric>(
       TScaler scaler)
       where TScaler : struct, IPixelScaler
-      where TMetric : struct, IColorMetric<Bgra8888>
+      where TMetric : struct, IColorMetric<Bgra8888>, INormalizedMetric
       => _UpscaleWithMetric<TScaler, TMetric>(@this, scaler);
 
     /// <summary>
@@ -258,7 +258,7 @@ public static class BitmapScalerExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithMetric<TScaler, TMetric>(Bitmap source, TScaler scaler)
     where TScaler : struct, IPixelScaler
-    where TMetric : struct, IColorMetric<Bgra8888> {
+    where TMetric : struct, IColorMetric<Bgra8888>, INormalizedMetric {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);

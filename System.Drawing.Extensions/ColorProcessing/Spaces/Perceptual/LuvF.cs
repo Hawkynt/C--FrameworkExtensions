@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -60,10 +62,23 @@ public readonly record struct LuvF(float L, float U, float V) : IColorSpace3F<Lu
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LuvF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>L: 0-100 -> 0-1, U: -134 to 220 -> 0-1, V: -140 to 122 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.L / 100f, (this.U + 134f) / 354f, (this.V + 140f) / 262f);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.L / 100f),
+    UNorm32.FromFloat((this.U + 134f) / 354f),
+    UNorm32.FromFloat((this.V + 140f) / 262f)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> L 0-100, C2: 0-1 -> U -134 to 220, C3: 0-1 -> V -140 to 122.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static LuvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat() * 100f,
+    c2.ToFloat() * 354f - 134f,
+    c3.ToFloat() * 262f - 140f
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>L: 0-100 -> 0-255, U: -134 to 220 -> 0-255, V: -140 to 122 -> 0-255.</remarks>

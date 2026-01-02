@@ -20,6 +20,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Storage;
@@ -48,6 +50,28 @@ public readonly struct Argb4444 : IColorSpace4B<Argb4444>, IStorageSpace, IEquat
   byte IColorSpace4B<Argb4444>.C3 => this.B;
   byte IColorSpace4B<Argb4444>.A => this.A;
   public static Argb4444 Create(byte c1, byte c2, byte c3, byte a) => new(c1, c2, c3, a);
+
+  #endregion
+
+  #region Normalized Conversion
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 A) ToNormalized() => (
+    UNorm32.FromByte(this.R),
+    UNorm32.FromByte(this.G),
+    UNorm32.FromByte(this.B),
+    UNorm32.FromByte(this.A)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Argb4444 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a) => new(
+    c1.ToByte(),
+    c2.ToByte(),
+    c3.ToByte(),
+    a.ToByte()
+  );
 
   #endregion
 

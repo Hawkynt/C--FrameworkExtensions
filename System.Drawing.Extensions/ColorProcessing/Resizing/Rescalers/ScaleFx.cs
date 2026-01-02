@@ -55,7 +55,7 @@ public readonly struct ScaleFx3x : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
@@ -87,16 +87,17 @@ file static class ScaleFxHelpers {
   public const float DefaultThreshold = 0.50f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static float CornerStrength(float d, float a1, float a2, float b1, float b2, float threshold) {
-    var diff = a1 - a2;
-    var wght1 = Math.Max(threshold - d, 0f) / threshold;
-    var rawWght2 = (1f - d) + (Math.Min(a1, b1) + a1 > Math.Min(a2, b2) + a2 ? diff : -diff);
-#if SUPPORTS_MATHF_CLAMP
-    var wght2 = MathF.Clamp(rawWght2, 0f, 1f);
-#else
+  public static float CornerStrength(UNorm32 d, UNorm32 a1, UNorm32 a2, UNorm32 b1, UNorm32 b2, float threshold) {
+    var df = (float)d;
+    var a1f = (float)a1;
+    var a2f = (float)a2;
+    var b1f = (float)b1;
+    var b2f = (float)b2;
+    var diff = a1f - a2f;
+    var wght1 = Math.Max(threshold - df, 0f) / threshold;
+    var rawWght2 = (1f - df) + (Math.Min(a1f, b1f) + a1f > Math.Min(a2f, b2f) + a2f ? diff : -diff);
     var wght2 = rawWght2 < 0f ? 0f : rawWght2 > 1f ? 1f : rawWght2;
-#endif
-    return 2f * d < a1 + a2 ? wght1 * wght2 * a1 * a2 : 0f;
+    return 2f * df < a1f + a2f ? wght1 * wght2 * a1f * a2f : 0f;
   }
 }
 

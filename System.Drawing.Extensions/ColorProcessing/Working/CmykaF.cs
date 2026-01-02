@@ -19,8 +19,9 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Working;
@@ -79,6 +80,26 @@ public readonly record struct CmykaF(float C, float M, float Y, float K, float A
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static CmykaF Create(float c1, float c2, float c3, float c4, float a) => new(c1, c2, c3, c4, a);
 
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 C4, UNorm32 A) ToNormalized() => (
+    UNorm32.FromFloat(this.C),
+    UNorm32.FromFloat(this.M),
+    UNorm32.FromFloat(this.Y),
+    UNorm32.FromFloat(this.K),
+    UNorm32.FromFloat(this.A)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static CmykaF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a) => new(
+    c1.ToFloat(),
+    c2.ToFloat(),
+    c3.ToFloat(),
+    c4.ToFloat(),
+    a.ToFloat()
+  );
+
   #endregion
 
   #region IErrorOps Implementation
@@ -129,11 +150,6 @@ public readonly record struct CmykaF(float C, float M, float Y, float K, float A
     this.K < 0 ? 0 : this.K > 1 ? 1 : this.K,
     this.A < 0 ? 0 : this.A > 1 ? 1 : this.A
   );
-
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
-  /// <remarks>Components are already in 0-1 range.</remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3, float C4, float A) ToNormalized() => (this.C, this.M, this.Y, this.K, this.A);
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -20,6 +20,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Storage;
@@ -47,6 +49,26 @@ public readonly struct Rgb565 : IColorSpace3B<Rgb565>, IStorageSpace, IEquatable
   byte IColorSpace3B<Rgb565>.C2 => this.G;
   byte IColorSpace3B<Rgb565>.C3 => this.B;
   public static Rgb565 Create(byte c1, byte c2, byte c3) => new(c1, c2, c3);
+
+  #endregion
+
+  #region Normalized Conversion
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromByte(this.R),
+    UNorm32.FromByte(this.G),
+    UNorm32.FromByte(this.B)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Rgb565 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToByte(),
+    c2.ToByte(),
+    c3.ToByte()
+  );
 
   #endregion
 

@@ -30,8 +30,10 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Manhattan distance.
-/// Sum of weighted absolute differences.
+/// <para>Applies custom weights to each component before calculating Manhattan distance.
+/// Sum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedManhattan3F<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3F<TKey> {
@@ -40,8 +42,10 @@ public readonly struct WeightedManhattan3F<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) * w1 + MathF.Abs(a.C2 - b.C2) * w2 + MathF.Abs(a.C3 - b.C3) * w3;
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Abs(a.C1 - b.C1) * w1 + MathF.Abs(a.C2 - b.C2) * w2 + MathF.Abs(a.C3 - b.C3) * w3;
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 #endregion
@@ -53,8 +57,10 @@ public readonly struct WeightedManhattan3F<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Manhattan distance.
-/// Sum of weighted absolute differences.
+/// <para>Applies custom weights to each component before calculating Manhattan distance.
+/// Sum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedManhattan3B<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
@@ -63,8 +69,10 @@ public readonly struct WeightedManhattan3B<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) * w1 + Math.Abs(a.C2 - b.C2) * w2 + Math.Abs(a.C3 - b.C3) * w3;
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = Math.Abs(a.C1 - b.C1) * w1 + Math.Abs(a.C2 - b.C2) * w2 + Math.Abs(a.C3 - b.C3) * w3;
+    return UNorm32.FromFloatClamped((float)raw);
+  }
 }
 
 #endregion
@@ -76,8 +84,10 @@ public readonly struct WeightedManhattan3B<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Manhattan distance.
-/// Sum of weighted absolute differences.
+/// <para>Applies custom weights to each component including alpha before calculating Manhattan distance.
+/// Sum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedManhattan4F<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4F<TKey> {
@@ -86,9 +96,11 @@ public readonly struct WeightedManhattan4F<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) * w1 + MathF.Abs(a.C2 - b.C2) * w2 +
-       MathF.Abs(a.C3 - b.C3) * w3 + MathF.Abs(a.A - b.A) * wA;
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = MathF.Abs(a.C1 - b.C1) * w1 + MathF.Abs(a.C2 - b.C2) * w2 +
+              MathF.Abs(a.C3 - b.C3) * w3 + MathF.Abs(a.A - b.A) * wA;
+    return UNorm32.FromFloatClamped(raw);
+  }
 }
 
 #endregion
@@ -100,8 +112,10 @@ public readonly struct WeightedManhattan4F<TKey>(float w1, float w2, float w3, f
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Manhattan distance.
-/// Sum of weighted absolute differences.
+/// <para>Applies custom weights to each component including alpha before calculating Manhattan distance.
+/// Sum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedManhattan4B<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
@@ -110,9 +124,11 @@ public readonly struct WeightedManhattan4B<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) * w1 + Math.Abs(a.C2 - b.C2) * w2 +
-       Math.Abs(a.C3 - b.C3) * w3 + Math.Abs(a.A - b.A) * wA;
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = Math.Abs(a.C1 - b.C1) * w1 + Math.Abs(a.C2 - b.C2) * w2 +
+              Math.Abs(a.C3 - b.C3) * w3 + Math.Abs(a.A - b.A) * wA;
+    return UNorm32.FromFloatClamped((float)raw);
+  }
 }
 
 #endregion

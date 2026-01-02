@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -62,18 +64,31 @@ public readonly record struct XyzF(float X, float Y, float Z) : IColorSpace3F<Xy
   public static XyzF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
   /// <summary>D65 reference white X component.</summary>
-  public const float WhiteX = ColorConstants.D65_Xn;
+  public const float WhiteX = ColorMatrices.D65_Xn;
 
   /// <summary>D65 reference white Y component.</summary>
-  public const float WhiteY = ColorConstants.D65_Yn;
+  public const float WhiteY = ColorMatrices.D65_Yn;
 
   /// <summary>D65 reference white Z component.</summary>
-  public const float WhiteZ = ColorConstants.D65_Zn;
+  public const float WhiteZ = ColorMatrices.D65_Zn;
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>X: 0-0.95047 -> 0-1, Y: 0-1 -> 0-1, Z: 0-1.08883 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.X / WhiteX, this.Y / WhiteY, this.Z / WhiteZ);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.X / WhiteX),
+    UNorm32.FromFloat(this.Y / WhiteY),
+    UNorm32.FromFloat(this.Z / WhiteZ)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> X 0-0.95047, C2: 0-1 -> Y, C3: 0-1 -> Z 0-1.08883.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static XyzF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat() * WhiteX,
+    c2.ToFloat() * WhiteY,
+    c3.ToFloat() * WhiteZ
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>X: 0-0.95047 -> 0-255, Y: 0-1 -> 0-255, Z: 0-1.08883 -> 0-255.</remarks>

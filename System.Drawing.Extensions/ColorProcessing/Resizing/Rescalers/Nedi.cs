@@ -70,7 +70,7 @@ public readonly struct Nedi : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>

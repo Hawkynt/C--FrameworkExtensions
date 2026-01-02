@@ -17,10 +17,10 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -34,8 +34,8 @@ public readonly struct OklabFToOklchF : IProject<OklabF, OklchF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklchF Project(in OklabF oklab) {
-    var c = (float)SysMath.Sqrt(oklab.A * oklab.A + oklab.B * oklab.B);
-    var h = (float)SysMath.Atan2(oklab.B, oklab.A);
+    var c = MathF.Sqrt(oklab.A * oklab.A + oklab.B * oklab.B);
+    var h = MathF.Atan2(oklab.B, oklab.A);
     if (h < 0) h += TwoPi;
     return new(oklab.L, c, h / TwoPi);
   }
@@ -51,8 +51,8 @@ public readonly struct OklchFToOklabF : IProject<OklchF, OklabF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklabF Project(in OklchF oklch) {
     var hRad = oklch.H * TwoPi;
-    var a = oklch.C * (float)SysMath.Cos(hRad);
-    var b = oklch.C * (float)SysMath.Sin(hRad);
+    var a = oklch.C * MathF.Cos(hRad);
+    var b = oklch.C * MathF.Sin(hRad);
     return new(oklch.L, a, b);
   }
 }

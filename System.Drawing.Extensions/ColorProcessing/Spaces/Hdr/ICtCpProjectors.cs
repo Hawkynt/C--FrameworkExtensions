@@ -17,10 +17,10 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -75,8 +75,8 @@ public readonly struct LinearRgbFToICtCpF : IProject<LinearRgbF, ICtCpF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _Pq(float x) {
     if (x <= 0) return 0;
-    var xm1 = (float)SysMath.Pow(x, M1);
-    return (float)SysMath.Pow((C1 + C2 * xm1) / (1f + C3 * xm1), M2);
+    var xm1 = MathF.Pow(x, M1);
+    return MathF.Pow((C1 + C2 * xm1) / (1f + C3 * xm1), M2);
   }
 }
 
@@ -119,8 +119,8 @@ public readonly struct LinearRgbaFToICtCpF : IProject<LinearRgbaF, ICtCpF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _Pq(float x) {
     if (x <= 0) return 0;
-    var xm1 = (float)SysMath.Pow(x, M1);
-    return (float)SysMath.Pow((C1 + C2 * xm1) / (1f + C3 * xm1), M2);
+    var xm1 = MathF.Pow(x, M1);
+    return MathF.Pow((C1 + C2 * xm1) / (1f + C3 * xm1), M2);
   }
 }
 
@@ -168,11 +168,11 @@ public readonly struct ICtCpFToLinearRgbF : IProject<ICtCpF, LinearRgbF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _InvPq(float x) {
     if (x <= 0) return 0;
-    var xp = (float)SysMath.Pow(x, 1f / M2);
+    var xp = MathF.Pow(x, 1f / M2);
     var num = xp - C1;
     if (num < 0) num = 0;
     var den = C2 - C3 * xp;
     if (den <= 0) return 0;
-    return (float)SysMath.Pow(num / den, 1f / M1);
+    return MathF.Pow(num / den, 1f / M1);
   }
 }

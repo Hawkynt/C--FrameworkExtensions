@@ -17,11 +17,11 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Spaces.Lab;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
@@ -31,12 +31,12 @@ namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
 /// </summary>
 public readonly struct LabFToLchF : IProject<LabF, LchF> {
 
-  private const float TwoPi = 2f * (float)SysMath.PI;
+  private const float TwoPi = 2f * MathF.PI;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public LchF Project(in LabF lab) {
-    var c = (float)SysMath.Sqrt(lab.A * lab.A + lab.B * lab.B);
-    var h = (float)SysMath.Atan2(lab.B, lab.A);
+    var c = MathF.Sqrt(lab.A * lab.A + lab.B * lab.B);
+    var h = MathF.Atan2(lab.B, lab.A);
 
     // Normalize hue to 0-1 range
     if (h < 0f)
@@ -52,15 +52,15 @@ public readonly struct LabFToLchF : IProject<LabF, LchF> {
 /// </summary>
 public readonly struct LchFToLabF : IProject<LchF, LabF> {
 
-  private const float TwoPi = 2f * (float)SysMath.PI;
+  private const float TwoPi = 2f * MathF.PI;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public LabF Project(in LchF lch) {
     var hRad = lch.H * TwoPi;
     return new(
       lch.L,
-      lch.C * (float)SysMath.Cos(hRad),
-      lch.C * (float)SysMath.Sin(hRad)
+      lch.C * MathF.Cos(hRad),
+      lch.C * MathF.Sin(hRad)
     );
   }
 }

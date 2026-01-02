@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Cmyk;
@@ -73,7 +75,21 @@ public readonly record struct CmykF(float C, float M, float Y, float K) {
   /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
   /// <remarks>Components are already in 0-1 range.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3, float C4) ToNormalized() => (this.C, this.M, this.Y, this.K);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 C4) ToNormalized() => (
+    UNorm32.FromFloat(this.C),
+    UNorm32.FromFloat(this.M),
+    UNorm32.FromFloat(this.Y),
+    UNorm32.FromFloat(this.K)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static CmykF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4) => new(
+    c1.ToFloat(),
+    c2.ToFloat(),
+    c3.ToFloat(),
+    c4.ToFloat()
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

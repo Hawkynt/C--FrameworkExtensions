@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
@@ -59,9 +61,21 @@ public readonly record struct HwbF(float H, float W, float B) : IColorSpace3F<Hw
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static HwbF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.H, this.W, this.B);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.H),
+    UNorm32.FromFloat(this.W),
+    UNorm32.FromFloat(this.B)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static HwbF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat(),
+    c3.ToFloat()
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

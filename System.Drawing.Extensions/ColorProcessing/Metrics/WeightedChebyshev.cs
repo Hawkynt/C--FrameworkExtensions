@@ -30,8 +30,10 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Chebyshev distance.
-/// Maximum of weighted absolute differences.
+/// <para>Applies custom weights to each component before calculating Chebyshev distance.
+/// Maximum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedChebyshev3F<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3F<TKey> {
@@ -40,11 +42,12 @@ public readonly struct WeightedChebyshev3F<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Chebyshev distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) {
+  public UNorm32 Distance(in TKey a, in TKey b) {
     var d1 = MathF.Abs(a.C1 - b.C1) * w1;
     var d2 = MathF.Abs(a.C2 - b.C2) * w2;
     var d3 = MathF.Abs(a.C3 - b.C3) * w3;
-    return d1 > d2 ? (d1 > d3 ? d1 : d3) : (d2 > d3 ? d2 : d3);
+    var max = d1 > d2 ? (d1 > d3 ? d1 : d3) : (d2 > d3 ? d2 : d3);
+    return UNorm32.FromFloatClamped(max);
   }
 }
 
@@ -57,8 +60,10 @@ public readonly struct WeightedChebyshev3F<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component before calculating Chebyshev distance.
-/// Maximum of weighted absolute differences.
+/// <para>Applies custom weights to each component before calculating Chebyshev distance.
+/// Maximum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedChebyshev3B<TKey>(float w1, float w2, float w3) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace3B<TKey> {
@@ -67,11 +72,12 @@ public readonly struct WeightedChebyshev3B<TKey>(float w1, float w2, float w3) :
   /// Calculates the weighted Chebyshev distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) {
+  public UNorm32 Distance(in TKey a, in TKey b) {
     var d1 = Math.Abs(a.C1 - b.C1) * w1;
     var d2 = Math.Abs(a.C2 - b.C2) * w2;
     var d3 = Math.Abs(a.C3 - b.C3) * w3;
-    return d1 > d2 ? (d1 > d3 ? d1 : d3) : (d2 > d3 ? d2 : d3);
+    var max = d1 > d2 ? (d1 > d3 ? d1 : d3) : (d2 > d3 ? d2 : d3);
+    return UNorm32.FromFloatClamped((float)max);
   }
 }
 
@@ -84,8 +90,10 @@ public readonly struct WeightedChebyshev3B<TKey>(float w1, float w2, float w3) :
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4F.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Chebyshev distance.
-/// Maximum of weighted absolute differences.
+/// <para>Applies custom weights to each component including alpha before calculating Chebyshev distance.
+/// Maximum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedChebyshev4F<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4F<TKey> {
@@ -94,12 +102,13 @@ public readonly struct WeightedChebyshev4F<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Chebyshev distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) {
+  public UNorm32 Distance(in TKey a, in TKey b) {
     var d1 = MathF.Abs(a.C1 - b.C1) * w1;
     var d2 = MathF.Abs(a.C2 - b.C2) * w2;
     var d3 = MathF.Abs(a.C3 - b.C3) * w3;
     var da = MathF.Abs(a.A - b.A) * wA;
-    return MathF.Max(MathF.Max(d1, d2), MathF.Max(d3, da));
+    var max = MathF.Max(MathF.Max(d1, d2), MathF.Max(d3, da));
+    return UNorm32.FromFloatClamped(max);
   }
 }
 
@@ -112,8 +121,10 @@ public readonly struct WeightedChebyshev4F<TKey>(float w1, float w2, float w3, f
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4B.</typeparam>
 /// <remarks>
-/// Applies custom weights to each component including alpha before calculating Chebyshev distance.
-/// Maximum of weighted absolute differences.
+/// <para>Applies custom weights to each component including alpha before calculating Chebyshev distance.
+/// Maximum of weighted absolute differences.</para>
+/// <para>Returns UNorm32 distance. NOT normalized - range depends on weights.</para>
+/// <para>Does not implement INormalizedMetric since the range varies with weights.</para>
 /// </remarks>
 public readonly struct WeightedChebyshev4B<TKey>(float w1, float w2, float w3, float wA) : IColorMetric<TKey>
   where TKey : unmanaged, IColorSpace4B<TKey> {
@@ -122,12 +133,13 @@ public readonly struct WeightedChebyshev4B<TKey>(float w1, float w2, float w3, f
   /// Calculates the weighted Chebyshev distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) {
+  public UNorm32 Distance(in TKey a, in TKey b) {
     var d1 = Math.Abs(a.C1 - b.C1) * w1;
     var d2 = Math.Abs(a.C2 - b.C2) * w2;
     var d3 = Math.Abs(a.C3 - b.C3) * w3;
     var da = Math.Abs(a.A - b.A) * wA;
-    return Math.Max(Math.Max(d1, d2), Math.Max(d3, da));
+    var max = Math.Max(Math.Max(d1, d2), Math.Max(d3, da));
+    return UNorm32.FromFloatClamped((float)max);
   }
 }
 

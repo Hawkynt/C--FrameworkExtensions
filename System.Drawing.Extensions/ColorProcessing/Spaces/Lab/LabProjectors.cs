@@ -44,9 +44,9 @@ public readonly struct LinearRgbFToLabF : IProject<LinearRgbF, LabF> {
     var z = ColorMatrices.RgbToXyz_ZR * work.R + ColorMatrices.RgbToXyz_ZG * work.G + ColorMatrices.RgbToXyz_ZB * work.B;
 
     // XYZ to Lab using fixed-point LUTs
-    var xRatioFixed = (int)((x / ColorConstants.D65_Xn) * 65536f);
-    var yRatioFixed = (int)((y / ColorConstants.D65_Yn) * 65536f);
-    var zRatioFixed = (int)((z / ColorConstants.D65_Zn) * 65536f);
+    var xRatioFixed = (int)(x * ColorMatrices.Inv_D65_Xn * 65536f);
+    var yRatioFixed = (int)(y * ColorMatrices.Inv_D65_Yn * 65536f);
+    var zRatioFixed = (int)(z * ColorMatrices.Inv_D65_Zn * 65536f);
 
     var fx = FixedPointMath.LabF(xRatioFixed) / 65536f;
     var fy = FixedPointMath.LabF(yRatioFixed) / 65536f;
@@ -71,9 +71,9 @@ public readonly struct LinearRgbaFToLabF : IProject<LinearRgbaF, LabF> {
     var y = ColorMatrices.RgbToXyz_YR * work.R + ColorMatrices.RgbToXyz_YG * work.G + ColorMatrices.RgbToXyz_YB * work.B;
     var z = ColorMatrices.RgbToXyz_ZR * work.R + ColorMatrices.RgbToXyz_ZG * work.G + ColorMatrices.RgbToXyz_ZB * work.B;
 
-    var xRatioFixed = (int)((x / ColorConstants.D65_Xn) * 65536f);
-    var yRatioFixed = (int)((y / ColorConstants.D65_Yn) * 65536f);
-    var zRatioFixed = (int)((z / ColorConstants.D65_Zn) * 65536f);
+    var xRatioFixed = (int)(x * ColorMatrices.Inv_D65_Xn * 65536f);
+    var yRatioFixed = (int)(y * ColorMatrices.Inv_D65_Yn * 65536f);
+    var zRatioFixed = (int)(z * ColorMatrices.Inv_D65_Zn * 65536f);
 
     var fx = FixedPointMath.LabF(xRatioFixed) / 65536f;
     var fy = FixedPointMath.LabF(yRatioFixed) / 65536f;
@@ -95,19 +95,19 @@ public readonly struct LabFToLinearRgbF : IProject<LabF, LinearRgbF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public LinearRgbF Project(in LabF lab) {
     // Lab to XYZ
-    var fy = (lab.L + 16f) / 116f;
-    var fx = lab.A / 500f + fy;
-    var fz = fy - lab.B / 200f;
+    var fy = (lab.L + 16f) * ColorMatrices.Inv116;
+    var fx = lab.A * ColorMatrices.Inv500 + fy;
+    var fz = fy - lab.B * ColorMatrices.Inv200;
 
     // Inverse f function
-    var x = fx > ColorConstants.Lab_Delta ? fx * fx * fx : (fx - 16f / 116f) * 3f * ColorConstants.Lab_Delta * ColorConstants.Lab_Delta;
-    var y = lab.L > 8f ? fy * fy * fy : lab.L / ColorConstants.Lab_Kappa;
-    var z = fz > ColorConstants.Lab_Delta ? fz * fz * fz : (fz - 16f / 116f) * 3f * ColorConstants.Lab_Delta * ColorConstants.Lab_Delta;
+    var x = fx > ColorMatrices.Lab_Delta ? fx * fx * fx : (fx - 16f / 116f) * 3f * ColorMatrices.Lab_Delta * ColorMatrices.Lab_Delta;
+    var y = lab.L > 8f ? fy * fy * fy : lab.L / ColorMatrices.Lab_Kappa;
+    var z = fz > ColorMatrices.Lab_Delta ? fz * fz * fz : (fz - 16f / 116f) * 3f * ColorMatrices.Lab_Delta * ColorMatrices.Lab_Delta;
 
     // Scale by white point
-    x *= ColorConstants.D65_Xn;
-    y *= ColorConstants.D65_Yn;
-    z *= ColorConstants.D65_Zn;
+    x *= ColorMatrices.D65_Xn;
+    y *= ColorMatrices.D65_Yn;
+    z *= ColorMatrices.D65_Zn;
 
     // XYZ to linear RGB
     return new(

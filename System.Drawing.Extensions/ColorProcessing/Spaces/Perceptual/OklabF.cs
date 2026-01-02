@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -61,10 +63,23 @@ public readonly record struct OklabF(float L, float A, float B) : IColorSpace3F<
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static OklabF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>L: 0-1 -> 0-1, A: -0.4 to 0.4 -> 0-1, B: -0.4 to 0.4 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.L, (this.A + 0.4f) / 0.8f, (this.B + 0.4f) / 0.8f);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.L),
+    UNorm32.FromFloat((this.A + 0.4f) / 0.8f),
+    UNorm32.FromFloat((this.B + 0.4f) / 0.8f)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> L 0-1, C2: 0-1 -> A -0.4 to 0.4, C3: 0-1 -> B -0.4 to 0.4.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static OklabF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat() * 0.8f - 0.4f,
+    c3.ToFloat() * 0.8f - 0.4f
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>L: 0-1 -> 0-255, A: -0.4 to 0.4 -> 0-255, B: -0.4 to 0.4 -> 0-255.</remarks>

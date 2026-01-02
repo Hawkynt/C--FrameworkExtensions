@@ -19,8 +19,9 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Working;
@@ -59,6 +60,22 @@ public readonly record struct LinearRgbF(float R, float G, float B) : IColorSpac
   /// <summary>Creates a new instance from component values.</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LinearRgbF Create(float c1, float c2, float c3) => new(c1, c2, c3);
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.R),
+    UNorm32.FromFloat(this.G),
+    UNorm32.FromFloat(this.B)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static LinearRgbF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat(),
+    c3.ToFloat()
+  );
 
   #endregion
 
@@ -102,11 +119,6 @@ public readonly record struct LinearRgbF(float R, float G, float B) : IColorSpac
     this.G < 0 ? 0 : this.G > 1 ? 1 : this.G,
     this.B < 0 ? 0 : this.B > 1 ? 1 : this.B
   );
-
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
-  /// <remarks>Components are already in 0-1 range (clamped if needed).</remarks>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.R, this.G, this.B);
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

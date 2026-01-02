@@ -20,6 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
+using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Working;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -48,11 +49,11 @@ public readonly struct LinearRgbFToHwbF : IProject<LinearRgbF, HwbF> {
 
     float h;
     if (max == r)
-      h = ((g - b) / delta + (g < b ? 6f : 0f)) / 6f;
+      h = ((g - b) / delta + (g < b ? 6f : 0f)) * ColorMatrices.Inv6;
     else if (max == g)
-      h = ((b - r) / delta + 2f) / 6f;
+      h = ((b - r) / delta + 2f) * ColorMatrices.Inv6;
     else
-      h = ((r - g) / delta + 4f) / 6f;
+      h = ((r - g) / delta + 4f) * ColorMatrices.Inv6;
 
     return new(h, w, bl);
   }
@@ -81,11 +82,11 @@ public readonly struct LinearRgbaFToHwbF : IProject<LinearRgbaF, HwbF> {
 
     float h;
     if (max == r)
-      h = ((g - b) / delta + (g < b ? 6f : 0f)) / 6f;
+      h = ((g - b) / delta + (g < b ? 6f : 0f)) * ColorMatrices.Inv6;
     else if (max == g)
-      h = ((b - r) / delta + 2f) / 6f;
+      h = ((b - r) / delta + 2f) * ColorMatrices.Inv6;
     else
-      h = ((r - g) / delta + 4f) / 6f;
+      h = ((r - g) / delta + 4f) * ColorMatrices.Inv6;
 
     return new(h, w, bl);
   }

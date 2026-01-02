@@ -69,7 +69,7 @@ public class MetricTests {
   public void EuclideanRgb_SameColor_ReturnsZero() {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -77,8 +77,8 @@ public class MetricTests {
   public void EuclideanRgb_BlackToWhite_ReturnsMaxDistance() {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
-    var expected = (float)Math.Sqrt(3f); // sqrt(1^2 + 1^2 + 1^2)
-    Assert.That(distance, Is.EqualTo(expected).Within(Tolerance));
+    // Normalized: sqrt(3)/sqrt(3) = 1.0
+    Assert.That((float)distance, Is.EqualTo(1f).Within(Tolerance));
   }
 
   [Test]
@@ -87,7 +87,7 @@ public class MetricTests {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -97,7 +97,7 @@ public class MetricTests {
     var distanceAB = metric.Distance(Black, Gray);
     var distanceBC = metric.Distance(Gray, White);
     var distanceAC = metric.Distance(Black, White);
-    Assert.That(distanceAC, Is.LessThanOrEqualTo(distanceAB + distanceBC + Tolerance));
+    Assert.That((float)distanceAC, Is.LessThanOrEqualTo((float)distanceAB + (float)distanceBC + Tolerance));
   }
 
   [Test]
@@ -105,8 +105,9 @@ public class MetricTests {
   public void EuclideanRgb_PrimaryColors_KnownDistance() {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Green);
-    var expected = (float)Math.Sqrt(2f); // sqrt(1^2 + 1^2)
-    Assert.That(distance, Is.EqualTo(expected).Within(Tolerance));
+    // Normalized: sqrt(2)/sqrt(3) ≈ 0.8165
+    var expected = (float)Math.Sqrt(2f / 3f);
+    Assert.That((float)distance, Is.EqualTo(expected).Within(Tolerance));
   }
 
   #endregion
@@ -118,7 +119,7 @@ public class MetricTests {
   public void Euclidean3_LinearRgbF_SameColor_ReturnsZero() {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -127,7 +128,7 @@ public class MetricTests {
     var metric = new Euclidean3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -135,7 +136,7 @@ public class MetricTests {
   public void Euclidean3_LabF_SameColor_ReturnsZero() {
     var metric = new Euclidean3F<LabF>();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -144,7 +145,7 @@ public class MetricTests {
     var metric = new Euclidean3F<LabF>();
     var distance1 = metric.Distance(LabRed, LabGreen);
     var distance2 = metric.Distance(LabGreen, LabRed);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   #endregion
@@ -156,7 +157,7 @@ public class MetricTests {
   public void Manhattan3_LinearRgbF_SameColor_ReturnsZero() {
     var metric = new Manhattan3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -164,7 +165,8 @@ public class MetricTests {
   public void Manhattan3_LinearRgbF_BlackToWhite_ReturnsSum() {
     var metric = new Manhattan3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
-    Assert.That(distance, Is.EqualTo(3f).Within(Tolerance)); // |1| + |1| + |1|
+    // Normalized: 3/3 = 1.0
+    Assert.That((float)distance, Is.EqualTo(1f).Within(Tolerance));
   }
 
   [Test]
@@ -173,7 +175,7 @@ public class MetricTests {
     var metric = new Manhattan3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   #endregion
@@ -185,7 +187,7 @@ public class MetricTests {
   public void Chebyshev3_LinearRgbF_SameColor_ReturnsZero() {
     var metric = new Chebyshev3F<LinearRgbF>();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -193,7 +195,8 @@ public class MetricTests {
   public void Chebyshev3_LinearRgbF_BlackToWhite_ReturnsMax() {
     var metric = new Chebyshev3F<LinearRgbF>();
     var distance = metric.Distance(Black, White);
-    Assert.That(distance, Is.EqualTo(1f).Within(Tolerance)); // max(|1|, |1|, |1|)
+    // Chebyshev max for [0,1] range is already 1.0
+    Assert.That((float)distance, Is.EqualTo(1f).Within(Tolerance));
   }
 
   [Test]
@@ -202,7 +205,7 @@ public class MetricTests {
     var metric = new Chebyshev3F<LinearRgbF>();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -213,7 +216,7 @@ public class MetricTests {
     var b = new LinearRgbF(0.3f, 0.9f, 0.6f);
     var distance = metric.Distance(a, b);
     // Max of |0.5-0.3|=0.2, |0.2-0.9|=0.7, |0.8-0.6|=0.2 is 0.7
-    Assert.That(distance, Is.EqualTo(0.7f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0.7f).Within(Tolerance));
   }
 
   #endregion
@@ -225,7 +228,7 @@ public class MetricTests {
   public void CompuPhase_SameColor_ReturnsZero() {
     var metric = new CompuPhase();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -233,7 +236,7 @@ public class MetricTests {
   public void CompuPhase_BlackToWhite_ReturnsPositive() {
     var metric = new CompuPhase();
     var distance = metric.Distance(Black, White);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   [Test]
@@ -242,7 +245,7 @@ public class MetricTests {
     var metric = new CompuPhase();
     var distance1 = metric.Distance(MixedColor1, MixedColor2);
     var distance2 = metric.Distance(MixedColor2, MixedColor1);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -252,7 +255,7 @@ public class MetricTests {
     var distanceAB = metric.Distance(Black, Gray);
     var distanceBC = metric.Distance(Gray, White);
     var distanceAC = metric.Distance(Black, White);
-    Assert.That(distanceAC, Is.LessThanOrEqualTo(distanceAB + distanceBC + Tolerance));
+    Assert.That((float)distanceAC, Is.LessThanOrEqualTo((float)distanceAB + (float)distanceBC + Tolerance));
   }
 
   [Test]
@@ -260,7 +263,7 @@ public class MetricTests {
   public void CompuPhaseSquared_SameColor_ReturnsZero() {
     var metric = new CompuPhaseSquared();
     var distance = metric.Distance(Red, Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   #endregion
@@ -272,7 +275,7 @@ public class MetricTests {
   public void CIE76_SameColor_ReturnsZero() {
     var metric = new CIE76();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -280,7 +283,8 @@ public class MetricTests {
   public void CIE76_BlackToWhite_ReturnsLightnessDifference() {
     var metric = new CIE76();
     var distance = metric.Distance(LabBlack, LabWhite);
-    Assert.That(distance, Is.EqualTo(100f).Within(Tolerance)); // L* from 0 to 100
+    // Normalized: 100/100 = 1.0
+    Assert.That((float)distance, Is.EqualTo(1f).Within(Tolerance));
   }
 
   [Test]
@@ -289,7 +293,7 @@ public class MetricTests {
     var metric = new CIE76();
     var distance1 = metric.Distance(LabRed, LabGreen);
     var distance2 = metric.Distance(LabGreen, LabRed);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -299,7 +303,8 @@ public class MetricTests {
     var lab1 = new LabF(30f, 0f, 0f);
     var lab2 = new LabF(80f, 0f, 0f);
     var distance = metric.Distance(lab1, lab2);
-    Assert.That(distance, Is.EqualTo(50f).Within(Tolerance));
+    // Normalized: 50/100 = 0.5
+    Assert.That((float)distance, Is.EqualTo(0.5f).Within(Tolerance));
   }
 
   #endregion
@@ -311,7 +316,7 @@ public class MetricTests {
   public void CIEDE2000_SameColor_ReturnsZero() {
     var metric = new CIEDE2000();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -320,7 +325,7 @@ public class MetricTests {
     var metric = new CIEDE2000();
     var distance1 = metric.Distance(LabRed, LabGreen);
     var distance2 = metric.Distance(LabGreen, LabRed);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -328,7 +333,7 @@ public class MetricTests {
   public void CIEDE2000_BlackToWhite_ReturnsPositive() {
     var metric = new CIEDE2000();
     var distance = metric.Distance(LabBlack, LabWhite);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   [Test]
@@ -338,8 +343,9 @@ public class MetricTests {
     var lab1 = new LabF(30f, 0f, 0f);
     var lab2 = new LabF(80f, 0f, 0f);
     var distance = metric.Distance(lab1, lab2);
-    Assert.That(distance, Is.GreaterThan(0f));
-    Assert.That(distance, Is.LessThan(100f)); // Should be less than max L* difference due to weighting
+    Assert.That((float)distance, Is.GreaterThan(0f));
+    // Normalized to [0,1]: distance < 1.0
+    Assert.That((float)distance, Is.LessThan(1f));
   }
 
   [Test]
@@ -347,7 +353,7 @@ public class MetricTests {
   public void CIEDE2000Squared_SameColor_ReturnsZero() {
     var metric = new CIEDE2000Squared();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   #endregion
@@ -359,7 +365,7 @@ public class MetricTests {
   public void CIE94_SameColor_ReturnsZero() {
     var metric = new CIE94();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -367,7 +373,7 @@ public class MetricTests {
   public void CIE94_DifferentColors_ReturnsPositive() {
     var metric = new CIE94();
     var distance = metric.Distance(LabRed, LabGreen);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   [Test]
@@ -375,7 +381,7 @@ public class MetricTests {
   public void CIE94_BlackToWhite_ReturnsPositive() {
     var metric = new CIE94();
     var distance = metric.Distance(LabBlack, LabWhite);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   #endregion
@@ -387,7 +393,7 @@ public class MetricTests {
   public void CMC_SameColor_ReturnsZero() {
     var metric = new CMC();
     var distance = metric.Distance(LabRed, LabRed);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -395,7 +401,7 @@ public class MetricTests {
   public void CMC_DifferentColors_ReturnsPositive() {
     var metric = new CMC();
     var distance = metric.Distance(LabRed, LabGreen);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   [Test]
@@ -403,7 +409,7 @@ public class MetricTests {
   public void CMC_BlackToWhite_ReturnsPositive() {
     var metric = new CMC();
     var distance = metric.Distance(LabBlack, LabWhite);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   #endregion
@@ -415,7 +421,7 @@ public class MetricTests {
   public void DIN99Distance_SameColor_ReturnsZero() {
     var metric = new DIN99Distance();
     var distance = metric.Distance(Din99Red, Din99Red);
-    Assert.That(distance, Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)distance, Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -424,7 +430,7 @@ public class MetricTests {
     var metric = new DIN99Distance();
     var distance1 = metric.Distance(Din99Red, Din99Green);
     var distance2 = metric.Distance(Din99Green, Din99Red);
-    Assert.That(distance1, Is.EqualTo(distance2).Within(Tolerance));
+    Assert.That((float)distance1, Is.EqualTo((float)distance2).Within(Tolerance));
   }
 
   [Test]
@@ -432,7 +438,7 @@ public class MetricTests {
   public void DIN99Distance_BlackToWhite_ReturnsPositive() {
     var metric = new DIN99Distance();
     var distance = metric.Distance(Din99Black, Din99White);
-    Assert.That(distance, Is.GreaterThan(0f));
+    Assert.That((float)distance, Is.GreaterThan(0f));
   }
 
   #endregion
@@ -444,11 +450,11 @@ public class MetricTests {
   public void AllMetrics_SameColor_ReturnZero() {
     var color = MixedColor1;
 
-    Assert.That(new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Manhattan3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new Chebyshev3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new CompuPhase().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new Euclidean3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new Manhattan3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new Chebyshev3F<LinearRgbF>().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new CompuPhase().Distance(color, color), Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -457,11 +463,11 @@ public class MetricTests {
     var labColor = LabGray;
     var din99Color = Din99Gray;
 
-    Assert.That(new CIE76().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new CIE94().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new CIEDE2000().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new CMC().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
-    Assert.That(new DIN99Distance().Distance(din99Color, din99Color), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new CIE76().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new CIE94().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new CIEDE2000().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new CMC().Distance(labColor, labColor), Is.EqualTo(0f).Within(Tolerance));
+    Assert.That((float)new DIN99Distance().Distance(din99Color, din99Color), Is.EqualTo(0f).Within(Tolerance));
   }
 
   [Test]
@@ -476,10 +482,10 @@ public class MetricTests {
     var manhattan = new Manhattan3F<LinearRgbF>();
     var chebyshev = new Chebyshev3F<LinearRgbF>();
 
-    Assert.That(euclidean.Distance(reference, closer), Is.LessThan(euclidean.Distance(reference, farther)));
-    Assert.That(compuPhase.Distance(reference, closer), Is.LessThan(compuPhase.Distance(reference, farther)));
-    Assert.That(manhattan.Distance(reference, closer), Is.LessThan(manhattan.Distance(reference, farther)));
-    Assert.That(chebyshev.Distance(reference, closer), Is.LessThan(chebyshev.Distance(reference, farther)));
+    Assert.That((float)euclidean.Distance(reference, closer), Is.LessThan((float)euclidean.Distance(reference, farther)));
+    Assert.That((float)compuPhase.Distance(reference, closer), Is.LessThan((float)compuPhase.Distance(reference, farther)));
+    Assert.That((float)manhattan.Distance(reference, closer), Is.LessThan((float)manhattan.Distance(reference, farther)));
+    Assert.That((float)chebyshev.Distance(reference, closer), Is.LessThan((float)chebyshev.Distance(reference, farther)));
   }
 
   #endregion

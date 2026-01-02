@@ -17,10 +17,10 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -34,8 +34,8 @@ public readonly struct JzAzBzFToJzCzhzF : IProject<JzAzBzF, JzCzhzF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public JzCzhzF Project(in JzAzBzF jzazbz) {
-    var cz = (float)SysMath.Sqrt(jzazbz.Az * jzazbz.Az + jzazbz.Bz * jzazbz.Bz);
-    var hz = (float)SysMath.Atan2(jzazbz.Bz, jzazbz.Az);
+    var cz = MathF.Sqrt(jzazbz.Az * jzazbz.Az + jzazbz.Bz * jzazbz.Bz);
+    var hz = MathF.Atan2(jzazbz.Bz, jzazbz.Az);
     if (hz < 0) hz += TwoPi;
     return new(jzazbz.Jz, cz, hz / TwoPi);
   }
@@ -51,8 +51,8 @@ public readonly struct JzCzhzFToJzAzBzF : IProject<JzCzhzF, JzAzBzF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public JzAzBzF Project(in JzCzhzF jzczhz) {
     var hRad = jzczhz.Hz * TwoPi;
-    var az = jzczhz.Cz * (float)SysMath.Cos(hRad);
-    var bz = jzczhz.Cz * (float)SysMath.Sin(hRad);
+    var az = jzczhz.Cz * MathF.Cos(hRad);
+    var bz = jzczhz.Cz * MathF.Sin(hRad);
     return new(jzczhz.Jz, az, bz);
   }
 }

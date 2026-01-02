@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Lab;
@@ -59,10 +61,23 @@ public readonly record struct LabF(float L, float A, float B) : IColorSpace3F<La
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static LabF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>L: 0-100 -> 0-1, A: -128 to 127 -> 0-1, B: -128 to 127 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.L / 100f, (this.A + 128f) / 255f, (this.B + 128f) / 255f);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.L / 100f),
+    UNorm32.FromFloat((this.A + 128f) / 255f),
+    UNorm32.FromFloat((this.B + 128f) / 255f)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> L 0-100, C2: 0-1 -> A -128 to 127, C3: 0-1 -> B -128 to 127.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static LabF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat() * 100f,
+    c2.ToFloat() * 255f - 128f,
+    c3.ToFloat() * 255f - 128f
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>L: 0-100 -> 0-255, A: -128 to 127 -> 0-255, B: -128 to 127 -> 0-255.</remarks>

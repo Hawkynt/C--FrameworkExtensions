@@ -17,11 +17,11 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Spaces.Lab;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -43,14 +43,14 @@ public readonly struct LabFToDin99F : IProject<LabF, Din99F> {
   public Din99F Project(in LabF lab) {
     // DIN99 transformation from Lab
     // L99 = 105.509 * ln(1 + 0.0158 * L*)
-    var l99 = 105.509f * (float)SysMath.Log(1.0 + 0.0158 * lab.L);
+    var l99 = 105.509f * MathF.Log(1.0f + 0.0158f * lab.L);
 
     // Rotation of a,b axes by 16°
     var e = lab.A * Cos16 + lab.B * Sin16;
     var f = 0.7f * (-lab.A * Sin16 + lab.B * Cos16);
 
     // Calculate chroma and hue angle
-    var g = (float)SysMath.Sqrt(e * e + f * f);
+    var g = MathF.Sqrt(e * e + f * f);
 
     // a99 and b99
     float a99, b99;
@@ -58,7 +58,7 @@ public readonly struct LabFToDin99F : IProject<LabF, Din99F> {
       a99 = 0f;
       b99 = 0f;
     } else {
-      var c99 = (float)SysMath.Log(1.0 + 0.045 * g * KCH * KE) / (0.045f * KCH * KE);
+      var c99 = MathF.Log(1.0f + 0.045f * g * KCH * KE) / (0.045f * KCH * KE);
       a99 = c99 * e / g;
       b99 = c99 * f / g;
     }
@@ -81,16 +81,16 @@ public readonly struct Din99FToLabF : IProject<Din99F, LabF> {
   public LabF Project(in Din99F din99) {
     // Inverse L99 transformation
     // L* = (exp(L99 / 105.509) - 1) / 0.0158
-    var lStar = ((float)SysMath.Exp(din99.L / 105.509) - 1f) / 0.0158f;
+    var lStar = (MathF.Exp(din99.L / 105.509f) - 1f) / 0.0158f;
 
     // Calculate chroma in DIN99 space
-    var c99 = (float)SysMath.Sqrt(din99.A * din99.A + din99.B * din99.B);
+    var c99 = MathF.Sqrt(din99.A * din99.A + din99.B * din99.B);
 
     if (c99 < 1e-6f)
       return new(lStar, 0f, 0f);
 
     // Inverse chroma transformation
-    var g = ((float)SysMath.Exp(c99 * 0.045f * KCH * KE) - 1f) / (0.045f * KCH * KE);
+    var g = (MathF.Exp(c99 * 0.045f * KCH * KE) - 1f) / (0.045f * KCH * KE);
 
     // Calculate e and f
     var e = g * din99.A / c99;

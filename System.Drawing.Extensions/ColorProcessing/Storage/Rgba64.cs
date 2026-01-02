@@ -21,6 +21,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Storage;
@@ -133,6 +134,28 @@ public readonly struct Rgba64 : IColorSpace4B<Rgba64>, IStorageSpace, IEquatable
     (ushort)((c1.BValue + c2.BValue) >> 1),
     (ushort)((c1.AValue + c2.AValue) >> 1)
   );
+
+  #region Normalized Conversion
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 A) ToNormalized() => (
+    UNorm32.FromUInt16(this.RValue),
+    UNorm32.FromUInt16(this.GValue),
+    UNorm32.FromUInt16(this.BValue),
+    UNorm32.FromUInt16(this.AValue)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Rgba64 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a) => new(
+    c1.ToUInt16(),
+    c2.ToUInt16(),
+    c3.ToUInt16(),
+    a.ToUInt16()
+  );
+
+  #endregion
 
   #region IEquatable<Rgba64> Implementation
 

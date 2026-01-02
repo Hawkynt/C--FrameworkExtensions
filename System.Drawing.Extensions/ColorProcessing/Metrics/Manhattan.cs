@@ -19,6 +19,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Hawkynt.ColorProcessing.Internal;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Metrics;
@@ -30,18 +31,24 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// Sum of absolute differences. Faster than Euclidean and suitable for
-/// some perceptual comparisons.
+/// <para>Sum of absolute differences. Faster than Euclidean and suitable for
+/// some perceptual comparisons.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Maximum raw distance: 3.0.</para>
 /// </remarks>
-public readonly struct Manhattan3F<TKey> : IColorMetric<TKey>
+public readonly struct Manhattan3F<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace3F<TKey> {
+
+  private const float InverseMaxDistance = 1f / 3f; // 1/(3 components × 1.0 max diff)
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) + Math.Abs(a.C3 - b.C3);
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) + Math.Abs(a.C3 - b.C3);
+    return UNorm32.FromFloatClamped(raw * InverseMaxDistance);
+  }
 }
 
 #endregion
@@ -55,27 +62,27 @@ public readonly struct Manhattan3F<TKey> : IColorMetric<TKey>
 /// <remarks>
 /// <para>Sum of absolute differences. Faster than Euclidean and suitable for
 /// some perceptual comparisons.</para>
-/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
-/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
-/// in integer-only pipelines.</para>
-/// <para>Maximum distance: 3 × 255 = 765.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Maximum raw distance: 3 × 255 = 765.</para>
 /// </remarks>
-public readonly struct Manhattan3B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
+public readonly struct Manhattan3B<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace3B<TKey> {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _Calculate(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) + Math.Abs(a.C3 - b.C3);
+  private const int MaxDistance = 765; // 3 × 255
 
-  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
+  internal static int _Calculate(in TKey a, in TKey b)
+    // Using branchless operations for better performance
+    => FixedPointMath.BranchlessAbsDiff(a.C1, b.C1) +
+       FixedPointMath.BranchlessAbsDiff(a.C2, b.C2) +
+       FixedPointMath.BranchlessAbsDiff(a.C3, b.C3);
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromRaw((uint)((ulong)_Calculate(a, b) * uint.MaxValue / MaxDistance));
 }
 
 #endregion
@@ -87,19 +94,25 @@ public readonly struct Manhattan3B<TKey> : IColorMetric<TKey>, IColorMetricInt<T
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace4F.</typeparam>
 /// <remarks>
-/// Sum of absolute differences across all four components including alpha.
-/// Faster than Euclidean and suitable for threshold-based comparisons.
+/// <para>Sum of absolute differences across all four components including alpha.
+/// Faster than Euclidean and suitable for threshold-based comparisons.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Maximum raw distance: 4.0.</para>
 /// </remarks>
-public readonly struct Manhattan4F<TKey> : IColorMetric<TKey>
+public readonly struct Manhattan4F<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace4F<TKey> {
+
+  private const float InverseMaxDistance = 0.25f; // 1/(4 components × 1.0 max diff)
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) +
-       Math.Abs(a.C3 - b.C3) + Math.Abs(a.A - b.A);
+  public UNorm32 Distance(in TKey a, in TKey b) {
+    var raw = Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) +
+              Math.Abs(a.C3 - b.C3) + Math.Abs(a.A - b.A);
+    return UNorm32.FromFloatClamped(raw * InverseMaxDistance);
+  }
 }
 
 #endregion
@@ -113,28 +126,28 @@ public readonly struct Manhattan4F<TKey> : IColorMetric<TKey>
 /// <remarks>
 /// <para>Sum of absolute differences across all four components including alpha.
 /// Faster than Euclidean and suitable for threshold-based comparisons.</para>
-/// <para>Implements both <see cref="IColorMetric{TKey}"/> (float) and
-/// <see cref="IColorMetricInt{TKey}"/> (int) for optimal performance
-/// in integer-only pipelines.</para>
-/// <para>Maximum distance: 4 × 255 = 1,020.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>Maximum raw distance: 4 × 255 = 1,020.</para>
 /// </remarks>
-public readonly struct Manhattan4B<TKey> : IColorMetric<TKey>, IColorMetricInt<TKey>
+public readonly struct Manhattan4B<TKey> : IColorMetric<TKey>, INormalizedMetric
   where TKey : unmanaged, IColorSpace4B<TKey> {
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _Calculate(in TKey a, in TKey b)
-    => Math.Abs(a.C1 - b.C1) + Math.Abs(a.C2 - b.C2) +
-       Math.Abs(a.C3 - b.C3) + Math.Abs(a.A - b.A);
+  private const int MaxDistance = 1020; // 4 × 255
 
-  /// <inheritdoc cref="IColorMetricInt{TKey}.Distance"/>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  int IColorMetricInt<TKey>.Distance(in TKey a, in TKey b) => _Calculate(a, b);
+  internal static int _Calculate(in TKey a, in TKey b)
+    // Using branchless operations for better performance
+    => FixedPointMath.BranchlessAbsDiff(a.C1, b.C1) +
+       FixedPointMath.BranchlessAbsDiff(a.C2, b.C2) +
+       FixedPointMath.BranchlessAbsDiff(a.C3, b.C3) +
+       FixedPointMath.BranchlessAbsDiff(a.A, b.A);
 
   /// <summary>
   /// Calculates the Manhattan distance between two colors.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in TKey a, in TKey b) => _Calculate(a, b);
+  public UNorm32 Distance(in TKey a, in TKey b)
+    => UNorm32.FromRaw((uint)((ulong)_Calculate(a, b) * uint.MaxValue / MaxDistance));
 }
 
 #endregion

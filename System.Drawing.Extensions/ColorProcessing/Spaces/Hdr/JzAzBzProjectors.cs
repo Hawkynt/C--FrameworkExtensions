@@ -20,8 +20,8 @@
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
@@ -72,10 +72,10 @@ public readonly struct LinearRgbFToJzAzBzF : IProject<LinearRgbF, JzAzBzF> {
     m /= 10000f;
     s /= 10000f;
 
-    // Apply PQ transfer function
-    var lp = _Pq(l);
-    var mp = _Pq(m);
-    var sp = _Pq(s);
+    // Apply PQ transfer function (using LUT for performance)
+    var lp = FixedPointMath.FastPqForward(l);
+    var mp = FixedPointMath.FastPqForward(m);
+    var sp = FixedPointMath.FastPqForward(s);
 
     // LMS' to Izazbz
     var iz = 0.5f * (lp + mp);
@@ -86,13 +86,6 @@ public readonly struct LinearRgbFToJzAzBzF : IProject<LinearRgbF, JzAzBzF> {
     var jz = ((1f + D) * iz) / (1f + D * iz) - D0;
 
     return new(jz, az, bz);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _Pq(float x) {
-    if (x <= 0) return 0;
-    var xn = (float)SysMath.Pow(x, N);
-    return (float)SysMath.Pow((C1 + C2 * xn) / (1f + C3 * xn), P);
   }
 }
 
@@ -132,9 +125,9 @@ public readonly struct LinearRgbaFToJzAzBzF : IProject<LinearRgbaF, JzAzBzF> {
     m /= 10000f;
     s /= 10000f;
 
-    var lp = _Pq(l);
-    var mp = _Pq(m);
-    var sp = _Pq(s);
+    var lp = FixedPointMath.FastPqForward(l);
+    var mp = FixedPointMath.FastPqForward(m);
+    var sp = FixedPointMath.FastPqForward(s);
 
     var iz = 0.5f * (lp + mp);
     var az = 3.524000f * lp - 4.066708f * mp + 0.542708f * sp;
@@ -143,13 +136,6 @@ public readonly struct LinearRgbaFToJzAzBzF : IProject<LinearRgbaF, JzAzBzF> {
     var jz = ((1f + D) * iz) / (1f + D * iz) - D0;
 
     return new(jz, az, bz);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _Pq(float x) {
-    if (x <= 0) return 0;
-    var xn = (float)SysMath.Pow(x, N);
-    return (float)SysMath.Pow((C1 + C2 * xn) / (1f + C3 * xn), P);
   }
 }
 
@@ -160,11 +146,6 @@ public readonly struct JzAzBzFToLinearRgbF : IProject<JzAzBzF, LinearRgbF> {
 
   private const float B = 1.15f;
   private const float G = 0.66f;
-  private const float C1 = 0.8359375f;
-  private const float C2 = 18.8515625f;
-  private const float C3 = 18.6875f;
-  private const float N = 0.15930175781f;
-  private const float P = 134.034375f;
   private const float D = -0.56f;
   private const float D0 = 1.6295499532821566e-11f;
 
@@ -179,10 +160,10 @@ public readonly struct JzAzBzFToLinearRgbF : IProject<JzAzBzF, LinearRgbF> {
     var mp = iz - 0.1386050f * jzazbz.Az - 0.0580473f * jzazbz.Bz;
     var sp = iz - 0.0960193f * jzazbz.Az - 0.8118919f * jzazbz.Bz;
 
-    // Inverse PQ
-    var l = _InvPq(lp) * 10000f;
-    var m = _InvPq(mp) * 10000f;
-    var s = _InvPq(sp) * 10000f;
+    // Inverse PQ (using LUT for performance)
+    var l = FixedPointMath.FastPqInverse(lp) * 10000f;
+    var m = FixedPointMath.FastPqInverse(mp) * 10000f;
+    var s = FixedPointMath.FastPqInverse(sp) * 10000f;
 
     // LMS to X'Y'Z'
     var xp = 1.9242264358f * l - 1.0047923126f * m + 0.0376514040f * s;
@@ -204,15 +185,5 @@ public readonly struct JzAzBzFToLinearRgbF : IProject<JzAzBzF, LinearRgbF> {
       ColorMatrices.XyzToRgb_GX * x + ColorMatrices.XyzToRgb_GY * y + ColorMatrices.XyzToRgb_GZ * z,
       ColorMatrices.XyzToRgb_BX * x + ColorMatrices.XyzToRgb_BY * y + ColorMatrices.XyzToRgb_BZ * z
     );
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _InvPq(float x) {
-    if (x <= 0) return 0;
-    var xp = (float)SysMath.Pow(x, 1f / P);
-    var num = C1 - xp;
-    var den = C3 * xp - C2;
-    if (den >= 0) return 0;
-    return (float)SysMath.Pow(num / den, 1f / N);
   }
 }

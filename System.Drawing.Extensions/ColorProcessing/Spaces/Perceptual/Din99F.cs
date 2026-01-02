@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -60,10 +62,23 @@ public readonly record struct Din99F(float L, float A, float B) : IColorSpace3F<
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Din99F Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>L: 0-105.509 -> 0-1, A: -40 to 40 -> 0-1, B: -40 to 40 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.L / 105.509f, (this.A + 40f) / 80f, (this.B + 40f) / 80f);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.L / 105.509f),
+    UNorm32.FromFloat((this.A + 40f) / 80f),
+    UNorm32.FromFloat((this.B + 40f) / 80f)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> L 0-105.509, C2: 0-1 -> A -40 to 40, C3: 0-1 -> B -40 to 40.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Din99F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat() * 105.509f,
+    c2.ToFloat() * 80f - 40f,
+    c3.ToFloat() * 80f - 40f
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>L: 0-105.509 -> 0-255, A: -40 to 40 -> 0-255, B: -40 to 40 -> 0-255.</remarks>

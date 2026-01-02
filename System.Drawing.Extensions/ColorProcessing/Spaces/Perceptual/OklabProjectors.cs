@@ -17,12 +17,11 @@
 
 #endregion
 
-using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -39,14 +38,14 @@ public readonly struct LinearRgbFToOklabF : IProject<LinearRgbF, OklabF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklabF Project(in LinearRgbF work) {
     // Linear sRGB to LMS
-    var l = ColorConstants.Oklab_L_R * work.R + ColorConstants.Oklab_L_G * work.G + ColorConstants.Oklab_L_B * work.B;
-    var m = ColorConstants.Oklab_M_R * work.R + ColorConstants.Oklab_M_G * work.G + ColorConstants.Oklab_M_B * work.B;
-    var s = ColorConstants.Oklab_S_R * work.R + ColorConstants.Oklab_S_G * work.G + ColorConstants.Oklab_S_B * work.B;
+    var l = ColorMatrices.Oklab_L_R * work.R + ColorMatrices.Oklab_L_G * work.G + ColorMatrices.Oklab_L_B * work.B;
+    var m = ColorMatrices.Oklab_M_R * work.R + ColorMatrices.Oklab_M_G * work.G + ColorMatrices.Oklab_M_B * work.B;
+    var s = ColorMatrices.Oklab_S_R * work.R + ColorMatrices.Oklab_S_G * work.G + ColorMatrices.Oklab_S_B * work.B;
 
-    // Cube root
-    var l_ = MathF.Cbrt(l);
-    var m_ = MathF.Cbrt(m);
-    var s_ = MathF.Cbrt(s);
+    // Cube root (using LUT for performance)
+    var l_ = FixedPointMath.FastCbrt(l);
+    var m_ = FixedPointMath.FastCbrt(m);
+    var s_ = FixedPointMath.FastCbrt(s);
 
     // LMS to Oklab
     return new(
@@ -64,13 +63,13 @@ public readonly struct LinearRgbaFToOklabF : IProject<LinearRgbaF, OklabF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OklabF Project(in LinearRgbaF work) {
-    var l = ColorConstants.Oklab_L_R * work.R + ColorConstants.Oklab_L_G * work.G + ColorConstants.Oklab_L_B * work.B;
-    var m = ColorConstants.Oklab_M_R * work.R + ColorConstants.Oklab_M_G * work.G + ColorConstants.Oklab_M_B * work.B;
-    var s = ColorConstants.Oklab_S_R * work.R + ColorConstants.Oklab_S_G * work.G + ColorConstants.Oklab_S_B * work.B;
+    var l = ColorMatrices.Oklab_L_R * work.R + ColorMatrices.Oklab_L_G * work.G + ColorMatrices.Oklab_L_B * work.B;
+    var m = ColorMatrices.Oklab_M_R * work.R + ColorMatrices.Oklab_M_G * work.G + ColorMatrices.Oklab_M_B * work.B;
+    var s = ColorMatrices.Oklab_S_R * work.R + ColorMatrices.Oklab_S_G * work.G + ColorMatrices.Oklab_S_B * work.B;
 
-    var l_ = MathF.Cbrt(l);
-    var m_ = MathF.Cbrt(m);
-    var s_ = MathF.Cbrt(s);
+    var l_ = FixedPointMath.FastCbrt(l);
+    var m_ = FixedPointMath.FastCbrt(m);
+    var s_ = FixedPointMath.FastCbrt(s);
 
     return new(
       0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,

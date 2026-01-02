@@ -21,6 +21,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Storage;
@@ -52,6 +53,30 @@ public readonly struct Cmyka88888 : IColorSpace5B<Cmyka88888>, IStorageSpace, IE
   byte IColorSpace5B<Cmyka88888>.C4 => this.K;
   byte IColorSpace5B<Cmyka88888>.A => this.A;
   public static Cmyka88888 Create(byte c1, byte c2, byte c3, byte c4, byte a) => new(c1, c2, c3, c4, a);
+
+  #endregion
+
+  #region Normalized Conversion
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 C4, UNorm32 A) ToNormalized() => (
+    UNorm32.FromByte(this.C),
+    UNorm32.FromByte(this.M),
+    UNorm32.FromByte(this.Y),
+    UNorm32.FromByte(this.K),
+    UNorm32.FromByte(this.A)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Cmyka88888 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a) => new(
+    c1.ToByte(),
+    c2.ToByte(),
+    c3.ToByte(),
+    c4.ToByte(),
+    a.ToByte()
+  );
 
   #endregion
 

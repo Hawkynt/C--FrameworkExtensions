@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -60,10 +62,23 @@ public readonly record struct OklchF(float L, float C, float H) : IColorSpace3F<
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static OklchF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>L, C (scaled by 2.5), H are in 0-1 range.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.L, this.C * 2.5f, this.H);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.L),
+    UNorm32.FromFloat(this.C * 2.5f),
+    UNorm32.FromFloat(this.H)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> L, C2: 0-1 -> C (divided by 2.5), C3: 0-1 -> H.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static OklchF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat() / 2.5f,
+    c3.ToFloat()
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

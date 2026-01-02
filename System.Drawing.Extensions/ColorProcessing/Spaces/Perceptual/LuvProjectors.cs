@@ -17,12 +17,12 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Spaces.Hdr;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -34,12 +34,12 @@ public readonly struct XyzFToLuvF : IProject<XyzF, LuvF> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public LuvF Project(in XyzF xyz) {
-    var yRatio = xyz.Y / ColorConstants.D65_Yn;
+    var yRatio = xyz.Y / ColorMatrices.D65_Yn;
 
     // Calculate L*
-    var l = yRatio > ColorConstants.Lab_Epsilon
-      ? 116f * (float)SysMath.Pow(yRatio, 1.0 / 3.0) - 16f
-      : ColorConstants.Lab_Kappa * yRatio;
+    var l = yRatio > ColorMatrices.Lab_Epsilon
+      ? 116f * MathF.Pow(yRatio, 1f / 3f) - 16f
+      : ColorMatrices.Lab_Kappa * yRatio;
 
     // Calculate u' and v'
     var denom = xyz.X + 15f * xyz.Y + 3f * xyz.Z;
@@ -52,8 +52,8 @@ public readonly struct XyzFToLuvF : IProject<XyzF, LuvF> {
     // Calculate u* and v*
     return new(
       l,
-      13f * l * (uPrime - ColorConstants.Luv_Un),
-      13f * l * (vPrime - ColorConstants.Luv_Vn)
+      13f * l * (uPrime - ColorMatrices.Luv_Un),
+      13f * l * (vPrime - ColorMatrices.Luv_Vn)
     );
   }
 }
@@ -99,14 +99,14 @@ public readonly struct LuvFToXyzF : IProject<LuvF, XyzF> {
     // Calculate Y from L*
     float y;
     if (luv.L > 8f) {
-      var t = (luv.L + 16f) / 116f;
-      y = ColorConstants.D65_Yn * t * t * t;
+      var t = (luv.L + 16f) * ColorMatrices.Inv116;
+      y = ColorMatrices.D65_Yn * t * t * t;
     } else
-      y = ColorConstants.D65_Yn * luv.L / ColorConstants.Lab_Kappa;
+      y = ColorMatrices.D65_Yn * luv.L / ColorMatrices.Lab_Kappa;
 
     // Calculate u' and v' from u* and v*
-    var uPrime = luv.U / (13f * luv.L) + ColorConstants.Luv_Un;
-    var vPrime = luv.V / (13f * luv.L) + ColorConstants.Luv_Vn;
+    var uPrime = luv.U / (13f * luv.L) + ColorMatrices.Luv_Un;
+    var vPrime = luv.V / (13f * luv.L) + ColorMatrices.Luv_Vn;
 
     // Calculate X and Z
     var x = y * (9f * uPrime) / (4f * vPrime);

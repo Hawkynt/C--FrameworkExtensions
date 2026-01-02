@@ -20,7 +20,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Spaces.Lab;
-using SysMath = System.Math;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Metrics.Lab;
@@ -29,28 +29,34 @@ namespace Hawkynt.ColorProcessing.Metrics.Lab;
 /// Calculates the CIE76 delta E (ΔE*ab) between two Lab colors.
 /// </summary>
 /// <remarks>
-/// CIE76 is the simplest and fastest Lab distance formula.
+/// <para>CIE76 is the simplest and fastest Lab distance formula.
 /// It's simply the Euclidean distance in Lab space.
-/// While not perfectly perceptually uniform, it's adequate for many uses.
+/// While not perfectly perceptually uniform, it's adequate for many uses.</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
 /// </remarks>
-public readonly struct CIE76 : IColorMetric<LabF> {
+public readonly struct CIE76 : IColorMetric<LabF>, INormalizedMetric {
+
+  // Practical max delta E for normalization (colors beyond this are "completely different")
+  private const float MaxDeltaE = 100f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in LabF a, in LabF b)
-#if SUPPORTS_MATHF
-    => MathF.Sqrt(CIE76Squared._Calculate(a, b));
-#else
-    => (float)SysMath.Sqrt(CIE76Squared._Calculate(a, b));
-#endif
+  public UNorm32 Distance(in LabF a, in LabF b) {
+    var raw = MathF.Sqrt(CIE76Squared._Calculate(a, b));
+    return UNorm32.FromFloatClamped(raw / MaxDeltaE);
+  }
 }
 
 /// <summary>
 /// Calculates the squared CIE76 delta E between two Lab colors.
 /// </summary>
 /// <remarks>
-/// Faster than CIE76 when only comparing distances (no sqrt).
+/// <para>Faster than CIE76 when only comparing distances (no sqrt).</para>
+/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E² of 10000.</para>
 /// </remarks>
-public readonly struct CIE76Squared : IColorMetric<LabF> {
+public readonly struct CIE76Squared : IColorMetric<LabF>, INormalizedMetric {
+
+  // Practical max delta E squared for normalization (100²)
+  private const float MaxDeltaESquared = 10000f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   internal static float _Calculate(in LabF a, in LabF b) {
@@ -61,5 +67,6 @@ public readonly struct CIE76Squared : IColorMetric<LabF> {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Distance(in LabF a, in LabF b) => _Calculate(a, b);
+  public UNorm32 Distance(in LabF a, in LabF b)
+    => UNorm32.FromFloatClamped(_Calculate(a, b) / MaxDeltaESquared);
 }

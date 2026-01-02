@@ -21,7 +21,9 @@ using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Storage;
@@ -54,6 +56,28 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace, IEquat
   byte IColorSpace4B<Bgra8888>.C3 => this.B;
   byte IColorSpace4B<Bgra8888>.A => this.A;
   public static Bgra8888 Create(byte c1, byte c2, byte c3, byte a) => new(c1, c2, c3, a);
+
+  #endregion
+
+  #region Normalized Conversion
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 A) ToNormalized() => (
+    UNorm32.FromByte(this.R),
+    UNorm32.FromByte(this.G),
+    UNorm32.FromByte(this.B),
+    UNorm32.FromByte(this.A)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bgra8888 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a) => new(
+    c1.ToByte(),
+    c2.ToByte(),
+    c3.ToByte(),
+    a.ToByte()
+  );
 
   #endregion
 

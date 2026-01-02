@@ -174,7 +174,7 @@ public readonly struct HqLq : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
@@ -283,7 +283,7 @@ public readonly struct Hq : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
@@ -369,7 +369,7 @@ public readonly struct Lq : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
-    where TDistance : struct, IColorMetric<TKey>
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
@@ -870,9 +870,10 @@ file readonly struct Hq3xNormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -896,9 +897,10 @@ file readonly struct Hq3xBoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnco
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -922,9 +924,10 @@ file readonly struct Hq3xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -951,9 +954,10 @@ file readonly struct Hq4xNormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -979,9 +983,10 @@ file readonly struct Hq4xBoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnco
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1007,9 +1012,10 @@ file readonly struct Hq4xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1038,9 +1044,10 @@ file readonly struct Lq3xNormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1064,9 +1071,10 @@ file readonly struct Lq3xBoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnco
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1090,9 +1098,10 @@ file readonly struct Lq3xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1119,9 +1128,10 @@ file readonly struct Lq4xNormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1147,9 +1157,10 @@ file readonly struct Lq4xBoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnco
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1175,9 +1186,10 @@ file readonly struct Lq4xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1206,9 +1218,10 @@ file readonly struct Hq2x3NormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1232,9 +1245,10 @@ file readonly struct Hq2x3BoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1258,9 +1272,10 @@ file readonly struct Hq2x3SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1287,9 +1302,10 @@ file readonly struct Hq2x4NormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1314,9 +1330,10 @@ file readonly struct Hq2x4BoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1341,9 +1358,10 @@ file readonly struct Hq2x4SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1371,9 +1389,10 @@ file readonly struct Lq2x3NormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1397,9 +1416,10 @@ file readonly struct Lq2x3BoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1423,9 +1443,10 @@ file readonly struct Lq2x3SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 3;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1452,9 +1473,10 @@ file readonly struct Lq2x4NormalKernel<TWork, TKey, TPixel, TEquality, TLerp, TE
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1479,9 +1501,10 @@ file readonly struct Lq2x4BoldKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
@@ -1506,9 +1529,10 @@ file readonly struct Lq2x4SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
   public int ScaleY => 4;
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(in NeighborWindow<TWork, TKey> window, TPixel* dest, int destStride, in TEncode encoder) {
-    var n0 = window.M1M1; var n1 = window.P0M1; var n2 = window.P1M1;
-    var n3 = window.M1P0; var n4 = window.P0P0; var n5 = window.P1P0;
-    var n6 = window.M1P1; var n7 = window.P0P1; var n8 = window.P1P1;
+    // NeighborWindow uses [Row][Column] naming: M1P0 = row -1, col 0 = TOP
+    var n0 = window.M1M1; var n1 = window.M1P0; var n2 = window.M1P1;
+    var n3 = window.P0M1; var n4 = window.P0P0; var n5 = window.P0P1;
+    var n6 = window.P1M1; var n7 = window.P1P0; var n8 = window.P1P1;
     var c0 = n0.Key; var c1 = n1.Key; var c2 = n2.Key; var c3 = n3.Key; var c4 = n4.Key;
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;

@@ -429,7 +429,7 @@ public static partial class ColorPolyfills {
     public float DistanceTo(Color other) {
       var lab1 = default(LinearRgbaFToLabF).Project(default(Srgb32ToLinearRgbaF).Decode(new Bgra8888(@this)));
       var lab2 = default(LinearRgbaFToLabF).Project(default(Srgb32ToLinearRgbaF).Decode(new Bgra8888(other)));
-      return default(CIE76).Distance(lab1, lab2);
+      return (float)default(CIE76).Distance(lab1, lab2);
     }
 
     /// <summary>Calculates the CIEDE2000 perceptual color distance to another color.</summary>
@@ -439,7 +439,7 @@ public static partial class ColorPolyfills {
     public float PerceptualDistanceTo(Color other) {
       var lab1 = default(LinearRgbaFToLabF).Project(default(Srgb32ToLinearRgbaF).Decode(new Bgra8888(@this)));
       var lab2 = default(LinearRgbaFToLabF).Project(default(Srgb32ToLinearRgbaF).Decode(new Bgra8888(other)));
-      return default(CIEDE2000).Distance(lab1, lab2);
+      return (float)default(CIEDE2000).Distance(lab1, lab2);
     }
 
     #endregion

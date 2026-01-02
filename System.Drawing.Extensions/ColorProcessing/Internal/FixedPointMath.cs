@@ -17,9 +17,9 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
-using SysMath = System.Math;
 
 namespace Hawkynt.ColorProcessing.Internal;
 
@@ -122,6 +122,77 @@ internal static class FixedPointMath {
 
   #endregion
 
+  #region Branchless Integer Operations
+
+  /// <summary>
+  /// Branchless absolute difference |a - b| for integers.
+  /// Uses Hacker's Delight sign-bit manipulation.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int BranchlessAbsDiff(int a, int b) {
+    var diff = a - b;
+    var mask = diff >> 31; // All 1s if negative, all 0s if positive
+    return (diff ^ mask) - mask;
+  }
+
+  /// <summary>
+  /// Branchless minimum for integers.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int BranchlessMin(int a, int b) {
+    var diff = a - b;
+    return b + (diff & (diff >> 31));
+  }
+
+  /// <summary>
+  /// Branchless maximum for integers.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int BranchlessMax(int a, int b) {
+    var diff = a - b;
+    return a - (diff & (diff >> 31));
+  }
+
+  /// <summary>
+  /// Branchless saturating clamp to 0-255 range.
+  /// Uses Hacker's Delight overflow detection.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int SaturateToU8(int v) {
+    // If v > 255, set all bits high then mask to 255
+    // If v < 0, mask becomes 0
+    var overflow = (255 - v) >> 31; // -1 if v > 255, 0 otherwise
+    var underflow = v >> 31;        // -1 if v < 0, 0 otherwise
+    return (v | overflow) & ~underflow & 255;
+  }
+
+  /// <summary>
+  /// Branchless saturating clamp to 0-65535 range.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int SaturateToU16(int v) {
+    var overflow = (65535 - v) >> 31;
+    var underflow = v >> 31;
+    return (v | overflow) & ~underflow & 65535;
+  }
+
+  /// <summary>
+  /// Fast division by 255 using multiply+shift (Hacker's Delight).
+  /// Exact for inputs 0-65535.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int DivBy255(int v)
+    => (v * 0x8081) >> 23;
+
+  /// <summary>
+  /// Fast division by 255 with rounding.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int DivBy255Rounded(int v)
+    => ((v * 257) + 257) >> 16;
+
+  #endregion
+
   #region Conversion Methods
 
   /// <summary>
@@ -194,7 +265,7 @@ internal static class FixedPointMath {
     var lut = new int[256];
     for (var i = 0; i < 256; ++i) {
       var v = i / 255.0;
-      var linear = v <= 0.04045 ? v / 12.92 : SysMath.Pow((v + 0.055) / 1.055, 2.4);
+      var linear = v <= 0.04045 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
       lut[i] = (int)(linear * 65536.0 + 0.5);
     }
     return lut;
@@ -205,8 +276,8 @@ internal static class FixedPointMath {
     var lut = new byte[257];
     for (var i = 0; i <= 256; ++i) {
       var linear = i / 256.0;
-      var v = linear <= 0.0031308 ? linear * 12.92 : 1.055 * SysMath.Pow(linear, 1.0 / 2.4) - 0.055;
-      lut[i] = (byte)SysMath.Min(255, SysMath.Max(0, (int)(v * 255.0 + 0.5)));
+      var v = linear <= 0.0031308 ? linear * 12.92 : 1.055 * Math.Pow(linear, 1.0 / 2.4) - 0.055;
+      lut[i] = (byte)Math.Min(255, Math.Max(0, (int)(v * 255.0 + 0.5)));
     }
     return lut;
   }
@@ -254,7 +325,7 @@ internal static class FixedPointMath {
 
     for (var i = 0; i <= 256; ++i) {
       var t = i / 256.0;
-      var f = t > epsilon ? SysMath.Pow(t, 1.0 / 3.0) : (kappa * t + 16.0) / 116.0;
+      var f = t > epsilon ? Math.Pow(t, 1.0 / 3.0) : (kappa * t + 16.0) / 116.0;
       lut[i] = (int)(f * 65536.0 + 0.5);
     }
     return lut;
@@ -269,7 +340,7 @@ internal static class FixedPointMath {
       var f = i / 256.0;
       var t3 = f * f * f;
       var t = t3 > epsilon ? t3 : (116.0 * f - 16.0) / 903.3;
-      lut[i] = (int)(SysMath.Max(0, SysMath.Min(1, t)) * 65536.0 + 0.5);
+      lut[i] = (int)(Math.Max(0, Math.Min(1, t)) * 65536.0 + 0.5);
     }
     return lut;
   }
@@ -300,6 +371,127 @@ internal static class FixedPointMath {
     if (v >= One)
       return LabFInverseLut[256];
     return LabFInverseLut[v >> 8];
+  }
+
+  #endregion
+
+  #region Cube Root LUT (for Oklab)
+
+  private static float[]? _cbrtLut;
+
+  /// <summary>
+  /// Gets the cube root lookup table (257 entries for 0.0-1.0 range with interpolation).
+  /// </summary>
+  public static float[] CbrtLut => _cbrtLut ??= _BuildCbrtLut();
+
+  private static float[] _BuildCbrtLut() {
+    var lut = new float[257];
+    for (var i = 0; i <= 256; ++i)
+      lut[i] = MathF.Cbrt(i / 256f);
+    return lut;
+  }
+
+  /// <summary>
+  /// Fast cube root using LUT with linear interpolation.
+  /// Optimized for 0-1 range, falls back to MathF.Cbrt for out-of-range values.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float FastCbrt(float x) {
+    if (x <= 0f) return 0f;
+    if (x >= 1f) return x > 1f ? MathF.Cbrt(x) : 1f; // cbrt(1)=1 fast-path, fallback for out-of-gamut
+    var idx = x * 256f;
+    var i = (int)idx;
+    var frac = idx - i;
+    var lut = CbrtLut;
+    return lut[i] + (lut[i + 1] - lut[i]) * frac;
+  }
+
+  #endregion
+
+  #region PQ Transfer LUTs (for JzAzBz)
+
+  // PQ constants
+  private const float PQ_C1 = 0.8359375f;         // 3424/4096
+  private const float PQ_C2 = 18.8515625f;        // 2413/128
+  private const float PQ_C3 = 18.6875f;           // 2392/128
+  private const float PQ_N = 0.15930175781f;      // 2610/16384
+  private const float PQ_P = 134.034375f;         // 1.7*2523/32
+
+  private static float[]? _pqForwardLut;
+  private static float[]? _pqInverseLut;
+
+  /// <summary>
+  /// Gets the PQ forward transfer lookup table.
+  /// </summary>
+  public static float[] PqForwardLut => _pqForwardLut ??= _BuildPqForwardLut();
+
+  /// <summary>
+  /// Gets the PQ inverse transfer lookup table.
+  /// </summary>
+  public static float[] PqInverseLut => _pqInverseLut ??= _BuildPqInverseLut();
+
+  private static float[] _BuildPqForwardLut() {
+    // 4097 entries for input range 0-1 (normalized LMS) - high resolution for better precision
+    var lut = new float[4097];
+    for (var i = 0; i <= 4096; ++i) {
+      var x = i / 4096f;
+      if (x <= 0f) {
+        lut[i] = 0f;
+        continue;
+      }
+      var xn = MathF.Pow(x, PQ_N);
+      lut[i] = MathF.Pow((PQ_C1 + PQ_C2 * xn) / (1f + PQ_C3 * xn), PQ_P);
+    }
+    return lut;
+  }
+
+  private static float[] _BuildPqInverseLut() {
+    // 4097 entries for input range 0-1 (PQ-encoded values) - high resolution for better precision
+    var lut = new float[4097];
+    for (var i = 0; i <= 4096; ++i) {
+      var x = i / 4096f;
+      if (x <= 0f) {
+        lut[i] = 0f;
+        continue;
+      }
+      var xp = MathF.Pow(x, 1f / PQ_P);
+      var num = PQ_C1 - xp;
+      var den = PQ_C3 * xp - PQ_C2;
+      if (den >= 0f) {
+        lut[i] = 0f;
+        continue;
+      }
+      lut[i] = MathF.Pow(num / den, 1f / PQ_N);
+    }
+    return lut;
+  }
+
+  /// <summary>
+  /// Fast PQ forward transfer using LUT with linear interpolation.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float FastPqForward(float x) {
+    if (x <= 0f) return 0f;
+    if (x >= 1f) return PqForwardLut[4096];
+    var idx = x * 4096f;
+    var i = (int)idx;
+    var frac = idx - i;
+    var lut = PqForwardLut;
+    return lut[i] + (lut[i + 1] - lut[i]) * frac;
+  }
+
+  /// <summary>
+  /// Fast PQ inverse transfer using LUT with linear interpolation.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float FastPqInverse(float x) {
+    if (x <= 0f) return 0f;
+    if (x >= 1f) return PqInverseLut[4096];
+    var idx = x * 4096f;
+    var i = (int)idx;
+    var frac = idx - i;
+    var lut = PqInverseLut;
+    return lut[i] + (lut[i + 1] - lut[i]) * frac;
   }
 
   #endregion

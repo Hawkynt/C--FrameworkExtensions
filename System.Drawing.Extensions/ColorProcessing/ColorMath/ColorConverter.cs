@@ -28,6 +28,7 @@ using Hawkynt.ColorProcessing.Spaces.Lab;
 using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Spaces.WideGamut;
 using Hawkynt.ColorProcessing.Spaces.Yuv;
+using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -59,7 +60,7 @@ public static class ColorConverter {
       ref readonly var rgb = ref Unsafe.As<TWork, LinearRgbF>(ref Unsafe.AsRef(in color));
       return highQuality
         ? _GetOklabLuminance(rgb.R, rgb.G, rgb.B)
-        : ColorConstants.BT601_R * rgb.R + ColorConstants.BT601_G * rgb.G + ColorConstants.BT601_B * rgb.B;
+        : ColorMatrices.BT601_R * rgb.R + ColorMatrices.BT601_G * rgb.G + ColorMatrices.BT601_B * rgb.B;
     }
 
     // Fast path for LinearRgbaF
@@ -67,7 +68,7 @@ public static class ColorConverter {
       ref readonly var rgba = ref Unsafe.As<TWork, LinearRgbaF>(ref Unsafe.AsRef(in color));
       return highQuality
         ? _GetOklabLuminance(rgba.R, rgba.G, rgba.B)
-        : ColorConstants.BT601_R * rgba.R + ColorConstants.BT601_G * rgba.G + ColorConstants.BT601_B * rgba.B;
+        : ColorMatrices.BT601_R * rgba.R + ColorMatrices.BT601_G * rgba.G + ColorMatrices.BT601_B * rgba.B;
     }
 
     // Fallback via interface
@@ -133,6 +134,12 @@ public static class ColorConverter {
       return (rgba.R, rgba.G, rgba.B);
     }
 
+    // Fast path for Bgra8888 (common storage format)
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      ref readonly var bgra = ref Unsafe.As<TWork, Bgra8888>(ref Unsafe.AsRef(in color));
+      return (bgra.RNormalized, bgra.GNormalized, bgra.BNormalized);
+    }
+
     // Fallback via interface
     return _GetNormalizedRgbFallback(color);
   }
@@ -159,6 +166,12 @@ public static class ColorConverter {
       return (rgba.R, rgba.G, rgba.B, rgba.A);
     }
 
+    // Fast path for Bgra8888 (common storage format)
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      ref readonly var bgra = ref Unsafe.As<TWork, Bgra8888>(ref Unsafe.AsRef(in color));
+      return (bgra.RNormalized, bgra.GNormalized, bgra.BNormalized, bgra.ANormalized);
+    }
+
     // Fallback via interface
     var (r, g, b) = _GetNormalizedRgbFallback(color);
     var a = _GetAlphaFallback(color);
@@ -183,6 +196,12 @@ public static class ColorConverter {
     if (typeof(TWork) == typeof(LinearRgbaF)) {
       ref readonly var rgba = ref Unsafe.As<TWork, LinearRgbaF>(ref Unsafe.AsRef(in color));
       return rgba.A;
+    }
+
+    // Fast path for Bgra8888 (common storage format)
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      ref readonly var bgra = ref Unsafe.As<TWork, Bgra8888>(ref Unsafe.AsRef(in color));
+      return bgra.ANormalized;
     }
 
     // Fallback via interface
@@ -265,6 +284,17 @@ public static class ColorConverter {
       return Unsafe.As<LinearRgbaF, TWork>(ref result);
     }
 
+    // Fast path for Bgra8888 (common storage format)
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      var result = new Bgra8888(
+        Bgra8888.ClampToByte(r * Bgra8888.NormalizedToByte),
+        Bgra8888.ClampToByte(g * Bgra8888.NormalizedToByte),
+        Bgra8888.ClampToByte(b * Bgra8888.NormalizedToByte),
+        Bgra8888.ClampToByte(a * Bgra8888.NormalizedToByte)
+      );
+      return Unsafe.As<Bgra8888, TWork>(ref result);
+    }
+
     // Fallback via ColorFactory for known 4F types
     return _FromNormalizedRgbaFallback<TWork>(r, g, b, a);
   }
@@ -304,7 +334,7 @@ public static class ColorConverter {
     var (r, g, b) = _GetNormalizedRgbFallback(color);
     return highQuality
       ? _GetOklabLuminance(r, g, b)
-      : ColorConstants.BT601_R * r + ColorConstants.BT601_G * g + ColorConstants.BT601_B * b;
+      : ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
   }
 
   /// <summary>

@@ -17,6 +17,8 @@
 
 #endregion
 
+using Hawkynt.ColorProcessing.Metrics;
+
 namespace Hawkynt.ColorProcessing;
 
 /// <summary>
@@ -39,8 +41,14 @@ public interface IColorSpace3F<TSelf> : IColorSpace
   /// <summary>Gets the third component.</summary>
   float C3 { get; }
 
+  /// <summary>Returns components normalized to [0.0, 1.0].</summary>
+  (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized();
+
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
   /// <summary>Creates a new instance from component values.</summary>
   static abstract TSelf Create(float c1, float c2, float c3);
+
+  /// <summary>Creates from normalized values.</summary>
+  static abstract TSelf FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3);
 #endif
 }

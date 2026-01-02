@@ -17,11 +17,11 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Spaces.Hdr;
 using Hawkynt.ColorProcessing.Working;
-using SysMath = System.Math;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
@@ -40,7 +40,7 @@ public readonly struct XyzFToHunterLabF : IProject<XyzF, HunterLabF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public HunterLabF Project(in XyzF xyz) {
     // L = 10 * sqrt(Y)
-    var sqrtY = (float)SysMath.Sqrt(xyz.Y);
+    var sqrtY = MathF.Sqrt(xyz.Y);
     var l = 10f * sqrtY;
 
     if (sqrtY < 1e-6f)
@@ -102,7 +102,7 @@ public readonly struct HunterLabFToXyzF : IProject<HunterLabF, XyzF> {
     if (y < 1e-6f)
       return new(0f, 0f, 0f);
 
-    var sqrtY = (float)SysMath.Sqrt(y);
+    var sqrtY = MathF.Sqrt(y);
 
     // X = (a * sqrt(Y) / Ka + Y) / 1.02
     var x = (hunterLab.A * sqrtY / Ka + y) / K1;

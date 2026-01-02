@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.WideGamut;
@@ -60,13 +62,21 @@ public readonly record struct AcesCgF(float R, float G, float B) : IColorSpace3F
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static AcesCgF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>ACEScg can have values outside 0-1, but this clamps to that range.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (
-    this.R < 0 ? 0 : this.R > 1 ? 1 : this.R,
-    this.G < 0 ? 0 : this.G > 1 ? 1 : this.G,
-    this.B < 0 ? 0 : this.B > 1 ? 1 : this.B
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.R),
+    UNorm32.FromFloat(this.G),
+    UNorm32.FromFloat(this.B)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static AcesCgF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat(),
+    c3.ToFloat()
   );
 
   /// <summary>Returns components as bytes (0-255).</summary>

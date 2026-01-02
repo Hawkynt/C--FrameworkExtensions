@@ -20,6 +20,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hawkynt.ColorProcessing.Constants;
+using Hawkynt.ColorProcessing.Metrics;
+using UNorm32 = Hawkynt.ColorProcessing.Metrics.UNorm32;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Spaces.Yuv;
@@ -61,10 +63,23 @@ public readonly record struct YCbCrF(float Y, float Cb, float Cr) : IColorSpace3
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static YCbCrF Create(float c1, float c2, float c3) => new(c1, c2, c3);
 
-  /// <summary>Returns components normalized to 0.0-1.0 range.</summary>
+  /// <inheritdoc />
   /// <remarks>Y: 0-1 -> 0-1, Cb: -0.5 to 0.5 -> 0-1, Cr: -0.5 to 0.5 -> 0-1.</remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public (float C1, float C2, float C3) ToNormalized() => (this.Y, this.Cb + 0.5f, this.Cr + 0.5f);
+  public (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized() => (
+    UNorm32.FromFloat(this.Y),
+    UNorm32.FromFloat(this.Cb + 0.5f),
+    UNorm32.FromFloat(this.Cr + 0.5f)
+  );
+
+  /// <summary>Creates from normalized values.</summary>
+  /// <remarks>C1: 0-1 -> Y, C2: 0-1 -> Cb -0.5 to 0.5, C3: 0-1 -> Cr -0.5 to 0.5.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static YCbCrF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => new(
+    c1.ToFloat(),
+    c2.ToFloat() - 0.5f,
+    c3.ToFloat() - 0.5f
+  );
 
   /// <summary>Returns components as bytes (0-255).</summary>
   /// <remarks>Y: 0-1 -> 0-255, Cb: -0.5 to 0.5 -> 0-255, Cr: -0.5 to 0.5 -> 0-255.</remarks>
