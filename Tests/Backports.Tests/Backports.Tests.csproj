@@ -117,4 +117,19 @@
     <Compile Remove="TensorTests.cs" />
   </ItemGroup>
 
+  <!--
+    ExpressionVisitor was added in .NET 4.0. On net35, neither the BCL nor our polyfill has it
+    (we can't polyfill it for net35 without causing CS0433 conflicts with BCL Expression types).
+    Tests for ExpressionVisitor can only run on net40+ where BCL provides it.
+
+    ExpressionFactoryTests.cs and LambdaCompileTests.cs use Expression features added in .NET 4.0
+    (Expression.Variable, Expression.Default, Expression.Block, etc.) that don't exist in the
+    net35 BCL Expression class. Our polyfill only compiles for net20 to avoid conflicts.
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+    <Compile Remove="ExpressionVisitorTests.cs" />
+    <Compile Remove="ExpressionFactoryTests.cs" />
+    <Compile Remove="LambdaCompileTests.cs" />
+  </ItemGroup>
+
 </Project>
