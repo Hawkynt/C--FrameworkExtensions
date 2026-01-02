@@ -24,30 +24,37 @@
 
 namespace System.Runtime.CompilerServices;
 
-public static partial class RuntimeHelpers {
+/// <summary>
+/// Provides extension methods for <see cref="RuntimeHelpers"/> on older frameworks.
+/// </summary>
+public static partial class RuntimeHelpersPolyfills {
 
-  /// <summary>
-  /// Serves as a hash function for a particular object, and is suitable for use in
-  /// algorithms and data structures that use hash codes, such as a hash table.
-  /// </summary>
-  /// <param name="o">An object to retrieve the hash code for.</param>
-  /// <returns>
-  /// A hash code for the object identified by the <paramref name="o"/> parameter,
-  /// regardless of any instance method that the object's type might override.
-  /// </returns>
-  /// <remarks>
-  /// <para>
-  /// The <see cref="GetHashCode(object)"/> method always calls the <see cref="object.GetHashCode"/>
-  /// method non-virtually, even if the object's type has overridden the <see cref="object.GetHashCode"/>
-  /// method.
-  /// </para>
-  /// <para>
-  /// This polyfill implementation uses <see cref="object.GetHashCode"/> which may be overridden.
-  /// However, this is acceptable for use cases like <see cref="ConditionalWeakTable{TKey,TValue}"/>
-  /// where reference equality is confirmed after hash comparison.
-  /// </para>
-  /// </remarks>
-  public static int GetHashCode(object? o) => o?.GetHashCode() ?? 0;
+  extension(RuntimeHelpers) {
+
+    /// <summary>
+    /// Serves as a hash function for a particular object, and is suitable for use in
+    /// algorithms and data structures that use hash codes, such as a hash table.
+    /// </summary>
+    /// <param name="o">An object to retrieve the hash code for.</param>
+    /// <returns>
+    /// A hash code for the object identified by the <paramref name="o"/> parameter,
+    /// regardless of any instance method that the object's type might override.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The <see cref="GetHashCode(object)"/> method always calls the <see cref="object.GetHashCode"/>
+    /// method non-virtually, even if the object's type has overridden the <see cref="object.GetHashCode"/>
+    /// method.
+    /// </para>
+    /// <para>
+    /// This polyfill implementation uses <see cref="object.GetHashCode"/> which may be overridden.
+    /// However, this is acceptable for use cases like <see cref="ConditionalWeakTable{TKey,TValue}"/>
+    /// where reference equality is confirmed after hash comparison.
+    /// </para>
+    /// </remarks>
+    public static int GetHashCode(object? o) => o?.GetHashCode() ?? 0;
+
+  }
 
 }
 
