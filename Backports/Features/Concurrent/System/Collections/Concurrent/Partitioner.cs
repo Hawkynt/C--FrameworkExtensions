@@ -233,7 +233,7 @@ public static class Partitioner {
       for (var i = 0; i < partitionCount; ++i) {
         var start = i * itemsPerPartition;
         var end = Math.Min(start + itemsPerPartition, list.Count);
-        partitions[i] = _GetPartitionEnumerator(start, end);
+        partitions[i] = this._GetPartitionEnumerator(start, end);
       }
       return partitions;
     }

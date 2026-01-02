@@ -49,7 +49,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   private const ushort MinValueBits = 0xFBFF;
   private const ushort MaxValueBits = 0x7BFF;
 
-  private Half(ushort value) => _value = value;
+  private Half(ushort value) => this._value = value;
 
   /// <summary>
   /// Gets the smallest positive Half value that is greater than zero.
@@ -168,7 +168,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
       return 1;
     if (obj is not Half other)
       throw new ArgumentException("Object must be of type Half.");
-    return CompareTo(other);
+    return this.CompareTo(other);
   }
 
   /// <summary>
@@ -178,19 +178,19 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   public bool Equals(Half other) {
     if (IsNaN(this) && IsNaN(other))
       return true;
-    return _value == other._value;
+    return this._value == other._value;
   }
 
   /// <summary>
   /// Indicates whether this instance and a specified object are equal.
   /// </summary>
-  public override bool Equals(object? obj) => obj is Half other && Equals(other);
+  public override bool Equals(object? obj) => obj is Half other && this.Equals(other);
 
   /// <summary>
   /// Returns the hash code for this instance.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override int GetHashCode() => _value.GetHashCode();
+  public override int GetHashCode() => this._value.GetHashCode();
 
   /// <summary>
   /// Converts this Half to a string representation.
@@ -216,7 +216,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   /// Tries to format the value of the current instance into the provided span of characters.
   /// </summary>
   public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null) {
-    var str = ToString(format.Length > 0 ? format.ToString() : null, provider);
+    var str = this.ToString(format.Length > 0 ? format.ToString() : null, provider);
     if (str.Length > destination.Length) {
       charsWritten = 0;
       return false;

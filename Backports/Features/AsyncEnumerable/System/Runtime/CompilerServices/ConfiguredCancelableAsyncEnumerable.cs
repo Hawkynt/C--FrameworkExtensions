@@ -35,9 +35,9 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
   private readonly bool _continueOnCapturedContext;
 
   internal ConfiguredCancelableAsyncEnumerable(IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken, bool continueOnCapturedContext) {
-    _enumerable = enumerable;
-    _cancellationToken = cancellationToken;
-    _continueOnCapturedContext = continueOnCapturedContext;
+    this._enumerable = enumerable;
+    this._cancellationToken = cancellationToken;
+    this._continueOnCapturedContext = continueOnCapturedContext;
   }
 
   /// <summary>
@@ -48,7 +48,7 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
   /// </param>
   /// <returns>The configured enumerable.</returns>
   public ConfiguredCancelableAsyncEnumerable<T> ConfigureAwait(bool continueOnCapturedContext)
-    => new(_enumerable, _cancellationToken, continueOnCapturedContext);
+    => new(this._enumerable, this._cancellationToken, continueOnCapturedContext);
 
   /// <summary>
   /// Sets the <see cref="CancellationToken"/> to be passed to <see cref="IAsyncEnumerable{T}.GetAsyncEnumerator"/>
@@ -57,13 +57,13 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
   /// <param name="cancellationToken">The <see cref="CancellationToken"/> to use.</param>
   /// <returns>The configured enumerable.</returns>
   public ConfiguredCancelableAsyncEnumerable<T> WithCancellation(CancellationToken cancellationToken)
-    => new(_enumerable, cancellationToken, _continueOnCapturedContext);
+    => new(this._enumerable, cancellationToken, this._continueOnCapturedContext);
 
   /// <summary>
   /// Returns an enumerator that iterates asynchronously through collections that enables cancelable iteration and configured awaits.
   /// </summary>
   /// <returns>An enumerator for the <see cref="ConfiguredCancelableAsyncEnumerable{T}"/>.</returns>
-  public Enumerator GetAsyncEnumerator() => new(_enumerable.GetAsyncEnumerator(_cancellationToken), _continueOnCapturedContext);
+  public Enumerator GetAsyncEnumerator() => new(this._enumerable.GetAsyncEnumerator(this._cancellationToken), this._continueOnCapturedContext);
 
   /// <summary>
   /// Provides an awaitable async enumerator that enables cancelable iteration and configured awaits.
@@ -73,14 +73,14 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
     private readonly bool _continueOnCapturedContext;
 
     internal Enumerator(IAsyncEnumerator<T> enumerator, bool continueOnCapturedContext) {
-      _enumerator = enumerator;
-      _continueOnCapturedContext = continueOnCapturedContext;
+      this._enumerator = enumerator;
+      this._continueOnCapturedContext = continueOnCapturedContext;
     }
 
     /// <summary>
     /// Gets the element in the collection at the current position of the enumerator.
     /// </summary>
-    public T Current => _enumerator.Current;
+    public T Current => this._enumerator.Current;
 
     /// <summary>
     /// Advances the enumerator asynchronously to the next element of the collection.
@@ -91,14 +91,14 @@ public readonly struct ConfiguredCancelableAsyncEnumerable<T> {
     /// passed the end of the collection.
     /// </returns>
     public ConfiguredValueTaskAwaitable<bool> MoveNextAsync()
-      => _enumerator.MoveNextAsync().ConfigureAwait(_continueOnCapturedContext);
+      => this._enumerator.MoveNextAsync().ConfigureAwait(this._continueOnCapturedContext);
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources asynchronously.
     /// </summary>
     /// <returns>A task that represents the asynchronous dispose operation.</returns>
     public ConfiguredValueTaskAwaitable DisposeAsync()
-      => _enumerator.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
+      => this._enumerator.DisposeAsync().ConfigureAwait(this._continueOnCapturedContext);
   }
 }
 

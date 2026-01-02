@@ -50,7 +50,7 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   /// </summary>
   public DateOnly(int year, int month, int day) {
     var dt = new DateTime(year, month, day);
-    _dayNumber = (int)(dt.Ticks / TimeSpan.TicksPerDay);
+    this._dayNumber = (int)(dt.Ticks / TimeSpan.TicksPerDay);
   }
 
   /// <summary>
@@ -58,10 +58,10 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   /// </summary>
   public DateOnly(int year, int month, int day, Calendar calendar) {
     var dt = new DateTime(year, month, day, calendar);
-    _dayNumber = (int)(dt.Ticks / TimeSpan.TicksPerDay);
+    this._dayNumber = (int)(dt.Ticks / TimeSpan.TicksPerDay);
   }
 
-  private DateOnly(int dayNumber) => _dayNumber = dayNumber;
+  private DateOnly(int dayNumber) => this._dayNumber = dayNumber;
 
   /// <summary>
   /// Gets the year component of the date represented by this instance.
@@ -91,14 +91,14 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   /// <summary>
   /// Gets the number of days since January 1, 0001 in the Proleptic Gregorian calendar.
   /// </summary>
-  public int DayNumber => _dayNumber;
+  public int DayNumber => this._dayNumber;
 
-  private DateTime _GetDateTime() => new(_dayNumber * TimeSpan.TicksPerDay);
+  private DateTime _GetDateTime() => new(this._dayNumber * TimeSpan.TicksPerDay);
 
   /// <summary>
   /// Returns a new DateOnly that adds the specified number of days to the value of this instance.
   /// </summary>
-  public DateOnly AddDays(int value) => new(_dayNumber + value);
+  public DateOnly AddDays(int value) => new(this._dayNumber + value);
 
   /// <summary>
   /// Returns a new DateOnly that adds the specified number of months to the value of this instance.
@@ -128,12 +128,12 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   /// <summary>
   /// Returns a DateTime instance with the specified input kind that is set to the date of this DateOnly instance and the time of the specified input TimeOnly instance.
   /// </summary>
-  public DateTime ToDateTime(TimeOnly time) => new(_dayNumber * TimeSpan.TicksPerDay + time.Ticks);
+  public DateTime ToDateTime(TimeOnly time) => new(this._dayNumber * TimeSpan.TicksPerDay + time.Ticks);
 
   /// <summary>
   /// Returns a DateTime instance with the specified input kind that is set to the date of this DateOnly instance and the time of the specified input TimeOnly instance.
   /// </summary>
-  public DateTime ToDateTime(TimeOnly time, DateTimeKind kind) => new(_dayNumber * TimeSpan.TicksPerDay + time.Ticks, kind);
+  public DateTime ToDateTime(TimeOnly time, DateTimeKind kind) => new(this._dayNumber * TimeSpan.TicksPerDay + time.Ticks, kind);
 
   /// <summary>
   /// Returns the long date string representation of the current DateOnly object.
@@ -150,11 +150,11 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   public string ToString(IFormatProvider? provider) => this._GetDateTime().ToString("d", provider);
   public string ToString(string? format, IFormatProvider? provider) => this._GetDateTime().ToString(format ?? "d", provider);
 
-  public override int GetHashCode() => _dayNumber;
+  public override int GetHashCode() => this._dayNumber;
   public override bool Equals(object? obj) => obj is DateOnly other && this.Equals(other);
-  public bool Equals(DateOnly other) => _dayNumber == other._dayNumber;
+  public bool Equals(DateOnly other) => this._dayNumber == other._dayNumber;
 
-  public int CompareTo(DateOnly other) => _dayNumber.CompareTo(other._dayNumber);
+  public int CompareTo(DateOnly other) => this._dayNumber.CompareTo(other._dayNumber);
   public int CompareTo(object? obj) {
     if (obj is null)
       return 1;

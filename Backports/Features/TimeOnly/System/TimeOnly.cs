@@ -49,7 +49,7 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   public TimeOnly(long ticks) {
     ArgumentOutOfRangeException.ThrowIfNegative(ticks);
     ArgumentOutOfRangeException.ThrowIfGreaterThan(ticks, MaxTicks);
-    _ticks = ticks;
+    this._ticks = ticks;
   }
 
   /// <summary>
@@ -75,36 +75,36 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
     ArgumentOutOfRangeException.ThrowIfNegative(millisecond);
     ArgumentOutOfRangeException.ThrowIfGreaterThan(millisecond, 999);
 
-    _ticks = hour * TimeSpan.TicksPerHour +
-             minute * TimeSpan.TicksPerMinute +
-             second * TimeSpan.TicksPerSecond +
-             millisecond * TimeSpan.TicksPerMillisecond;
+    this._ticks = hour * TimeSpan.TicksPerHour +
+                  minute * TimeSpan.TicksPerMinute +
+                  second * TimeSpan.TicksPerSecond +
+                  millisecond * TimeSpan.TicksPerMillisecond;
   }
 
   /// <summary>
   /// Gets the hour component of the time represented by this instance.
   /// </summary>
-  public int Hour => (int)(_ticks / TimeSpan.TicksPerHour);
+  public int Hour => (int)(this._ticks / TimeSpan.TicksPerHour);
 
   /// <summary>
   /// Gets the minute component of the time represented by this instance.
   /// </summary>
-  public int Minute => (int)(_ticks / TimeSpan.TicksPerMinute % 60);
+  public int Minute => (int)(this._ticks / TimeSpan.TicksPerMinute % 60);
 
   /// <summary>
   /// Gets the second component of the time represented by this instance.
   /// </summary>
-  public int Second => (int)(_ticks / TimeSpan.TicksPerSecond % 60);
+  public int Second => (int)(this._ticks / TimeSpan.TicksPerSecond % 60);
 
   /// <summary>
   /// Gets the millisecond component of the time represented by this instance.
   /// </summary>
-  public int Millisecond => (int)(_ticks / TimeSpan.TicksPerMillisecond % 1000);
+  public int Millisecond => (int)(this._ticks / TimeSpan.TicksPerMillisecond % 1000);
 
   /// <summary>
   /// Gets the number of ticks that represent the time of this instance.
   /// </summary>
-  public long Ticks => _ticks;
+  public long Ticks => this._ticks;
 
   /// <summary>
   /// Returns a new TimeOnly that adds the specified TimeSpan to the value of this instance.
@@ -115,7 +115,7 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// Returns a new TimeOnly that adds the specified TimeSpan to the value of this instance.
   /// </summary>
   public TimeOnly Add(TimeSpan value, out int wrappedDays) {
-    var totalTicks = _ticks + value.Ticks;
+    var totalTicks = this._ticks + value.Ticks;
     wrappedDays = (int)(totalTicks / TimeSpan.TicksPerDay);
     totalTicks %= TimeSpan.TicksPerDay;
     if (totalTicks < 0) {
@@ -150,10 +150,10 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// </summary>
   public bool IsBetween(TimeOnly start, TimeOnly end) {
     if (start._ticks <= end._ticks)
-      return _ticks >= start._ticks && _ticks < end._ticks;
+      return this._ticks >= start._ticks && this._ticks < end._ticks;
 
     // Range wraps around midnight
-    return _ticks >= start._ticks || _ticks < end._ticks;
+    return this._ticks >= start._ticks || this._ticks < end._ticks;
   }
 
   /// <summary>
@@ -169,28 +169,28 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// <summary>
   /// Converts this TimeOnly instance to a TimeSpan.
   /// </summary>
-  public TimeSpan ToTimeSpan() => new(_ticks);
+  public TimeSpan ToTimeSpan() => new(this._ticks);
 
   /// <summary>
   /// Returns the long time string representation of the current TimeOnly object.
   /// </summary>
-  public string ToLongTimeString() => new DateTime(_ticks).ToString("T");
+  public string ToLongTimeString() => new DateTime(this._ticks).ToString("T");
 
   /// <summary>
   /// Returns the short time string representation of the current TimeOnly object.
   /// </summary>
-  public string ToShortTimeString() => new DateTime(_ticks).ToString("t");
+  public string ToShortTimeString() => new DateTime(this._ticks).ToString("t");
 
-  public override string ToString() => new DateTime(_ticks).ToString("t");
-  public string ToString(string? format) => new DateTime(_ticks).ToString(format ?? "t");
-  public string ToString(IFormatProvider? provider) => new DateTime(_ticks).ToString("t", provider);
-  public string ToString(string? format, IFormatProvider? provider) => new DateTime(_ticks).ToString(format ?? "t", provider);
+  public override string ToString() => new DateTime(this._ticks).ToString("t");
+  public string ToString(string? format) => new DateTime(this._ticks).ToString(format ?? "t");
+  public string ToString(IFormatProvider? provider) => new DateTime(this._ticks).ToString("t", provider);
+  public string ToString(string? format, IFormatProvider? provider) => new DateTime(this._ticks).ToString(format ?? "t", provider);
 
-  public override int GetHashCode() => _ticks.GetHashCode();
+  public override int GetHashCode() => this._ticks.GetHashCode();
   public override bool Equals(object? obj) => obj is TimeOnly other && this.Equals(other);
-  public bool Equals(TimeOnly other) => _ticks == other._ticks;
+  public bool Equals(TimeOnly other) => this._ticks == other._ticks;
 
-  public int CompareTo(TimeOnly other) => _ticks.CompareTo(other._ticks);
+  public int CompareTo(TimeOnly other) => this._ticks.CompareTo(other._ticks);
   public int CompareTo(object? obj) {
     if (obj is null)
       return 1;
@@ -300,7 +300,7 @@ public readonly struct TimeOnly : IComparable, IComparable<TimeOnly>, IEquatable
   /// Tries to format the value of the current instance into the provided span of characters.
   /// </summary>
   public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format = default, IFormatProvider? provider = null)
-    => new DateTime(_ticks).TryFormat(destination, out charsWritten, format.Length == 0 ? "t".AsSpan() : format, provider);
+    => new DateTime(this._ticks).TryFormat(destination, out charsWritten, format.Length == 0 ? "t".AsSpan() : format, provider);
 
   /// <summary>
   /// Tries to convert a string to a TimeOnly using the specified format.

@@ -63,6 +63,18 @@ public static class GCPolyfills {
       return array;
     }
 
+    /// <summary>Allocates an array without initializing it.</summary>
+    /// <typeparam name="T">Specifies the type of the array element.</typeparam>
+    /// <param name="length">Specifies the length of the array.</param>
+    /// <param name="pinned">Specifies whether the allocated array must be pinned.</param>
+    /// <returns>An allocated array.</returns>
+    /// <remarks>
+    /// On older frameworks, this behaves identically to <see cref="AllocateArray{T}"/>
+    /// since skipping initialization is not supported.
+    /// </remarks>
+    public static T[] AllocateUninitializedArray<T>(int length, bool pinned = false)
+      => AllocateArray<T>(length, pinned);
+
   }
 
 }

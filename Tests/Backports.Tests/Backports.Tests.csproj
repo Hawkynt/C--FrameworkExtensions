@@ -17,9 +17,16 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <NoWarn>$(NoWarn);NU1701</NoWarn><!-- NUnit3TestAdapter is .NET Framework only but works via netstandard2.0 -->
     <NoWarn>$(NoWarn);MSB3268</NoWarn><!-- Microsoft.BCL.Async indirect dependencies on net40 can't be resolved but library works -->
+    <!-- Disable optimization to work around Roslyn SDK 10.0 bug with nint array optimization -->
+    <Optimize>false</Optimize>
   </PropertyGroup>
 
   <Import Project="..\..\VersionSpecificSymbols.Common.prop" />
+
+  <!-- OFFICIAL_TENSORS - use official package for net8.0+ (same as Backports.csproj) -->
+  <PropertyGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
+    <DefineConstants>$(DefineConstants);OFFICIAL_TENSORS</DefineConstants>
+  </PropertyGroup>
 
   <!-- NUnit Test Framework -->
   <ItemGroup>
@@ -81,6 +88,33 @@
   <ItemGroup>
     <!-- That's exactly how we want it, only one reference, the rest is auto-magic-voodoo -->
     <ProjectReference Include="..\..\Backports\Backports.csproj" />
+  </ItemGroup>
+
+  <!--
+    ROSLYN SDK 10.0 COMPILER BUG WORKAROUND:
+
+    TensorTests.cs must be excluded from older frameworks due to a Roslyn SDK 10.0 bug in
+    TryEmitOptimizedReadonlySpanCreation. The compiler crashes with NullReferenceException when:
+    1. Code uses ReadOnlySpan<nint> (native integer span)
+    2. Targeting frameworks without native nint support (net35-net48, netstandard2.0-2.1)
+
+    The bug occurs during code emission when Roslyn tries to optimize span creation from nint
+    arrays. The optimization path cannot handle nint's platform-dependent size on older frameworks.
+
+    Workarounds attempted but failed:
+    - NoInlining helper methods: Bug triggers at call site, not in helper
+    - MemoryMarshal.CreateReadOnlySpan: Bug still triggers
+    - Array.CreateInstance: Bug still triggers
+    - Returning ReadOnlySpan<nint> directly: Bug still triggers
+
+    The Tensor polyfill (Backports.dll) compiles because it stores nint[] fields directly without
+    converting to ReadOnlySpan<nint>. Test code must use ReadOnlySpan<nint> parameters of the API.
+
+    This exclusion should be removed when Roslyn fixes the bug or when dropping legacy framework support.
+    See: https://github.com/dotnet/roslyn/issues/ (TODO: file bug report)
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <Compile Remove="TensorTests.cs" />
   </ItemGroup>
 
 </Project>

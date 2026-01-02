@@ -56,7 +56,12 @@
        accessible in SDK-style projects. Instead, we use the Backports polyfills for:
        - CallerMemberName attribute
        - TaskAwaiter and async/await support
-       These polyfills provide equivalent functionality without package dependency issues. -->
+       These polyfills provide equivalent functionality without package dependency issues.
+
+       Technical reason: Microsoft.Bcl uses type-forwarding assemblies that cause:
+       - CS0436 warnings (type conflicts between polyfill and package types)
+       - CS4027 errors (ConfiguredTaskAwaiter doesn't implement INotifyCompletion)
+       The types are incompatible because INotifyCompletion from polyfill vs package are different. -->
 
   <!-- System.ValueTuple - Provides ValueTuple types for older frameworks -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
@@ -121,6 +126,10 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
   </ItemGroup>
+  <!-- Native HashCode support in .NET Standard 2.1+ and .NET Core 2.1+ -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR ($(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0)">
+    <DefineConstants>$(DefineConstants);OFFICIAL_HASHCODE</DefineConstants>
+  </PropertyGroup>
 
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
@@ -134,6 +143,16 @@
   </PropertyGroup>
   <ItemGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
     <PackageReference Include="System.IO.Hashing" Version="*" />
+  </ItemGroup>
+
+  <!-- System.Numerics.Tensors - Provides TensorPrimitives, Tensor<T>, TensorSpan<T> -->
+  <!-- Only use official package for net8.0+ (to avoid dependency conflicts with older packages) -->
+  <!-- Polyfill provides TensorPrimitives for older frameworks -->
+  <PropertyGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
+    <DefineConstants>$(DefineConstants);OFFICIAL_TENSORS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('8.0')))) &gt;= 0">
+    <PackageReference Include="System.Numerics.Tensors" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>

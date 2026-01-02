@@ -215,6 +215,28 @@ internal static class Scalar<T> {
     _ => ThrowNotSupported<T>()
   };
 
+  public static readonly T Pi = TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.PI),
+    CachedTypeCode.Double => Promote(Math.PI),
+    CachedTypeCode.Decimal => Promote(3.1415926535897932384626433833m),
+    CachedTypeCode.Half => Promote((Half)MathF.PI),
+    // For integer types, Pi makes no sense but return 3 as approximation
+    CachedTypeCode.Char => Promote((char)3),
+    CachedTypeCode.Pointer => Promote((nint)3),
+    CachedTypeCode.UPointer => Promote((nuint)3),
+    CachedTypeCode.Byte => Promote((byte)3),
+    CachedTypeCode.SByte => Promote((sbyte)3),
+    CachedTypeCode.UInt16 => Promote((ushort)3),
+    CachedTypeCode.Int16 => Promote((short)3),
+    CachedTypeCode.UInt32 => Promote(3u),
+    CachedTypeCode.Int32 => Promote(3),
+    CachedTypeCode.UInt64 => Promote(3ul),
+    CachedTypeCode.Int64 => Promote(3L),
+    CachedTypeCode.UInt128 => Promote((UInt128)3),
+    CachedTypeCode.Int128 => Promote((Int128)3),
+    _ => ThrowNotSupported<T>()
+  };
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T Zero() => TypeCodeCache<T>.Code switch {
     CachedTypeCode.Char => Promote((char)0),
@@ -271,6 +293,48 @@ internal static class Scalar<T> {
     CachedTypeCode.Double => Promote(Math.Round(As<double>(value))),
     CachedTypeCode.Decimal => Promote(Math.Round(As<decimal>(value))),
     CachedTypeCode.Half => Promote((Half)MathF.Round((float)As<Half>(value))),
+    // For integer types, round is identity
+    CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Round(T value, int digits) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote((float)Math.Round(As<float>(value), digits)),
+    CachedTypeCode.Double => Promote(Math.Round(As<double>(value), digits)),
+    CachedTypeCode.Decimal => Promote(Math.Round(As<decimal>(value), digits)),
+    CachedTypeCode.Half => Promote((Half)Math.Round((float)As<Half>(value), digits)),
+    // For integer types, round is identity
+    CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Round(T value, MidpointRounding mode) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote((float)Math.Round(As<float>(value), mode)),
+    CachedTypeCode.Double => Promote(Math.Round(As<double>(value), mode)),
+    CachedTypeCode.Decimal => Promote(Math.Round(As<decimal>(value), mode)),
+    CachedTypeCode.Half => Promote((Half)Math.Round((float)As<Half>(value), mode)),
+    // For integer types, round is identity
+    CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 => value,
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Round(T value, int digits, MidpointRounding mode) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote((float)Math.Round(As<float>(value), digits, mode)),
+    CachedTypeCode.Double => Promote(Math.Round(As<double>(value), digits, mode)),
+    CachedTypeCode.Decimal => Promote(Math.Round(As<decimal>(value), digits, mode)),
+    CachedTypeCode.Half => Promote((Half)Math.Round((float)As<Half>(value), digits, mode)),
     // For integer types, round is identity
     CachedTypeCode.Char or CachedTypeCode.Pointer or CachedTypeCode.UPointer or
     CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
@@ -348,6 +412,307 @@ internal static class Scalar<T> {
     CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
       From(Math.Log(To<double>(value), 2)),
     _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Log10(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Log10(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Log10(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Log10((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Log10((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Log10(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Pow(T x, T y) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Pow(As<float>(x), As<float>(y))),
+    CachedTypeCode.Double => Promote(Math.Pow(As<double>(x), As<double>(y))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Pow((double)As<decimal>(x), (double)As<decimal>(y))),
+    CachedTypeCode.Half => Promote((Half)MathF.Pow((float)As<Half>(x), (float)As<Half>(y))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Pow(To<double>(x), To<double>(y))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Cbrt(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Cbrt(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Cbrt(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Cbrt((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Cbrt((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Cbrt(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Sin(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Sin(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Sin(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Sin((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Sin((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Sin(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Cos(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Cos(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Cos(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Cos((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Cos((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Cos(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Tan(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Tan(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Tan(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Tan((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Tan((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Tan(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Sinh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Sinh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Sinh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Sinh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Sinh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Sinh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Cosh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Cosh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Cosh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Cosh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Cosh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Cosh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Tanh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Tanh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Tanh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Tanh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Tanh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Tanh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Asin(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Asin(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Asin(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Asin((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Asin((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Asin(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Acos(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Acos(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Acos(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Acos((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Acos((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Acos(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Atan(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Atan(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Atan(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Atan((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Atan((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Atan(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Atan2(T y, T x) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Atan2(As<float>(y), As<float>(x))),
+    CachedTypeCode.Double => Promote(Math.Atan2(As<double>(y), As<double>(x))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Atan2((double)As<decimal>(y), (double)As<decimal>(x))),
+    CachedTypeCode.Half => Promote((Half)MathF.Atan2((float)As<Half>(y), (float)As<Half>(x))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Atan2(To<double>(y), To<double>(x))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Asinh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Asinh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Asinh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Asinh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Asinh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Asinh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Acosh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Acosh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Acosh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Acosh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Acosh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Acosh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Atanh(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.Atanh(As<float>(value))),
+    CachedTypeCode.Double => Promote(Math.Atanh(As<double>(value))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.Atanh((double)As<decimal>(value))),
+    CachedTypeCode.Half => Promote((Half)MathF.Atanh((float)As<Half>(value))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.Atanh(To<double>(value))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T CopySign(T magnitude, T sign) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.CopySign(As<float>(magnitude), As<float>(sign))),
+    CachedTypeCode.Double => Promote(Math.CopySign(As<double>(magnitude), As<double>(sign))),
+    CachedTypeCode.Decimal => Math.Sign(As<decimal>(sign)) < 0 ? Negate(Abs(magnitude)) : Abs(magnitude),
+    CachedTypeCode.Half => Promote((Half)MathF.CopySign((float)As<Half>(magnitude), (float)As<Half>(sign))),
+    CachedTypeCode.SByte => Promote((sbyte)(As<sbyte>(sign) < 0 ? -As<sbyte>(Abs(magnitude)) : As<sbyte>(Abs(magnitude)))),
+    CachedTypeCode.Int16 => Promote((short)(As<short>(sign) < 0 ? -As<short>(Abs(magnitude)) : As<short>(Abs(magnitude)))),
+    CachedTypeCode.Int32 => Promote(As<int>(sign) < 0 ? -Math.Abs(As<int>(magnitude)) : Math.Abs(As<int>(magnitude))),
+    CachedTypeCode.Int64 => Promote(As<long>(sign) < 0 ? -Math.Abs(As<long>(magnitude)) : Math.Abs(As<long>(magnitude))),
+    CachedTypeCode.Pointer => Promote(As<nint>(sign) < 0 ? -Math.Abs(As<nint>(magnitude)) : Math.Abs(As<nint>(magnitude))),
+    CachedTypeCode.Int128 => Promote(Int128.IsNegative(As<Int128>(sign)) ? -Int128.Abs(As<Int128>(magnitude)) : Int128.Abs(As<Int128>(magnitude))),
+    // Unsigned types don't have sign
+    CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or
+    CachedTypeCode.UPointer or CachedTypeCode.UInt128 or CachedTypeCode.Char => Abs(magnitude),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T FusedMultiplyAdd(T x, T y, T z) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.FusedMultiplyAdd(As<float>(x), As<float>(y), As<float>(z))),
+    CachedTypeCode.Double => Promote(Math.FusedMultiplyAdd(As<double>(x), As<double>(y), As<double>(z))),
+    _ => Add(Multiply(x, y), z)
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T IEEERemainder(T x, T y) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => Promote(MathF.IEEERemainder(As<float>(x), As<float>(y))),
+    CachedTypeCode.Double => Promote(Math.IEEERemainder(As<double>(x), As<double>(y))),
+    CachedTypeCode.Decimal => Promote((decimal)Math.IEEERemainder((double)As<decimal>(x), (double)As<decimal>(y))),
+    CachedTypeCode.Half => Promote((Half)MathF.IEEERemainder((float)As<Half>(x), (float)As<Half>(y))),
+    CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.UInt16 or CachedTypeCode.Int16 or
+    CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.UInt64 or CachedTypeCode.Int64 or
+    CachedTypeCode.UInt128 or CachedTypeCode.Int128 =>
+      From(Math.IEEERemainder(To<double>(x), To<double>(y))),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T Remainder(T x, T y) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Byte => Promote((byte)(As<byte>(x) % As<byte>(y))),
+    CachedTypeCode.SByte => Promote((sbyte)(As<sbyte>(x) % As<sbyte>(y))),
+    CachedTypeCode.UInt16 => Promote((ushort)(As<ushort>(x) % As<ushort>(y))),
+    CachedTypeCode.Int16 => Promote((short)(As<short>(x) % As<short>(y))),
+    CachedTypeCode.UInt32 => Promote(As<uint>(x) % As<uint>(y)),
+    CachedTypeCode.Int32 => Promote(As<int>(x) % As<int>(y)),
+    CachedTypeCode.UInt64 => Promote(As<ulong>(x) % As<ulong>(y)),
+    CachedTypeCode.Int64 => Promote(As<long>(x) % As<long>(y)),
+    CachedTypeCode.Single => Promote(As<float>(x) % As<float>(y)),
+    CachedTypeCode.Double => Promote(As<double>(x) % As<double>(y)),
+    CachedTypeCode.Decimal => Promote(As<decimal>(x) % As<decimal>(y)),
+    CachedTypeCode.Half => Promote((Half)((float)As<Half>(x) % (float)As<Half>(y))),
+    CachedTypeCode.UInt128 => Promote(As<UInt128>(x) % As<UInt128>(y)),
+    CachedTypeCode.Int128 => Promote(As<Int128>(x) % As<Int128>(y)),
+    _ => ThrowNotSupported<T>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsNegative(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.SByte => As<sbyte>(value) < 0,
+    CachedTypeCode.Int16 => As<short>(value) < 0,
+    CachedTypeCode.Int32 => As<int>(value) < 0,
+    CachedTypeCode.Int64 => As<long>(value) < 0,
+    CachedTypeCode.Single => float.IsNegative(As<float>(value)),
+    CachedTypeCode.Double => double.IsNegative(As<double>(value)),
+    CachedTypeCode.Decimal => As<decimal>(value) < 0m,
+    CachedTypeCode.Half => Half.IsNegative(As<Half>(value)),
+    CachedTypeCode.Pointer => As<nint>(value) < 0,
+    CachedTypeCode.Int128 => Int128.IsNegative(As<Int128>(value)),
+    // Unsigned types are never negative
+    CachedTypeCode.Byte or CachedTypeCode.UInt16 or CachedTypeCode.UInt32 or CachedTypeCode.UInt64 or
+    CachedTypeCode.UPointer or CachedTypeCode.UInt128 or CachedTypeCode.Char => false,
+    _ => ThrowNotSupported<bool>()
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsNaN(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => float.IsNaN(As<float>(value)),
+    CachedTypeCode.Double => double.IsNaN(As<double>(value)),
+    CachedTypeCode.Half => Half.IsNaN(As<Half>(value)),
+    // Integer and decimal types are never NaN
+    _ => false
+  };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsInfinity(T value) => TypeCodeCache<T>.Code switch {
+    CachedTypeCode.Single => float.IsInfinity(As<float>(value)),
+    CachedTypeCode.Double => double.IsInfinity(As<double>(value)),
+    CachedTypeCode.Half => Half.IsInfinity(As<Half>(value)),
+    // Integer and decimal types are never infinity
+    _ => false
   };
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -39,6 +39,7 @@ The following official Microsoft packages are conditionally referenced based on 
 - **System.ValueTuple** - Provides `ValueTuple` types (.NET Framework 4.0+)
 - **System.Runtime.CompilerServices.Unsafe** - Provides the `Unsafe` class (.NET Framework 4.5+, .NET Standard 1.0+)
 - **System.Numerics.Vectors** - Provides `Vector` types (.NET Framework 4.5+, .NET Standard 2.0)
+- **System.Numerics.Tensors** - Provides `Tensor<T>`, `TensorSpan<T>`, `TensorPrimitives` and related tensor types (.NET 9.0+; polyfill for earlier versions)
 - **System.Threading.Tasks.Extensions** - Provides `ValueTask` (.NET Framework 4.5+, .NET Standard 2.0)
 - **Microsoft.Bcl.HashCode** - Provides `HashCode` (.NET Framework 4.6.1+, .NET Standard 2.0)
 
@@ -88,6 +89,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 * System
   * [DateOnly](https://learn.microsoft.com/dotnet/api/system.dateonly)
   * [Half](https://learn.microsoft.com/dotnet/api/system.half)
+  * [HashCode](https://learn.microsoft.com/dotnet/api/system.hashcode) (polyfill for frameworks without Microsoft.Bcl.HashCode)
   * [Index](https://learn.microsoft.com/dotnet/api/system.index)
   * [Int128](https://learn.microsoft.com/dotnet/api/system.int128)
   * [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
@@ -111,6 +113,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [IMemoryOwner](https://learn.microsoft.com/dotnet/api/system.buffers.imemoryowner-1)&lt;T&gt;
   * [MemoryManager](https://learn.microsoft.com/dotnet/api/system.buffers.memorymanager-1)&lt;T&gt;
   * [MemoryPool](https://learn.microsoft.com/dotnet/api/system.buffers.memorypool-1)&lt;T&gt;
+  * [NIndex](https://learn.microsoft.com/dotnet/api/system.buffers.nindex) (native integer index for tensors)
+  * [NRange](https://learn.microsoft.com/dotnet/api/system.buffers.nrange) (native integer range for tensors)
   * [ReadOnlySequence](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequence-1)&lt;T&gt;
   * [ReadOnlySequenceSegment](https://learn.microsoft.com/dotnet/api/system.buffers.readonlysequencesegment-1)&lt;T&gt;
   * [SequenceReader](https://learn.microsoft.com/dotnet/api/system.buffers.sequencereader-1)&lt;T&gt;
@@ -155,6 +159,15 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   * [Vector2](https://learn.microsoft.com/dotnet/api/system.numerics.vector2)
   * [Vector3](https://learn.microsoft.com/dotnet/api/system.numerics.vector3)
   * [Vector4](https://learn.microsoft.com/dotnet/api/system.numerics.vector4)
+
+* System.Numerics.Tensors
+  * [ReadOnlyTensorSpan](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.readonlytensorspan-1)&lt;T&gt;
+  * [ReadOnlyTensorDimensionSpan](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.readonlytensordimensionspan-1)&lt;T&gt;
+  * [Tensor](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.tensor) (static factory and operations)
+  * [Tensor](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.tensor-1)&lt;T&gt;
+  * [TensorDimensionSpan](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.tensordimensionspan-1)&lt;T&gt;
+  * [TensorPrimitives](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.tensorprimitives)
+  * [TensorSpan](https://learn.microsoft.com/dotnet/api/system.numerics.tensors.tensorspan-1)&lt;T&gt;
 
 * System.Runtime.CompilerServices
   * [AsyncIteratorMethodBuilder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.asynciteratormethodbuilder)
@@ -618,6 +631,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 * System.GC
   * T[] [AllocateArray](https://learn.microsoft.com/dotnet/api/system.gc.allocatearray)&lt;T&gt;(int length, bool pinned = false)
+  * T[] [AllocateUninitializedArray](https://learn.microsoft.com/dotnet/api/system.gc.allocateuninitializedarray)&lt;T&gt;(int length, bool pinned = false)
 
 * System.Globalization.CompareInfo
   * int [GetHashCode](https://learn.microsoft.com/dotnet/api/system.globalization.compareinfo.gethashcode#system-globalization-compareinfo-gethashcode%28system-string-system-globalization-compareoptions%29)(this CompareInfo @this, string source, CompareOptions options)
