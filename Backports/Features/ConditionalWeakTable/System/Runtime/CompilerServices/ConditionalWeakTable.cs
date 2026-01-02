@@ -40,7 +40,7 @@ namespace System.Runtime.CompilerServices;
 /// the table when the only reference to the key is from the table itself.
 /// </para>
 /// </remarks>
-public sealed class ConditionalWeakTable<TKey, TValue>
+public sealed partial class ConditionalWeakTable<TKey, TValue>
   where TKey : class
   where TValue : class? {
 
@@ -93,31 +93,6 @@ public sealed class ConditionalWeakTable<TKey, TValue>
           throw new ArgumentException("An entry with the same key already exists.", nameof(key));
 
       this._entries.Add(new(key, value, hashCode));
-    }
-  }
-
-  /// <summary>
-  /// Adds a key to the table if it doesn't already exist.
-  /// </summary>
-  /// <param name="key">The key to add.</param>
-  /// <param name="value">The key's property value.</param>
-  /// <returns><c>true</c> if the key was added; <c>false</c> if the key already exists.</returns>
-  /// <exception cref="ArgumentNullException"><paramref name="key"/> is null.</exception>
-  public bool TryAdd(TKey key, TValue value) {
-    if (key == null)
-      throw new ArgumentNullException(nameof(key));
-
-    lock (this._lock) {
-      this.CleanupDeadEntries();
-
-      // Check if key already exists
-      var hashCode = RuntimeHelpers.GetHashCode(key);
-      foreach (var entry in this._entries)
-        if (entry.HashCode == hashCode && entry.TryGetKey(out var existingKey) && ReferenceEquals(existingKey, key))
-          return false;
-
-      this._entries.Add(new(key, value, hashCode));
-      return true;
     }
   }
 

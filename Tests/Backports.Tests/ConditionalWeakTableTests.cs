@@ -73,6 +73,58 @@ public class ConditionalWeakTableTests {
 
   #endregion
 
+  #region TryAdd Method
+
+  [Test]
+  [Category("HappyPath")]
+  public void ConditionalWeakTable_TryAdd_ReturnsTrue_WhenKeyDoesNotExist() {
+    var table = new ConditionalWeakTable<object, TestValue>();
+    var key = new object();
+    var value = new TestValue { Data = 42 };
+
+    var result = table.TryAdd(key, value);
+
+    Assert.That(result, Is.True);
+    Assert.That(table.TryGetValue(key, out var retrieved), Is.True);
+    Assert.That(retrieved.Data, Is.EqualTo(42));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ConditionalWeakTable_TryAdd_ReturnsFalse_WhenKeyExists() {
+    var table = new ConditionalWeakTable<object, TestValue>();
+    var key = new object();
+    table.Add(key, new TestValue { Data = 1 });
+
+    var result = table.TryAdd(key, new TestValue { Data = 2 });
+
+    Assert.That(result, Is.False);
+    Assert.That(table.TryGetValue(key, out var retrieved), Is.True);
+    Assert.That(retrieved.Data, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void ConditionalWeakTable_TryAdd_NullKey_ThrowsArgumentNullException() {
+    var table = new ConditionalWeakTable<object, TestValue>();
+    Assert.Throws<ArgumentNullException>(() => table.TryAdd(null, new TestValue()));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ConditionalWeakTable_TryAdd_NullValue_Allowed() {
+    var table = new ConditionalWeakTable<object, TestValue>();
+    var key = new object();
+
+    var result = table.TryAdd(key, null);
+
+    Assert.That(result, Is.True);
+    Assert.That(table.TryGetValue(key, out var retrieved), Is.True);
+    Assert.That(retrieved, Is.Null);
+  }
+
+  #endregion
+
   #region TryGetValue Method
 
   [Test]
