@@ -94,6 +94,7 @@ internal sealed class ExpressionInterpreter {
       LabelExpression label => EvaluateLabel(label, args),
       GotoExpression gotoExpr => EvaluateGoto(gotoExpr, args),
       TryExpression tryExpr => EvaluateTry(tryExpr, args),
+      DynamicExpression dynamic => EvaluateDynamic(dynamic, args),
       _ => throw new NotSupportedException($"Expression type {expr.NodeType} is not supported for interpretation.")
     };
   }
@@ -457,6 +458,38 @@ internal sealed class ExpressionInterpreter {
     }
 
     return result;
+  }
+
+  private object? EvaluateDynamic(DynamicExpression dynamic, object?[] args) {
+    // Evaluate all arguments
+    var evaluatedArgs = new object?[dynamic.Arguments.Count];
+    for (var i = 0; i < dynamic.Arguments.Count; ++i)
+      evaluatedArgs[i] = Evaluate(dynamic.Arguments[i], args);
+
+    // Get or create the CallSite for this dynamic expression
+    var callSiteType = typeof(System.Runtime.CompilerServices.CallSite<>).MakeGenericType(dynamic.DelegateType);
+    var createMethod = callSiteType.GetMethod("Create", new[] { typeof(System.Runtime.CompilerServices.CallSiteBinder) });
+
+    if (createMethod == null)
+      throw new InvalidOperationException("Cannot create CallSite for dynamic expression.");
+
+    var callSite = createMethod.Invoke(null, new object[] { dynamic.Binder });
+
+    // Get the Target field from the CallSite
+    var targetField = callSiteType.GetField("Target");
+    if (targetField == null)
+      throw new InvalidOperationException("CallSite does not have a Target field.");
+
+    var target = targetField.GetValue(callSite) as Delegate;
+    if (target == null)
+      throw new InvalidOperationException("CallSite Target is not a delegate.");
+
+    // Invoke the target with the CallSite as the first argument followed by the evaluated args
+    var invokeArgs = new object?[evaluatedArgs.Length + 1];
+    invokeArgs[0] = callSite;
+    Array.Copy(evaluatedArgs, 0, invokeArgs, 1, evaluatedArgs.Length);
+
+    return target.DynamicInvoke(invokeArgs);
   }
 
   #endregion

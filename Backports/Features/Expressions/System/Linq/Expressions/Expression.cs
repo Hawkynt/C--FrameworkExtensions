@@ -42,26 +42,41 @@ namespace System.Linq.Expressions;
 public abstract class Expression {
 
   /// <summary>
+  /// The node type stored for derived classes that use the constructor-based initialization.
+  /// </summary>
+  private readonly ExpressionType _nodeType;
+
+  /// <summary>
+  /// The type stored for derived classes that use the constructor-based initialization.
+  /// </summary>
+  private readonly Type _type;
+
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Expression"/> class.
+  /// </summary>
+  protected Expression() { }
+
+  /// <summary>
   /// Initializes a new instance of the <see cref="Expression"/> class.
   /// </summary>
   /// <param name="nodeType">The <see cref="ExpressionType"/> of the <see cref="Expression"/>.</param>
   /// <param name="type">The <see cref="Type"/> of the value this expression represents.</param>
   protected Expression(ExpressionType nodeType, Type type) {
-    this.NodeType = nodeType;
-    this.Type = type;
+    this._nodeType = nodeType;
+    this._type = type;
   }
 
   /// <summary>
   /// Gets the node type of this <see cref="Expression"/>.
   /// </summary>
   /// <value>One of the <see cref="ExpressionType"/> values.</value>
-  public ExpressionType NodeType { get; }
+  public virtual ExpressionType NodeType => this._nodeType;
 
   /// <summary>
   /// Gets the static type of the expression that this <see cref="Expression"/> represents.
   /// </summary>
   /// <value>The <see cref="System.Type"/> that represents the static type of the expression.</value>
-  public Type Type { get; }
+  public virtual Type Type => this._type;
 
   /// <summary>
   /// Indicates that the node can be reduced to a simpler node.
@@ -1768,6 +1783,114 @@ public abstract class Expression {
     }
     throw new ArgumentException("The method is not a property accessor.", nameof(propertyAccessor));
   }
+
+  #endregion
+
+  #region Dynamic Expressions
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/>.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arguments">The arguments to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, params Expression[] arguments) =>
+    DynamicExpression.Dynamic(binder, returnType, arguments);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/>.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arguments">The arguments to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, IEnumerable<Expression> arguments) =>
+    DynamicExpression.Dynamic(binder, returnType, arguments);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> with no arguments.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder and return type.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType) =>
+    DynamicExpression.Dynamic(binder, returnType);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> with one argument.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arg0">The first argument to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and argument.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, Expression arg0) =>
+    DynamicExpression.Dynamic(binder, returnType, arg0);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> with two arguments.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arg0">The first argument to the dynamic operation.</param>
+  /// <param name="arg1">The second argument to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1) =>
+    DynamicExpression.Dynamic(binder, returnType, arg0, arg1);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> with three arguments.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arg0">The first argument to the dynamic operation.</param>
+  /// <param name="arg1">The second argument to the dynamic operation.</param>
+  /// <param name="arg2">The third argument to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2) =>
+    DynamicExpression.Dynamic(binder, returnType, arg0, arg1, arg2);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// bound by the provided <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> with four arguments.
+  /// </summary>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="returnType">The return type of the dynamic expression.</param>
+  /// <param name="arg0">The first argument to the dynamic operation.</param>
+  /// <param name="arg1">The second argument to the dynamic operation.</param>
+  /// <param name="arg2">The third argument to the dynamic operation.</param>
+  /// <param name="arg3">The fourth argument to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
+  public static DynamicExpression Dynamic(System.Runtime.CompilerServices.CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2, Expression arg3) =>
+    DynamicExpression.Dynamic(binder, returnType, arg0, arg1, arg2, arg3);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// using the specified delegate type.
+  /// </summary>
+  /// <param name="delegateType">The type of the delegate used by the call site.</param>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="arguments">The arguments to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified delegate type, binder, and arguments.</returns>
+  public static DynamicExpression MakeDynamic(Type delegateType, System.Runtime.CompilerServices.CallSiteBinder binder, IEnumerable<Expression> arguments) =>
+    DynamicExpression.MakeDynamic(delegateType, binder, arguments);
+
+  /// <summary>
+  /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
+  /// using the specified delegate type.
+  /// </summary>
+  /// <param name="delegateType">The type of the delegate used by the call site.</param>
+  /// <param name="binder">The <see cref="System.Runtime.CompilerServices.CallSiteBinder"/> that binds the dynamic operation.</param>
+  /// <param name="arguments">The arguments to the dynamic operation.</param>
+  /// <returns>A <see cref="DynamicExpression"/> that has the specified delegate type, binder, and arguments.</returns>
+  public static DynamicExpression MakeDynamic(Type delegateType, System.Runtime.CompilerServices.CallSiteBinder binder, params Expression[] arguments) =>
+    DynamicExpression.MakeDynamic(delegateType, binder, arguments);
 
   #endregion
 

@@ -17,9 +17,9 @@
 
 #endregion
 
-// LabelTarget was added in .NET 4.0 but is used by expression types that depend on the polyfilled Expression class
-// Only compile for net20 where our full expression polyfill is available
-#if !SUPPORTS_LINQ
+// LabelTarget was added in .NET 4.0 as part of the enhanced expression tree support
+// Polyfill for net20 and net35 where LabelTarget doesn't exist
+#if !SUPPORTS_EXPRESSION_VISITOR
 
 namespace System.Linq.Expressions;
 

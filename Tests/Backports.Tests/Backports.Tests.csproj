@@ -70,6 +70,14 @@
     <!-- Explicit dependencies for test host compatibility -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
+    <!-- Microsoft.CSharp - Required for 'dynamic' keyword support on netstandard -->
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'" />
+
+  </ItemGroup>
+
+  <!-- Microsoft.CSharp - Required for 'dynamic' keyword support on .NET Framework -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
@@ -130,6 +138,10 @@
     <Compile Remove="ExpressionVisitorTests.cs" />
     <Compile Remove="ExpressionFactoryTests.cs" />
     <Compile Remove="LambdaCompileTests.cs" />
+    <Compile Remove="ExpandoObjectTests.cs" />
+    <Compile Remove="DynamicObjectTests.cs" />
+    <Compile Remove="CallSiteTests.cs" />
+    <Compile Remove="DynamicExpressionTests.cs" />
   </ItemGroup>
 
 </Project>

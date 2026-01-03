@@ -367,6 +367,16 @@ public abstract class ExpressionVisitor {
   }
 
   /// <summary>
+  /// Visits the children of the <see cref="DynamicExpression"/>.
+  /// </summary>
+  /// <param name="node">The expression to visit.</param>
+  /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
+  protected internal virtual Expression VisitDynamic(DynamicExpression node) {
+    var arguments = this.VisitArguments(node.Arguments);
+    return node.Update(arguments);
+  }
+
+  /// <summary>
   /// Visits the <see cref="MemberBinding"/>.
   /// </summary>
   /// <param name="node">The member binding to visit.</param>

@@ -267,6 +267,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ConditionalExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.conditionalexpression)
   - [ConstantExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.constantexpression)
   - [DefaultExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.defaultexpression)
+  - [DynamicExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.dynamicexpression)
   - [ElementInit](https://learn.microsoft.com/dotnet/api/system.linq.expressions.elementinit)
   - [Expression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.expression)
   - [Expression&lt;TDelegate&gt;](https://learn.microsoft.com/dotnet/api/system.linq.expressions.expression-1)
@@ -297,6 +298,32 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [TryExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.tryexpression)
   - [TypeBinaryExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.typebinaryexpression)
   - [UnaryExpression](https://learn.microsoft.com/dotnet/api/system.linq.expressions.unaryexpression)
+
+- System.Dynamic
+  - [BinaryOperationBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.binaryoperationbinder)
+  - [BindingRestrictions](https://learn.microsoft.com/dotnet/api/system.dynamic.bindingrestrictions)
+  - [CallInfo](https://learn.microsoft.com/dotnet/api/system.dynamic.callinfo)
+  - [ConvertBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.convertbinder)
+  - [CreateInstanceBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.createinstancebinder)
+  - [DeleteIndexBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.deleteindexbinder)
+  - [DeleteMemberBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.deletememberbinder)
+  - [DynamicMetaObject](https://learn.microsoft.com/dotnet/api/system.dynamic.dynamicmetaobject)
+  - [DynamicMetaObjectBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.dynamicmetaobjectbinder)
+  - [DynamicObject](https://learn.microsoft.com/dotnet/api/system.dynamic.dynamicobject)
+  - [ExpandoObject](https://learn.microsoft.com/dotnet/api/system.dynamic.expandoobject)
+  - [GetIndexBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.getindexbinder)
+  - [GetMemberBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.getmemberbinder)
+  - [IDynamicMetaObjectProvider](https://learn.microsoft.com/dotnet/api/system.dynamic.idynamicmetaobjectprovider)
+  - [InvokeBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.invokebinder)
+  - [InvokeMemberBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.invokememberbinder)
+  - [SetIndexBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.setindexbinder)
+  - [SetMemberBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.setmemberbinder)
+  - [UnaryOperationBinder](https://learn.microsoft.com/dotnet/api/system.dynamic.unaryoperationbinder)
+
+- System.Runtime.CompilerServices (Dynamic Support)
+  - [CallSite](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callsite)
+  - [CallSite&lt;T&gt;](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callsite-1)
+  - [CallSiteBinder](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.callsitebinder)
 
 - System.Diagnostics
   - [UnreachableException](https://learn.microsoft.com/dotnet/api/system.diagnostics.unreachableexception)
@@ -1087,6 +1114,58 @@ public class Program {
     }
 }
 ```
+
+### Dynamic Language Runtime (DLR)
+
+The Dynamic Language Runtime (DLR) provides infrastructure for dynamic languages and the `dynamic` keyword in C#. This polyfill enables DLR functionality for .NET 2.0 and .NET 3.5.
+
+```csharp
+using System;
+using System.Dynamic;
+using System.Collections.Generic;
+
+public class Program {
+    public static void Main() {
+        // ExpandoObject - dynamic property bag
+        dynamic expando = new ExpandoObject();
+        expando.Name = "John";
+        expando.Age = 30;
+        expando.Greet = (Func<string>)(() => $"Hello, I'm {expando.Name}!");
+
+        Console.WriteLine(expando.Name);    // Output: John
+        Console.WriteLine(expando.Age);     // Output: 30
+        Console.WriteLine(expando.Greet()); // Output: Hello, I'm John!
+
+        // Access as dictionary
+        var dict = (IDictionary<string, object>)expando;
+        dict["City"] = "New York";
+        Console.WriteLine(expando.City);    // Output: New York
+
+        // Enumerate properties
+        foreach (var kvp in dict)
+            Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+    }
+}
+
+// Custom DynamicObject implementation
+public class DynamicDictionary : DynamicObject {
+    private readonly Dictionary<string, object> _storage = new();
+
+    public override bool TryGetMember(GetMemberBinder binder, out object result) {
+        return _storage.TryGetValue(binder.Name, out result);
+    }
+
+    public override bool TrySetMember(SetMemberBinder binder, object value) {
+        _storage[binder.Name] = value;
+        return true;
+    }
+
+    public override IEnumerable<string> GetDynamicMemberNames() => _storage.Keys;
+}
+```
+
+> [!NOTE]
+> The DLR polyfill for .NET 2.0/3.5 provides the core dynamic infrastructure including `ExpandoObject`, `DynamicObject`, `CallSite<T>`, and all binder types. On .NET 4.0+, the BCL implementation is used automatically.
 
 ### Span Extensions
 
