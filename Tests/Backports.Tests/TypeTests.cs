@@ -84,4 +84,69 @@ public class TypeTests {
 
   #endregion
 
+  #region Type.GenericTypeArguments
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_ClosedGenericType_ReturnsTypeArguments() {
+    var type = typeof(List<int>);
+    var args = type.GenericTypeArguments;
+    Assert.That(args.Length, Is.EqualTo(1));
+    Assert.That(args[0], Is.EqualTo(typeof(int)));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_ClosedGenericType_MultipleArguments() {
+    var type = typeof(Dictionary<string, int>);
+    var args = type.GenericTypeArguments;
+    Assert.That(args.Length, Is.EqualTo(2));
+    Assert.That(args[0], Is.EqualTo(typeof(string)));
+    Assert.That(args[1], Is.EqualTo(typeof(int)));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_GenericTypeDefinition_ReturnsEmptyArray() {
+    var type = typeof(List<>);
+    var args = type.GenericTypeArguments;
+    Assert.That(args, Is.Empty);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_NonGenericType_ReturnsEmptyArray() {
+    var type = typeof(string);
+    var args = type.GenericTypeArguments;
+    Assert.That(args, Is.Empty);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_NestedGenericType_ReturnsOuterTypeArguments() {
+    var type = typeof(List<Dictionary<string, int>>);
+    var args = type.GenericTypeArguments;
+    Assert.That(args.Length, Is.EqualTo(1));
+    Assert.That(args[0], Is.EqualTo(typeof(Dictionary<string, int>)));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void GenericTypeArguments_ValueType_ReturnsEmptyArray() {
+    var type = typeof(int);
+    var args = type.GenericTypeArguments;
+    Assert.That(args, Is.Empty);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void GenericTypeArguments_NullableValueType_ReturnsUnderlyingType() {
+    var type = typeof(int?);
+    var args = type.GenericTypeArguments;
+    Assert.That(args.Length, Is.EqualTo(1));
+    Assert.That(args[0], Is.EqualTo(typeof(int)));
+  }
+
+  #endregion
+
 }

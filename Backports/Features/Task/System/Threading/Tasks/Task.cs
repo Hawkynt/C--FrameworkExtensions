@@ -259,6 +259,9 @@ public class Task : IDisposable {
     if (this._exception != null)
       throw this._exception;
 
+    if (this.IsCanceled)
+      throw new AggregateException(new TaskCanceledException(this));
+
     return true;
   }
 

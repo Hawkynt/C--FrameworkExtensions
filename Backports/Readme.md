@@ -99,6 +99,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [Int128](https://learn.microsoft.com/dotnet/api/system.int128)
   - [Lazy](https://learn.microsoft.com/dotnet/api/system.lazy-1)&lt;T&gt;
   - [MathF](https://learn.microsoft.com/dotnet/api/system.mathf)
+  - [OperatingSystem](https://learn.microsoft.com/dotnet/api/system.operatingsystem) (platform detection methods)
   - [Range](https://learn.microsoft.com/dotnet/api/system.range)
   - [ReadOnlySpan](https://learn.microsoft.com/dotnet/api/system.readonlyspan-1)&lt;T&gt;
   - [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
@@ -228,7 +229,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Threading
   - [CancellationToken](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken)
   - [CancellationTokenSource](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource)
+  - [Lock](https://learn.microsoft.com/dotnet/api/system.threading.lock)
   - [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
+  - [PeriodicTimer](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer)
   - [SpinLock](https://learn.microsoft.com/dotnet/api/system.threading.spinlock)
   - [SpinWait](https://learn.microsoft.com/dotnet/api/system.threading.spinwait)
   - [ThreadLocal](https://learn.microsoft.com/dotnet/api/system.threading.threadlocal-1)&lt;T&gt;
@@ -599,6 +602,33 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - uint [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-uint32%40-system-uint32%29)(ref uint location1, uint value)
   - ulong [Or](https://learn.microsoft.com/dotnet/api/system.threading.interlocked.or#system-threading-interlocked-or%28system-uint64%40-system-uint64%29)(ref ulong location1, ulong value)
 
+- System.OperatingSystem
+  - bool [IsAndroid](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isandroid)()
+  - bool [IsAndroidVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isandroidversionatleast)(int major, int minor = 0, int build = 0, int revision = 0)
+  - bool [IsBrowser](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isbrowser)()
+  - bool [IsFreeBSD](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isfreebsd)()
+  - bool [IsFreeBSDVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isfreebsdversionatleast)(int major, int minor = 0, int build = 0, int revision = 0)
+  - bool [IsIOS](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isios)()
+  - bool [IsIOSVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isiosversionatleast)(int major, int minor = 0, int build = 0)
+  - bool [IsLinux](https://learn.microsoft.com/dotnet/api/system.operatingsystem.islinux)()
+  - bool [IsMacCatalyst](https://learn.microsoft.com/dotnet/api/system.operatingsystem.ismaccatalyst)()
+  - bool [IsMacCatalystVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.ismaccatalystversionatleast)(int major, int minor = 0, int build = 0)
+  - bool [IsMacOS](https://learn.microsoft.com/dotnet/api/system.operatingsystem.ismacos)()
+  - bool [IsMacOSVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.ismacosversionatleast)(int major, int minor = 0, int build = 0)
+  - bool [IsOSPlatform](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isosplatform)(string platform)
+  - bool [IsOSPlatformVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.isosplatformversionatleast)(string platform, int major, int minor = 0, int build = 0, int revision = 0)
+  - bool [IsTvOS](https://learn.microsoft.com/dotnet/api/system.operatingsystem.istvos)()
+  - bool [IsTvOSVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.istvosversionatleast)(int major, int minor = 0, int build = 0)
+  - bool [IsWasi](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswasi)()
+  - bool [IsWatchOS](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswatchos)()
+  - bool [IsWatchOSVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswatchosversionatleast)(int major, int minor = 0, int build = 0)
+  - bool [IsWindows](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswindows)()
+  - bool [IsWindowsVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswindowsversionatleast)(int major, int minor = 0, int build = 0, int revision = 0)
+
+- System.Threading.Tasks.Task
+  - Task [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled%28system-threading-cancellationtoken%29)(CancellationToken cancellationToken)
+  - Task&lt;TResult&gt; [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled-1%28system-threading-cancellationtoken%29)&lt;TResult&gt;(CancellationToken cancellationToken)
+
 ### Methods
 
 - System.Array
@@ -702,6 +732,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - long [TickCount64](https://learn.microsoft.com/dotnet/api/system.environment.tickcount64)
   - int [ProcessId](https://learn.microsoft.com/dotnet/api/system.environment.processid)
   - string? [ProcessPath](https://learn.microsoft.com/dotnet/api/system.environment.processpath)
+  - int [CurrentManagedThreadId](https://learn.microsoft.com/dotnet/api/system.environment.currentmanagedthreadid)
   - bool [IsPrivilegedProcess](https://learn.microsoft.com/dotnet/api/system.environment.isprivilegedprocess)
 
 - System.GC
@@ -769,6 +800,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - DirectoryInfo [CreateTempSubdirectory](https://learn.microsoft.com/dotnet/api/system.io.directory.createtempsubdirectory)(string? prefix = null)
 
 - System.Type
+  - Type[] [GenericTypeArguments](https://learn.microsoft.com/dotnet/api/system.type.generictypearguments) { get; }
   - bool [IsAssignableTo](https://learn.microsoft.com/dotnet/api/system.type.isassignableto)(this Type @this, Type? targetType)
 
 - System.Text.StringBuilder
@@ -991,6 +1023,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Threading.WaitHandle
   - void [Dispose](https://learn.microsoft.com/dotnet/api/system.threading.waithandle.dispose#system-threading-waithandle-dispose)(this WaitHandle @this)
+
+- System.Threading.PeriodicTimer
+  - TimeSpan [Period](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer.period) (instance property)
 
 ## Installation
 

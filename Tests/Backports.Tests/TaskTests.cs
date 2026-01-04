@@ -484,4 +484,72 @@ public class TaskTests {
 
   #endregion
 
+  #region Task.FromCanceled
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_FromCanceled_ReturnsCompletedTask() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled(cts.Token);
+    Assert.That(task.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_FromCanceled_ReturnsCanceledTask() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled(cts.Token);
+    Assert.That(task.IsCanceled, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_FromCanceled_IsNotFaulted() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled(cts.Token);
+    Assert.That(task.IsFaulted, Is.False);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_FromCanceledT_ReturnsCompletedTask() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled<int>(cts.Token);
+    Assert.That(task.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_FromCanceledT_ReturnsCanceledTask() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled<int>(cts.Token);
+    Assert.That(task.IsCanceled, Is.True);
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_FromCanceledT_ThrowsOnResult() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled<int>(cts.Token);
+    Assert.Throws<AggregateException>(() => _ = task.Result);
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_FromCanceled_ThrowsOnWait() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = Task.FromCanceled(cts.Token);
+    var ex = Assert.Throws<AggregateException>(() => task.Wait());
+    Assert.That(ex.InnerException, Is.TypeOf<TaskCanceledException>());
+  }
+
+  #endregion
+
 }

@@ -19,6 +19,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
@@ -77,6 +78,23 @@ public static partial class EnvironmentPolyfills {
         using var process = Process.GetCurrentProcess();
         return process.MainModule?.FileName;
       }
+    }
+  }
+}
+
+#endif
+
+#if !SUPPORTS_ENVIRONMENT_CURRENT_MANAGED_THREAD_ID
+
+public static partial class EnvironmentPolyfills {
+  extension(Environment) {
+    /// <summary>
+    /// Gets a unique identifier for the current managed thread.
+    /// </summary>
+    /// <value>An integer that represents a unique identifier for the current managed thread.</value>
+    public static int CurrentManagedThreadId {
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      get => Thread.CurrentThread.ManagedThreadId;
     }
   }
 }

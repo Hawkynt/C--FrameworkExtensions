@@ -114,4 +114,45 @@ public class EnvironmentTests {
 
   #endregion
 
+  #region Environment.CurrentManagedThreadId
+
+  [Test]
+  [Category("HappyPath")]
+  public void CurrentManagedThreadId_ReturnsPositiveValue() {
+    var id = Environment.CurrentManagedThreadId;
+    Assert.That(id, Is.GreaterThan(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CurrentManagedThreadId_ReturnsConsistentValueOnSameThread() {
+    var id1 = Environment.CurrentManagedThreadId;
+    var id2 = Environment.CurrentManagedThreadId;
+    Assert.That(id1, Is.EqualTo(id2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CurrentManagedThreadId_MatchesThreadCurrentManagedThreadId() {
+    var expected = Thread.CurrentThread.ManagedThreadId;
+    var actual = Environment.CurrentManagedThreadId;
+    Assert.That(actual, Is.EqualTo(expected));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CurrentManagedThreadId_DifferentOnDifferentThreads() {
+    var mainThreadId = Environment.CurrentManagedThreadId;
+    var otherThreadId = 0;
+
+    var thread = new Thread(() => otherThreadId = Environment.CurrentManagedThreadId);
+    thread.Start();
+    thread.Join();
+
+    Assert.That(otherThreadId, Is.GreaterThan(0));
+    Assert.That(otherThreadId, Is.Not.EqualTo(mainThreadId));
+  }
+
+  #endregion
+
 }
