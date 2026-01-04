@@ -89,6 +89,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [INotifyCompletion](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.inotifycompletion)
   - [ITuple](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.ituple)
 
+- System.Threading
+  - [ITimer](https://learn.microsoft.com/dotnet/api/system.threading.itimer)
+
 ### Types
 
 - System
@@ -104,6 +107,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ReadOnlySpan](https://learn.microsoft.com/dotnet/api/system.readonlyspan-1)&lt;T&gt;
   - [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
   - [TimeOnly](https://learn.microsoft.com/dotnet/api/system.timeonly)
+  - [TimeProvider](https://learn.microsoft.com/dotnet/api/system.timeprovider)
   - [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
   - [UInt128](https://learn.microsoft.com/dotnet/api/system.uint128)
   - [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
@@ -155,7 +159,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ZipFileExtensions](https://learn.microsoft.com/dotnet/api/system.io.compression.zipfileextensions)
 
 - System.Numerics
+  - [BigInteger](https://learn.microsoft.com/dotnet/api/system.numerics.biginteger) (native polyfill for net20/net35)
   - [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
+  - [Complex](https://learn.microsoft.com/dotnet/api/system.numerics.complex) (native polyfill for net20/net35)
   - [Matrix3x2](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2)
   - [Matrix4x4](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4)
   - [Plane](https://learn.microsoft.com/dotnet/api/system.numerics.plane)
@@ -342,6 +348,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [DisallowNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.disallownullattribute)
   - [DoesNotReturn](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnattribute)
   - [DoesNotReturnIf](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.doesnotreturnifattribute)
+  - [DynamicallyAccessedMembers](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.dynamicallyaccessedmembersattribute)
   - [Experimental](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.experimentalattribute)
   - [MaybeNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.maybenullattribute)
   - [MaybeNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.maybenullwhenattribute)
@@ -349,6 +356,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [MemberNotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.membernotnullwhenattribute)
   - [NotNull](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullattribute)
   - [NotNullWhen](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.notnullwhenattribute)
+  - [RequiresDynamicCode](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.requiresdynamiccodeattribute)
+  - [RequiresUnreferencedCode](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.requiresunreferencedcodeattribute)
   - [SetsRequiredMembers](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.setsrequiredmembersattribute)
   - [StringSyntax](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.stringsyntaxattribute)
   - [UnscopedRef](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.unscopedrefattribute)
@@ -371,8 +380,12 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [OverloadResolutionPriority](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.overloadresolutionpriorityattribute)
   - [RefSafetyRules](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.refsafetyrulesattribute)
   - [RequiredMember](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.requiredmemberattribute)
+  - [RequiresLocation](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.requireslocationattribute)
   - [SkipLocalsInit](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.skiplocalsinitattribute)
   - [TupleElementNames](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.tupleelementnamesattribute)
+
+- System.Runtime.InteropServices
+  - [UnmanagedCallersOnly](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.unmanagedcallersonlyattribute)
 
 ### Delegates
 

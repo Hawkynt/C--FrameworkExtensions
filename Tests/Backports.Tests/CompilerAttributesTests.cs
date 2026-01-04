@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace Backports.Tests;
@@ -483,6 +484,292 @@ public class CompilerAttributesTests {
     Assert.That(usageAttribute!.Inherited, Is.False);
     Assert.That(usageAttribute.AllowMultiple, Is.False);
     Assert.That(usageAttribute.ValidOn, Is.EqualTo(AttributeTargets.Constructor));
+  }
+
+  #endregion
+
+  #region DynamicallyAccessedMemberTypes Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMemberTypes_HasCorrectValues() {
+    Assert.That((int)DynamicallyAccessedMemberTypes.None, Is.EqualTo(0));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, Is.EqualTo(1));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicConstructors, Is.EqualTo(3));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicConstructors, Is.EqualTo(4));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicMethods, Is.EqualTo(8));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicMethods, Is.EqualTo(16));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicFields, Is.EqualTo(32));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicFields, Is.EqualTo(64));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicNestedTypes, Is.EqualTo(128));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicNestedTypes, Is.EqualTo(256));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicProperties, Is.EqualTo(512));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicProperties, Is.EqualTo(1024));
+    Assert.That((int)DynamicallyAccessedMemberTypes.PublicEvents, Is.EqualTo(2048));
+    Assert.That((int)DynamicallyAccessedMemberTypes.NonPublicEvents, Is.EqualTo(4096));
+#if !NET5_0 // Interfaces was added in .NET 6.0
+    Assert.That((int)DynamicallyAccessedMemberTypes.Interfaces, Is.EqualTo(8192));
+#endif
+    Assert.That((int)DynamicallyAccessedMemberTypes.All, Is.EqualTo(-1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMemberTypes_IsFlagsEnum() {
+    var flagsAttribute = typeof(DynamicallyAccessedMemberTypes)
+      .GetCustomAttribute<FlagsAttribute>();
+    Assert.That(flagsAttribute, Is.Not.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMemberTypes_PublicConstructorsIncludesPublicParameterlessConstructor() {
+    var publicConstructors = DynamicallyAccessedMemberTypes.PublicConstructors;
+    var publicParameterless = DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+    Assert.That(publicConstructors.HasFlag(publicParameterless), Is.True);
+  }
+
+  #endregion
+
+  #region DynamicallyAccessedMembersAttribute Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMembersAttribute_Constructor_SetsMemberTypes() {
+    var attribute = new DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.PublicMethods);
+    Assert.That(attribute.MemberTypes, Is.EqualTo(DynamicallyAccessedMemberTypes.PublicMethods));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMembersAttribute_Constructor_WithAll_SetsMemberTypes() {
+    var attribute = new DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.All);
+    Assert.That(attribute.MemberTypes, Is.EqualTo(DynamicallyAccessedMemberTypes.All));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMembersAttribute_InheritsFromAttribute() {
+    var attribute = new DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes.None);
+    Assert.That(attribute, Is.InstanceOf<Attribute>());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMembersAttribute_HasCorrectAttributeUsage() {
+    var usageAttribute = typeof(DynamicallyAccessedMembersAttribute)
+      .GetCustomAttribute<AttributeUsageAttribute>();
+    Assert.That(usageAttribute, Is.Not.Null);
+    Assert.That(usageAttribute!.Inherited, Is.False);
+
+#if NET5_0
+    // .NET 5.0 native BCL has different targets than later versions
+    var expectedTargets = AttributeTargets.Field | AttributeTargets.ReturnValue |
+                          AttributeTargets.GenericParameter | AttributeTargets.Parameter |
+                          AttributeTargets.Property | AttributeTargets.Method;
+#else
+    var expectedTargets = AttributeTargets.Field | AttributeTargets.ReturnValue |
+                          AttributeTargets.GenericParameter | AttributeTargets.Parameter |
+                          AttributeTargets.Property | AttributeTargets.Method |
+                          AttributeTargets.Class | AttributeTargets.Interface |
+                          AttributeTargets.Struct;
+#endif
+    Assert.That(usageAttribute.ValidOn, Is.EqualTo(expectedTargets));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DynamicallyAccessedMembersAttribute_Constructor_WithCombinedFlags_SetsMemberTypes() {
+    var combined = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicFields;
+    var attribute = new DynamicallyAccessedMembersAttribute(combined);
+    Assert.That(attribute.MemberTypes, Is.EqualTo(combined));
+  }
+
+  #endregion
+
+  #region RequiresUnreferencedCodeAttribute Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresUnreferencedCodeAttribute_Constructor_SetsMessage() {
+    var attribute = new RequiresUnreferencedCodeAttribute("This method uses reflection");
+    Assert.That(attribute.Message, Is.EqualTo("This method uses reflection"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresUnreferencedCodeAttribute_Url_DefaultsToNull() {
+    var attribute = new RequiresUnreferencedCodeAttribute("Test");
+    Assert.That(attribute.Url, Is.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresUnreferencedCodeAttribute_Url_CanBeSet() {
+    var attribute = new RequiresUnreferencedCodeAttribute("Test") {
+      Url = "https://example.com/trimming-info"
+    };
+    Assert.That(attribute.Url, Is.EqualTo("https://example.com/trimming-info"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresUnreferencedCodeAttribute_InheritsFromAttribute() {
+    var attribute = new RequiresUnreferencedCodeAttribute("Test");
+    Assert.That(attribute, Is.InstanceOf<Attribute>());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresUnreferencedCodeAttribute_HasCorrectAttributeUsage() {
+    var usageAttribute = typeof(RequiresUnreferencedCodeAttribute)
+      .GetCustomAttribute<AttributeUsageAttribute>();
+    Assert.That(usageAttribute, Is.Not.Null);
+    Assert.That(usageAttribute!.Inherited, Is.False);
+
+#if NET5_0
+    // .NET 5.0 native BCL has different targets than later versions
+    var expectedTargets = AttributeTargets.Method | AttributeTargets.Constructor;
+#else
+    var expectedTargets = AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Class;
+#endif
+    Assert.That(usageAttribute.ValidOn, Is.EqualTo(expectedTargets));
+  }
+
+  #endregion
+
+  #region RequiresDynamicCodeAttribute Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresDynamicCodeAttribute_Constructor_SetsMessage() {
+    var attribute = new RequiresDynamicCodeAttribute("This method uses Reflection.Emit");
+    Assert.That(attribute.Message, Is.EqualTo("This method uses Reflection.Emit"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresDynamicCodeAttribute_Url_DefaultsToNull() {
+    var attribute = new RequiresDynamicCodeAttribute("Test");
+    Assert.That(attribute.Url, Is.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresDynamicCodeAttribute_Url_CanBeSet() {
+    var attribute = new RequiresDynamicCodeAttribute("Test") {
+      Url = "https://example.com/aot-info"
+    };
+    Assert.That(attribute.Url, Is.EqualTo("https://example.com/aot-info"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresDynamicCodeAttribute_InheritsFromAttribute() {
+    var attribute = new RequiresDynamicCodeAttribute("Test");
+    Assert.That(attribute, Is.InstanceOf<Attribute>());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresDynamicCodeAttribute_HasCorrectAttributeUsage() {
+    var usageAttribute = typeof(RequiresDynamicCodeAttribute)
+      .GetCustomAttribute<AttributeUsageAttribute>();
+    Assert.That(usageAttribute, Is.Not.Null);
+    Assert.That(usageAttribute!.Inherited, Is.False);
+
+    var expectedTargets = AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Class;
+    Assert.That(usageAttribute.ValidOn, Is.EqualTo(expectedTargets));
+  }
+
+  #endregion
+
+  #region UnmanagedCallersOnlyAttribute Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_Constructor_CreatesInstance() {
+    var attribute = new UnmanagedCallersOnlyAttribute();
+    Assert.That(attribute, Is.Not.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_CallConvs_DefaultsToNull() {
+    var attribute = new UnmanagedCallersOnlyAttribute();
+    Assert.That(attribute.CallConvs, Is.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_EntryPoint_DefaultsToNull() {
+    var attribute = new UnmanagedCallersOnlyAttribute();
+    Assert.That(attribute.EntryPoint, Is.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_CallConvs_CanBeSet() {
+    var attribute = new UnmanagedCallersOnlyAttribute {
+      CallConvs = new[] { typeof(object) }
+    };
+    Assert.That(attribute.CallConvs, Is.Not.Null);
+    Assert.That(attribute.CallConvs!.Length, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_EntryPoint_CanBeSet() {
+    var attribute = new UnmanagedCallersOnlyAttribute {
+      EntryPoint = "MyNativeFunction"
+    };
+    Assert.That(attribute.EntryPoint, Is.EqualTo("MyNativeFunction"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_InheritsFromAttribute() {
+    var attribute = new UnmanagedCallersOnlyAttribute();
+    Assert.That(attribute, Is.InstanceOf<Attribute>());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void UnmanagedCallersOnlyAttribute_HasCorrectAttributeUsage() {
+    var usageAttribute = typeof(UnmanagedCallersOnlyAttribute)
+      .GetCustomAttribute<AttributeUsageAttribute>();
+    Assert.That(usageAttribute, Is.Not.Null);
+    Assert.That(usageAttribute!.Inherited, Is.False);
+    Assert.That(usageAttribute.ValidOn, Is.EqualTo(AttributeTargets.Method));
+  }
+
+  #endregion
+
+  #region RequiresLocationAttribute Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresLocationAttribute_Constructor_CreatesInstance() {
+    var attribute = new RequiresLocationAttribute();
+    Assert.That(attribute, Is.Not.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresLocationAttribute_InheritsFromAttribute() {
+    var attribute = new RequiresLocationAttribute();
+    Assert.That(attribute, Is.InstanceOf<Attribute>());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void RequiresLocationAttribute_HasCorrectAttributeUsage() {
+    var usageAttribute = typeof(RequiresLocationAttribute)
+      .GetCustomAttribute<AttributeUsageAttribute>();
+    Assert.That(usageAttribute, Is.Not.Null);
+    Assert.That(usageAttribute!.Inherited, Is.False);
+    Assert.That(usageAttribute.AllowMultiple, Is.False);
+    Assert.That(usageAttribute.ValidOn, Is.EqualTo(AttributeTargets.Parameter));
   }
 
   #endregion
