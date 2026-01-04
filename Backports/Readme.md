@@ -197,6 +197,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ValueTaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.valuetaskawaiter)
   - [ValueTaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.valuetaskawaiter-1)&lt;TResult&gt;
 
+- System.Reflection
+  - [TypeInfo](https://learn.microsoft.com/dotnet/api/system.reflection.typeinfo)
+
 - System.Runtime.InteropServices
   - [MemoryMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.memorymarshal)
 
@@ -235,9 +238,13 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Threading
   - [CancellationToken](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken)
   - [CancellationTokenSource](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource)
+  - [CountdownEvent](https://learn.microsoft.com/dotnet/api/system.threading.countdownevent)
   - [Lock](https://learn.microsoft.com/dotnet/api/system.threading.lock)
+  - [LockRecursionException](https://learn.microsoft.com/dotnet/api/system.threading.lockrecursionexception)
+  - [LockRecursionPolicy](https://learn.microsoft.com/dotnet/api/system.threading.lockrecursionpolicy)
   - [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
   - [PeriodicTimer](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer)
+  - [ReaderWriterLockSlim](https://learn.microsoft.com/dotnet/api/system.threading.readerwriterlockslim)
   - [SpinLock](https://learn.microsoft.com/dotnet/api/system.threading.spinlock)
   - [SpinWait](https://learn.microsoft.com/dotnet/api/system.threading.spinwait)
   - [ThreadLocal](https://learn.microsoft.com/dotnet/api/system.threading.threadlocal-1)&lt;T&gt;
@@ -256,6 +263,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [TaskFactory](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskfactory)
   - [TaskScheduler](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskscheduler)
   - [TaskStatus](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskstatus)
+  - [UnobservedTaskExceptionEventArgs](https://learn.microsoft.com/dotnet/api/system.threading.tasks.unobservedtaskexceptioneventargs)
   - [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask)
   - [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1)&lt;TResult&gt;
 
@@ -888,6 +896,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - IEnumerable&lt;T&gt; [Sequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.sequence)&lt;T&gt;(T start, T endInclusive, T step)
   - IEnumerable&lt;T&gt; [InfiniteSequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.infinitesequence)&lt;T&gt;(T start, T step)
 
+- System.Delegate
+  - MethodInfo [GetMethodInfo](https://learn.microsoft.com/dotnet/api/system.reflection.runtimereflectionextensions.getmethodinfo)(this Delegate @this)
+
 - System.Random
   - long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64)(this Random @this)
   - long [NextInt64](https://learn.microsoft.com/dotnet/api/system.random.nextint64#system-random-nextint64%28system-int64%29)(this Random @this, long maxValue)
@@ -977,6 +988,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
+
+- System.Type
+  - TypeInfo [GetTypeInfo](https://learn.microsoft.com/dotnet/api/system.reflection.introspectionextensions.gettypeinfo)(this Type @this)
 
 - System.Numerics.Matrix3x2
   - float [GetElement](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2.getelement)(this Matrix3x2 @this, int row, int column)

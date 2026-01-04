@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_TIME_PROVIDER && SUPPORTS_TIMEZONEINFO
+#if !SUPPORTS_TIME_PROVIDER
 
 using System.Diagnostics;
 using System.Threading;

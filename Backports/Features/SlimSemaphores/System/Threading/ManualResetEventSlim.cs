@@ -45,6 +45,9 @@ public class ManualResetEventSlim(bool initialState) : IDisposable {
   public bool Wait(TimeSpan timeout) => this._manualResetEvent.WaitOne(timeout);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool Wait(int millisecondsTimeout) => this._manualResetEvent.WaitOne(millisecondsTimeout);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void Reset() => this._manualResetEvent.Reset();
   
   ~ManualResetEventSlim() => this.Dispose();

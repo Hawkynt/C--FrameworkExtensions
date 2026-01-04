@@ -258,8 +258,8 @@ namespace System.Collections.Generic {
       if (this.Count == 0 || ReferenceEquals(other, this))
         return true;
 
-      var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
-      return uniqueCount == this.Count && unfoundCount >= 0;
+      var (_, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
+      return unfoundCount == 0;
     }
 
     /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a proper subset of the specified collection.</summary>
@@ -276,7 +276,7 @@ namespace System.Collections.Generic {
         return false;
 
       var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
-      return uniqueCount == this.Count && unfoundCount > 0;
+      return unfoundCount == 0 && uniqueCount > 0;
     }
 
     /// <summary>Determines whether a <see cref="HashSet{T}" /> object is a proper superset of the specified collection.</summary>
@@ -309,8 +309,8 @@ namespace System.Collections.Generic {
       if (this.Count == 0 || ReferenceEquals(other, this))
         return false;
 
-      var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, true);
-      return uniqueCount < this.Count && unfoundCount == 0;
+      var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
+      return uniqueCount == 0 && unfoundCount > 0;
     }
 
     /// <summary>
@@ -352,15 +352,15 @@ namespace System.Collections.Generic {
       if (this.Count == 0 && other is ICollection<T> { Count: > 0 })
         return false;
 
-      var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, true);
-      return uniqueCount == this.Count && unfoundCount == 0;
+      var (uniqueCount, unfoundCount) = this.CheckUniqueAndUnfoundElements(other, false);
+      return uniqueCount == 0 && unfoundCount == 0;
     }
 
     private (int UniqueCount, int UnfoundCount) CheckUniqueAndUnfoundElements(IEnumerable<T> other, bool returnIfUnfound) {
       if (other == null)
         AlwaysThrow.ArgumentNullException(nameof(other));
 
-      var foundInOther = new HashSet<T>();
+      var foundInOther = new HashSet<T>(this.Comparer);
       var uniqueCount = 0;
       var unfoundCount = 0;
 
@@ -418,19 +418,25 @@ namespace System.Collections.Generic {
       if (match == null)
         AlwaysThrow.ArgumentNullException(nameof(match));
 
-      var result = 0;
+      // Collect keys to remove first to avoid modifying during enumeration
+      var keysToRemove = new List<Wrapper>();
       foreach (var kvp in this._hashtable)
-        if (match(kvp.Value)) {
-          this._hashtable.Remove(kvp.Key);
-          ++result;
-        }
+        if (match(kvp.Value))
+          keysToRemove.Add(kvp.Key);
 
-      return result;
+      foreach (var key in keysToRemove)
+        this._hashtable.Remove(key);
+
+      return keysToRemove.Count;
     }
 
     /// <summary>Ensures that this hash set can hold the specified number of elements without growing.</summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int EnsureCapacity(int capacity) => capacity;
+    public int EnsureCapacity(int capacity) {
+      if (capacity < 0)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(capacity));
+
+      return capacity;
+    }
 
     /// <summary>
     ///   Sets the capacity of a <see cref="HashSet{T}" /> object to the actual number of elements it contains,

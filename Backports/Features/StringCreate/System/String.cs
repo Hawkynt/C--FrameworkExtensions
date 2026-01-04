@@ -20,6 +20,7 @@
 #if !SUPPORTS_STRING_CREATE
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -46,9 +47,14 @@ public static partial class StringPolyfills {
       return string.Empty;
 
     var result = new string('\0', length);
-    unsafe {
-      fixed (char* ptr = result)
+    var handle = GCHandle.Alloc(result, GCHandleType.Pinned);
+    try {
+      unsafe {
+        var ptr = (char*)handle.AddrOfPinnedObject();
         action(new Span<char>(ptr, length), state);
+      }
+    } finally {
+      handle.Free();
     }
 
     return result;

@@ -30,12 +30,21 @@ public static partial class MethodInfoPolyfills {
   extension(MethodInfo @this)
   {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Delegate CreateDelegate(Type result) {
+    public Delegate CreateDelegate(Type delegateType) {
       Against.ThisIsNull(@this);
-      if (result == null)
-        AlwaysThrow.ArgumentNullException(nameof(result));
+      if (delegateType == null)
+        AlwaysThrow.ArgumentNullException(nameof(delegateType));
 
-      return Delegate.CreateDelegate(result, @this);
+      return Delegate.CreateDelegate(delegateType, @this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Delegate CreateDelegate(Type delegateType, object? target) {
+      Against.ThisIsNull(@this);
+      if (delegateType == null)
+        AlwaysThrow.ArgumentNullException(nameof(delegateType));
+
+      return Delegate.CreateDelegate(delegateType, target, @this);
     }
   }
 }

@@ -29,6 +29,86 @@ namespace System.Linq;
 
 // ReSharper disable PartialTypeWithSinglePart
 // ReSharper disable UnusedMember.Global
+
+/// <summary>
+/// Provides static methods for querying objects that implement IEnumerable.
+/// This class is required for reflection-based LINQ method access (e.g., typeof(Enumerable).GetMethod("Cast")).
+/// </summary>
+public static partial class Enumerable {
+
+  /// <summary>
+  /// Casts the elements of an IEnumerable to the specified type.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static IEnumerable<TResult> Cast<TResult>(IEnumerable source) {
+    ArgumentNullException.ThrowIfNull(source);
+
+    return Invoke(source);
+
+    static IEnumerable<TResult> Invoke(IEnumerable items) {
+      foreach (var item in items)
+        yield return (TResult)item;
+    }
+  }
+
+  /// <summary>
+  /// Filters the elements of an IEnumerable based on a specified type.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static IEnumerable<TResult> OfType<TResult>(IEnumerable source) {
+    ArgumentNullException.ThrowIfNull(source);
+
+    return Invoke(source);
+
+    static IEnumerable<TResult> Invoke(IEnumerable items) {
+      foreach (var item in items)
+        if (item is TResult result)
+          yield return result;
+    }
+  }
+
+  /// <summary>
+  /// Generates a sequence of integral numbers within a specified range.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static IEnumerable<int> Range(int start, int count) {
+    if (count < 0)
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
+    if ((long)start + count - 1 > int.MaxValue)
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
+
+    return Invoke(start, count);
+
+    static IEnumerable<int> Invoke(int start, int count) {
+      for (var i = 0; i < count; ++i)
+        yield return start + i;
+    }
+  }
+
+  /// <summary>
+  /// Generates a sequence that contains one repeated value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static IEnumerable<TResult> Repeat<TResult>(TResult element, int count) {
+    if (count < 0)
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(count));
+
+    return Invoke(element, count);
+
+    static IEnumerable<TResult> Invoke(TResult element, int count) {
+      for (var i = 0; i < count; ++i)
+        yield return element;
+    }
+  }
+
+  /// <summary>
+  /// Returns an empty IEnumerable that has the specified type argument.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static IEnumerable<TResult> Empty<TResult>() => [];
+
+}
+
 public static partial class EnumerablePolyfills {
 
   extension(IEnumerable @this) {
@@ -42,6 +122,198 @@ public static partial class EnumerablePolyfills {
         foreach (var item in source)
           yield return (TResult)item;
       }
+    }
+  }
+
+  extension(IEnumerable<int> @this) {
+    public int Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      var result = 0;
+      foreach (var item in @this)
+        result += item;
+      return result;
+    }
+  }
+
+  extension(IEnumerable<int?> @this) {
+    public int? Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      int? result = 0;
+      foreach (var item in @this)
+        result += item.GetValueOrDefault();
+      return result;
+    }
+  }
+
+  extension(IEnumerable<long> @this) {
+    public long Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      var result = 0L;
+      foreach (var item in @this)
+        result += item;
+      return result;
+    }
+  }
+
+  extension(IEnumerable<long?> @this) {
+    public long? Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      long? result = 0L;
+      foreach (var item in @this)
+        result += item.GetValueOrDefault();
+      return result;
+    }
+  }
+
+  extension(IEnumerable<float> @this) {
+    public float Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      var result = 0f;
+      foreach (var item in @this)
+        result += item;
+      return result;
+    }
+  }
+
+  extension(IEnumerable<float?> @this) {
+    public float? Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      float? result = 0f;
+      foreach (var item in @this)
+        result += item.GetValueOrDefault();
+      return result;
+    }
+  }
+
+  extension(IEnumerable<double> @this) {
+    public double Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      var result = 0d;
+      foreach (var item in @this)
+        result += item;
+      return result;
+    }
+  }
+
+  extension(IEnumerable<double?> @this) {
+    public double? Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      double? result = 0d;
+      foreach (var item in @this)
+        result += item.GetValueOrDefault();
+      return result;
+    }
+  }
+
+  extension(IEnumerable<decimal> @this) {
+    public decimal Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      var result = 0m;
+      foreach (var item in @this)
+        result += item;
+      return result;
+    }
+  }
+
+  extension(IEnumerable<decimal?> @this) {
+    public decimal? Sum() {
+      ArgumentNullException.ThrowIfNull(@this);
+      decimal? result = 0m;
+      foreach (var item in @this)
+        result += item.GetValueOrDefault();
+      return result;
+    }
+  }
+
+  extension<TSource>(IEnumerable<TSource> @this) {
+    public int Sum(Func<TSource, int> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      var result = 0;
+      foreach (var item in @this)
+        result += selector(item);
+      return result;
+    }
+
+    public int? Sum(Func<TSource, int?> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      int? result = 0;
+      foreach (var item in @this)
+        result += selector(item).GetValueOrDefault();
+      return result;
+    }
+
+    public long Sum(Func<TSource, long> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      var result = 0L;
+      foreach (var item in @this)
+        result += selector(item);
+      return result;
+    }
+
+    public long? Sum(Func<TSource, long?> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      long? result = 0L;
+      foreach (var item in @this)
+        result += selector(item).GetValueOrDefault();
+      return result;
+    }
+
+    public float Sum(Func<TSource, float> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      var result = 0f;
+      foreach (var item in @this)
+        result += selector(item);
+      return result;
+    }
+
+    public float? Sum(Func<TSource, float?> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      float? result = 0f;
+      foreach (var item in @this)
+        result += selector(item).GetValueOrDefault();
+      return result;
+    }
+
+    public double Sum(Func<TSource, double> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      var result = 0d;
+      foreach (var item in @this)
+        result += selector(item);
+      return result;
+    }
+
+    public double? Sum(Func<TSource, double?> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      double? result = 0d;
+      foreach (var item in @this)
+        result += selector(item).GetValueOrDefault();
+      return result;
+    }
+
+    public decimal Sum(Func<TSource, decimal> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      var result = 0m;
+      foreach (var item in @this)
+        result += selector(item);
+      return result;
+    }
+
+    public decimal? Sum(Func<TSource, decimal?> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+      decimal? result = 0m;
+      foreach (var item in @this)
+        result += selector(item).GetValueOrDefault();
+      return result;
     }
   }
 
@@ -474,6 +746,464 @@ public static partial class EnumerablePolyfills {
 
       return result;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TResult> SelectMany<TResult>(Func<TSource, IEnumerable<TResult>> selector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(selector);
+
+      return Invoke(@this, selector);
+
+      static IEnumerable<TResult> Invoke(IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector) {
+        foreach (var item in source)
+          foreach (var subItem in selector(item))
+            yield return subItem;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TResult> SelectMany<TCollection, TResult>(Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(collectionSelector);
+      ArgumentNullException.ThrowIfNull(resultSelector);
+
+      return Invoke(@this, collectionSelector, resultSelector);
+
+      static IEnumerable<TResult> Invoke(IEnumerable<TSource> source, Func<TSource, IEnumerable<TCollection>> collectionSelector, Func<TSource, TCollection, TResult> resultSelector) {
+        foreach (var item in source)
+          foreach (var subItem in collectionSelector(item))
+            yield return resultSelector(item, subItem);
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Reverse() {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source) {
+        var list = source.ToList();
+        for (var i = list.Count - 1; i >= 0; --i)
+          yield return list[i];
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Distinct()
+      => @this.Distinct(EqualityComparer<TSource>.Default);
+
+    public IEnumerable<TSource> Distinct(IEqualityComparer<TSource> comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, comparer ?? EqualityComparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, IEqualityComparer<TSource> comparer) {
+        var seen = new Dictionary<Wrapper<TSource>, bool>(new WrapperComparer<TSource>());
+        foreach (var item in source) {
+          var wrapper = new Wrapper<TSource>(item, comparer);
+          if (seen.ContainsKey(wrapper))
+            continue;
+
+          seen[wrapper] = true;
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Except(IEnumerable<TSource> second)
+      => @this.Except(second, EqualityComparer<TSource>.Default);
+
+    public IEnumerable<TSource> Except(IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(second);
+
+      return Invoke(@this, second, comparer ?? EqualityComparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) {
+        var set = new Dictionary<Wrapper<TSource>, bool>(new WrapperComparer<TSource>());
+        foreach (var item in second)
+          set[new Wrapper<TSource>(item, comparer)] = true;
+
+        foreach (var item in first) {
+          var wrapper = new Wrapper<TSource>(item, comparer);
+          if (!set.ContainsKey(wrapper))
+            yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Intersect(IEnumerable<TSource> second)
+      => @this.Intersect(second, EqualityComparer<TSource>.Default);
+
+    public IEnumerable<TSource> Intersect(IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(second);
+
+      return Invoke(@this, second, comparer ?? EqualityComparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) {
+        var set = new Dictionary<Wrapper<TSource>, bool>(new WrapperComparer<TSource>());
+        foreach (var item in second)
+          set[new Wrapper<TSource>(item, comparer)] = true;
+
+        var returned = new Dictionary<Wrapper<TSource>, bool>(new WrapperComparer<TSource>());
+        foreach (var item in first) {
+          var wrapper = new Wrapper<TSource>(item, comparer);
+          if (set.ContainsKey(wrapper) && !returned.ContainsKey(wrapper)) {
+            returned[wrapper] = true;
+            yield return item;
+          }
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Union(IEnumerable<TSource> second)
+      => @this.Union(second, EqualityComparer<TSource>.Default);
+
+    public IEnumerable<TSource> Union(IEnumerable<TSource> second, IEqualityComparer<TSource>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(second);
+
+      return Invoke(@this, second, comparer ?? EqualityComparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second, IEqualityComparer<TSource> comparer) {
+        var set = new Dictionary<Wrapper<TSource>, bool>(new WrapperComparer<TSource>());
+        foreach (var item in first) {
+          var wrapper = new Wrapper<TSource>(item, comparer);
+          if (!set.ContainsKey(wrapper)) {
+            set[wrapper] = true;
+            yield return item;
+          }
+        }
+        foreach (var item in second) {
+          var wrapper = new Wrapper<TSource>(item, comparer);
+          if (!set.ContainsKey(wrapper)) {
+            set[wrapper] = true;
+            yield return item;
+          }
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Contains(TSource value)
+      => @this.Contains(value, EqualityComparer<TSource>.Default);
+
+    public bool Contains(TSource value, IEqualityComparer<TSource> comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      comparer ??= EqualityComparer<TSource>.Default;
+      foreach (var item in @this)
+        if (comparer.Equals(item, value))
+          return true;
+
+      return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Skip(int count) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, count);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, int count) {
+        var skipped = 0;
+        foreach (var item in source) {
+          if (skipped < count) {
+            ++skipped;
+            continue;
+          }
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Take(int count) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, count);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, int count) {
+        var taken = 0;
+        foreach (var item in source) {
+          if (taken >= count)
+            yield break;
+          ++taken;
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Concat(IEnumerable<TSource> second) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(second);
+
+      return Invoke(@this, second);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> first, IEnumerable<TSource> second) {
+        foreach (var item in first)
+          yield return item;
+        foreach (var item in second)
+          yield return item;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> DefaultIfEmpty()
+      => @this.DefaultIfEmpty(default!);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> DefaultIfEmpty(TSource defaultValue) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, defaultValue);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, TSource defaultValue) {
+        var hasElements = false;
+        foreach (var item in source) {
+          hasElements = true;
+          yield return item;
+        }
+        if (!hasElements)
+          yield return defaultValue;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TSource ElementAt(int index) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      var currentIndex = 0;
+      foreach (var item in @this) {
+        if (currentIndex == index)
+          return item;
+        ++currentIndex;
+      }
+
+      AlwaysThrow.ArgumentOutOfRangeException(nameof(index));
+      return default!;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TSource? ElementAtOrDefault(int index) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      var currentIndex = 0;
+      foreach (var item in @this) {
+        if (currentIndex == index)
+          return item;
+        ++currentIndex;
+      }
+
+      return default;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource[]> Chunk(int size) {
+      ArgumentNullException.ThrowIfNull(@this);
+      if (size < 1)
+        AlwaysThrow.ArgumentOutOfRangeException(nameof(size));
+
+      return Invoke(@this, size);
+
+      static IEnumerable<TSource[]> Invoke(IEnumerable<TSource> source, int size) {
+        var chunk = new List<TSource>(size);
+        foreach (var item in source) {
+          chunk.Add(item);
+          if (chunk.Count == size) {
+            yield return chunk.ToArray();
+            chunk.Clear();
+          }
+        }
+        if (chunk.Count > 0)
+          yield return chunk.ToArray();
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> DistinctBy<TKey>(Func<TSource, TKey> keySelector)
+      => @this.DistinctBy(keySelector, EqualityComparer<TKey>.Default);
+
+    public IEnumerable<TSource> DistinctBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
+
+      return Invoke(@this, keySelector, comparer ?? EqualityComparer<TKey>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+        var seen = new Dictionary<Wrapper<TKey>, bool>(new WrapperComparer<TKey>());
+        foreach (var item in source) {
+          var key = keySelector(item);
+          var wrapper = new Wrapper<TKey>(key, comparer);
+          if (seen.ContainsKey(wrapper))
+            continue;
+
+          seen[wrapper] = true;
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Order()
+      => @this.Order(Comparer<TSource>.Default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> Order(IComparer<TSource>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, comparer ?? Comparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, IComparer<TSource> comparer) {
+        var list = source.ToList();
+        list.Sort(comparer);
+        return list;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> OrderDescending()
+      => @this.OrderDescending(Comparer<TSource>.Default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> OrderDescending(IComparer<TSource>? comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+
+      return Invoke(@this, comparer ?? Comparer<TSource>.Default);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, IComparer<TSource> comparer) {
+        var list = source.ToList();
+        list.Sort((x, y) => comparer.Compare(y, x));
+        return list;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<IGrouping<TKey, TSource>> GroupBy<TKey>(Func<TSource, TKey> keySelector)
+      => _GroupByCore(@this, keySelector, EqualityComparer<TKey>.Default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<IGrouping<TKey, TSource>> GroupBy<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer)
+      => _GroupByCore(@this, keySelector, comparer ?? EqualityComparer<TKey>.Default);
+  }
+
+  private static IEnumerable<IGrouping<TKey, TSource>> _GroupByCore<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(keySelector);
+
+    var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>(new WrapperComparer<TKey>());
+    var orderedGroups = new List<Grouping<TKey, TSource>>();
+    foreach (var element in source) {
+      var key = keySelector(element);
+      var wrapper = new Wrapper<TKey>(key, comparer);
+      if (!groups.TryGetValue(wrapper, out var group)) {
+        group = new Grouping<TKey, TSource>(key);
+        groups[wrapper] = group;
+        orderedGroups.Add(group);
+      }
+      group.Add(element);
+    }
+
+    foreach (var group in orderedGroups)
+      yield return group;
+  }
+
+  private sealed class WrapperComparer<T> : IEqualityComparer<Wrapper<T>> {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(Wrapper<T> x, Wrapper<T> y) => x.Equals(y);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetHashCode(Wrapper<T> obj) => obj.GetHashCode();
+  }
+
+  extension<TSource>(IEnumerable<TSource> @this) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector) where TKey : notnull
+      => @this.ToDictionary(keySelector, EqualityComparer<TKey>.Default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Dictionary<TKey, TSource> ToDictionary<TKey>(Func<TSource, TKey> keySelector, IEqualityComparer<TKey>? comparer) where TKey : notnull
+      => @this.ToDictionary(keySelector, x => x, comparer);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector) where TKey : notnull
+      => @this.ToDictionary(keySelector, elementSelector, EqualityComparer<TKey>.Default);
+
+    public Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<TSource, TKey> keySelector, Func<TSource, TElement> elementSelector, IEqualityComparer<TKey>? comparer) where TKey : notnull {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
+      ArgumentNullException.ThrowIfNull(elementSelector);
+
+      var result = new Dictionary<TKey, TElement>(comparer ?? EqualityComparer<TKey>.Default);
+      foreach (var item in @this)
+        result.Add(keySelector(item), elementSelector(item));
+
+      return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> SkipWhile(Func<TSource, bool> predicate) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(predicate);
+
+      return Invoke(@this, predicate);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, bool> predicate) {
+        var skipping = true;
+        foreach (var item in source) {
+          if (skipping && predicate(item))
+            continue;
+          skipping = false;
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> TakeWhile(Func<TSource, bool> predicate) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(predicate);
+
+      return Invoke(@this, predicate);
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, bool> predicate) {
+        foreach (var item in source) {
+          if (!predicate(item))
+            yield break;
+          yield return item;
+        }
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector)
+      => @this.OrderByDescending(keySelector, Comparer<TKey>.Default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<TSource> OrderByDescending<TKey>(Func<TSource, TKey> keySelector, IComparer<TKey> comparer) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentNullException.ThrowIfNull(keySelector);
+      ArgumentNullException.ThrowIfNull(comparer);
+
+      return Invoke(@this, keySelector, Compare);
+
+      int Compare((int, TKey, TSource) x, (int, TKey, TSource) y) {
+        var result = comparer.Compare(y.Item2, x.Item2);
+        return result != 0 ? result : x.Item1.CompareTo(y.Item1);
+      }
+
+      static IEnumerable<TSource> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Comparison<(int, TKey, TSource)> compare) {
+        var sortedList = new List<(int, TKey, TSource)>(source.Select((v, i) => (i, keySelector(v), v)));
+        sortedList.Sort(compare);
+        return sortedList.Select(i => i.Item3);
+      }
+    }
   }
 
   private readonly struct Wrapper<T>(T value, IEqualityComparer<T> comparer) {
@@ -553,27 +1283,6 @@ public static partial class EnumerablePolyfills {
     IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
     #endregion
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static IEnumerable<IGrouping<TKey, TSource>> GroupBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
-    ArgumentNullException.ThrowIfNull(source);
-    ArgumentNullException.ThrowIfNull(keySelector);
-
-    return Invoke(source, keySelector, EqualityComparer<TKey>.Default);
-
-    static IEnumerable<IGrouping<TKey, TSource>> Invoke(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, EqualityComparer<TKey> comparer) {
-      var groups = new Dictionary<Wrapper<TKey>, Grouping<TKey, TSource>>();
-      foreach (var element in source) {
-        var key = keySelector(element);
-        var wrapper = new Wrapper<TKey>(key, comparer);
-        if (!groups.ContainsKey(wrapper))
-          groups[wrapper] = new(key);
-        groups[wrapper].Add(element);
-      }
-
-      return groups.Values.Cast<IGrouping<TKey, TSource>>();
-    }
   }
 
   [DoesNotReturn]

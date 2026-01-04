@@ -28,6 +28,19 @@ namespace System.Threading.Tasks;
 /// </summary>
 public abstract class TaskScheduler {
   /// <summary>
+  /// Occurs when a faulted task's unobserved exception is about to trigger exception escalation policy.
+  /// </summary>
+  public static event EventHandler<UnobservedTaskExceptionEventArgs>? UnobservedTaskException;
+
+  /// <summary>
+  /// Raises the <see cref="UnobservedTaskException"/> event.
+  /// </summary>
+  /// <param name="sender">The source of the event.</param>
+  /// <param name="e">The event data.</param>
+  internal static void PublishUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    => UnobservedTaskException?.Invoke(sender, e);
+
+  /// <summary>
   /// Gets the default <see cref="TaskScheduler"/> instance that is provided by the .NET Framework.
   /// </summary>
   public static TaskScheduler Default { get; } = new ThreadPoolTaskScheduler();
