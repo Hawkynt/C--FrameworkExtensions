@@ -171,6 +171,19 @@ public readonly struct DateOnly : IComparable, IComparable<DateOnly>, IEquatable
   public static bool operator >=(DateOnly left, DateOnly right) => left._dayNumber >= right._dayNumber;
 
   /// <summary>
+  /// Deconstructs this DateOnly instance into its year, month, and day components.
+  /// </summary>
+  /// <param name="year">The year component of the date.</param>
+  /// <param name="month">The month component of the date.</param>
+  /// <param name="day">The day component of the date.</param>
+  public void Deconstruct(out int year, out int month, out int day) {
+    var dt = this._GetDateTime();
+    year = dt.Year;
+    month = dt.Month;
+    day = dt.Day;
+  }
+
+  /// <summary>
   /// Converts a string to a DateOnly.
   /// </summary>
   public static DateOnly Parse(string s) => FromDateTime(DateTime.Parse(s));

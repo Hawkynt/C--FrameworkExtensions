@@ -1,11 +1,11 @@
-﻿// This file is part of Hawkynt's .NET Framework extensions.
+// This file is part of Hawkynt's .NET Framework extensions.
 //
-// Hawkynt's .NET Framework extensions are free software: 
-// you can redistribute and/or modify it under the terms 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
 // given in the LICENSE file.
 //
-// Hawkynt's .NET Framework extensions is distributed in the hope that 
-// it will be useful, but WITHOUT ANY WARRANTY without even the implied 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the LICENSE file for more details.
 //
@@ -26,17 +26,17 @@ internal static class MethodImplOptions {
   public const MIO Synchronized = MIO.Synchronized;
   public const MIO NoInlining = MIO.NoInlining;
   public const MIO NoOptimization = MIO.NoOptimization;
-  
+
 #if SUPPORTS_INLINING
   public const MIO AggressiveInlining = MIO.AggressiveInlining;
 #else
   public const MIO AggressiveInlining = (MIO)256;
 #endif
-  
+
 #if SUPPORTS_OPTIMIZATION
   public const MIO AggressiveOptimization = MIO.AggressiveOptimization;
 #else
   public const MIO AggressiveOptimization = (MIO)512;
 #endif
-  
+
 }

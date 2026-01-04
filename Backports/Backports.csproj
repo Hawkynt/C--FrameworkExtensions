@@ -38,7 +38,6 @@
   <ItemGroup>
     <Compile Include="..\Corlib.Extensions\Guard\Against.cs" Link="Guard\Against.cs" />
     <Compile Include="..\Corlib.Extensions\Guard\AlwaysThrow.cs" Link="Guard\AlwaysThrow.cs" />
-    <Compile Include="..\Corlib.Extensions\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -135,6 +134,14 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR ($(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.1')))) &gt;= 0)">
     <DefineConstants>$(DefineConstants);OFFICIAL_HASHCODE</DefineConstants>
   </PropertyGroup>
+
+  <!-- System.Runtime.InteropServices.RuntimeInformation - Provides RuntimeInformation for OS detection -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_RUNTIME_INFORMATION</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+  </ItemGroup>
 
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">

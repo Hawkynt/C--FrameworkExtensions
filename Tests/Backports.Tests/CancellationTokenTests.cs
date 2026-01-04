@@ -76,4 +76,53 @@ public class CancellationTokenTests {
 
   #endregion
 
+  #region CancellationTokenSource.CancelAsync
+
+  [Test]
+  [Category("HappyPath")]
+  public void CancelAsync_NotCanceled_CancelsToken() {
+    using var cts = new CancellationTokenSource();
+    var task = cts.CancelAsync();
+    task.Wait();
+    Assert.That(cts.IsCancellationRequested, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CancelAsync_ReturnsCompletedTask() {
+    using var cts = new CancellationTokenSource();
+    var task = cts.CancelAsync();
+    Assert.That(task.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CancelAsync_TokenIsCancellationRequested_IsTrue() {
+    using var cts = new CancellationTokenSource();
+    var token = cts.Token;
+    cts.CancelAsync().Wait();
+    Assert.That(token.IsCancellationRequested, Is.True);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CancelAsync_AlreadyCanceled_Succeeds() {
+    using var cts = new CancellationTokenSource();
+    cts.Cancel();
+    var task = cts.CancelAsync();
+    Assert.That(task.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CancelAsync_CallbackIsInvoked() {
+    using var cts = new CancellationTokenSource();
+    var callbackInvoked = false;
+    cts.Token.Register(() => callbackInvoked = true);
+    cts.CancelAsync().Wait();
+    Assert.That(callbackInvoked, Is.True);
+  }
+
+  #endregion
+
 }

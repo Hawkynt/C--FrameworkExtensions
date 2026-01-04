@@ -205,4 +205,90 @@ public class GuidPolyfillTests {
 
   #endregion
 
+  #region Guid.CreateVersion7
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_ReturnsNonEmptyGuid() {
+    var guid = Guid.CreateVersion7();
+    Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_HasCorrectVersion() {
+    var guid = Guid.CreateVersion7();
+    var bytes = guid.ToByteArray();
+    var versionByte = bytes[7];
+    var version = (versionByte & 0xF0) >> 4;
+    Assert.That(version, Is.EqualTo(7));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_HasCorrectVariant() {
+    var guid = Guid.CreateVersion7();
+    var bytes = guid.ToByteArray();
+    var variantByte = bytes[8];
+    var variant = (variantByte & 0xC0) >> 6;
+    Assert.That(variant, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_MultipleCallsReturnDifferentGuids() {
+    var guid1 = Guid.CreateVersion7();
+    var guid2 = Guid.CreateVersion7();
+    var guid3 = Guid.CreateVersion7();
+    Assert.That(guid1, Is.Not.EqualTo(guid2));
+    Assert.That(guid2, Is.Not.EqualTo(guid3));
+    Assert.That(guid1, Is.Not.EqualTo(guid3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_WithTimestamp_UsesProvidedTimestamp() {
+    var timestamp = new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero);
+    var guid1 = Guid.CreateVersion7(timestamp);
+    var guid2 = Guid.CreateVersion7(timestamp);
+    Assert.That(guid1, Is.Not.EqualTo(guid2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_WithTimestamp_HasCorrectVersion() {
+    var timestamp = new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.Zero);
+    var guid = Guid.CreateVersion7(timestamp);
+    var bytes = guid.ToByteArray();
+    var versionByte = bytes[7];
+    var version = (versionByte & 0xF0) >> 4;
+    Assert.That(version, Is.EqualTo(7));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CreateVersion7_EpochTimestamp_Works() {
+    var timestamp = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    var guid = Guid.CreateVersion7(timestamp);
+    Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CreateVersion7_FutureTimestamp_Works() {
+    var timestamp = new DateTimeOffset(2099, 12, 31, 23, 59, 59, TimeSpan.Zero);
+    var guid = Guid.CreateVersion7(timestamp);
+    Assert.That(guid, Is.Not.EqualTo(Guid.Empty));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CreateVersion7_GuidsAreRoughlyOrdered() {
+    var earlier = Guid.CreateVersion7(new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
+    var later = Guid.CreateVersion7(new DateTimeOffset(2024, 12, 31, 23, 59, 59, TimeSpan.Zero));
+    Assert.That(earlier.ToString().CompareTo(later.ToString()), Is.LessThan(0));
+  }
+
+  #endregion
+
 }

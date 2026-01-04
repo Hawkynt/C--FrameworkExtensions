@@ -43,6 +43,7 @@
 
   <ItemGroup>
     <Compile Include="..\Backports\Utilities\Runtime.cs" Link="Utilities\Runtime.cs" />
+    <Compile Include="..\Backports\Utilities\MethodImplOptions.cs" Link="Utilities\MethodImplOptions.cs" />
   </ItemGroup>
 
   <ItemGroup>
