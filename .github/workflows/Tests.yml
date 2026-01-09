@@ -26,16 +26,10 @@ jobs:
         with:
           dotnet-version: |
             9.x
+            8.x
+            6.x
+            5.x
             3.1
-#            1.0
-#            1.1
-#            2.0
-#            2.1
-#            2.2
-#            3.0
-#            5.x
-#            6.x
-#            7.x
 
       - name: Test
         run: dotnet test "${{ matrix.csproj-file }}" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620

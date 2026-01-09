@@ -198,6 +198,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ValueTaskAwaiter](https://learn.microsoft.com/dotnet/api/system.runtime.compilerservices.valuetaskawaiter-1)&lt;TResult&gt;
 
 - System.Reflection
+  - [NullabilityInfo](https://learn.microsoft.com/dotnet/api/system.reflection.nullabilityinfo)
+  - [NullabilityInfoContext](https://learn.microsoft.com/dotnet/api/system.reflection.nullabilityinfocontext)
+  - [NullabilityState](https://learn.microsoft.com/dotnet/api/system.reflection.nullabilitystate)
   - [TypeInfo](https://learn.microsoft.com/dotnet/api/system.reflection.typeinfo)
 
 - System.Runtime.InteropServices
@@ -515,6 +518,42 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Random
   - Random [Shared](https://learn.microsoft.com/dotnet/api/system.random.shared) (static property)
 
+- System.Security.Cryptography.RandomNumberGenerator
+  - int [GetInt32](https://learn.microsoft.com/dotnet/api/system.security.cryptography.randomnumbergenerator.getint32#system-security-cryptography-randomnumbergenerator-getint32%28system-int32%29)(int toExclusive)
+  - int [GetInt32](https://learn.microsoft.com/dotnet/api/system.security.cryptography.randomnumbergenerator.getint32#system-security-cryptography-randomnumbergenerator-getint32%28system-int32-system-int32%29)(int fromInclusive, int toExclusive)
+  - void [GetBytes](https://learn.microsoft.com/dotnet/api/system.security.cryptography.randomnumbergenerator.getbytes#system-security-cryptography-randomnumbergenerator-getbytes%28system-byte%5B%5D%29)(byte[] data)
+  - void [GetBytes](https://learn.microsoft.com/dotnet/api/system.security.cryptography.randomnumbergenerator.getbytes#system-security-cryptography-randomnumbergenerator-getbytes%28system-byte%5B%5D-system-int32-system-int32%29)(byte[] data, int offset, int count)
+
+- System.Security.Cryptography.SHA256
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha256.hashdata#system-security-cryptography-sha256-hashdata%28system-byte%5B%5D%29)(byte[] source)
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha256.hashdata#system-security-cryptography-sha256-hashdata%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source)
+  - int [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha256.hashdata#system-security-cryptography-sha256-hashdata%28system-readonlyspan%28%28system-byte%29%29-system-span%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination)
+  - bool [TryHashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha256.tryhashdata)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination, out int bytesWritten)
+
+- System.Security.Cryptography.SHA512
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha512.hashdata#system-security-cryptography-sha512-hashdata%28system-byte%5B%5D%29)(byte[] source)
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha512.hashdata#system-security-cryptography-sha512-hashdata%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source)
+  - int [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha512.hashdata#system-security-cryptography-sha512-hashdata%28system-readonlyspan%28%28system-byte%29%29-system-span%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination)
+  - bool [TryHashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha512.tryhashdata)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination, out int bytesWritten)
+
+- System.Security.Cryptography.SHA384
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha384.hashdata#system-security-cryptography-sha384-hashdata%28system-byte%5B%5D%29)(byte[] source)
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha384.hashdata#system-security-cryptography-sha384-hashdata%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source)
+  - int [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha384.hashdata#system-security-cryptography-sha384-hashdata%28system-readonlyspan%28%28system-byte%29%29-system-span%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination)
+  - bool [TryHashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha384.tryhashdata)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination, out int bytesWritten)
+
+- System.Security.Cryptography.SHA1
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha1.hashdata#system-security-cryptography-sha1-hashdata%28system-byte%5B%5D%29)(byte[] source)
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha1.hashdata#system-security-cryptography-sha1-hashdata%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source)
+  - int [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha1.hashdata#system-security-cryptography-sha1-hashdata%28system-readonlyspan%28%28system-byte%29%29-system-span%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination)
+  - bool [TryHashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.sha1.tryhashdata)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination, out int bytesWritten)
+
+- System.Security.Cryptography.MD5
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.md5.hashdata#system-security-cryptography-md5-hashdata%28system-byte%5B%5D%29)(byte[] source)
+  - byte[] [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.md5.hashdata#system-security-cryptography-md5-hashdata%28system-readonlyspan%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source)
+  - int [HashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.md5.hashdata#system-security-cryptography-md5-hashdata%28system-readonlyspan%28%28system-byte%29%29-system-span%28%28system-byte%29%29%29)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination)
+  - bool [TryHashData](https://learn.microsoft.com/dotnet/api/system.security.cryptography.md5.tryhashdata)(ReadOnlySpan&lt;byte&gt; source, Span&lt;byte&gt; destination, out int bytesWritten)
+
 - System.TimeSpan
   - bool [TryParse](https://learn.microsoft.com/dotnet/api/system.timespan.tryparse#system-timespan-tryparse%28system-readonlyspan%28%28system-char%29%29-system-timespan%40%29)(ReadOnlySpan&lt;char&gt; input, out TimeSpan result)
   - TimeSpan [Parse](https://learn.microsoft.com/dotnet/api/system.timespan.parse#system-timespan-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
@@ -823,6 +862,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Type
   - Type[] [GenericTypeArguments](https://learn.microsoft.com/dotnet/api/system.type.generictypearguments) { get; }
   - bool [IsAssignableTo](https://learn.microsoft.com/dotnet/api/system.type.isassignableto)(this Type @this, Type? targetType)
+
+- System.Text.Encoding
+  - bool [TryGetBytes](https://learn.microsoft.com/dotnet/api/system.text.encoding.trygetbytes)(this Encoding @this, ReadOnlySpan&lt;char&gt; chars, Span&lt;byte&gt; bytes, out int bytesWritten)
+  - bool [TryGetChars](https://learn.microsoft.com/dotnet/api/system.text.encoding.trygetchars)(this Encoding @this, ReadOnlySpan&lt;byte&gt; bytes, Span&lt;char&gt; chars, out int charsWritten)
 
 - System.Text.StringBuilder
   - StringBuilder [Append](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.append#system-text-stringbuilder-append%28system-readonlyspan%28%28system-char%29%29%29)(this StringBuilder @this, ReadOnlySpan&lt;char&gt; value)

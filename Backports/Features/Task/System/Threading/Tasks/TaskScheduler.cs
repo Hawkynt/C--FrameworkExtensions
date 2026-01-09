@@ -93,7 +93,7 @@ public abstract class TaskScheduler {
 internal sealed class ThreadPoolTaskScheduler : TaskScheduler {
 
   protected internal override void QueueTask(Task task)
-    => ThreadPool.QueueUserWorkItem(_ => this.TryExecuteTask(task));
+    => Utilities.ThreadPoolHelper.QueueUserWorkItem(_ => this.TryExecuteTask(task));
 
   protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) {
     this.TryExecuteTask(task);

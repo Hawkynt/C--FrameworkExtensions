@@ -77,6 +77,10 @@ public static partial class TaskPolyfills {
     /// <param name="millisecondsDelay">The number of milliseconds to wait before completing the returned task.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the time delay.</returns>
+    /// <remarks>
+    /// Uses ThreadPoolHelper with Thread.Sleep to ensure reliability on .NET 3.5 where
+    /// Timer callbacks use the ThreadPool internally and may not execute when the pool is saturated.
+    /// </remarks>
     public static Task Delay(int millisecondsDelay, CancellationToken cancellationToken) {
       ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsDelay, -1);
 
@@ -86,28 +90,44 @@ public static partial class TaskPolyfills {
       if (millisecondsDelay == 0)
         return _CompletedTask;
 
+      // Handle infinite timeout (-1 means wait forever)
+      if (millisecondsDelay == Timeout.Infinite) {
+        var tcs = new TaskCompletionSource<object?>();
+        if (cancellationToken.CanBeCanceled)
+          cancellationToken.Register(() => tcs.TrySetCanceled());
+        return tcs.Task;
+      }
+
+      return _DelayWithSleep(millisecondsDelay, cancellationToken);
+    }
+
+    private static Task _DelayWithSleep(int millisecondsDelay, CancellationToken cancellationToken) {
       var tcs = new TaskCompletionSource<object?>();
-      Timer? timer = null;
-      CancellationTokenRegistration registration = default;
 
-      timer = new Timer(
-        _ => {
-          timer?.Dispose();
-          registration.Dispose();
-          tcs.TrySetResult(null);
-        },
-        null,
-        millisecondsDelay,
-        Timeout.Infinite
-      );
+      // Use ThreadPoolHelper to ensure reliable execution on .NET 3.5
+      // This uses Thread.Sleep instead of Timer to avoid Timer's ThreadPool dependency
+      Utilities.ThreadPoolHelper.QueueUserWorkItem(_ => {
+        try {
+          // Sleep in smaller chunks to check cancellation periodically
+          const int chunkMs = 50;
+          var remaining = millisecondsDelay;
 
-      if (cancellationToken.CanBeCanceled)
-        registration = cancellationToken.Register(
-          () => {
-            timer?.Dispose();
-            tcs.TrySetCanceled();
+          while (remaining > 0) {
+            if (cancellationToken.IsCancellationRequested) {
+              tcs.TrySetCanceled();
+              return;
+            }
+
+            var sleepTime = Math.Min(remaining, chunkMs);
+            Thread.Sleep(sleepTime);
+            remaining -= sleepTime;
           }
-        );
+
+          tcs.TrySetResult(null);
+        } catch (Exception ex) {
+          tcs.TrySetException(ex);
+        }
+      });
 
       return tcs.Task;
     }
@@ -123,6 +143,30 @@ public static partial class TaskPolyfills {
         throw new ArgumentException("At least one task must be provided.", nameof(tasks));
 
       var tcs = new TaskCompletionSource<Task>();
+
+      foreach (var task in tasks)
+        task.ContinueWith(
+          t => tcs.TrySetResult(t),
+          CancellationToken.None,
+          TaskContinuationOptions.ExecuteSynchronously,
+          TaskScheduler.Default
+        );
+
+      return tcs.Task;
+    }
+
+    /// <summary>
+    /// Creates a task that will complete when any of the supplied tasks have completed.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the completed task.</typeparam>
+    /// <param name="tasks">The tasks to wait on for completion.</param>
+    /// <returns>A task that represents the completion of one of the supplied tasks.</returns>
+    public static Task<Task<TResult>> WhenAny<TResult>(params Task<TResult>[] tasks) {
+      ArgumentNullException.ThrowIfNull(tasks);
+      if (tasks.Length == 0)
+        throw new ArgumentException("At least one task must be provided.", nameof(tasks));
+
+      var tcs = new TaskCompletionSource<Task<TResult>>();
 
       foreach (var task in tasks)
         task.ContinueWith(

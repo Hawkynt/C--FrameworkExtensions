@@ -340,10 +340,216 @@ public class TaskTests {
     });
     var task2 = Task.FromResult(2);
 
-    var whenAny = Task.WhenAny(task1, task2);
+    var whenAny = Task.WhenAny((Task)task1, (Task)task2);
     whenAny.Wait();
 
     Assert.That(whenAny.Result.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_WhenAnyT_ReturnsTypedTask() {
+    var task1 = Task.FromResult(1);
+    var task2 = Task.FromResult(2);
+
+    Task<Task<int>> whenAny = Task.WhenAny<int>(task1, task2);
+    whenAny.Wait();
+
+    Assert.That(whenAny.Result, Is.InstanceOf<Task<int>>());
+    Assert.That(whenAny.Result.Result, Is.EqualTo(1).Or.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_WhenAnyT_ReturnsFirstCompleted() {
+    var tcs1 = new TaskCompletionSource<int>();
+    var tcs2 = new TaskCompletionSource<int>();
+
+    var whenAny = Task.WhenAny<int>(tcs1.Task, tcs2.Task);
+
+    tcs2.SetResult(42);
+    whenAny.Wait();
+
+    Assert.That(whenAny.Result.Result, Is.EqualTo(42));
+    Assert.That(whenAny.Result, Is.SameAs(tcs2.Task));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Task_WhenAnyT_WithArray_ReturnsFirstCompleted() {
+    var tasks = new[] {
+      Task.Run(() => {
+        Thread.Sleep(100);
+        return "slow";
+      }),
+      Task.FromResult("fast")
+    };
+
+    var whenAny = Task.WhenAny(tasks);
+    whenAny.Wait();
+
+    Assert.That(whenAny.Result.Result, Is.EqualTo("fast"));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_WhenAnyT_WithNull_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Task.WhenAny((Task<int>[])null!));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_WhenAnyT_WithEmpty_ThrowsArgumentException() {
+    Assert.Throws<ArgumentException>(() => Task.WhenAny(Array.Empty<Task<int>>()));
+  }
+
+  #endregion
+
+  #region Task.WhenEach
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_YieldsTasksAsTheyComplete() {
+    var tcs1 = new TaskCompletionSource<int>();
+    var tcs2 = new TaskCompletionSource<int>();
+    var tcs3 = new TaskCompletionSource<int>();
+
+    var tasks = new[] { tcs1.Task, tcs2.Task, tcs3.Task };
+    var completionOrder = new System.Collections.Generic.List<int>();
+
+    // Complete in order: 2, 3, 1
+    tcs2.SetResult(2);
+    tcs3.SetResult(3);
+    tcs1.SetResult(1);
+
+    await foreach (var task in Task.WhenEach(tasks))
+      completionOrder.Add(task.Result);
+
+    Assert.That(completionOrder, Has.Count.EqualTo(3));
+    Assert.That(completionOrder, Is.EquivalentTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_NonGeneric_YieldsTasksAsTheyComplete() {
+    var tcs1 = new TaskCompletionSource<object>();
+    var tcs2 = new TaskCompletionSource<object>();
+
+    var tasks = new Task[] { tcs1.Task, tcs2.Task };
+    var completedCount = 0;
+
+    tcs2.SetResult(null);
+    tcs1.SetResult(null);
+
+    await foreach (var task in Task.WhenEach(tasks)) {
+      Assert.That(task.IsCompleted, Is.True);
+      ++completedCount;
+    }
+
+    Assert.That(completedCount, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_WithImmediatelyCompletedTasks_YieldsAll() {
+    var tasks = new[] {
+      Task.FromResult(1),
+      Task.FromResult(2),
+      Task.FromResult(3)
+    };
+
+    var results = new System.Collections.Generic.List<int>();
+    await foreach (var task in Task.WhenEach(tasks))
+      results.Add(task.Result);
+
+    Assert.That(results, Has.Count.EqualTo(3));
+    Assert.That(results, Is.EquivalentTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_WithEmptyArray_YieldsNothing() {
+    var tasks = Array.Empty<Task<int>>();
+    var count = 0;
+
+    await foreach (var _ in Task.WhenEach(tasks))
+      ++count;
+
+    Assert.That(count, Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_YieldsAllTasks() {
+    // Create tasks that complete immediately with different values
+    var tasks = new[] {
+      Task.FromResult(10),
+      Task.FromResult(20),
+      Task.FromResult(30),
+      Task.FromResult(40),
+      Task.FromResult(50)
+    };
+
+    var results = new System.Collections.Generic.List<int>();
+    await foreach (var task in Task.WhenEach(tasks))
+      results.Add(task.Result);
+
+    Assert.That(results, Has.Count.EqualTo(5));
+    // Verify all results are present (order is not guaranteed for pre-completed tasks)
+    Assert.That(results, Does.Contain(10));
+    Assert.That(results, Does.Contain(20));
+    Assert.That(results, Does.Contain(30));
+    Assert.That(results, Does.Contain(40));
+    Assert.That(results, Does.Contain(50));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_WithSingleTask_YieldsThatTask() {
+    var task = Task.FromResult(42);
+
+    var results = new System.Collections.Generic.List<int>();
+    await foreach (var completed in Task.WhenEach<int>(task))
+      results.Add(completed.Result);
+
+    Assert.That(results, Has.Count.EqualTo(1));
+    Assert.That(results[0], Is.EqualTo(42));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_WhenEach_WithNull_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Task.WhenEach((Task<int>[])null!));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Task_WhenEach_NonGeneric_WithNull_ThrowsArgumentNullException() {
+    Assert.Throws<ArgumentNullException>(() => Task.WhenEach((Task[])null!));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public async System.Threading.Tasks.Task Task_WhenEach_WithFaultedTask_YieldsFaultedTask() {
+    var tcs1 = new TaskCompletionSource<int>();
+    var tcs2 = new TaskCompletionSource<int>();
+
+    tcs1.SetException(new InvalidOperationException("Test error"));
+    tcs2.SetResult(2);
+
+    var tasks = new[] { tcs1.Task, tcs2.Task };
+    var faultedCount = 0;
+    var succeededCount = 0;
+
+    await foreach (var task in Task.WhenEach(tasks)) {
+      if (task.IsFaulted)
+        ++faultedCount;
+      else
+        ++succeededCount;
+    }
+
+    Assert.That(faultedCount, Is.EqualTo(1));
+    Assert.That(succeededCount, Is.EqualTo(1));
   }
 
   #endregion

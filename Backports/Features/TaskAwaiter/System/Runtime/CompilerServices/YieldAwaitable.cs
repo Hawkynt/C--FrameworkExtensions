@@ -57,7 +57,7 @@ public readonly struct YieldAwaitable {
     /// <param name="continuation">The action to invoke asynchronously.</param>
     public void OnCompleted(Action continuation) {
       ArgumentNullException.ThrowIfNull(continuation);
-      ThreadPool.QueueUserWorkItem(_ => continuation(), null);
+      Utilities.ThreadPoolHelper.QueueUserWorkItem(_ => continuation(), null);
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public readonly struct YieldAwaitable {
     [SecurityCritical]
     public void UnsafeOnCompleted(Action continuation) {
       ArgumentNullException.ThrowIfNull(continuation);
-      ThreadPool.QueueUserWorkItem(_ => continuation(), null);
+      Utilities.ThreadPoolHelper.QueueUserWorkItem(_ => continuation(), null);
     }
 
     /// <summary>
