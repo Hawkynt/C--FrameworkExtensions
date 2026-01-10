@@ -17,7 +17,7 @@
 
 #endregion
 
-#if !SUPPORTS_ASYNC_ITERATOR_METHOD_BUILDER
+#if !SUPPORTS_ASYNC_ITERATOR_METHOD_BUILDER && !OFFICIAL_ASYNC_ENUMERABLE
 
 namespace System.Runtime.CompilerServices;
 

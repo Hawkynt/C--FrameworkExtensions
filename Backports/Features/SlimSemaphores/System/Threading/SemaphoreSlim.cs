@@ -354,8 +354,8 @@ public static class SemaphoreSlimPolyfills {
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> to observe.</param>
     /// <returns>A task that will complete with a result of <see langword="true"/> if the current thread successfully entered the <see cref="SemaphoreSlim"/>, otherwise with a result of <see langword="false"/>.</returns>
     public Task<bool> WaitAsync(int millisecondsTimeout, CancellationToken cancellationToken) {
-      if (millisecondsTimeout < -1)
-        throw new ArgumentOutOfRangeException(nameof(millisecondsTimeout), millisecondsTimeout, "The timeout must be a non-negative number or -1.");
+      ArgumentOutOfRangeException.ThrowIfLessThan(millisecondsTimeout, -1);
+      cancellationToken.ThrowIfCancellationRequested();
 
       // Try to acquire synchronously first
       if (@this.Wait(0))
@@ -364,8 +364,76 @@ public static class SemaphoreSlimPolyfills {
       if (millisecondsTimeout == 0)
         return Task.FromResult(false);
 
-      // Fall back to running Wait on a thread pool thread
-      return Task.Run(() => @this.Wait(millisecondsTimeout, cancellationToken), cancellationToken);
+      // Use RegisterWaitForSingleObject for truly async waiting without blocking ThreadPool threads.
+      // This uses OS-level wait infrastructure and only consumes a ThreadPool thread briefly
+      // when the wait completes to run the callback.
+      return _WaitAsyncCore(@this, millisecondsTimeout, cancellationToken);
+    }
+
+    private static Task<bool> _WaitAsyncCore(SemaphoreSlim semaphore, int millisecondsTimeout, CancellationToken cancellationToken) {
+      var tcs = new TaskCompletionSource<bool>();
+      var waitHandle = semaphore.AvailableWaitHandle;
+      var startTicks = Environment.TickCount;
+      RegisteredWaitHandle? registeredHandle = null;
+      CancellationTokenRegistration cancellationRegistration = default;
+      var isCompleted = 0; // Used as a flag to prevent multiple completions
+
+      void RegisterWait(int remainingTimeout) => registeredHandle = ThreadPool.RegisterWaitForSingleObject(
+        waitHandle,
+        (state, timedOut) => {
+          // Unregister to prevent re-entry
+          registeredHandle?.Unregister(null);
+
+          if (timedOut) {
+            if (Interlocked.Exchange(ref isCompleted, 1) != 0)
+              return;
+
+            cancellationRegistration.Dispose();
+            tcs.TrySetResult(false);
+            return;
+          }
+
+          // The semaphore was signaled, try to acquire it
+          if (semaphore.Wait(0)) {
+            if (Interlocked.Exchange(ref isCompleted, 1) != 0)
+              return;
+
+            cancellationRegistration.Dispose();
+            tcs.TrySetResult(true);
+            return;
+          }
+
+          // Someone else got it first - re-register if we have time left
+          if (millisecondsTimeout == Timeout.Infinite) {
+            RegisterWait(Timeout.Infinite);
+            return;
+          }
+
+          var elapsed = Environment.TickCount - startTicks;
+          var newRemaining = millisecondsTimeout - elapsed;
+          if (newRemaining > 0)
+            RegisterWait(newRemaining);
+          else if (Interlocked.Exchange(ref isCompleted, 1) == 0) {
+            cancellationRegistration.Dispose();
+            tcs.TrySetResult(false);
+          }
+        },
+        null,
+        remainingTimeout,
+        executeOnlyOnce: true
+      );
+
+      if (cancellationToken.CanBeCanceled)
+        cancellationRegistration = cancellationToken.Register(() => {
+          if (Interlocked.Exchange(ref isCompleted, 1) != 0)
+            return;
+
+          registeredHandle?.Unregister(null);
+          tcs.TrySetCanceled();
+        });
+
+      RegisterWait(millisecondsTimeout);
+      return tcs.Task;
     }
   }
 }

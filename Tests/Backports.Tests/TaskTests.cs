@@ -407,22 +407,36 @@ public class TaskTests {
 
   #region Task.WhenEach
 
+  // Helper method to synchronously enumerate IAsyncEnumerable (for NUnit compatibility on older frameworks)
+  private static System.Collections.Generic.List<T> EnumerateAsync<T>(global::System.Collections.Generic.IAsyncEnumerable<T> source) {
+    var results = new System.Collections.Generic.List<T>();
+    var enumerator = source.GetAsyncEnumerator();
+    try {
+      while (enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+        results.Add(enumerator.Current);
+    } finally {
+      enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+    return results;
+  }
+
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_YieldsTasksAsTheyComplete() {
+  public void Task_WhenEach_YieldsTasksAsTheyComplete() {
     var tcs1 = new TaskCompletionSource<int>();
     var tcs2 = new TaskCompletionSource<int>();
     var tcs3 = new TaskCompletionSource<int>();
 
     var tasks = new[] { tcs1.Task, tcs2.Task, tcs3.Task };
-    var completionOrder = new System.Collections.Generic.List<int>();
 
     // Complete in order: 2, 3, 1
     tcs2.SetResult(2);
     tcs3.SetResult(3);
     tcs1.SetResult(1);
 
-    await foreach (var task in Task.WhenEach(tasks))
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
+    var completionOrder = new System.Collections.Generic.List<int>();
+    foreach (var task in completedTasks)
       completionOrder.Add(task.Result);
 
     Assert.That(completionOrder, Has.Count.EqualTo(3));
@@ -431,17 +445,19 @@ public class TaskTests {
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_NonGeneric_YieldsTasksAsTheyComplete() {
+  public void Task_WhenEach_NonGeneric_YieldsTasksAsTheyComplete() {
     var tcs1 = new TaskCompletionSource<object>();
     var tcs2 = new TaskCompletionSource<object>();
 
     var tasks = new Task[] { tcs1.Task, tcs2.Task };
-    var completedCount = 0;
 
     tcs2.SetResult(null);
     tcs1.SetResult(null);
 
-    await foreach (var task in Task.WhenEach(tasks)) {
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
+    var completedCount = 0;
+
+    foreach (var task in completedTasks) {
       Assert.That(task.IsCompleted, Is.True);
       ++completedCount;
     }
@@ -451,15 +467,16 @@ public class TaskTests {
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_WithImmediatelyCompletedTasks_YieldsAll() {
+  public void Task_WhenEach_WithImmediatelyCompletedTasks_YieldsAll() {
     var tasks = new[] {
       Task.FromResult(1),
       Task.FromResult(2),
       Task.FromResult(3)
     };
 
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
     var results = new System.Collections.Generic.List<int>();
-    await foreach (var task in Task.WhenEach(tasks))
+    foreach (var task in completedTasks)
       results.Add(task.Result);
 
     Assert.That(results, Has.Count.EqualTo(3));
@@ -468,19 +485,17 @@ public class TaskTests {
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_WithEmptyArray_YieldsNothing() {
+  public void Task_WhenEach_WithEmptyArray_YieldsNothing() {
     var tasks = Array.Empty<Task<int>>();
-    var count = 0;
 
-    await foreach (var _ in Task.WhenEach(tasks))
-      ++count;
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
 
-    Assert.That(count, Is.EqualTo(0));
+    Assert.That(completedTasks, Has.Count.EqualTo(0));
   }
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_YieldsAllTasks() {
+  public void Task_WhenEach_YieldsAllTasks() {
     // Create tasks that complete immediately with different values
     var tasks = new[] {
       Task.FromResult(10),
@@ -490,8 +505,9 @@ public class TaskTests {
       Task.FromResult(50)
     };
 
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
     var results = new System.Collections.Generic.List<int>();
-    await foreach (var task in Task.WhenEach(tasks))
+    foreach (var task in completedTasks)
       results.Add(task.Result);
 
     Assert.That(results, Has.Count.EqualTo(5));
@@ -505,11 +521,12 @@ public class TaskTests {
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_WithSingleTask_YieldsThatTask() {
+  public void Task_WhenEach_WithSingleTask_YieldsThatTask() {
     var task = Task.FromResult(42);
 
+    var completedTasks = EnumerateAsync(Task.WhenEach<int>(task));
     var results = new System.Collections.Generic.List<int>();
-    await foreach (var completed in Task.WhenEach<int>(task))
+    foreach (var completed in completedTasks)
       results.Add(completed.Result);
 
     Assert.That(results, Has.Count.EqualTo(1));
@@ -530,7 +547,7 @@ public class TaskTests {
 
   [Test]
   [Category("HappyPath")]
-  public async System.Threading.Tasks.Task Task_WhenEach_WithFaultedTask_YieldsFaultedTask() {
+  public void Task_WhenEach_WithFaultedTask_YieldsFaultedTask() {
     var tcs1 = new TaskCompletionSource<int>();
     var tcs2 = new TaskCompletionSource<int>();
 
@@ -541,7 +558,8 @@ public class TaskTests {
     var faultedCount = 0;
     var succeededCount = 0;
 
-    await foreach (var task in Task.WhenEach(tasks)) {
+    var completedTasks = EnumerateAsync(Task.WhenEach(tasks));
+    foreach (var task in completedTasks) {
       if (task.IsFaulted)
         ++faultedCount;
       else

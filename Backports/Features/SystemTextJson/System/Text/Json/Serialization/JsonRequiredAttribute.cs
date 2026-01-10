@@ -17,15 +17,22 @@
 
 #endregion
 
-#if !SUPPORTS_ENUMERATOR_CANCELLATION_ATTRIBUTE && !OFFICIAL_ASYNC_ENUMERABLE
+// System.Text.Json polyfill for older frameworks that don't have the official package
+#if !SUPPORTS_SYSTEM_TEXT_JSON && !OFFICIAL_SYSTEM_TEXT_JSON
 
-namespace System.Runtime.CompilerServices;
+namespace System.Text.Json.Serialization;
 
 /// <summary>
-/// Used on the parameter of an async-iterator method to indicate that the iterator cancellation token
-/// should combine with the token provided by <c>GetAsyncEnumerator</c> through <c>WithCancellation</c>.
+/// Indicates that the property or field is required for JSON deserialization.
 /// </summary>
-[AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
-public sealed class EnumeratorCancellationAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+public sealed class JsonRequiredAttribute : JsonAttribute {
+
+  /// <summary>
+  /// Initializes a new instance of <see cref="JsonRequiredAttribute"/>.
+  /// </summary>
+  public JsonRequiredAttribute() { }
+
+}
 
 #endif

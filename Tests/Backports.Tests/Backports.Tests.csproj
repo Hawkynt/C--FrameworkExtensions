@@ -1,8 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- net20 excluded: NUnit test infrastructure requires net35+ -->
+    <!--
+      Detect if custom NUnit repository is available (supports net20).
+      The custom nunit fork is expected at: ..\..\..\nunit\src\NUnitFramework\framework\nunit.framework.csproj
+      When available: include net20 target and use project reference
+      When not available: start from net35 and use NuGet packages
+    -->
+    <CustomNUnitPath>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'nunit.sln'))</CustomNUnitPath>
+    <CustomNUnitProjectPath>..\..\..\nunit\src\NUnitFramework\framework\nunit.framework.csproj</CustomNUnitProjectPath>
+    <HasCustomNUnit Condition="Exists('$(CustomNUnitProjectPath)')">true</HasCustomNUnit>
+    <HasCustomNUnit Condition="!Exists('$(CustomNUnitProjectPath)')">false</HasCustomNUnit>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(HasCustomNUnit)' == 'true'">
+    <!-- Custom NUnit available: include net20 target -->
+    <TargetFrameworks>net20;net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(HasCustomNUnit)' != 'true'">
+    <!-- Custom NUnit not available: start from net35 using NuGet packages -->
     <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
@@ -61,8 +82,13 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" Condition="$(TargetFramework) == 'net40'" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" Condition="$(TargetFramework) == 'net35'" />
 
-    <PackageReference Include="NUnit" Version="3.14.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.3.2" />
+    <!--
+      NUnit references:
+      - When custom NUnit is available: use project reference for net20, NuGet for others
+      - When custom NUnit not available: always use NuGet packages (net35+)
+    -->
+    <PackageReference Include="NUnit" Version="3.14.0" Condition="'$(HasCustomNUnit)' != 'true' OR '$(TargetFramework)' != 'net20'" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.3.2" Condition="'$(HasCustomNUnit)' != 'true' OR '$(TargetFramework)' != 'net20'" />
 
     <!-- Reference assemblies for older .NET Framework versions -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
@@ -98,6 +124,11 @@
     <ProjectReference Include="..\..\Backports\Backports.csproj" />
   </ItemGroup>
 
+  <!-- net20: use custom NUnit from parent directory which has net20 support (only when available) -->
+  <ItemGroup Condition="'$(HasCustomNUnit)' == 'true' AND '$(TargetFramework)' == 'net20'">
+    <ProjectReference Include="$(CustomNUnitProjectPath)" />
+  </ItemGroup>
+
   <!--
     ROSLYN SDK 10.0 COMPILER BUG WORKAROUND:
 
@@ -121,7 +152,7 @@
     This exclusion should be removed when Roslyn fixes the bug or when dropping legacy framework support.
     See: https://github.com/dotnet/roslyn/issues/ (TODO: file bug report)
   -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="('$(HasCustomNUnit)' == 'true' AND '$(TargetFramework)' == 'net20') OR '$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <Compile Remove="TensorTests.cs" />
   </ItemGroup>
 
@@ -134,7 +165,7 @@
     (Expression.Variable, Expression.Default, Expression.Block, etc.) that don't exist in the
     net35 BCL Expression class. Our polyfill only compiles for net20 to avoid conflicts.
   -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+  <ItemGroup Condition="('$(HasCustomNUnit)' == 'true' AND '$(TargetFramework)' == 'net20') OR '$(TargetFramework)' == 'net35'">
     <Compile Remove="ExpressionVisitorTests.cs" />
     <Compile Remove="ExpressionFactoryTests.cs" />
     <Compile Remove="LambdaCompileTests.cs" />
@@ -142,6 +173,16 @@
     <Compile Remove="DynamicObjectTests.cs" />
     <Compile Remove="CallSiteTests.cs" />
     <Compile Remove="DynamicExpressionTests.cs" />
+  </ItemGroup>
+
+  <!--
+    HttpContextTests.cs must be excluded from .NET Framework 4.0+ because:
+    - The native System.Web.HttpContext/HttpRequest/HttpResponse classes have internal constructors
+    - They can only be created by ASP.NET infrastructure, not instantiated directly in test code
+    - Our polyfill (used on net20-net35, netstandard, netcore) allows direct instantiation for testing
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+    <Compile Remove="HttpContextTests.cs" />
   </ItemGroup>
 
 </Project>

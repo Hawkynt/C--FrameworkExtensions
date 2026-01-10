@@ -17,21 +17,25 @@
 
 #endregion
 
-#if !SUPPORTS_ASYNC_ITERATOR_STATE_MACHINE_ATTRIBUTE && !OFFICIAL_ASYNC_ENUMERABLE
+// System.Text.Json polyfill for older frameworks that don't have the official package
+#if !SUPPORTS_SYSTEM_TEXT_JSON && !OFFICIAL_SYSTEM_TEXT_JSON
 
-namespace System.Runtime.CompilerServices;
+namespace System.Text.Json.Serialization;
 
 /// <summary>
-/// Indicates whether a method is an asynchronous iterator.
+/// Indicates that the property or field should be included for serialization and deserialization.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-public sealed class AsyncIteratorStateMachineAttribute : StateMachineAttribute {
+/// <remarks>
+/// When applied to a public property, indicates that non-public getters and setters can be used for serialization and deserialization.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+public sealed class JsonIncludeAttribute : JsonAttribute {
+
   /// <summary>
-  /// Initializes a new instance of the <see cref="AsyncIteratorStateMachineAttribute"/> class.
+  /// Initializes a new instance of <see cref="JsonIncludeAttribute"/>.
   /// </summary>
-  /// <param name="stateMachineType">The type of the compiler-generated state machine type for the async iterator method.</param>
-  public AsyncIteratorStateMachineAttribute(Type stateMachineType)
-    : base(stateMachineType) { }
+  public JsonIncludeAttribute() { }
+
 }
 
 #endif

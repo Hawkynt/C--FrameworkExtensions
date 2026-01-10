@@ -17,15 +17,27 @@
 
 #endregion
 
-#if !SUPPORTS_ENUMERATOR_CANCELLATION_ATTRIBUTE && !OFFICIAL_ASYNC_ENUMERABLE
+// System.Text.Json polyfill for older frameworks that don't have the official package
+#if !SUPPORTS_SYSTEM_TEXT_JSON && !OFFICIAL_SYSTEM_TEXT_JSON
 
-namespace System.Runtime.CompilerServices;
+namespace System.Text.Json.Serialization;
 
 /// <summary>
-/// Used on the parameter of an async-iterator method to indicate that the iterator cancellation token
-/// should combine with the token provided by <c>GetAsyncEnumerator</c> through <c>WithCancellation</c>.
+/// Prevents a property from being serialized or deserialized.
 /// </summary>
-[AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
-public sealed class EnumeratorCancellationAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+public sealed class JsonIgnoreAttribute : JsonAttribute {
+
+  /// <summary>
+  /// Initializes a new instance of <see cref="JsonIgnoreAttribute"/>.
+  /// </summary>
+  public JsonIgnoreAttribute() { }
+
+  /// <summary>
+  /// Gets or sets the condition under which the property is ignored.
+  /// </summary>
+  public JsonIgnoreCondition Condition { get; set; } = JsonIgnoreCondition.Always;
+
+}
 
 #endif
