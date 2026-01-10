@@ -411,4 +411,134 @@ public class LinqExtendedTests {
 
   #endregion
 
+  #region Enumerable.TakeLast
+
+  [Test]
+  [Category("HappyPath")]
+  public void TakeLast_ReturnsLastNElements() {
+    var source = new[] { 1, 2, 3, 4, 5 };
+    var result = source.TakeLast(3).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 3, 4, 5 }));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void TakeLast_CountExceedsLength_ReturnsAll() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.TakeLast(10).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void TakeLast_ZeroCount_ReturnsEmpty() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.TakeLast(0).ToArray();
+    Assert.That(result, Is.Empty);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void TakeLast_NegativeCount_ReturnsEmpty() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.TakeLast(-5).ToArray();
+    Assert.That(result, Is.Empty);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void TakeLast_EmptySource_ReturnsEmpty() {
+    var source = new int[0];
+    var result = source.TakeLast(3).ToArray();
+    Assert.That(result, Is.Empty);
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void TakeLast_NullSource_ThrowsArgumentNullException() {
+    IEnumerable<int> source = null;
+    Assert.Throws<ArgumentNullException>(() => source.TakeLast(1).ToArray());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void TakeLast_WorksWithNonListEnumerable() {
+    IEnumerable<int> GenerateSequence() {
+      yield return 1;
+      yield return 2;
+      yield return 3;
+      yield return 4;
+      yield return 5;
+    }
+    var result = GenerateSequence().TakeLast(2).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 4, 5 }));
+  }
+
+  #endregion
+
+  #region Enumerable.SkipLast
+
+  [Test]
+  [Category("HappyPath")]
+  public void SkipLast_SkipsLastNElements() {
+    var source = new[] { 1, 2, 3, 4, 5 };
+    var result = source.SkipLast(2).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SkipLast_CountExceedsLength_ReturnsEmpty() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.SkipLast(10).ToArray();
+    Assert.That(result, Is.Empty);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SkipLast_ZeroCount_ReturnsAll() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.SkipLast(0).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SkipLast_NegativeCount_ReturnsAll() {
+    var source = new[] { 1, 2, 3 };
+    var result = source.SkipLast(-5).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SkipLast_EmptySource_ReturnsEmpty() {
+    var source = new int[0];
+    var result = source.SkipLast(3).ToArray();
+    Assert.That(result, Is.Empty);
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void SkipLast_NullSource_ThrowsArgumentNullException() {
+    IEnumerable<int> source = null;
+    Assert.Throws<ArgumentNullException>(() => source.SkipLast(1).ToArray());
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SkipLast_WorksWithNonListEnumerable() {
+    IEnumerable<int> GenerateSequence() {
+      yield return 1;
+      yield return 2;
+      yield return 3;
+      yield return 4;
+      yield return 5;
+    }
+    var result = GenerateSequence().SkipLast(2).ToArray();
+    Assert.That(result, Is.EqualTo(new[] { 1, 2, 3 }));
+  }
+
+  #endregion
+
 }

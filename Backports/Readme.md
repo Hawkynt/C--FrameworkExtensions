@@ -938,6 +938,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - IEnumerable&lt;TSource&gt; [Reverse](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.reverse)&lt;TSource&gt;(this TSource[] source)
   - IEnumerable&lt;T&gt; [Sequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.sequence)&lt;T&gt;(T start, T endInclusive, T step)
   - IEnumerable&lt;T&gt; [InfiniteSequence](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.infinitesequence)&lt;T&gt;(T start, T step)
+  - IEnumerable&lt;TSource&gt; [TakeLast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.takelast)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, int count)
+  - IEnumerable&lt;TSource&gt; [SkipLast](https://learn.microsoft.com/dotnet/api/system.linq.enumerable.skiplast)&lt;TSource&gt;(this IEnumerable&lt;TSource&gt; source, int count)
 
 - System.Delegate
   - MethodInfo [GetMethodInfo](https://learn.microsoft.com/dotnet/api/system.reflection.runtimereflectionextensions.getmethodinfo)(this Delegate @this)
