@@ -182,5 +182,42 @@ public class MemoryExtensionsTests {
   }
 
   #endregion
+  
+  #region Split
+
+  [Test]
+  [Category("HappyPath")]
+  public void Split_SplitsByCharacter() {
+    var span = "a,b,c".AsSpan();
+    var enumerator = span.Split(',');
+    var parts = new System.Collections.Generic.List<string>();
+    foreach (var part in enumerator)
+      parts.Add(span[part].ToString());
+    Assert.That(parts, Is.EqualTo(new[] { "a", "b", "c" }));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Split_EmptySpan_ReturnsSingleEmptyPart() {
+    var span = ReadOnlySpan<char>.Empty;
+    var enumerator = span.Split(',');
+    var count = 0;
+    foreach (var _ in enumerator)
+      ++count;
+    Assert.That(count, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Split_NoSeparator_ReturnsSinglePart() {
+    var span = "abc".AsSpan();
+    var enumerator = span.Split(',');
+    var parts = new System.Collections.Generic.List<string>();
+    foreach (var part in enumerator)
+      parts.Add(span[part].ToString());
+    Assert.That(parts, Is.EqualTo(new[] { "abc" }));
+  }
+
+  #endregion
 
 }

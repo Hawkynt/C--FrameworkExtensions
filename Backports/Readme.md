@@ -147,6 +147,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Collections.Generic
   - [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   - [OrderedDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ordereddictionary-2)&lt;TKey, TValue&gt;
+  - [SortedSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.sortedset-1)&lt;T&gt;
   - [PriorityQueue](https://learn.microsoft.com/dotnet/api/system.collections.generic.priorityqueue-2)&lt;TElement, TPriority&gt;
   - [ReadOnlyDictionary](https://learn.microsoft.com/dotnet/api/system.collections.objectmodel.readonlydictionary-2)&lt;TKey, TValue&gt;
 
@@ -469,6 +470,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Math
   - T [Clamp](https://learn.microsoft.com/dotnet/api/system.math.clamp)(T value, T min, T max) - for byte, sbyte, short, ushort, int, uint, long, ulong, float, double, decimal
+  - double [BitDecrement](https://learn.microsoft.com/dotnet/api/system.math.bitdecrement)(double x)
+  - double [BitIncrement](https://learn.microsoft.com/dotnet/api/system.math.bitincrement)(double x)
   - double [CopySign](https://learn.microsoft.com/dotnet/api/system.math.copysign)(double x, double y)
   - double [FusedMultiplyAdd](https://learn.microsoft.com/dotnet/api/system.math.fusedmultiplyadd)(double x, double y, double z)
   - double [ScaleB](https://learn.microsoft.com/dotnet/api/system.math.scaleb)(double x, int n)
@@ -483,10 +486,16 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - UInt128 [BigMul](https://learn.microsoft.com/dotnet/api/system.math.bigmul#system-math-bigmul%28system-uint64-system-uint64%29)(ulong a, ulong b)
 
 - System.MathF
+  - float [BitDecrement](https://learn.microsoft.com/dotnet/api/system.mathf.bitdecrement)(float x)
+  - float [BitIncrement](https://learn.microsoft.com/dotnet/api/system.mathf.bitincrement)(float x)
   - float [CopySign](https://learn.microsoft.com/dotnet/api/system.mathf.copysign)(float x, float y)
   - float [FusedMultiplyAdd](https://learn.microsoft.com/dotnet/api/system.mathf.fusedmultiplyadd)(float x, float y, float z)
+  - int [ILogB](https://learn.microsoft.com/dotnet/api/system.mathf.ilogb)(float x)
+  - float [MaxMagnitude](https://learn.microsoft.com/dotnet/api/system.mathf.maxmagnitude)(float x, float y)
+  - float [MinMagnitude](https://learn.microsoft.com/dotnet/api/system.mathf.minmagnitude)(float x, float y)
   - float [ReciprocalEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalestimate)(float x)
   - float [ReciprocalSqrtEstimate](https://learn.microsoft.com/dotnet/api/system.mathf.reciprocalsqrtestimate)(float x)
+  - float [ScaleB](https://learn.microsoft.com/dotnet/api/system.mathf.scaleb)(float x, int n)
   - float [Asinh](https://learn.microsoft.com/dotnet/api/system.mathf.asinh)(float x)
   - float [Acosh](https://learn.microsoft.com/dotnet/api/system.mathf.acosh)(float x)
   - float [Atanh](https://learn.microsoft.com/dotnet/api/system.mathf.atanh)(float x)
@@ -688,6 +697,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Threading.Tasks.Task
   - Task [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled%28system-threading-cancellationtoken%29)(CancellationToken cancellationToken)
   - Task&lt;TResult&gt; [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled-1%28system-threading-cancellationtoken%29)&lt;TResult&gt;(CancellationToken cancellationToken)
+  - Task [FromException](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromexception#system-threading-tasks-task-fromexception%28system-exception%29)(Exception exception)
+  - Task&lt;TResult&gt; [FromException](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromexception#system-threading-tasks-task-fromexception-1%28system-exception%29)&lt;TResult&gt;(Exception exception)
 
 ### Methods
 
@@ -697,6 +708,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-int32-system-int32%29)&lt;T&gt;(this T[] @this, int start, int length)
   - Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-index%29)&lt;T&gt;(this T[] @this, Index startIndex)
   - Span&lt;T&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan-1%28-0%28%29-system-range%29)&lt;T&gt;(this T[] @this, Range range)
+  - Memory&lt;T&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory-1%28-0%28%29%29)&lt;T&gt;(this T[] @this)
+  - Memory&lt;T&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory-1%28-0%28%29-system-int32%29)&lt;T&gt;(this T[] @this, int start)
+  - Memory&lt;T&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory-1%28-0%28%29-system-int32-system-int32%29)&lt;T&gt;(this T[] @this, int start, int length)
+  - Memory&lt;T&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory-1%28-0%28%29-system-index%29)&lt;T&gt;(this T[] @this, Index startIndex)
+  - Memory&lt;T&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory-1%28-0%28%29-system-range%29)&lt;T&gt;(this T[] @this, Range range)
 
 - System.ReadOnlySpan
   - bool [SequenceEqual](https://learn.microsoft.com/dotnet/api/system.memoryextensions.sequenceequal#system-memoryextensions-sequenceequal-1%28system-span%28%28-0%29%29-system-readonlyspan%28%28-0%29%29%29)&lt;T&gt;(this Span&lt;T&gt; span, ReadOnlySpan&lt;T&gt; other)
@@ -761,6 +777,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Collections.Generic.HashSet
   - int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1.ensurecapacity)&lt;T&gt;(this HashSet&lt;T&gt; @this, int capacity)
   - bool [TryGetValue](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1.trygetvalue)&lt;T&gt;(this HashSet&lt;T&gt; @this, T equalValue, out T actualValue)
+
+- System.Collections.Generic.SortedSet
+  - bool [TryGetValue](https://learn.microsoft.com/dotnet/api/system.collections.generic.sortedset-1.trygetvalue)&lt;T&gt;(this SortedSet&lt;T&gt; @this, T equalValue, out T actualValue)
 
 - System.Collections.Generic.List
   - List&lt;T&gt; [Slice](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.slice)&lt;T&gt;(this List&lt;T&gt; @this, int start, int length)
@@ -1021,6 +1040,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - string [TrimEnd](https://learn.microsoft.com/dotnet/api/system.string.trimend#system-string-trimend%28system-char%29)(this string @this, char trimChar)
   - string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings)(this string @this)
   - string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings%28system-string%29)(this string @this, string replacementText)
+  - LineSplitEnumerator [EnumerateLines](https://learn.microsoft.com/dotnet/api/system.string.enumeratelines)(this string @this)
   - void [CopyTo](https://learn.microsoft.com/dotnet/api/system.string.copyto#system-string-copyto%28system-span%28%28system-char%29%29%29)(this string @this, Span&lt;char&gt; destination)
   - bool [TryCopyTo](https://learn.microsoft.com/dotnet/api/system.string.trycopyto)(this string @this, Span&lt;char&gt; destination)
   - string[] [Split](https://learn.microsoft.com/dotnet/api/system.string.split#system-string-split%28system-char-system-stringsplitoptions%29)(this string @this, char separator, StringSplitOptions options = StringSplitOptions.None)
@@ -1033,6 +1053,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-index%29)(this string @this, Index startIndex)
   - ReadOnlySpan&lt;char&gt; [AsSpan](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asspan#system-memoryextensions-asspan%28system-string-system-range%29)(this string @this, Range range)
+  - ReadOnlyMemory&lt;char&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory%28system-string%29)(this string @this)
+  - ReadOnlyMemory&lt;char&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory%28system-string-system-int32%29)(this string @this, int start)
+  - ReadOnlyMemory&lt;char&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory%28system-string-system-int32-system-int32%29)(this string @this, int start, int length)
+  - ReadOnlyMemory&lt;char&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory%28system-string-system-index%29)(this string @this, Index startIndex)
+  - ReadOnlyMemory&lt;char&gt; [AsMemory](https://learn.microsoft.com/dotnet/api/system.memoryextensions.asmemory#system-memoryextensions-asmemory%28system-string-system-range%29)(this string @this, Range range)
 
 - System.Type
   - TypeInfo [GetTypeInfo](https://learn.microsoft.com/dotnet/api/system.reflection.introspectionextensions.gettypeinfo)(this Type @this)

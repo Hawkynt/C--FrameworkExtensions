@@ -19,8 +19,6 @@
 
 #if !SUPPORTS_ENUMERABLE_TAKELAST_SKIPLAST
 
-#if SUPPORTS_LINQ
-
 using System.Collections.Generic;
 
 namespace System.Linq;
@@ -115,7 +113,5 @@ public static partial class EnumerablePolyfills {
   }
 
 }
-
-#endif
 
 #endif

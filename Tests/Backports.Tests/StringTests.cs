@@ -367,4 +367,54 @@ public class StringTests {
 
   #endregion
 
+  #region String.Replace with StringComparison
+
+  [Test]
+  [Category("HappyPath")]
+  public void Replace_WithOrdinalIgnoreCase_ReplacesCaseInsensitive() {
+    var source = "Hello World hello";
+    var result = source.Replace("hello", "hi", StringComparison.OrdinalIgnoreCase);
+    Assert.That(result, Is.EqualTo("hi World hi"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Replace_WithOrdinal_IsCaseSensitive() {
+    var source = "Hello World hello";
+    var result = source.Replace("hello", "hi", StringComparison.Ordinal);
+    Assert.That(result, Is.EqualTo("Hello World hi"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Replace_NoMatch_ReturnsOriginal() {
+    var source = "Hello World";
+    var result = source.Replace("foo", "bar", StringComparison.Ordinal);
+    Assert.That(result, Is.EqualTo("Hello World"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Replace_WithNullNewValue_RemovesOldValue() {
+    var source = "Hello World";
+    var result = source.Replace("World", null, StringComparison.Ordinal);
+    Assert.That(result, Is.EqualTo("Hello "));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Replace_WithNullOldValue_ThrowsArgumentNullException() {
+    var source = "Hello World";
+    Assert.Throws<ArgumentNullException>(() => source.Replace(null!, "bar", StringComparison.Ordinal));
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Replace_WithEmptyOldValue_ThrowsArgumentException() {
+    var source = "Hello World";
+    Assert.Throws<ArgumentException>(() => source.Replace("", "bar", StringComparison.Ordinal));
+  }
+
+  #endregion
+
 }

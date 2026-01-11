@@ -220,6 +220,50 @@ public static partial class PathPolyfills {
 
 #endif
 
+#if !SUPPORTS_PATH_ISPATHFULLYQUALIFIED
+
+  /// <summary>
+  /// Returns a value that indicates whether a file path is fully qualified.
+  /// </summary>
+  /// <param name="path">A file path.</param>
+  /// <returns><see langword="true"/> if the path is fully qualified; otherwise, <see langword="false"/>.</returns>
+  /// <remarks>
+  /// This method handles paths that use either forward slash or backslash as separator.
+  /// A path is fully qualified if it starts with a drive letter and colon on Windows,
+  /// or with a directory separator on any platform.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPathFullyQualified(string? path) {
+    if (string.IsNullOrEmpty(path))
+      return false;
+    return IsPathFullyQualified(path.AsSpan());
+  }
+
+  /// <summary>
+  /// Returns a value that indicates whether a file path is fully qualified.
+  /// </summary>
+  /// <param name="path">A file path.</param>
+  /// <returns><see langword="true"/> if the path is fully qualified; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPathFullyQualified(ReadOnlySpan<char> path) {
+    if (path.IsEmpty)
+      return false;
+
+    // Unix-style rooted path
+    if (path[0] == Path.DirectorySeparatorChar || path[0] == Path.AltDirectorySeparatorChar)
+      // UNC paths (\\server\share or //server/share) are always fully qualified
+      // Single slash is also fully qualified on Unix
+      return path.Length == 1 || path[1] != path[0] || true;
+
+    // Windows drive letter path (e.g., C:\ or C:/)
+    if (path.Length >= 3 && path[1] == Path.VolumeSeparatorChar && (path[2] == Path.DirectorySeparatorChar || path[2] == Path.AltDirectorySeparatorChar))
+      return true;
+
+    return false;
+  }
+
+#endif
+
 #if !SUPPORTS_PATH_GETRELATIVEPATH
 
   /// <summary>

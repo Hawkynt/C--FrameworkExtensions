@@ -83,4 +83,47 @@ public class ConvertTests {
 
   #endregion
 
+  #region ToHexStringLower
+
+  [Test]
+  [Category("HappyPath")]
+  public void ToHexStringLower_ByteArray_ReturnsLowercaseHex() {
+    var bytes = new byte[] { 0x12, 0xAB, 0xCD };
+    var result = Convert.ToHexStringLower(bytes);
+    Assert.That(result, Is.EqualTo("12abcd"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ToHexStringLower_EmptyArray_ReturnsEmpty() {
+    var result = Convert.ToHexStringLower(new byte[0]);
+    Assert.That(result, Is.EqualTo(string.Empty));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ToHexStringLower_WithOffset_ReturnsSlice() {
+    var bytes = new byte[] { 0x00, 0x12, 0xAB, 0xCD, 0x00 };
+    var result = Convert.ToHexStringLower(bytes, 1, 3);
+    Assert.That(result, Is.EqualTo("12abcd"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ToHexStringLower_Span_ReturnsLowercaseHex() {
+    ReadOnlySpan<byte> span = new byte[] { 0x12, 0xAB, 0xCD };
+    var result = Convert.ToHexStringLower(span);
+    Assert.That(result, Is.EqualTo("12abcd"));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void ToHexStringLower_EmptySpan_ReturnsEmpty() {
+    ReadOnlySpan<byte> span = ReadOnlySpan<byte>.Empty;
+    var result = Convert.ToHexStringLower(span);
+    Assert.That(result, Is.EqualTo(string.Empty));
+  }
+
+  #endregion
+
 }

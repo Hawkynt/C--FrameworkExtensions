@@ -47,6 +47,15 @@ public static partial class MemoryExtensionsPolyfills {
     public SpanSplitEnumerator<char> Split(ReadOnlySpan<char> separator)
       => new(@this, separator);
 
+    /// <summary>
+    /// Splits a span using any of the specified separators and returns an enumerator for the resulting ranges.
+    /// </summary>
+    /// <param name="separators">The characters to split on.</param>
+    /// <returns>A <see cref="SpanSplitAnyEnumerator{T}"/> that can be used to iterate through the ranges.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SpanSplitAnyEnumerator<char> SplitAny(ReadOnlySpan<char> separators)
+      => new(@this, separators);
+
   }
 
 }
@@ -132,6 +141,74 @@ public ref struct SpanSplitEnumerator<T> where T : IEquatable<T> {
     }
 
     return true;
+  }
+
+}
+
+/// <summary>
+/// Enumerates the split ranges in a span when splitting by any of multiple separators.
+/// </summary>
+/// <typeparam name="T">The type of elements in the span.</typeparam>
+public ref struct SpanSplitAnyEnumerator<T> where T : IEquatable<T> {
+
+  private readonly ReadOnlySpan<T> _span;
+  private readonly ReadOnlySpan<T> _separators;
+  private int _nextSearchStart;
+  private bool _isInitialized;
+
+  internal SpanSplitAnyEnumerator(ReadOnlySpan<T> span, ReadOnlySpan<T> separators) {
+    this._span = span;
+    this._separators = separators;
+    this._nextSearchStart = 0;
+    this.Current = default;
+    this._isInitialized = false;
+  }
+
+  /// <summary>
+  /// Gets the current range.
+  /// </summary>
+  public Range Current { get; private set; }
+
+  /// <summary>
+  /// Returns the enumerator.
+  /// </summary>
+  public SpanSplitAnyEnumerator<T> GetEnumerator() => this;
+
+  /// <summary>
+  /// Advances the enumerator to the next range.
+  /// </summary>
+  /// <returns><see langword="true"/> if there is another range; otherwise, <see langword="false"/>.</returns>
+  public bool MoveNext() {
+    if (!this._isInitialized) {
+      this._isInitialized = true;
+      this._nextSearchStart = 0;
+    }
+
+    if (this._nextSearchStart > this._span.Length)
+      return false;
+
+    var searchStart = this._nextSearchStart;
+    var remaining = this._span.Slice(searchStart);
+
+    var separatorIndex = IndexOfAny(remaining, this._separators);
+
+    if (separatorIndex >= 0) {
+      this.Current = new(searchStart, searchStart + separatorIndex);
+      this._nextSearchStart = searchStart + separatorIndex + 1;
+    } else {
+      this.Current = new(searchStart, this._span.Length);
+      this._nextSearchStart = this._span.Length + 1;
+    }
+
+    return true;
+  }
+
+  private static int IndexOfAny(ReadOnlySpan<T> span, ReadOnlySpan<T> values) {
+    for (var i = 0; i < span.Length; ++i)
+      for (var j = 0; j < values.Length; ++j)
+        if (span[i].Equals(values[j]))
+          return i;
+    return -1;
   }
 
 }

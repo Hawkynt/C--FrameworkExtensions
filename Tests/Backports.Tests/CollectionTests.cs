@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
@@ -265,6 +266,46 @@ public class CollectionTests {
     var success = queue.TryPeek(out var result);
     Assert.That(success, Is.False);
     Assert.That(result, Is.EqualTo(default(int)));
+  }
+
+  #endregion
+
+  #region SortedSet.TryGetValue
+
+  [Test]
+  [Category("HappyPath")]
+  public void SortedSet_TryGetValue_ExistingValue_ReturnsTrue() {
+    var set = new SortedSet<string> { "Apple", "Banana", "Cherry" };
+    var result = set.TryGetValue("Banana", out var actualValue);
+    Assert.That(result, Is.True);
+    Assert.That(actualValue, Is.EqualTo("Banana"));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SortedSet_TryGetValue_NonExistingValue_ReturnsFalse() {
+    var set = new SortedSet<string> { "Apple", "Banana", "Cherry" };
+    var result = set.TryGetValue("Date", out var actualValue);
+    Assert.That(result, Is.False);
+    Assert.That(actualValue, Is.Null);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SortedSet_TryGetValue_EmptySet_ReturnsFalse() {
+    var set = new SortedSet<string>();
+    var result = set.TryGetValue("Any", out var actualValue);
+    Assert.That(result, Is.False);
+    Assert.That(actualValue, Is.Null);
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SortedSet_TryGetValue_IntType_ReturnsActualValue() {
+    var set = new SortedSet<int> { 1, 2, 3 };
+    var result = set.TryGetValue(2, out var actualValue);
+    Assert.That(result, Is.True);
+    Assert.That(actualValue, Is.EqualTo(2));
   }
 
   #endregion
