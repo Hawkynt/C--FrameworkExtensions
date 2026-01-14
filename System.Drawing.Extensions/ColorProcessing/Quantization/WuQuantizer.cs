@@ -18,8 +18,8 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -37,14 +37,14 @@ namespace Hawkynt.ColorProcessing.Quantization;
 public class WuQuantizer : QuantizerBase {
 
   /// <inheritdoc />
-  protected override Color[] _ReduceColorsTo(int colorCount, IEnumerable<(Color color, uint count)> histogram) {
+  protected override Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram) {
     var smallHistogram = new uint[32, 32, 32];
 
     foreach (var (color, count) in histogram) {
-      var r = color.R >> 3;
-      var g = color.G >> 3;
-      var b = color.B >> 3;
-      smallHistogram[r, g, b] += count;
+      var c1 = color.C1 >> 3;
+      var c2 = color.C2 >> 3;
+      var c3 = color.C3 >> 3;
+      smallHistogram[c1, c2, c3] += count;
     }
 
     var cubes = new List<ColorCube> { new(smallHistogram) };
@@ -61,59 +61,60 @@ public class WuQuantizer : QuantizerBase {
     return cubes.Select(c => c.AverageColor).ToArray();
   }
 
-  private sealed class ColorCube(uint[,,] histogram, int rMin = 0, int rMax = 31, int gMin = 0, int gMax = 31, int bMin = 0, int bMax = 31) {
-    public int Volume => (rMax - rMin) * (gMax - gMin) * (bMax - bMin);
+  private sealed class ColorCube(uint[,,] histogram, int c1Min = 0, int c1Max = 31, int c2Min = 0, int c2Max = 31, int c3Min = 0, int c3Max = 31) {
+    public int Volume => (c1Max - c1Min) * (c2Max - c2Min) * (c3Max - c3Min);
 
-    public Color AverageColor => this._GetAverageColor();
+    public Bgra8888 AverageColor => this._GetAverageColor();
 
-    private Color _GetAverageColor() {
-      long rSum = 0, gSum = 0, bSum = 0, count = 0;
+    private Bgra8888 _GetAverageColor() {
+      long c1Sum = 0, c2Sum = 0, c3Sum = 0, count = 0;
 
-      for (var r = rMin; r <= rMax; ++r)
-      for (var g = gMin; g <= gMax; ++g)
-      for (var b = bMin; b <= bMax; ++b) {
-        var histCount = histogram[r, g, b];
-        rSum += (long)r * histCount;
-        gSum += (long)g * histCount;
-        bSum += (long)b * histCount;
+      for (var c1 = c1Min; c1 <= c1Max; ++c1)
+      for (var c2 = c2Min; c2 <= c2Max; ++c2)
+      for (var c3 = c3Min; c3 <= c3Max; ++c3) {
+        var histCount = histogram[c1, c2, c3];
+        c1Sum += (long)c1 * histCount;
+        c2Sum += (long)c2 * histCount;
+        c3Sum += (long)c3 * histCount;
         count += histCount;
       }
 
       return count == 0
-        ? Color.Transparent
-        : Color.FromArgb(
-          (int)(rSum / count) << 3,
-          (int)(gSum / count) << 3,
-          (int)(bSum / count) << 3
+        ? Bgra8888.Transparent
+        : Bgra8888.Create(
+          (byte)((c1Sum / count) << 3),
+          (byte)((c2Sum / count) << 3),
+          (byte)((c3Sum / count) << 3),
+          255
         );
     }
 
     public IEnumerable<ColorCube> Split() {
-      var rRange = rMax - rMin;
-      var gRange = gMax - gMin;
-      var bRange = bMax - bMin;
+      var c1Range = c1Max - c1Min;
+      var c2Range = c2Max - c2Min;
+      var c3Range = c3Max - c3Min;
 
       int mid;
-      if (rRange >= gRange && rRange >= bRange) {
-        mid = (rMin + rRange) >> 1;
+      if (c1Range >= c2Range && c1Range >= c3Range) {
+        mid = (c1Min + c1Range) >> 1;
         return [
-          new(histogram, rMin, mid, gMin, gMax, bMin, bMax),
-          new(histogram, mid + 1, rMax, gMin, gMax, bMin, bMax)
+          new(histogram, c1Min, mid, c2Min, c2Max, c3Min, c3Max),
+          new(histogram, mid + 1, c1Max, c2Min, c2Max, c3Min, c3Max)
         ];
       }
 
-      if (gRange >= rRange && gRange >= bRange) {
-        mid = (gMin + gRange) >> 1;
+      if (c2Range >= c1Range && c2Range >= c3Range) {
+        mid = (c2Min + c2Range) >> 1;
         return [
-          new(histogram, rMin, rMax, gMin, mid, bMin, bMax),
-          new(histogram, rMin, rMax, mid + 1, gMax, bMin, bMax)
+          new(histogram, c1Min, c1Max, c2Min, mid, c3Min, c3Max),
+          new(histogram, c1Min, c1Max, mid + 1, c2Max, c3Min, c3Max)
         ];
       }
 
-      mid = (bMin + bRange) >> 1;
+      mid = (c3Min + c3Range) >> 1;
       return [
-        new(histogram, rMin, rMax, gMin, gMax, bMin, mid),
-        new(histogram, rMin, rMax, gMin, gMax, mid + 1, bMax)
+        new(histogram, c1Min, c1Max, c2Min, c2Max, c3Min, mid),
+        new(histogram, c1Min, c1Max, c2Min, c2Max, mid + 1, c3Max)
       ];
     }
   }

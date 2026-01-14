@@ -19,7 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -39,7 +39,7 @@ public class OctreeQuantizer : QuantizerBase {
   private const int _MAX_DEPTH = 7;
 
   /// <inheritdoc />
-  protected override Color[] _ReduceColorsTo(int colorCount, IEnumerable<(Color color, uint count)> histogram) {
+  protected override Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram) {
     var root = new Node();
     var colorsCount = 0;
 
@@ -49,7 +49,7 @@ public class OctreeQuantizer : QuantizerBase {
     return _MergeAndGeneratePalette(root, (uint)colorCount, ref colorsCount);
   }
 
-  private static void _AddColor(Node node, Color color, int level, ulong pixelCount, ref int colorsCount) {
+  private static void _AddColor(Node node, Bgra8888 color, int level, ulong pixelCount, ref int colorsCount) {
     for (;;) {
       if (level >= _MAX_DEPTH) {
         _SetupColor(node, color, pixelCount, ref colorsCount);
@@ -57,9 +57,9 @@ public class OctreeQuantizer : QuantizerBase {
       }
 
       var index =
-        (((color.R >> (7 - level)) & 1) << 2) |
-        (((color.G >> (7 - level)) & 1) << 1) |
-        ((color.B >> (7 - level)) & 1);
+        (((color.C1 >> (7 - level)) & 1) << 2) |
+        (((color.C2 >> (7 - level)) & 1) << 1) |
+        ((color.C3 >> (7 - level)) & 1);
 
       ++node.ReferencesCount;
 
@@ -73,16 +73,16 @@ public class OctreeQuantizer : QuantizerBase {
     }
   }
 
-  private static void _SetupColor(Node node, Color color, ulong pixelCount, ref int colorsCount) {
+  private static void _SetupColor(Node node, Bgra8888 color, ulong pixelCount, ref int colorsCount) {
     colorsCount += node.ReferencesCount == 0 ? 1 : 0;
     ++node.ReferencesCount;
     ++node.PixelCount;
-    node.RSum += color.R;
-    node.GSum += color.G;
-    node.BSum += color.B;
+    node.C1Sum += color.C1;
+    node.C2Sum += color.C2;
+    node.C3Sum += color.C3;
   }
 
-  private static Color[] _MergeAndGeneratePalette(Node root, uint desiredColors, ref int colorsCount) {
+  private static Bgra8888[] _MergeAndGeneratePalette(Node root, uint desiredColors, ref int colorsCount) {
     var minimumReferenceCount = uint.MaxValue;
     _GetMinimumReferenceCount(root, ref minimumReferenceCount);
     var least = minimumReferenceCount;
@@ -92,7 +92,7 @@ public class OctreeQuantizer : QuantizerBase {
       least += minimumReferenceCount;
     }
 
-    var result = new Color[colorsCount];
+    var result = new Bgra8888[colorsCount];
     var index = 0;
     _FillPalette(root, result, ref index);
 
@@ -126,9 +126,9 @@ public class OctreeQuantizer : QuantizerBase {
         continue;
 
       currentNode.PixelCount += childNode.PixelCount;
-      currentNode.RSum += childNode.RSum;
-      currentNode.GSum += childNode.GSum;
-      currentNode.BSum += childNode.BSum;
+      currentNode.C1Sum += childNode.C1Sum;
+      currentNode.C2Sum += childNode.C2Sum;
+      currentNode.C3Sum += childNode.C3Sum;
 
       currentNode.Children[i] = null;
       --currentNode.ChildrenCount;
@@ -138,9 +138,9 @@ public class OctreeQuantizer : QuantizerBase {
         continue;
 
       currentNode.Children[i] = new() {
-        RSum = currentNode.RSum,
-        GSum = currentNode.GSum,
-        BSum = currentNode.BSum,
+        C1Sum = currentNode.C1Sum,
+        C2Sum = currentNode.C2Sum,
+        C3Sum = currentNode.C3Sum,
         PixelCount = currentNode.PixelCount
       };
 
@@ -153,7 +153,7 @@ public class OctreeQuantizer : QuantizerBase {
       ++colorsCount;
   }
 
-  private static void _FillPalette(Node currentNode, Color[] palette, ref int index) {
+  private static void _FillPalette(Node currentNode, Bgra8888[] palette, ref int index) {
     if (currentNode is { ChildrenCount: 0, PixelCount: > 0 })
       palette[index++] = currentNode.CreateColor();
 
@@ -165,17 +165,17 @@ public class OctreeQuantizer : QuantizerBase {
   private sealed class Node {
     public Node?[] Children { get; } = new Node?[8];
     public int ChildrenCount { get; set; }
-    public ulong RSum { get; set; }
-    public ulong GSum { get; set; }
-    public ulong BSum { get; set; }
+    public ulong C1Sum { get; set; }
+    public ulong C2Sum { get; set; }
+    public ulong C3Sum { get; set; }
     public ulong ReferencesCount { get; set; }
     public ulong PixelCount { get; set; }
 
-    public Color CreateColor() {
-      var r = (double)this.RSum / this.PixelCount;
-      var g = (double)this.GSum / this.PixelCount;
-      var b = (double)this.BSum / this.PixelCount;
-      return Color.FromArgb((byte)Math.Round(r), (byte)Math.Round(g), (byte)Math.Round(b));
+    public Bgra8888 CreateColor() {
+      var c1 = (double)this.C1Sum / this.PixelCount;
+      var c2 = (double)this.C2Sum / this.PixelCount;
+      var c3 = (double)this.C3Sum / this.PixelCount;
+      return Bgra8888.Create((byte)Math.Round(c1), (byte)Math.Round(c2), (byte)Math.Round(c3), 255);
     }
   }
 

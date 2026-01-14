@@ -17,10 +17,9 @@
 
 #endregion
 
-using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -38,7 +37,7 @@ namespace Hawkynt.ColorProcessing.Quantization;
 public class MedianCutQuantizer : QuantizerBase {
 
   /// <inheritdoc />
-  protected override Color[] _ReduceColorsTo(int colorCount, IEnumerable<(Color color, uint count)> histogram) {
+  protected override Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram) {
     var cubes = new List<ColorCube> { new(histogram.Select(h => h.color)) };
 
     while (cubes.Count < colorCount) {
@@ -54,55 +53,70 @@ public class MedianCutQuantizer : QuantizerBase {
     return cubes.Select(c => c.AverageColor).ToArray();
   }
 
-  private sealed class ColorCube(IEnumerable<Color> colors) {
-    private readonly List<Color> _colors = colors.ToList();
+  private sealed class ColorCube {
+    private readonly List<Bgra8888> _colors;
+    private readonly byte _c1Min, _c1Max, _c2Min, _c2Max, _c3Min, _c3Max;
+    private readonly long _c1Sum, _c2Sum, _c3Sum;
 
-    public int Volume => this._GetVolume();
+    public ColorCube(IEnumerable<Bgra8888> colors) {
+      this._colors = colors.ToList();
+      if (this._colors.Count == 0) {
+        this._c1Min = this._c1Max = this._c2Min = this._c2Max = this._c3Min = this._c3Max = 0;
+        this._c1Sum = this._c2Sum = this._c3Sum = 0;
+        return;
+      }
+
+      var first = this._colors[0];
+      byte c1Min = first.C1, c1Max = first.C1;
+      byte c2Min = first.C2, c2Max = first.C2;
+      byte c3Min = first.C3, c3Max = first.C3;
+      long c1Sum = first.C1, c2Sum = first.C2, c3Sum = first.C3;
+
+      for (var i = 1; i < this._colors.Count; ++i) {
+        var c = this._colors[i];
+
+        if (c.C1 < c1Min) c1Min = c.C1; else if (c.C1 > c1Max) c1Max = c.C1;
+        if (c.C2 < c2Min) c2Min = c.C2; else if (c.C2 > c2Max) c2Max = c.C2;
+        if (c.C3 < c3Min) c3Min = c.C3; else if (c.C3 > c3Max) c3Max = c.C3;
+
+        c1Sum += c.C1;
+        c2Sum += c.C2;
+        c3Sum += c.C3;
+      }
+
+      this._c1Min = c1Min; this._c1Max = c1Max;
+      this._c2Min = c2Min; this._c2Max = c2Max;
+      this._c3Min = c3Min; this._c3Max = c3Max;
+      this._c1Sum = c1Sum; this._c2Sum = c2Sum; this._c3Sum = c3Sum;
+    }
+
+    public int Volume => (this._c1Max - this._c1Min) * (this._c2Max - this._c2Min) * (this._c3Max - this._c3Min);
     public int ColorCount => this._colors.Count;
-    public Color AverageColor => this._GetAverageColor();
 
-    private int _GetVolume() {
-      if (this._colors.Count == 0)
-        return 0;
-
-      var rMin = this._colors.Min(c => c.R);
-      var rMax = this._colors.Max(c => c.R);
-      var gMin = this._colors.Min(c => c.G);
-      var gMax = this._colors.Max(c => c.G);
-      var bMin = this._colors.Min(c => c.B);
-      var bMax = this._colors.Max(c => c.B);
-
-      return (rMax - rMin) * (gMax - gMin) * (bMax - bMin);
-    }
-
-    private Color _GetAverageColor() {
-      if (this._colors.Count == 0)
-        return Color.Black;
-
-      var r = (int)this._colors.Average(c => c.R);
-      var g = (int)this._colors.Average(c => c.G);
-      var b = (int)this._colors.Average(c => c.B);
-
-      return Color.FromArgb(r, g, b);
-    }
+    public Bgra8888 AverageColor => this._colors.Count == 0
+      ? Bgra8888.Black
+      : Bgra8888.Create(
+        (byte)(this._c1Sum / this._colors.Count),
+        (byte)(this._c2Sum / this._colors.Count),
+        (byte)(this._c3Sum / this._colors.Count),
+        255
+      );
 
     public IEnumerable<ColorCube> Split() {
       if (this._colors.Count <= 1)
         return [this];
 
-      var rRange = this._colors.Max(c => c.R) - this._colors.Min(c => c.R);
-      var gRange = this._colors.Max(c => c.G) - this._colors.Min(c => c.G);
-      var bRange = this._colors.Max(c => c.B) - this._colors.Min(c => c.B);
+      var c1Range = this._c1Max - this._c1Min;
+      var c2Range = this._c2Max - this._c2Min;
+      var c3Range = this._c3Max - this._c3Min;
 
-      Func<Color, int> getComponent;
-      if (rRange >= gRange && rRange >= bRange)
-        getComponent = c => c.R;
-      else if (gRange >= rRange && gRange >= bRange)
-        getComponent = c => c.G;
+      if (c1Range >= c2Range && c1Range >= c3Range)
+        this._colors.Sort((a, b) => a.C1 - b.C1);
+      else if (c2Range >= c1Range && c2Range >= c3Range)
+        this._colors.Sort((a, b) => a.C2 - b.C2);
       else
-        getComponent = c => c.B;
+        this._colors.Sort((a, b) => a.C3 - b.C3);
 
-      this._colors.Sort((c1, c2) => getComponent(c1).CompareTo(getComponent(c2)));
       var medianIndex = this._colors.Count >> 1;
 
       if (medianIndex == 0)

@@ -68,6 +68,24 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace, IEquat
 
   #region IColorSpace4B Implementation
 
+  /// <summary>First color component (R).</summary>
+  public byte C1 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this.R;
+  }
+
+  /// <summary>Second color component (G).</summary>
+  public byte C2 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this.G;
+  }
+
+  /// <summary>Third color component (B).</summary>
+  public byte C3 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this.B;
+  }
+
   byte IColorSpace4B<Bgra8888>.C1 => this.R;
   byte IColorSpace4B<Bgra8888>.C2 => this.G;
   byte IColorSpace4B<Bgra8888>.C3 => this.B;

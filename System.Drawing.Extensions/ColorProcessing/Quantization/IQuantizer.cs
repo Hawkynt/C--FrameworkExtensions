@@ -18,7 +18,7 @@
 #endregion
 
 using System.Collections.Generic;
-using System.Drawing;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -46,9 +46,9 @@ public interface IQuantizer {
   /// <returns>An array of colors representing the optimized palette.</returns>
   /// <remarks>
   /// Each color in the collection is treated as having equal weight (count of 1).
-  /// For weighted quantization, use <see cref="GeneratePalette(IEnumerable{ValueTuple{Color, uint}}, int)"/>.
+  /// For weighted quantization, use <see cref="GeneratePalette(IEnumerable{ValueTuple{Bgra8888, uint}}, int)"/>.
   /// </remarks>
-  Color[] GeneratePalette(IEnumerable<Color> colors, int colorCount);
+  Bgra8888[] GeneratePalette(IEnumerable<Bgra8888> colors, int colorCount);
 
   /// <summary>
   /// Generates a color palette of the specified size from a color histogram.
@@ -61,6 +61,6 @@ public interface IQuantizer {
   /// in the original image. Colors with higher counts will have more influence on
   /// the resulting palette.
   /// </remarks>
-  Color[] GeneratePalette(IEnumerable<(Color color, uint count)> histogram, int colorCount);
+  Bgra8888[] GeneratePalette(IEnumerable<(Bgra8888 color, uint count)> histogram, int colorCount);
 
 }

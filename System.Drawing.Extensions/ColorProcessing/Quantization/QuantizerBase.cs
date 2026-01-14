@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using Hawkynt.ColorProcessing.Storage;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -38,7 +38,7 @@ public abstract class QuantizerBase : IQuantizer {
   public bool AllowFillingColors { get; set; } = true;
 
   /// <inheritdoc />
-  public Color[] GeneratePalette(IEnumerable<Color> colors, int colorCount) {
+  public Bgra8888[] GeneratePalette(IEnumerable<Bgra8888> colors, int colorCount) {
     switch (colorCount) {
       case <= 0:
         return [];
@@ -56,7 +56,7 @@ public abstract class QuantizerBase : IQuantizer {
   }
 
   /// <inheritdoc />
-  public Color[] GeneratePalette(IEnumerable<(Color color, uint count)> histogram, int colorCount) {
+  public Bgra8888[] GeneratePalette(IEnumerable<(Bgra8888 color, uint count)> histogram, int colorCount) {
     switch (colorCount) {
       case <= 0:
         return [];
@@ -65,8 +65,8 @@ public abstract class QuantizerBase : IQuantizer {
     }
 
     var used = histogram
-      .GroupBy(h => h.color.ToArgb())
-      .Select(g => (color: Color.FromArgb(g.Key), count: (uint)g.Sum(h => h.count)))
+      .GroupBy(h => h.color.Packed)
+      .Select(g => (color: new Bgra8888(g.Key), count: (uint)g.Sum(h => h.count)))
       .ToArray();
 
     return this._GenerateFinalPalette(
@@ -80,9 +80,9 @@ public abstract class QuantizerBase : IQuantizer {
   /// <summary>
   /// Generates the final palette by filling any remaining slots with appropriate colors.
   /// </summary>
-  private Color[] _GenerateFinalPalette(IEnumerable<Color> proposedPalette, int colorCount) {
+  private Bgra8888[] _GenerateFinalPalette(IEnumerable<Bgra8888> proposedPalette, int colorCount) {
     var distinctColors = proposedPalette.Distinct().ToArray();
-    var result = new Color[colorCount];
+    var result = new Bgra8888[colorCount];
     var index = 0;
 
     var colorsToTake = Math.Min(distinctColors.Length, colorCount);
@@ -91,36 +91,45 @@ public abstract class QuantizerBase : IQuantizer {
 
     if (!this.AllowFillingColors) {
       while (index < colorCount)
-        result[index++] = Color.Transparent;
+        result[index++] = Bgra8888.Transparent;
       return result;
     }
 
     // Add basic colors if still space left
     if (index < colorCount) {
-      var basicColors = new[] { Color.Black, Color.White, Color.Transparent };
+      Bgra8888[] basicColors = [Bgra8888.Black, Bgra8888.White, Bgra8888.Transparent];
       foreach (var color in basicColors) {
         if (index >= colorCount)
           break;
 
-        if (result.Take(index).All(c => c.ToArgb() != color.ToArgb()))
+        if (result.Take(index).All(c => c.Packed != color.Packed))
           result[index++] = color;
       }
     }
 
     // Add primary colors with varying shades
     if (index < colorCount) {
-      var primaryColors = new[] { Color.Red, Color.Lime, Color.Blue, Color.Cyan, Color.Yellow, Color.Magenta, Color.Gray };
-      var shadeFactors = new[] { 1.0, 0.75, 0.5, 0.25, 0.1 };
+      Bgra8888[] primaryColors = [
+        Bgra8888.FromRgb(255, 0, 0),   // Red
+        Bgra8888.FromRgb(0, 255, 0),   // Lime
+        Bgra8888.FromRgb(0, 0, 255),   // Blue
+        Bgra8888.FromRgb(0, 255, 255), // Cyan
+        Bgra8888.FromRgb(255, 255, 0), // Yellow
+        Bgra8888.FromRgb(255, 0, 255), // Magenta
+        Bgra8888.FromRgb(128, 128, 128) // Gray
+      ];
+      double[] shadeFactors = [1.0, 0.75, 0.5, 0.25, 0.1];
 
       foreach (var shadeFactor in shadeFactors) {
         foreach (var baseColor in primaryColors) {
-          var shadedColor = Color.FromArgb(
-            (int)(baseColor.R * shadeFactor),
-            (int)(baseColor.G * shadeFactor),
-            (int)(baseColor.B * shadeFactor)
+          var shadedColor = Bgra8888.Create(
+            (byte)(baseColor.C1 * shadeFactor),
+            (byte)(baseColor.C2 * shadeFactor),
+            (byte)(baseColor.C3 * shadeFactor),
+            255
           );
 
-          if (result.Take(index).Any(c => c.ToArgb() == shadedColor.ToArgb()))
+          if (result.Take(index).Any(c => c.Packed == shadedColor.Packed))
             continue;
 
           result[index++] = shadedColor;
@@ -132,10 +141,10 @@ public abstract class QuantizerBase : IQuantizer {
 
     // Fill remaining with pseudo-random colors
     for (; index < colorCount; ++index)
-      result[index] = Color.FromArgb(
-        (index * 37) % 256,
-        (index * 73) % 256,
-        (index * 109) % 256
+      result[index] = Bgra8888.FromRgb(
+        (byte)((index * 37) % 256),
+        (byte)((index * 73) % 256),
+        (byte)((index * 109) % 256)
       );
 
     return result;
@@ -144,12 +153,12 @@ public abstract class QuantizerBase : IQuantizer {
   /// <summary>
   /// Reduces colors to the specified count. Override to implement specific quantization algorithm.
   /// </summary>
-  protected virtual Color[] _ReduceColorsTo(int colorCount, IEnumerable<Color> colors)
+  protected virtual Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<Bgra8888> colors)
     => this._ReduceColorsTo(colorCount, colors.Select(c => (c, 1u)));
 
   /// <summary>
   /// Reduces colors to the specified count using histogram data. Override to implement specific quantization algorithm.
   /// </summary>
-  protected abstract Color[] _ReduceColorsTo(int colorCount, IEnumerable<(Color color, uint count)> histogram);
+  protected abstract Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram);
 
 }
