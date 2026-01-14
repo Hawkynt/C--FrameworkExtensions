@@ -319,6 +319,10 @@ public static partial class PathExtensions {
   /// <returns>A <see cref="DirectoryInfo">DirectoryInfo</see> instance pointint to the directory.</returns>
   public static DirectoryInfo GetTempDirectory(string name = null, string baseDirectory = null) => new(GetTempDirectoryName(name, baseDirectory));
 
+  // Character pool for random temp names: 0-9, A-Z, a-z, -, _ (64 chars)
+  private const string _TEMP_NAME_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+  private const int _TEMP_NAME_LENGTH = 12;
+
   /// <summary>
   ///   Generates a temporary directory which is most like the given one in the temporary folder.
   /// </summary>
@@ -331,17 +335,15 @@ public static partial class PathExtensions {
     // use a temp name if none given
     if (name == null) {
       const string PREFIX = "tmp";
-      const int LENGTH = 4;
       const string SUFFIX = ".tmp";
       string result;
-      Random random = new();
 
-      // loop until the temporarely generated name does not exist
+      // loop until the temporarily generated name does not exist
       do {
-        // generate a temporary name
-        StringBuilder tempName = new(PREFIX, LENGTH + PREFIX.Length);
-        for (var j = LENGTH; j > 0; --j)
-          tempName.Append(random.Next(0, 16).ToString("X"));
+        // generate a temporary name using shared Random instance
+        StringBuilder tempName = new(PREFIX, _TEMP_NAME_LENGTH + PREFIX.Length + SUFFIX.Length);
+        for (var j = _TEMP_NAME_LENGTH; j > 0; --j)
+          tempName.Append(_TEMP_NAME_CHARS[Random.Shared.Next(_TEMP_NAME_CHARS.Length)]);
 
         tempName.Append(SUFFIX);
         result = Path.Combine(path, tempName.ToString());
@@ -364,7 +366,7 @@ public static partial class PathExtensions {
     // otherwise count up
     var i = 1;
     while (!TryCreateDirectory(fullName = Path.Combine(path, $"{name}{++i}"))) { }
-    
+
     _TryMarkAsTemporaryDirectory(fullName);
     return fullName;
   }
@@ -609,7 +611,7 @@ public static partial class PathExtensions {
   }
   
   /// <summary>
-  ///   Tries to create a new folder.
+  ///   Tries to create a new folder atomically using a lock file.
   /// </summary>
   /// <param name="pathName">The directory name.</param>
   /// <param name="attributes">The attributes.</param>
@@ -622,21 +624,44 @@ public static partial class PathExtensions {
     if (Directory.Exists(pathName))
       return false;
 
+    // Use a lock file to make directory creation atomic across processes
+    var lockFilePath = pathName + ".lock";
+
+    FileStream lockFile;
     try {
+      // Try to create lock file exclusively - this is atomic on all platforms
+      lockFile = new(lockFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose);
+    } catch (IOException) {
+      // Lock file exists - another process is creating this directory
+      return false;
+    } catch (UnauthorizedAccessException) {
+      // Lock file exists or no permission
+      return false;
+    }
+
+    try {
+      // Double-check after acquiring lock
+      if (Directory.Exists(pathName))
+        return false;
+
       Directory.CreateDirectory(pathName);
-      DirectoryInfo directory = new(pathName);
       if (attributes == FileAttributes.Normal)
         return true;
 
       try {
-        directory.Attributes = attributes;
+        new DirectoryInfo(pathName).Attributes = attributes;
       } catch {
-        // ignore attribute assigment errors
+        // ignore attribute assignment errors
       }
 
       return true;
     } catch (IOException) {
       return false;
+    } catch (UnauthorizedAccessException) {
+      return false;
+    } finally {
+      // Release and delete lock file
+      lockFile.Dispose();
     }
   }
 
