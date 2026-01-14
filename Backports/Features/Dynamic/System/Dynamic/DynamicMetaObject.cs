@@ -47,8 +47,7 @@ public class DynamicMetaObject {
   /// </summary>
   public static readonly DynamicMetaObject[] EmptyMetaObjects = Array.Empty<DynamicMetaObject>();
 
-  private readonly object _value;
-  private readonly bool _hasValue;
+  private readonly object? _value;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="DynamicMetaObject"/> class.
@@ -63,7 +62,7 @@ public class DynamicMetaObject {
   public DynamicMetaObject(Expression expression, BindingRestrictions restrictions) {
     this.Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     this.Restrictions = restrictions ?? throw new ArgumentNullException(nameof(restrictions));
-    this._hasValue = false;
+    this.HasValue = false;
     this._value = null;
   }
 
@@ -81,7 +80,7 @@ public class DynamicMetaObject {
   public DynamicMetaObject(Expression expression, BindingRestrictions restrictions, object value) {
     this.Expression = expression ?? throw new ArgumentNullException(nameof(expression));
     this.Restrictions = restrictions ?? throw new ArgumentNullException(nameof(restrictions));
-    this._hasValue = true;
+    this.HasValue = true;
     this._value = value;
   }
 
@@ -101,18 +100,12 @@ public class DynamicMetaObject {
   /// <exception cref="InvalidOperationException">
   /// <see cref="HasValue"/> is <see langword="false"/>.
   /// </exception>
-  public object Value {
-    get {
-      if (!this._hasValue)
-        throw new InvalidOperationException("No value is associated with this meta-object.");
-      return this._value;
-    }
-  }
+  public object? Value => !this.HasValue ? throw new InvalidOperationException("No value is associated with this meta-object.") : this._value;
 
   /// <summary>
   /// Gets a value indicating whether the <see cref="DynamicMetaObject"/> has a runtime value.
   /// </summary>
-  public bool HasValue => this._hasValue;
+  public bool HasValue { get; }
 
   /// <summary>
   /// Gets the <see cref="Type"/> of the runtime value or null if this object doesn't have a value.
@@ -121,7 +114,7 @@ public class DynamicMetaObject {
   /// When <see cref="HasValue"/> is <see langword="true"/>, this returns the actual runtime type of
   /// <see cref="Value"/>. Otherwise, it returns <see cref="Expression.Type"/>.
   /// </remarks>
-  public Type RuntimeType => this._hasValue ? this._value?.GetType() : null;
+  public Type? RuntimeType => this.HasValue ? this._value?.GetType() : null;
 
   /// <summary>
   /// Gets the limit type of the <see cref="DynamicMetaObject"/>.

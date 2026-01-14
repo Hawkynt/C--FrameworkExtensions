@@ -88,7 +88,7 @@ public abstract class CallSiteBinder {
   /// This method is called by the DLR when a binding needs to be cached. The base implementation
   /// compiles the expression returned by <see cref="Bind"/> into a delegate.
   /// </remarks>
-  public virtual T BindDelegate<T>(CallSite<T> site, object[] args) where T : class =>
+  public virtual T? BindDelegate<T>(CallSite<T> site, object[] args) where T : class =>
     null; // Default implementation returns null, forcing the standard binding path
 
   /// <summary>
@@ -99,7 +99,7 @@ public abstract class CallSiteBinder {
   /// The default implementation returns <see langword="null"/>, indicating that rules
   /// should not be shared across binders.
   /// </remarks>
-  public virtual Type CacheIdentity => null;
+  public virtual Type? CacheIdentity => null;
 
 }
 

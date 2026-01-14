@@ -144,6 +144,16 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [FrozenDictionary](https://learn.microsoft.com/dotnet/api/system.collections.frozen.frozendictionary-2)&lt;TKey, TValue&gt;
   - [FrozenSet](https://learn.microsoft.com/dotnet/api/system.collections.frozen.frozenset-1)&lt;T&gt;
 
+- System.Collections.Immutable (uses official package for net461+/netstandard2.0+/netcoreapp2.0+, polyfill for others)
+  - [ImmutableArray](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablearray-1)&lt;T&gt;
+  - [ImmutableDictionary](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutabledictionary-2)&lt;TKey, TValue&gt;
+  - [ImmutableHashSet](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablehashset-1)&lt;T&gt;
+  - [ImmutableList](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablelist-1)&lt;T&gt;
+  - [ImmutableQueue](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablequeue-1)&lt;T&gt;
+  - [ImmutableSortedDictionary](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablesorteddictionary-2)&lt;TKey, TValue&gt;
+  - [ImmutableSortedSet](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablesortedset-1)&lt;T&gt;
+  - [ImmutableStack](https://learn.microsoft.com/dotnet/api/system.collections.immutable.immutablestack-1)&lt;T&gt;
+
 - System.Collections.Generic
   - [HashSet](https://learn.microsoft.com/dotnet/api/system.collections.generic.hashset-1)&lt;T&gt;
   - [OrderedDictionary](https://learn.microsoft.com/dotnet/api/system.collections.generic.ordereddictionary-2)&lt;TKey, TValue&gt;

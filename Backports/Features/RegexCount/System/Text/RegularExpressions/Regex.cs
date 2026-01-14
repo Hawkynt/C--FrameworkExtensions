@@ -150,14 +150,14 @@ public static partial class RegexPolyfills {
 
   private static IEnumerable<ValueMatch> EnumerateMatchesCore(Regex regex, string input) {
     var matches = regex.Matches(input);
-    foreach (Match match in matches)
-      yield return new(match.Index, match.Length);
+    foreach (Match? match in matches)
+      yield return new(match!.Index, match.Length);
   }
 
   private static IEnumerable<ValueMatch> EnumerateMatchesCore(Regex regex, string input, int startat) {
     var matches = regex.Matches(input, startat);
-    foreach (Match match in matches)
-      yield return new(match.Index, match.Length);
+    foreach (Match? match in matches)
+      yield return new(match!.Index, match.Length);
   }
 
 }

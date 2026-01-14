@@ -421,7 +421,7 @@ public static partial class PeriodicTimerPeriodPolyfill {
 
         // Fall back to our tracked values
         if (_periods.TryGetValue(@this, out var box))
-          return box.Value;
+          return box!.Value;
 
         throw new InvalidOperationException(
           "The period cannot be retrieved. On .NET 6.0/7.0, the PeriodicTimer.Period property is a polyfill " +
@@ -441,9 +441,9 @@ public static partial class PeriodicTimerPeriodPolyfill {
 
         // Store the value in our tracking table (for retrieval and in case timer change failed)
         if (_periods.TryGetValue(@this, out var existingBox))
-          existingBox.Value = value;
+          existingBox!.Value = value;
         else
-          _periods.Add(@this, new TimeSpanBox(value));
+          _periods.Add(@this, new(value));
 
         // Also try to set the internal _period field if it exists
         (_setPeriodCallback ??= _ReflectSetPeriodCallback())(@this, value);

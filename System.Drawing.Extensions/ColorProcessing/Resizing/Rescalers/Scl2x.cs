@@ -82,7 +82,9 @@ public readonly struct Scl2x : IPixelScaler {
   public static Scl2x Default => new();
 }
 
-file readonly struct Scl2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp lerp = default)
+#pragma warning disable CS9113 // Parameter is unread - TLerp required by IScaler interface but not used by this simple edge scaler
+file readonly struct Scl2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(TEquality equality = default, TLerp _ = default)
+#pragma warning restore CS9113
   : IScaler<TWork, TKey, TPixel, TEncode>
   where TWork : unmanaged, IColorSpace
   where TKey : unmanaged, IColorSpace

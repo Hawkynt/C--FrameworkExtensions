@@ -21,6 +21,7 @@
 #if !SUPPORTS_PROCESS_WAITFOREXITASYNC
 
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -65,7 +66,7 @@ public static partial class ProcessPolyfills {
       if (cancellationToken.CanBeCanceled)
         registration = cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
 
-      void OnExited(object sender, EventArgs e) {
+      void OnExited(object? sender, EventArgs e) {
         registration.Dispose();
         tcs.TrySetResult(true);
       }
@@ -173,7 +174,7 @@ public static partial class ProcessPolyfills {
   private static void _GetUnixChildProcesses(int parentId, List<int> children) {
     // On Unix, iterate through /proc/*/stat to find child processes
     try {
-      var procDir = new System.IO.DirectoryInfo("/proc");
+      var procDir = new DirectoryInfo("/proc");
       if (!procDir.Exists)
         return;
 
@@ -182,11 +183,11 @@ public static partial class ProcessPolyfills {
           continue;
 
         try {
-          var statPath = System.IO.Path.Combine(dir.FullName, "stat");
-          if (!System.IO.File.Exists(statPath))
+          var statPath = Path.Combine(dir.FullName, "stat");
+          if (!File.Exists(statPath))
             continue;
 
-          var stat = System.IO.File.ReadAllText(statPath);
+          var stat = File.ReadAllText(statPath);
 
           // Format: pid (comm) state ppid ...
           // Find the closing ) to skip the command name which might contain spaces
@@ -194,7 +195,7 @@ public static partial class ProcessPolyfills {
           if (endOfComm < 0)
             continue;
 
-          var fields = stat.Substring(endOfComm + 2).Split(' ');
+          var fields = stat[(endOfComm + 2)..].Split(' ');
           if (fields.Length >= 2 && int.TryParse(fields[1], out var ppid) && ppid == parentId)
             children.Add(pid);
         } catch {

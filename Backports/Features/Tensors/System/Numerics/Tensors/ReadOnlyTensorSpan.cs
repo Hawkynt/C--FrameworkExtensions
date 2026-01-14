@@ -27,7 +27,9 @@ namespace System.Numerics.Tensors;
 /// Represents a read-only view over a contiguous region of arbitrary memory that can be interpreted as a tensor.
 /// </summary>
 /// <typeparam name="T">The type of items in the tensor span.</typeparam>
+#pragma warning disable CS0660, CS0661 // Ref struct cannot implement Equals/GetHashCode (same as Span<T>)
 public readonly ref struct ReadOnlyTensorSpan<T> {
+#pragma warning restore CS0660, CS0661
 
   private readonly ReadOnlySpan<T> _span;
   private readonly nint[] _lengths;
@@ -56,7 +58,7 @@ public readonly ref struct ReadOnlyTensorSpan<T> {
   /// </summary>
   /// <param name="array">The underlying data array.</param>
   public ReadOnlyTensorSpan(T[]? array)
-    : this(array.AsSpan(), array == null ? [] : [array.Length]) { }
+    : this((array ?? []).AsSpan(), array == null ? [] : [array.Length]) { }
 
   /// <summary>
   /// Creates a new <see cref="ReadOnlyTensorSpan{T}"/> from the given array with specified lengths.
@@ -64,7 +66,7 @@ public readonly ref struct ReadOnlyTensorSpan<T> {
   /// <param name="array">The underlying data array.</param>
   /// <param name="lengths">The lengths of each dimension.</param>
   public ReadOnlyTensorSpan(T[]? array, scoped ReadOnlySpan<nint> lengths)
-    : this(array.AsSpan(), lengths) { }
+    : this((array ?? []).AsSpan(), lengths) { }
 
   /// <summary>
   /// Creates a new <see cref="ReadOnlyTensorSpan{T}"/> from the given array with specified start, lengths, and strides.
@@ -74,7 +76,7 @@ public readonly ref struct ReadOnlyTensorSpan<T> {
   /// <param name="lengths">The lengths of each dimension.</param>
   /// <param name="strides">The strides for each dimension.</param>
   public ReadOnlyTensorSpan(T[]? array, int start, scoped ReadOnlySpan<nint> lengths, scoped ReadOnlySpan<nint> strides)
-    : this(array.AsSpan(start), lengths, strides) { }
+    : this((array ?? []).AsSpan(start), lengths, strides) { }
 
   /// <summary>
   /// Creates a new <see cref="ReadOnlyTensorSpan{T}"/> from a multi-dimensional array.
@@ -101,8 +103,8 @@ public readonly ref struct ReadOnlyTensorSpan<T> {
     var flatLength = (int)_ComputeFlatLength(lengths);
     var flat = new T[flatLength];
     var index = 0;
-    foreach (T item in array)
-      flat[index++] = item;
+    foreach (T? item in array)
+      flat[index++] = item!;
 
     this._span = flat;
   }

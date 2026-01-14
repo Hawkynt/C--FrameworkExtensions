@@ -20,7 +20,7 @@ namespace System.Collections.Concurrent;
 
 public static partial class ConcurrentDictionary {
 
-  extension<TKey, TValue>(ConcurrentDictionary<TKey, TValue> @this)
+  extension<TKey, TValue>(ConcurrentDictionary<TKey, TValue> @this) where TKey : notnull
   {
     public TValue AddOrUpdate<TArg>(TKey key, Func<TKey, TArg, TValue> addValueFactory, Func<TKey, TValue, TArg, TValue> updateValueFactory, TArg factoryArgument) 
       => @this.AddOrUpdate(

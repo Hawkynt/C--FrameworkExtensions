@@ -69,7 +69,7 @@ public static partial class CancellationTokenSourcePolyfills {
   private static readonly Task _completedTask = _CreateCompletedTask();
 
   private static Task _CreateCompletedTask() {
-    var tcs = new TaskCompletionSource<object>();
+    var tcs = new TaskCompletionSource<object?>();
     tcs.SetResult(null);
     return tcs.Task;
   }

@@ -1,3 +1,5 @@
+#nullable enable
+
 // This file is part of Hawkynt's .NET Framework extensions.
 //
 // Hawkynt's .NET Framework extensions are free software:

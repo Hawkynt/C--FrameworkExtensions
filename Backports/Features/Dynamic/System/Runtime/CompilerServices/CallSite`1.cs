@@ -49,17 +49,12 @@ public sealed class CallSite<T> : CallSite where T : class {
   /// <summary>
   /// The delegate cache for this call site type.
   /// </summary>
-  private static volatile RuleCache<T> _cache;
+  private static volatile RuleCache<T>? _cache;
 
   /// <summary>
   /// The cached rules for this particular binder.
   /// </summary>
-  private T[] _rules;
-
-  /// <summary>
-  /// The level 2 cache for matched rules.
-  /// </summary>
-  private RuleCache<T> _cachedMatchingRules;
+  private T[]? _rules;
 
   /// <summary>
   /// The delegate that performs the bound operation at this call site.
@@ -119,7 +114,7 @@ public sealed class CallSite<T> : CallSite where T : class {
   private T GetUpdateDelegate() {
     // The update delegate will perform binding when called
     // For the polyfill, we create a delegate that invokes the binder
-    return CreateUpdateDelegate();
+    return this.CreateUpdateDelegate();
   }
 
   /// <summary>
@@ -146,7 +141,7 @@ public sealed class CallSite<T> : CallSite where T : class {
     if (parameters.Length > 0 && parameters[0].ParameterType == typeof(CallSite)) {
       // Standard DLR pattern: first arg is CallSite
       // Call the UpdateAndExecute method
-      body = CreateBindAndInvokeExpression(paramExprs, returnType);
+      body = this.CreateBindAndInvokeExpression(paramExprs, returnType);
     } else {
       // Non-standard delegate - just create a default return
       body = CreateDefaultExpression(returnType);
@@ -197,7 +192,7 @@ public sealed class CallSite<T> : CallSite where T : class {
   /// </summary>
   private static T CompileLambda(LambdaExpression lambda) {
     // Use the existing expression tree compilation infrastructure
-    return lambda.Compile() as T;
+    return (lambda.Compile() as T)!;
   }
 
   /// <summary>
@@ -207,7 +202,7 @@ public sealed class CallSite<T> : CallSite where T : class {
   internal void AddRule(T rule) {
     var rules = this._rules;
     if (rules == null) {
-      this._rules = new[] { rule };
+      this._rules = [rule];
       return;
     }
 

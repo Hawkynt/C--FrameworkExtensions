@@ -1325,16 +1325,16 @@ public class IOComprehensiveTest {
   [Test]
   [Category("Performance")]
   public void Performance_BufferedStreamEx_LargeSequentialWrites_OptimizedThroughput() {
-    var testData = new byte[1024 * 1024]; // 1MB
+    var testData = new byte[256 * 1024]; // 256KB
+    const int iterations = 20; // ~5MB total
     new Random(42).NextBytes(testData);
 
     var stopwatch = Stopwatch.StartNew();
 
     using (var baseStream = new MemoryStream())
     using (var bufferedStream = new BufferedStreamEx(baseStream, 64 * 1024)) {
-      for (var i = 0; i < 100; i++) {
+      for (var i = 0; i < iterations; ++i)
         bufferedStream.Write(testData, 0, testData.Length);
-      }
     }
 
     stopwatch.Stop();

@@ -31,6 +31,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS8500</NoWarn><!-- Pointer to managed type - required for Vector intrinsics -->
+    <NoWarn>$(NoWarn);CS3021</NoWarn><!-- CLSCompliant attribute not required when assembly has no CLSCompliant attribute -->
   </PropertyGroup>
 
   <Import Project="..\VersionSpecificSymbols.Common.prop" />
@@ -186,6 +187,21 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Text.Json" Version="9.0.1" />
   </ItemGroup>
+
+  <!-- System.Collections.Immutable - Provides ImmutableArray<T>, ImmutableList<T>, ImmutableDictionary<K,V>, etc. -->
+  <!-- Official package available for net461+, netstandard2.0+ -->
+  <!-- Built-in for netcoreapp2.0+ and net5.0+ -->
+  <!-- Package version 8.0+ includes FrozenDictionary/FrozenSet for netstandard2.0+ -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_IMMUTABLE_COLLECTIONS;OFFICIAL_FROZEN_COLLECTIONS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Collections.Immutable" Version="9.0.1" />
+  </ItemGroup>
+  <!-- Native immutable collections support in .NET Core 2.0+ -->
+  <PropertyGroup Condition="$(IsNetCore) AND $([System.Version]::Parse('$(NetCoreVersion)').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0">
+    <DefineConstants>$(DefineConstants);OFFICIAL_IMMUTABLE_COLLECTIONS</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="Readme.md" Pack="True" PackagePath=".">

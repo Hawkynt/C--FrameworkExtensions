@@ -194,7 +194,7 @@ public static partial class ColorPolyfills {
     /// Note: Fixes the issue with colors that were generated instead of chosen directly by looking up the ARGB value.
     /// </summary>
     /// <returns>The name of the color or <c>null</c>.</returns>
-    public string GetName() {
+    public string? GetName() {
       if (!string.IsNullOrWhiteSpace(@this.Name))
         return @this.Name;
 
@@ -455,7 +455,7 @@ public static partial class ColorPolyfills {
 
       var result = typeof(Color)
         .GetProperties(BindingFlags.Public | BindingFlags.Static)
-        .Select(f => (Color)f.GetValue(null, null))
+        .Select(f => (Color)f.GetValue(null, null)!)
         .Where(c => c.IsNamedColor)
         .ToDictionary(c => c.ToArgb(), c => c);
 

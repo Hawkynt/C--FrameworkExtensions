@@ -90,7 +90,7 @@ internal class ConcurrentStackTests {
   [TestCase(65535)]
   [TestCase(65536)]
   [TestCase(65537)]
-  [TestCase(1 << 24)]
+  [TestCase(1 << 20)] // 1M items - reduced from 16M to avoid OOM on 32-bit runtimes
   public void Pull_MaxCount_ReturnsUpToThatMany(int maxCount) {
     var items = Enumerable.Range(1, maxCount).ToArray();
     items.Shuffle();

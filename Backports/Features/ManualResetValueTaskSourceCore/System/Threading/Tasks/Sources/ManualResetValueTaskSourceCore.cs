@@ -24,7 +24,7 @@
 // Uses ExceptionDispatchInfo which is polyfilled for older frameworks
 #if !SUPPORTS_MANUAL_RESET_VALUE_TASK_SOURCE_CORE && !OFFICIAL_VALUETASK
 
-#nullable disable
+#nullable enable
 
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;

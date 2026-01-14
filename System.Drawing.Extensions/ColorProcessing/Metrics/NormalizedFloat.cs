@@ -91,7 +91,7 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>, IComparabl
   public bool Equals(NormalizedFloat other) => this._value.Equals(other._value);
 
   /// <inheritdoc />
-  public override bool Equals(object obj) => obj is NormalizedFloat other && this.Equals(other);
+  public override bool Equals(object? obj) => obj is NormalizedFloat other && this.Equals(other);
 
   /// <inheritdoc />
   public override int GetHashCode() => this._value.GetHashCode();

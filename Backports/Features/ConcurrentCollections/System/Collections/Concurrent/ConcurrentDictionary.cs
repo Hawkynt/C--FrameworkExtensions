@@ -327,6 +327,10 @@ public class ConcurrentDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IRe
     return false;
   }
 
+  // Explicit interface implementation for IDictionary<TKey, TValue> on older frameworks
+  // where the interface lacks [MaybeNullWhen(false)] attribute
+  bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value) => this.TryGetValue(key, out value!);
+
   /// <summary>
   /// Attempts to remove and return the value that has the specified key.
   /// </summary>

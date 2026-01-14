@@ -516,7 +516,7 @@ internal static class PixelFormatConverters {
               var b = (byte)p;
               var g = (byte)(p >> 8);
               var r = (byte)(p >> 16);
-              dstRow[i] = (uint)(((b * 255) / a) | (((g * 255) / a) << 8) | (((r * 255) / a) << 16) | ((uint)a << 24));
+              dstRow[i] = (uint)((uint)((b * 255) / a) | ((uint)((g * 255) / a) << 8) | ((uint)((r * 255) / a) << 16) | ((uint)a << 24));
             }
           }
           srcRow += 4;
@@ -536,7 +536,7 @@ internal static class PixelFormatConverters {
             var b = (byte)p;
             var g = (byte)(p >> 8);
             var r = (byte)(p >> 16);
-            *dstRow++ = (uint)(((b * 255) / a) | (((g * 255) / a) << 8) | (((r * 255) / a) << 16) | ((uint)a << 24));
+            *dstRow++ = (uint)((uint)((b * 255) / a) | ((uint)((g * 255) / a) << 8) | ((uint)((r * 255) / a) << 16) | ((uint)a << 24));
           }
           --count;
         }
@@ -575,7 +575,7 @@ internal static class PixelFormatConverters {
               var b = (byte)p;
               var g = (byte)(p >> 8);
               var r = (byte)(p >> 16);
-              dstRow[i] = (uint)(((b * a) / 255) | (((g * a) / 255) << 8) | (((r * a) / 255) << 16) | ((uint)a << 24));
+              dstRow[i] = (uint)((uint)((b * a) / 255) | ((uint)((g * a) / 255) << 8) | ((uint)((r * a) / 255) << 16) | ((uint)a << 24));
             }
           }
           srcRow += 4;
@@ -595,7 +595,7 @@ internal static class PixelFormatConverters {
             var b = (byte)p;
             var g = (byte)(p >> 8);
             var r = (byte)(p >> 16);
-            *dstRow++ = (uint)(((b * a) / 255) | (((g * a) / 255) << 8) | (((r * a) / 255) << 16) | ((uint)a << 24));
+            *dstRow++ = (uint)((uint)((b * a) / 255) | ((uint)((g * a) / 255) << 8) | ((uint)((r * a) / 255) << 16) | ((uint)a << 24));
           }
           --count;
         }
@@ -633,7 +633,7 @@ internal static class PixelFormatConverters {
             var g = (byte)((p >> 24) & 0xFF);
             var b = (byte)((p >> 40) & 0xFF);
             var a = (byte)((p >> 56) & 0xFF);
-            dstRow[i] = (uint)(b | (g << 8) | (r << 16) | ((uint)a << 24));
+            dstRow[i] = (uint)b | ((uint)g << 8) | ((uint)r << 16) | ((uint)a << 24);
           }
           srcRow += 4;
           dstRow += 4;
@@ -647,7 +647,7 @@ internal static class PixelFormatConverters {
           var g = (byte)((p >> 24) & 0xFF);
           var b = (byte)((p >> 40) & 0xFF);
           var a = (byte)((p >> 56) & 0xFF);
-          *dstRow++ = (uint)(b | (g << 8) | (r << 16) | ((uint)a << 24));
+          *dstRow++ = (uint)b | ((uint)g << 8) | ((uint)r << 16) | ((uint)a << 24);
           --count;
         }
       }
@@ -692,7 +692,7 @@ internal static class PixelFormatConverters {
                 var r8 = (byte)((r16 * 255L) / a16);
                 var g8 = (byte)((g16 * 255L) / a16);
                 var b8 = (byte)((b16 * 255L) / a16);
-                dstRow[i] = (uint)(b8 | (g8 << 8) | (r8 << 16) | ((uint)a8 << 24));
+                dstRow[i] = (uint)b8 | ((uint)g8 << 8) | ((uint)r8 << 16) | ((uint)a8 << 24);
               }
             }
           }
@@ -719,7 +719,7 @@ internal static class PixelFormatConverters {
               var r8 = (byte)((r16 * 255L) / a16);
               var g8 = (byte)((g16 * 255L) / a16);
               var b8 = (byte)((b16 * 255L) / a16);
-              *dstRow = (uint)(b8 | (g8 << 8) | (r8 << 16) | ((uint)a8 << 24));
+              *dstRow = (uint)b8 | ((uint)g8 << 8) | ((uint)r8 << 16) | ((uint)a8 << 24);
             }
           }
         }

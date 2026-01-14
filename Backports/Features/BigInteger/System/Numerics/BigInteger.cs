@@ -644,7 +644,7 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     if (string.IsNullOrWhiteSpace(value))
       return false;
 
-    value = value.Trim();
+    value = value!.Trim();
     var isNegative = false;
     var startIndex = 0;
 

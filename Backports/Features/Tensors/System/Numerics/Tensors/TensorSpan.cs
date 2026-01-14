@@ -26,7 +26,9 @@ namespace System.Numerics.Tensors;
 /// Represents a mutable view over a contiguous region of arbitrary memory that can be interpreted as a tensor.
 /// </summary>
 /// <typeparam name="T">The type of items in the tensor span.</typeparam>
+#pragma warning disable CS0660, CS0661 // Ref struct cannot implement Equals/GetHashCode (same as Span<T>)
 public readonly ref struct TensorSpan<T> {
+#pragma warning restore CS0660, CS0661
 
   private readonly Span<T> _span;
   private readonly nint[] _lengths;

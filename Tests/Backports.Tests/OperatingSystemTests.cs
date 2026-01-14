@@ -168,7 +168,9 @@ public class OperatingSystemTests {
   [Test]
   [Category("HappyPath")]
   public void OperatingSystem_IsOSPlatform_Unknown_ReturnsFalse() {
+#pragma warning disable CA1418 // Intentional: testing behavior with unknown platform name
     var isUnknown = OperatingSystem.IsOSPlatform("UnknownPlatform");
+#pragma warning restore CA1418
     Assert.That(isUnknown, Is.False);
   }
 
@@ -252,7 +254,9 @@ public class OperatingSystemTests {
   [Test]
   [Category("HappyPath")]
   public void OperatingSystem_IsOSPlatformVersionAtLeast_Unknown_ReturnsFalse() {
+#pragma warning disable CA1418 // Intentional: testing behavior with unknown platform name
     var result = OperatingSystem.IsOSPlatformVersionAtLeast("UnknownPlatform", 1);
+#pragma warning restore CA1418
     Assert.That(result, Is.False);
   }
 

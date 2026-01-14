@@ -49,7 +49,7 @@ public abstract class Expression {
   /// <summary>
   /// The type stored for derived classes that use the constructor-based initialization.
   /// </summary>
-  private readonly Type _type;
+  private readonly Type _type = null!;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="Expression"/> class.

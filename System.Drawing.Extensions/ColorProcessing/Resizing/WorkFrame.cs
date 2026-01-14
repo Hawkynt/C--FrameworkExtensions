@@ -32,7 +32,7 @@ namespace System.Drawing.Extensions.ColorProcessing.Resizing;
 /// Uses ArrayPool for efficient memory allocation. Always call Return() when done.
 /// </remarks>
 public struct WorkFrame<TWork> : IDisposable where TWork : unmanaged {
-  private TWork[] _buffer;
+  private TWork[]? _buffer;
   private readonly int _size;
 
   /// <summary>Width of the frame in pixels.</summary>
@@ -46,7 +46,7 @@ public struct WorkFrame<TWork> : IDisposable where TWork : unmanaged {
   /// </summary>
   public Span<TWork> Span {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => this._buffer.AsSpan(0, this._size);
+    get => (this._buffer ?? []).AsSpan(0, this._size);
   }
 
   /// <summary>
@@ -54,14 +54,14 @@ public struct WorkFrame<TWork> : IDisposable where TWork : unmanaged {
   /// </summary>
   public ref TWork this[int x, int y] {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => ref this._buffer[y * this.Width + x];
+    get => ref this._buffer![y * this.Width + x];
   }
 
   /// <summary>
   /// Gets a span for a single row.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Span<TWork> GetRow(int y) => this._buffer.AsSpan(y * this.Width, this.Width);
+  public Span<TWork> GetRow(int y) => this._buffer!.AsSpan(y * this.Width, this.Width);
 
   private WorkFrame(int width, int height, TWork[] buffer) {
     this.Width = width;

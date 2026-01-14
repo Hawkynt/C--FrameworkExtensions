@@ -19,6 +19,8 @@
 
 #if !SUPPORTS_READ_ONLY_COLLECTIONS
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Collections.Generic;
 
 /// <summary>
@@ -57,7 +59,7 @@ public interface IReadOnlyDictionary<TKey, TValue> : IReadOnlyCollection<KeyValu
   /// <param name="key">The key to locate.</param>
   /// <param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the value parameter.</param>
   /// <returns><see langword="true"/> if the object that implements the <see cref="IReadOnlyDictionary{TKey,TValue}"/> interface contains an element with the specified key; otherwise, <see langword="false"/>.</returns>
-  bool TryGetValue(TKey key, out TValue value);
+  bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value);
 }
 
 #endif

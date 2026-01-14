@@ -692,9 +692,10 @@ public class TaskTests {
   [Category("HappyPath")]
   public void CancellationTokenSource_CancelAfter_CancelsAfterDelay() {
     var cts = new CancellationTokenSource();
-    cts.CancelAfter(50);
+    cts.CancelAfter(100);
 
-    Thread.Sleep(100);
+    // Use generous timeout for slower runtimes like .NET 3.5
+    Thread.Sleep(500);
     Assert.That(cts.Token.IsCancellationRequested, Is.True);
   }
 

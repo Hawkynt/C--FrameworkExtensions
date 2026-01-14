@@ -37,7 +37,7 @@ internal static class Expr {
     typeof(System.Linq.Expressions.LabelTarget).GetConstructor(
       System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
       null,
-      new[] { typeof(Type), typeof(string) },
+      [typeof(Type), typeof(string)],
       null
     );
 
@@ -45,19 +45,19 @@ internal static class Expr {
   /// Creates a LabelTarget for control flow.
   /// </summary>
   public static System.Linq.Expressions.LabelTarget Label(Type type, string name) =>
-    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke(new object[] { type, name });
+    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke([type, name]);
 
   /// <summary>
   /// Creates a LabelTarget for void control flow.
   /// </summary>
   public static System.Linq.Expressions.LabelTarget Label(string name) =>
-    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke(new object[] { typeof(void), name });
+    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke([typeof(void), name]);
 
   /// <summary>
   /// Creates a LabelTarget for void control flow.
   /// </summary>
   public static System.Linq.Expressions.LabelTarget Label() =>
-    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke(new object[] { typeof(void), null });
+    (System.Linq.Expressions.LabelTarget)_labelTargetCtor.Invoke([typeof(void), null]);
 
   /// <summary>
   /// Creates a DefaultExpression that represents the default value of a type.
@@ -67,7 +67,7 @@ internal static class Expr {
   /// <summary>
   /// Creates a GotoExpression for control flow.
   /// </summary>
-  public static GotoExpression Goto(System.Linq.Expressions.LabelTarget target) => new(GotoExpressionKind.Goto, target, null, typeof(void));
+  public static GotoExpression Goto(System.Linq.Expressions.LabelTarget target) => new(GotoExpressionKind.Goto, target, null!, typeof(void));
 
   /// <summary>
   /// Creates a GotoExpression with a value.
@@ -82,7 +82,7 @@ internal static class Expr {
   /// <summary>
   /// Creates a LabelExpression.
   /// </summary>
-  public static LabelExpression Label(System.Linq.Expressions.LabelTarget target) => new(target, null);
+  public static LabelExpression Label(System.Linq.Expressions.LabelTarget target) => new(target, null!);
 
   /// <summary>
   /// Creates a LabelExpression with a default value.
@@ -218,7 +218,7 @@ internal sealed class BlockExpression : Expression {
 
   public ParameterExpression[] Variables { get; }
   public Expression[] Expressions { get; }
-  public Expression Result => this.Expressions.Length > 0 ? this.Expressions[this.Expressions.Length - 1] : null;
+  public Expression? Result => this.Expressions.Length > 0 ? this.Expressions[this.Expressions.Length - 1] : null;
 }
 
 /// <summary>

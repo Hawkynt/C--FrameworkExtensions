@@ -233,11 +233,7 @@ public static partial class PathPolyfills {
   /// or with a directory separator on any platform.
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsPathFullyQualified(string? path) {
-    if (string.IsNullOrEmpty(path))
-      return false;
-    return IsPathFullyQualified(path.AsSpan());
-  }
+  public static bool IsPathFullyQualified(string? path) => !string.IsNullOrEmpty(path) && IsPathFullyQualified(path!.AsSpan());
 
   /// <summary>
   /// Returns a value that indicates whether a file path is fully qualified.

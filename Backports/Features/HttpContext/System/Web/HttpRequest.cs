@@ -52,12 +52,12 @@ public sealed class HttpRequest {
       this.Path = url;
     }
     if (!string.IsNullOrEmpty(queryString))
-      _ParseQueryString(queryString, this.QueryString);
+      _ParseQueryString(queryString!, this.QueryString);
   }
 
   private static void _ParseQueryString(string queryString, NameValueCollection collection) {
     if (queryString.StartsWith("?"))
-      queryString = queryString.Substring(1);
+      queryString = queryString[1..];
 
     foreach (var pair in queryString.Split('&')) {
       if (string.IsNullOrEmpty(pair))
@@ -67,8 +67,8 @@ public sealed class HttpRequest {
       if (index < 0) {
         collection.Add(Uri.UnescapeDataString(pair), null);
       } else {
-        var key = Uri.UnescapeDataString(pair.Substring(0, index));
-        var value = Uri.UnescapeDataString(pair.Substring(index + 1));
+        var key = Uri.UnescapeDataString(pair[..index]);
+        var value = Uri.UnescapeDataString(pair[(index + 1)..]);
         collection.Add(key, value);
       }
     }
@@ -119,12 +119,14 @@ public sealed class HttpRequest {
   /// </summary>
   public NameValueCollection Params {
     get {
-      var result = new NameValueCollection();
-      result.Add(this.QueryString);
-      result.Add(this.Form);
+      var result = new NameValueCollection {
+        this.QueryString, 
+        this.Form
+      };
       foreach (var key in this.Cookies.AllKeys)
         if (key != null)
           result.Add(key, this.Cookies[key]?.Value);
+
       result.Add(this.ServerVariables);
       return result;
     }

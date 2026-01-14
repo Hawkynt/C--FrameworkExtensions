@@ -71,7 +71,6 @@ public ref struct SpanSplitEnumerator<T> where T : IEquatable<T> {
   private readonly ReadOnlySpan<T> _separator;
   private readonly bool _useSingleSeparator;
   private readonly int _separatorLength;
-  private int _currentStart;
   private int _nextSearchStart;
   private bool _isInitialized;
 
@@ -81,7 +80,6 @@ public ref struct SpanSplitEnumerator<T> where T : IEquatable<T> {
     this._separator = default;
     this._useSingleSeparator = true;
     this._separatorLength = 1;
-    this._currentStart = 0;
     this._nextSearchStart = 0;
     this.Current = default;
     this._isInitialized = false;
@@ -93,7 +91,6 @@ public ref struct SpanSplitEnumerator<T> where T : IEquatable<T> {
     this._separator = separator;
     this._useSingleSeparator = false;
     this._separatorLength = separator.Length;
-    this._currentStart = 0;
     this._nextSearchStart = 0;
     this.Current = default;
     this._isInitialized = false;
@@ -116,7 +113,6 @@ public ref struct SpanSplitEnumerator<T> where T : IEquatable<T> {
   public bool MoveNext() {
     if (!this._isInitialized) {
       this._isInitialized = true;
-      this._currentStart = 0;
       this._nextSearchStart = 0;
     }
 

@@ -104,7 +104,7 @@ public readonly struct NIndex : IEquatable<NIndex> {
     => this._value == other._value && this._fromEnd == other._fromEnd;
 
   /// <inheritdoc/>
-  public override bool Equals(object obj)
+  public override bool Equals(object? obj)
     => obj is NIndex other && this.Equals(other);
 
   /// <inheritdoc/>

@@ -108,7 +108,7 @@ public static partial class Tensor {
     for (var i = 0; i < x.Length; ++i) {
       var left = x[i];
       var right = y[i];
-      var result = default(T);
+      var result = default(T)!;
       var pLeft = (byte*)Unsafe.AsPointer(ref left);
       var pRight = (byte*)Unsafe.AsPointer(ref right);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
@@ -126,7 +126,7 @@ public static partial class Tensor {
     for (var i = 0; i < x.Length; ++i) {
       var left = x[i];
       var right = y[i];
-      var result = default(T);
+      var result = default(T)!;
       var pLeft = (byte*)Unsafe.AsPointer(ref left);
       var pRight = (byte*)Unsafe.AsPointer(ref right);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
@@ -144,7 +144,7 @@ public static partial class Tensor {
     for (var i = 0; i < x.Length; ++i) {
       var left = x[i];
       var right = y[i];
-      var result = default(T);
+      var result = default(T)!;
       var pLeft = (byte*)Unsafe.AsPointer(ref left);
       var pRight = (byte*)Unsafe.AsPointer(ref right);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
@@ -161,7 +161,7 @@ public static partial class Tensor {
     var size = Unsafe.SizeOf<T>();
     for (var i = 0; i < x.Length; ++i) {
       var value = x[i];
-      var result = default(T);
+      var result = default(T)!;
       var pValue = (byte*)Unsafe.AsPointer(ref value);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
       for (var j = 0; j < size; ++j)
@@ -182,7 +182,7 @@ public static partial class Tensor {
 
     for (var i = 0; i < x.Length; ++i) {
       var value = x[i];
-      var result = default(T);
+      var result = default(T)!;
       var pValue = (byte*)Unsafe.AsPointer(ref value);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
 
@@ -219,7 +219,7 @@ public static partial class Tensor {
 
     for (var i = 0; i < x.Length; ++i) {
       var value = x[i];
-      var result = default(T);
+      var result = default(T)!;
       var pValue = (byte*)Unsafe.AsPointer(ref value);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
 
@@ -255,7 +255,7 @@ public static partial class Tensor {
 
     for (var i = 0; i < x.Length; ++i) {
       var value = x[i];
-      var result = default(T);
+      var result = default(T)!;
       var pValue = (byte*)Unsafe.AsPointer(ref value);
       var pResult = (byte*)Unsafe.AsPointer(ref result);
 
@@ -345,7 +345,7 @@ public static partial class Tensor {
       _ => throw new NotSupportedException($"PopCount not supported for size {size}")
     };
 
-    var result = default(T);
+    var result = default(T)!;
     var pResult = (byte*)Unsafe.AsPointer(ref result);
     switch (size) {
       case 1: *(byte*)pResult = (byte)count; break;
@@ -402,7 +402,7 @@ public static partial class Tensor {
       _ => throw new NotSupportedException($"LeadingZeroCount not supported for size {size}")
     };
 
-    var result = default(T);
+    var result = default(T)!;
     var pResult = (byte*)Unsafe.AsPointer(ref result);
     switch (size) {
       case 1: *(byte*)pResult = (byte)count; break;
@@ -470,7 +470,7 @@ public static partial class Tensor {
       _ => throw new NotSupportedException($"TrailingZeroCount not supported for size {size}")
     };
 
-    var result = default(T);
+    var result = default(T)!;
     var pResult = (byte*)Unsafe.AsPointer(ref result);
     switch (size) {
       case 1: *(byte*)pResult = (byte)count; break;
@@ -528,7 +528,7 @@ public static partial class Tensor {
   /// </summary>
   private static unsafe T _FromDouble<T>(double value) {
     var size = Unsafe.SizeOf<T>();
-    var result = default(T);
+    var result = default(T)!;
     var pResult = (byte*)Unsafe.AsPointer(ref result);
 
     switch (size) {

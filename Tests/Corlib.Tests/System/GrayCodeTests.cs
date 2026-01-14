@@ -48,7 +48,9 @@ public class GrayCodeTests {
     Assert.IsTrue(medium < large);
     Assert.IsTrue(large > small);
     Assert.IsTrue(small <= medium);
+#pragma warning disable CS1718 // Intentional: testing self-comparison operator
     Assert.IsTrue(small >= small);
+#pragma warning restore CS1718
   }
 
   [Test]

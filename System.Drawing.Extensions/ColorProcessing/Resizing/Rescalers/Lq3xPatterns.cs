@@ -1776,8 +1776,6 @@ internal static class Lq3xPatterns {
         e00 = !equality.Equals(c1, c3) ? w4 : lerp.Lerp(w4, w1, w3, 2, 1, 1);
         e02 = !equality.Equals(c1, c5) ? w4 : lerp.Lerp(w4, w1, w5, 2, 1, 1);
         break;
-      default:
-        break;
     }
   }
 }

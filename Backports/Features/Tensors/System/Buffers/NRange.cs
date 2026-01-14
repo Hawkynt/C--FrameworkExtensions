@@ -88,7 +88,7 @@ public readonly struct NRange : IEquatable<NRange> {
     => this.Start == other.Start && this.End == other.End;
 
   /// <inheritdoc/>
-  public override bool Equals(object obj)
+  public override bool Equals(object? obj)
     => obj is NRange other && this.Equals(other);
 
   /// <inheritdoc/>

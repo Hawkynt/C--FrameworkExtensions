@@ -20,7 +20,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 
-#if !SUPPORTS_FROZEN_COLLECTIONS
+#if !SUPPORTS_FROZEN_COLLECTIONS && !OFFICIAL_FROZEN_COLLECTIONS
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

@@ -192,7 +192,7 @@ public abstract class DynamicMetaObjectBinder : CallSiteBinder {
     Expression.Goto(UpdateLabel, type != typeof(void) ? Expression.Default(type) : null);
 #else
   public Expression GetUpdateExpression(Type type) =>
-    Expr.Goto(UpdateLabel, type != typeof(void) ? Expr.Default(type) : null);
+    Expr.Goto(UpdateLabel, type != typeof(void) ? Expr.Default(type) : null!);
 #endif
 
 }

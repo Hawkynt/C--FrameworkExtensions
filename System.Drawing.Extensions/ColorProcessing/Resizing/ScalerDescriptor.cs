@@ -140,7 +140,7 @@ public sealed class ScalerDescriptor {
     // Try to get SupportedScales static property
     var supportedScales = Array.Empty<ScaleFactor>();
     var supportedScalesProp = type.GetProperty("SupportedScales", BindingFlags.Public | BindingFlags.Static);
-    if (supportedScalesProp?.GetValue(null) is ScaleFactor[] scales)
+    if (supportedScalesProp?.GetValue(null!) is ScaleFactor[] scales)
       supportedScales = scales;
 
     // Try to get Radius from a default instance for resamplers

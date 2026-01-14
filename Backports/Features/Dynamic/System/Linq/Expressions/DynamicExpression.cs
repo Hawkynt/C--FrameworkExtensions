@@ -160,6 +160,9 @@ public class DynamicExpression : Expression {
     return true;
   }
 
+  // CS0108: Member hides inherited member (net20 polyfill Expression has these methods)
+  // CS0109: Member does not hide inherited member (net35 BCL Expression lacks these methods)
+#pragma warning disable CS0108, CS0109
   #region Factory Methods
 
   /// <summary>
@@ -171,7 +174,7 @@ public class DynamicExpression : Expression {
   /// <param name="arguments">The arguments to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
   /// <exception cref="ArgumentNullException"><paramref name="binder"/> is <see langword="null"/>.</exception>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, params Expression[] arguments) =>
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, params Expression[] arguments) =>
     Dynamic(binder, returnType, (IEnumerable<Expression>)arguments);
 
   /// <summary>
@@ -183,7 +186,7 @@ public class DynamicExpression : Expression {
   /// <param name="arguments">The arguments to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
   /// <exception cref="ArgumentNullException"><paramref name="binder"/> is <see langword="null"/>.</exception>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, IEnumerable<Expression> arguments) {
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, IEnumerable<Expression> arguments) {
     if (binder == null)
       throw new ArgumentNullException(nameof(binder));
     if (returnType == null)
@@ -201,7 +204,7 @@ public class DynamicExpression : Expression {
   /// <param name="binder">The <see cref="CallSiteBinder"/> that binds the dynamic operation.</param>
   /// <param name="returnType">The return type of the dynamic expression.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder and return type.</returns>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType) =>
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType) =>
     Dynamic(binder, returnType, Array.Empty<Expression>());
 
   /// <summary>
@@ -212,8 +215,8 @@ public class DynamicExpression : Expression {
   /// <param name="returnType">The return type of the dynamic expression.</param>
   /// <param name="arg0">The first argument to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and argument.</returns>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0) =>
-    Dynamic(binder, returnType, new[] { arg0 });
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0) =>
+    Dynamic(binder, returnType, [arg0]);
 
   /// <summary>
   /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
@@ -224,8 +227,8 @@ public class DynamicExpression : Expression {
   /// <param name="arg0">The first argument to the dynamic operation.</param>
   /// <param name="arg1">The second argument to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1) =>
-    Dynamic(binder, returnType, new[] { arg0, arg1 });
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1) =>
+    Dynamic(binder, returnType, [arg0, arg1]);
 
   /// <summary>
   /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
@@ -237,8 +240,8 @@ public class DynamicExpression : Expression {
   /// <param name="arg1">The second argument to the dynamic operation.</param>
   /// <param name="arg2">The third argument to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2) =>
-    Dynamic(binder, returnType, new[] { arg0, arg1, arg2 });
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2) =>
+    Dynamic(binder, returnType, [arg0, arg1, arg2]);
 
   /// <summary>
   /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
@@ -251,8 +254,8 @@ public class DynamicExpression : Expression {
   /// <param name="arg2">The third argument to the dynamic operation.</param>
   /// <param name="arg3">The fourth argument to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified binder, return type, and arguments.</returns>
-  public static new DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2, Expression arg3) =>
-    Dynamic(binder, returnType, new[] { arg0, arg1, arg2, arg3 });
+  public new static DynamicExpression Dynamic(CallSiteBinder binder, Type returnType, Expression arg0, Expression arg1, Expression arg2, Expression arg3) =>
+    Dynamic(binder, returnType, [arg0, arg1, arg2, arg3]);
 
   /// <summary>
   /// Creates a <see cref="DynamicExpression"/> that represents a dynamic operation
@@ -268,7 +271,7 @@ public class DynamicExpression : Expression {
   /// <exception cref="ArgumentException">
   /// <paramref name="delegateType"/> is not a delegate type, or its first parameter is not assignable to <see cref="CallSite"/>.
   /// </exception>
-  public static new DynamicExpression MakeDynamic(Type delegateType, CallSiteBinder binder, IEnumerable<Expression> arguments) {
+  public new static DynamicExpression MakeDynamic(Type delegateType, CallSiteBinder binder, IEnumerable<Expression> arguments) {
     if (delegateType == null)
       throw new ArgumentNullException(nameof(delegateType));
     if (binder == null)
@@ -287,7 +290,7 @@ public class DynamicExpression : Expression {
   /// <param name="binder">The <see cref="CallSiteBinder"/> that binds the dynamic operation.</param>
   /// <param name="arguments">The arguments to the dynamic operation.</param>
   /// <returns>A <see cref="DynamicExpression"/> that has the specified delegate type, binder, and arguments.</returns>
-  public static new DynamicExpression MakeDynamic(Type delegateType, CallSiteBinder binder, params Expression[] arguments) =>
+  public new static DynamicExpression MakeDynamic(Type delegateType, CallSiteBinder binder, params Expression[] arguments) =>
     MakeDynamic(delegateType, binder, (IEnumerable<Expression>)arguments);
 
   /// <summary>
@@ -324,6 +327,7 @@ public class DynamicExpression : Expression {
   }
 
   #endregion
+#pragma warning restore CS0108, CS0109
 
 }
 

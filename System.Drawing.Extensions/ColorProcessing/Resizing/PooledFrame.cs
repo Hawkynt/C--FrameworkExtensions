@@ -74,7 +74,7 @@ public struct PooledFrame<TPixel> : IDisposable where TPixel : unmanaged, IColor
   /// </summary>
   public ReadOnlySpan<TPixel> Pixels {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => this._pixels.AsSpan(0, this._size);
+    get => this._pixels!.AsSpan(0, this._size);
   }
 
   /// <summary>
@@ -82,7 +82,7 @@ public struct PooledFrame<TPixel> : IDisposable where TPixel : unmanaged, IColor
   /// </summary>
   public Span<TPixel> MutablePixels {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    get => this._pixels.AsSpan(0, this._size);
+    get => this._pixels!.AsSpan(0, this._size);
   }
 
   /// <summary>
@@ -97,7 +97,7 @@ public struct PooledFrame<TPixel> : IDisposable where TPixel : unmanaged, IColor
   /// Gets a span for a single row.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public Span<TPixel> GetRow(int y) => this._pixels.AsSpan(y * this.Stride, this.Width);
+  public Span<TPixel> GetRow(int y) => this._pixels!.AsSpan(y * this.Stride, this.Width);
 
   /// <summary>
   /// Creates a new pooled frame with the specified dimensions.

@@ -118,7 +118,7 @@ public abstract class ExpressionVisitor {
   /// <param name="node">The expression to visit.</param>
   /// <returns>The modified expression, if it or any subexpression was modified; otherwise, returns the original expression.</returns>
   protected internal virtual Expression VisitExtension(Expression node) =>
-    node.CanReduce ? this.Visit(node.ReduceAndCheck()) : node;
+    node.CanReduce ? this.Visit(node.ReduceAndCheck())! : node;
 
   /// <summary>
   /// Visits the children of the <see cref="InvocationExpression"/>.

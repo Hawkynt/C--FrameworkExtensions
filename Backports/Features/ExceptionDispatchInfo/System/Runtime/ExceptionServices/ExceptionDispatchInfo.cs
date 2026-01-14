@@ -67,6 +67,7 @@ public static class ExceptionDispatchInfoPolyfills {
     public static void Throw(Exception source) {
       ArgumentNullException.ThrowIfNull(source);
       ExceptionDispatchInfo.Capture(source).Throw();
+      throw null!; // Unreachable - satisfies DoesNotReturn contract
     }
 
   }

@@ -53,7 +53,7 @@ public sealed class ReferenceEqualityComparer : IEqualityComparer<object?>, IEqu
   /// <param name="obj">The object for which to get a hash code.</param>
   /// <returns>A hash code for the specified object.</returns>
   public int GetHashCode(object? obj)
-    => RuntimeHelpers.GetHashCode(obj);
+    => RuntimeHelpers.GetHashCode(obj!);
 
 }
 
