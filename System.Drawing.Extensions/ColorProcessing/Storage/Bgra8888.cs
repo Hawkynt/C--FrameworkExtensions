@@ -43,6 +43,23 @@ public readonly struct Bgra8888 : IColorSpace4B<Bgra8888>, IStorageSpace, IEquat
   /// <summary>Multiplier for normalized-float-to-byte conversion.</summary>
   public const float NormalizedToByte = ColorConstants.FloatToByte;
 
+  #region Common Colors
+
+  /// <summary>Fully transparent color (0, 0, 0, 0).</summary>
+  public static Bgra8888 Transparent => new(0, 0, 0, 0);
+
+  /// <summary>Opaque black color (0, 0, 0, 255).</summary>
+  public static Bgra8888 Black => new(0, 0, 0);
+
+  /// <summary>Opaque white color (255, 255, 255, 255).</summary>
+  public static Bgra8888 White => new(255, 255, 255);
+
+  /// <summary>Creates an opaque color from RGB components.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bgra8888 FromRgb(byte r, byte g, byte b) => new(r, g, b);
+
+  #endregion
+
   [FieldOffset(0)] private readonly uint _packed;
   [FieldOffset(0)] public readonly byte B;
   [FieldOffset(1)] public readonly byte G;

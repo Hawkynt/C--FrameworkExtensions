@@ -353,7 +353,7 @@ public static class ColorMatrices {
   /// <summary>Oklab RGB→LMS S-row blue coefficient.</summary>
   public const float Oklab_S_B = 0.6299787005f;
 
-  // LMS' to Oklab L transformation vector
+  // LMS' to Oklab transformation matrix
   /// <summary>Oklab LMS'→L L coefficient.</summary>
   public const float Oklab_ToL_L = 0.2104542553f;
 
@@ -362,6 +362,80 @@ public static class ColorMatrices {
 
   /// <summary>Oklab LMS'→L S coefficient.</summary>
   public const float Oklab_ToL_S = -0.0040720468f;
+
+  /// <summary>Oklab LMS'→a L coefficient.</summary>
+  public const float Oklab_ToA_L = 1.9779984951f;
+
+  /// <summary>Oklab LMS'→a M coefficient.</summary>
+  public const float Oklab_ToA_M = -2.4285922050f;
+
+  /// <summary>Oklab LMS'→a S coefficient.</summary>
+  public const float Oklab_ToA_S = 0.4505937099f;
+
+  /// <summary>Oklab LMS'→b L coefficient.</summary>
+  public const float Oklab_ToB_L = 0.0259040371f;
+
+  /// <summary>Oklab LMS'→b M coefficient.</summary>
+  public const float Oklab_ToB_M = 0.7827717662f;
+
+  /// <summary>Oklab LMS'→b S coefficient.</summary>
+  public const float Oklab_ToB_S = -0.8086757660f;
+
+  // Oklab to LMS' inverse transformation matrix
+  /// <summary>Oklab Lab→LMS' L-row L coefficient.</summary>
+  public const float Oklab_FromL_L = 1f;
+
+  /// <summary>Oklab Lab→LMS' L-row a coefficient.</summary>
+  public const float Oklab_FromL_A = 0.3963377774f;
+
+  /// <summary>Oklab Lab→LMS' L-row b coefficient.</summary>
+  public const float Oklab_FromL_B = 0.2158037573f;
+
+  /// <summary>Oklab Lab→LMS' M-row L coefficient.</summary>
+  public const float Oklab_FromM_L = 1f;
+
+  /// <summary>Oklab Lab→LMS' M-row a coefficient.</summary>
+  public const float Oklab_FromM_A = -0.1055613458f;
+
+  /// <summary>Oklab Lab→LMS' M-row b coefficient.</summary>
+  public const float Oklab_FromM_B = -0.0638541728f;
+
+  /// <summary>Oklab Lab→LMS' S-row L coefficient.</summary>
+  public const float Oklab_FromS_L = 1f;
+
+  /// <summary>Oklab Lab→LMS' S-row a coefficient.</summary>
+  public const float Oklab_FromS_A = -0.0894841775f;
+
+  /// <summary>Oklab Lab→LMS' S-row b coefficient.</summary>
+  public const float Oklab_FromS_B = -1.2914855480f;
+
+  // LMS to Linear RGB inverse transformation matrix
+  /// <summary>Oklab LMS→RGB R-row L coefficient.</summary>
+  public const float Oklab_ToR_L = 4.0767416621f;
+
+  /// <summary>Oklab LMS→RGB R-row M coefficient.</summary>
+  public const float Oklab_ToR_M = -3.3077115913f;
+
+  /// <summary>Oklab LMS→RGB R-row S coefficient.</summary>
+  public const float Oklab_ToR_S = 0.2309699292f;
+
+  /// <summary>Oklab LMS→RGB G-row L coefficient.</summary>
+  public const float Oklab_ToG_L = -1.2684380046f;
+
+  /// <summary>Oklab LMS→RGB G-row M coefficient.</summary>
+  public const float Oklab_ToG_M = 2.6097574011f;
+
+  /// <summary>Oklab LMS→RGB G-row S coefficient.</summary>
+  public const float Oklab_ToG_S = -0.3413193965f;
+
+  /// <summary>Oklab LMS→RGB B-row L coefficient.</summary>
+  public const float Oklab_ToB_L_Inv = -0.0041960863f;
+
+  /// <summary>Oklab LMS→RGB B-row M coefficient.</summary>
+  public const float Oklab_ToB_M_Inv = -0.7034186147f;
+
+  /// <summary>Oklab LMS→RGB B-row S coefficient.</summary>
+  public const float Oklab_ToB_S_Inv = 1.7076147010f;
 
   #endregion
 
