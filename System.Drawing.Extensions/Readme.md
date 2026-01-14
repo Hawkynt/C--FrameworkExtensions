@@ -287,11 +287,15 @@ Quantizers reduce the number of colors in an image to generate optimized palette
 
 ### Available Quantizers
 
-| Quantizer                                                            | Author                      | Year | Type      | Description                                                                                        |
-| -------------------------------------------------------------------- | --------------------------- | ---- | --------- | -------------------------------------------------------------------------------------------------- |
-| [`MedianCutQuantizer`](https://dl.acm.org/doi/10.1145/965145.801294) | Paul Heckbert               | 1982 | Splitting | "Color Image Quantization for Frame Buffer Display", SIGGRAPH '82, pp. 297-307                     |
-| [`OctreeQuantizer`](https://www.cubic.org/docs/octree.htm)           | M. Gervautz, W. Purgathofer | 1988 | Tree      | "A Simple Method for Color Quantization: Octree Quantization", Graphics Gems, pp. 219-231          |
-| [`WuQuantizer`](http://www.ece.mcmaster.ca/~xwu/cq.c)                | Xiaolin Wu                  | 1991 | Splitting | "Efficient Statistical Computations for Optimal Color Quantization", Graphics Gems II, pp. 126-133 |
+| Quantizer                                                                                                    | Author                      | Year | Type       | Description                                                                                        |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------- | ---- | ---------- | -------------------------------------------------------------------------------------------------- |
+| [`KMeansQuantizer`](https://en.wikipedia.org/wiki/K-means_clustering)                                        | J. MacQueen                 | 1967 | Clustering | K-means++ iterative clustering, "Some Methods for Classification and Analysis"                     |
+| [`MedianCutQuantizer`](https://dl.acm.org/doi/10.1145/965145.801294)                                         | Paul Heckbert               | 1982 | Splitting  | "Color Image Quantization for Frame Buffer Display", SIGGRAPH '82, pp. 297-307                     |
+| [`NeuquantQuantizer`](https://scientificgems.wordpress.com/stuff/neuquant-fast-high-quality-image-quantization/) | Anthony Dekker              | 1994 | Neural     | "Kohonen Neural Networks for Optimal Colour Quantization", Network: Computing, vol. 73, pp. 351-367 |
+| [`OctreeQuantizer`](https://www.cubic.org/docs/octree.htm)                                                   | M. Gervautz, W. Purgathofer | 1988 | Tree       | "A Simple Method for Color Quantization: Octree Quantization", Graphics Gems, pp. 219-231          |
+| `PopularityQuantizer`                                                                                        | -                           | -    | Fixed      | Selects most frequently occurring colors from histogram                                            |
+| `UniformQuantizer`                                                                                           | -                           | -    | Fixed      | Divides RGB color space into uniform grid                                                          |
+| [`WuQuantizer`](http://www.ece.mcmaster.ca/~xwu/cq.c)                                                        | Xiaolin Wu                  | 1991 | Splitting  | "Efficient Statistical Computations for Optimal Color Quantization", Graphics Gems II, pp. 126-133 |
 
 ```csharp
 // Generate palette from colors
@@ -301,6 +305,24 @@ Bgra8888[] palette = quantizer.GeneratePalette(colors, 16);
 // Generate from histogram (weighted by frequency)
 var histogram = new List<(Bgra8888 color, uint count)> { ... };
 Bgra8888[] palette = quantizer.GeneratePalette(histogram, 256);
+```
+
+### K-Means Color Metrics
+
+The `KMeansQuantizer` supports any `IColorMetric<Bgra8888>` for clustering. See [Color Metrics](#color-metrics) for all available metrics.
+
+```csharp
+// Default K-Means (squared Euclidean - fastest)
+var kmeans = new KMeansQuantizer();
+
+// With perceptual Lab-based distance
+var perceptual = new KMeansQuantizer<CIEDE2000>();
+
+// With weighted RGB perception
+var weighted = new KMeansQuantizer<PngQuantDistance>(default);
+
+// With custom iterations
+var custom = new KMeansQuantizer { MaxIterations = 200, ConvergenceThreshold = 0.0001f };
 ```
 
 ---
@@ -336,6 +358,57 @@ Error diffusion dithering distributes quantization error to neighboring pixels f
 | `TwoD`                                                                                | -                                    | -    | 2         | Simple 2-neighbor                                                                                                                                   |
 | `TwoRowSierra`                                                                        | Frankie Sierra                       | 1990 | 7         | Two-row variant                                                                                                                                     |
 | `VerticalDiamond`                                                                     | -                                    | -    | 8         | Diamond with vertical bias                                                                                                                          |
+
+### Ordered Dithering
+
+Ordered dithering uses threshold matrices to determine pixel output. Unlike error diffusion, pixels can be processed independently (parallelizable).
+
+| Ditherer                                                                   | Author      | Year | Size  | Description                                            |
+| -------------------------------------------------------------------------- | ----------- | ---- | ----- | ------------------------------------------------------ |
+| [`Bayer2x2`](https://en.wikipedia.org/wiki/Ordered_dithering)              | Bryce Bayer | 1973 | 2×2   | Smallest Bayer threshold matrix                        |
+| [`Bayer4x4`](https://en.wikipedia.org/wiki/Ordered_dithering)              | Bryce Bayer | 1973 | 4×4   | Standard Bayer threshold matrix                        |
+| [`Bayer8x8`](https://en.wikipedia.org/wiki/Ordered_dithering)              | Bryce Bayer | 1973 | 8×8   | Large Bayer matrix with more gradation levels          |
+| [`Bayer16x16`](https://en.wikipedia.org/wiki/Ordered_dithering)            | Bryce Bayer | 1973 | 16×16 | Very large Bayer matrix for high quality               |
+| `ClusterDot4x4`                                                            | -           | -    | 4×4   | Clustered dot pattern for smoother appearance          |
+| `ClusterDot8x8`                                                            | -           | -    | 8×8   | Larger cluster dot pattern                             |
+| `Diagonal4x4`                                                              | -           | -    | 4×4   | Diagonal line pattern                                  |
+| `Halftone4x4`                                                              | -           | -    | 4×4   | Simulates halftone printing pattern                    |
+| `Halftone8x8`                                                              | -           | -    | 8×8   | Larger halftone pattern                                |
+
+```csharp
+// Ordered dithering with Bayer matrix
+var ditherer = OrderedDitherer.Bayer8x8;
+
+// Adjust strength (0.0 - 1.0)
+var reduced = OrderedDitherer.Bayer4x4.WithStrength(0.5f);
+```
+
+### Noise Dithering
+
+Noise dithering adds random or pseudo-random thresholds before quantization. Can be processed in parallel.
+
+| Ditherer      | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| `WhiteNoise`  | Uniform random threshold with equal energy at all frequencies        |
+| `BlueNoise`   | Spatially-filtered noise with reduced low-frequency content          |
+| `PinkNoise`   | 1/f noise, equal energy per octave, more natural-looking             |
+| `BrownNoise`  | 1/f² noise (Brownian motion), strong low-frequency, smooth organic   |
+| `VioletNoise` | f noise, high-frequency emphasis, sharp textured appearance          |
+| `GreyNoise`   | Perceptually uniform noise adjusted for human vision response        |
+
+```csharp
+// Noise dithering
+var ditherer = NoiseDitherer.BlueNoise;
+
+// Other noise types
+var pink = NoiseDitherer.PinkNoise;     // More natural than white
+var brown = NoiseDitherer.BrownNoise;   // Smooth, organic appearance
+var violet = NoiseDitherer.VioletNoise; // Sharp, textured
+var grey = NoiseDitherer.GreyNoise;     // Perceptually uniform
+
+// Adjust strength and seed
+var custom = NoiseDitherer.WhiteNoise.WithStrength(0.8f).WithSeed(12345);
+```
 
 ### Ditherer Configuration
 

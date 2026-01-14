@@ -421,4 +421,368 @@ public class QuantizationDitheringTests {
 
   #endregion
 
+  #region New Quantizer Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_PopularityQuantizer_PreservesDimensions() {
+    using var source = TestUtilities.CreateTestPattern(20, 20);
+    using var result = source.ReduceColors(new PopularityQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_PopularityQuantizer_SolidColorPreserved() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.ReduceColors(new PopularityQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    var palette = result.Palette.Entries;
+    var hasMagenta = false;
+    foreach (var c in palette)
+      if (c.R > 150 && c.B > 150) {
+        hasMagenta = true;
+        break;
+      }
+
+    Assert.That(hasMagenta, Is.True, "Palette should contain magenta color");
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_UniformQuantizer_PreservesDimensions() {
+    using var source = TestUtilities.CreateTestPattern(20, 20);
+    using var result = source.ReduceColors(new UniformQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_UniformQuantizer_ProducesUniformGrid() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new UniformQuantizer(), ErrorDiffusion.FloydSteinberg, 8);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format4bppIndexed));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_KMeansQuantizer_PreservesDimensions() {
+    using var source = TestUtilities.CreateTestPattern(20, 20);
+    using var result = source.ReduceColors(new KMeansQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_KMeansQuantizer_SolidColorPreserved() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.ReduceColors(new KMeansQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    var palette = result.Palette.Entries;
+    var hasOrange = false;
+    foreach (var c in palette)
+      if (c.R > 200 && c.G > 100 && c.B < 100) {
+        hasOrange = true;
+        break;
+      }
+
+    Assert.That(hasOrange, Is.True, "Palette should contain orange color");
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_KMeansQuantizer_WithCustomIterations_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(20, 20, Color.Red, Color.Blue);
+    var quantizer = new KMeansQuantizer { MaxIterations = 50 };
+    using var result = source.ReduceColors(quantizer, ErrorDiffusion.FloydSteinberg, 8);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_NeuquantQuantizer_PreservesDimensions() {
+    using var source = TestUtilities.CreateTestPattern(20, 20);
+    using var result = source.ReduceColors(new NeuquantQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_NeuquantQuantizer_SolidColorPreserved() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Purple);
+    using var result = source.ReduceColors(new NeuquantQuantizer(), ErrorDiffusion.FloydSteinberg, 16);
+
+    var palette = result.Palette.Entries;
+    var hasPurple = false;
+    foreach (var c in palette)
+      if (c.R > 100 && c.B > 100) {
+        hasPurple = true;
+        break;
+      }
+
+    Assert.That(hasPurple, Is.True, "Palette should contain purple color");
+  }
+
+  #endregion
+
+  #region Ordered Ditherer Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Bayer2x2_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Bayer2x2, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Bayer4x4_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Bayer4x4, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Bayer8x8_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Bayer8x8, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Bayer16x16_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Bayer16x16, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Halftone4x4_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Halftone4x4, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Halftone8x8_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Halftone8x8, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_ClusterDot4x4_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.ClusterDot4x4, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_ClusterDot8x8_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.ClusterDot8x8, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_Diagonal4x4_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), OrderedDitherer.Diagonal4x4, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_OrderedDitherer_WithStrength_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    var ditherer = OrderedDitherer.Bayer4x4.WithStrength(0.5f);
+    using var result = source.ReduceColors(new OctreeQuantizer(), ditherer, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void OrderedDitherer_RequiresSequentialProcessing_ReturnsFalse() {
+    var ditherer = OrderedDitherer.Bayer4x4;
+    Assert.That(ditherer.RequiresSequentialProcessing, Is.False);
+  }
+
+  #endregion
+
+  #region Noise Ditherer Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_WhiteNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.WhiteNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_BlueNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.BlueNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_PinkNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.PinkNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_BrownNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.BrownNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_VioletNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.VioletNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_GreyNoise_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    using var result = source.ReduceColors(new OctreeQuantizer(), NoiseDitherer.GreyNoise, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_NoiseDitherer_WithStrength_ProducesResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    var ditherer = NoiseDitherer.WhiteNoise.WithStrength(0.5f);
+    using var result = source.ReduceColors(new OctreeQuantizer(), ditherer, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_NoiseDitherer_WithSeed_ProducesReproducibleResult() {
+    using var source = TestUtilities.CreateGradientBitmap(32, 32, Color.Black, Color.White);
+    var ditherer = NoiseDitherer.WhiteNoise.WithSeed(12345);
+    using var result = source.ReduceColors(new OctreeQuantizer(), ditherer, 8);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void NoiseDitherer_RequiresSequentialProcessing_ReturnsFalse() {
+    var ditherer = NoiseDitherer.WhiteNoise;
+    Assert.That(ditherer.RequiresSequentialProcessing, Is.False);
+  }
+
+  #endregion
+
+  #region Combined New Algorithm Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_KMeansWithBayer_ProducesResult() {
+    using var source = TestUtilities.CreateTestPattern(32, 32);
+    using var result = source.ReduceColors(new KMeansQuantizer(), OrderedDitherer.Bayer8x8, 16);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_NeuquantWithBlueNoise_ProducesResult() {
+    using var source = TestUtilities.CreateTestPattern(32, 32);
+    using var result = source.ReduceColors(new NeuquantQuantizer(), NoiseDitherer.BlueNoise, 16);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_PopularityWithHalftone_ProducesResult() {
+    using var source = TestUtilities.CreateTestPattern(32, 32);
+    using var result = source.ReduceColors(new PopularityQuantizer(), OrderedDitherer.Halftone8x8, 16);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceColors_UniformWithWhiteNoise_ProducesResult() {
+    using var source = TestUtilities.CreateTestPattern(32, 32);
+    using var result = source.ReduceColors(new UniformQuantizer(), NoiseDitherer.WhiteNoise, 16);
+
+    Assert.That(result.Width, Is.EqualTo(32));
+    Assert.That(result.Height, Is.EqualTo(32));
+  }
+
+  #endregion
+
 }

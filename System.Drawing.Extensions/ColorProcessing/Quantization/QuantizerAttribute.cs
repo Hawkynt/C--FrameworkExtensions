@@ -34,7 +34,9 @@ public enum QuantizationType {
   /// <summary>Fixed palette quantization.</summary>
   Fixed,
   /// <summary>Variance-based quantization.</summary>
-  Variance
+  Variance,
+  /// <summary>Neural network-based quantization (e.g., NeuQuant).</summary>
+  Neural
 }
 
 /// <summary>
