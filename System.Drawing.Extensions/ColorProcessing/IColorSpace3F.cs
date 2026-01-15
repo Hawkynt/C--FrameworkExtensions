@@ -29,7 +29,7 @@ namespace Hawkynt.ColorProcessing;
 /// Components are typically normalized to 0.0-1.0 for working spaces,
 /// but may have different ranges for perceptual spaces like Lab.
 /// </remarks>
-public interface IColorSpace3F<TSelf> : IColorSpace
+public interface IColorSpace3F<out TSelf> : IColorSpace3<TSelf>
   where TSelf : unmanaged, IColorSpace3F<TSelf> {
 
   /// <summary>Gets the first component.</summary>
@@ -41,14 +41,9 @@ public interface IColorSpace3F<TSelf> : IColorSpace
   /// <summary>Gets the third component.</summary>
   float C3 { get; }
 
-  /// <summary>Returns components normalized to [0.0, 1.0].</summary>
-  (UNorm32 C1, UNorm32 C2, UNorm32 C3) ToNormalized();
-
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
   /// <summary>Creates a new instance from component values.</summary>
   static abstract TSelf Create(float c1, float c2, float c3);
 
-  /// <summary>Creates from normalized values.</summary>
-  static abstract TSelf FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3);
 #endif
 }

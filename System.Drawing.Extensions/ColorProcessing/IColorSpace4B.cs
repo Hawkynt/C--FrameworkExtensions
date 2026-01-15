@@ -17,15 +17,13 @@
 
 #endregion
 
-using Hawkynt.ColorProcessing.Metrics;
-
 namespace Hawkynt.ColorProcessing;
 
 /// <summary>
 /// Interface for 4-component byte color spaces with alpha (e.g., Rgba32).
 /// </summary>
 /// <typeparam name="TSelf">The implementing type for CRTP pattern.</typeparam>
-public interface IColorSpace4B<TSelf> : IColorSpace
+public interface IColorSpace4B<out TSelf> : IColorSpace4<TSelf>
   where TSelf : unmanaged, IColorSpace4B<TSelf> {
 
   /// <summary>Gets the first component (0-255).</summary>
@@ -40,14 +38,8 @@ public interface IColorSpace4B<TSelf> : IColorSpace
   /// <summary>Gets the alpha component (0-255).</summary>
   byte A { get; }
 
-  /// <summary>Returns components normalized to [0.0, 1.0].</summary>
-  (UNorm32 C1, UNorm32 C2, UNorm32 C3, UNorm32 A) ToNormalized();
-
 #if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
   /// <summary>Creates a new instance from component values.</summary>
   static abstract TSelf Create(byte c1, byte c2, byte c3, byte a);
-
-  /// <summary>Creates from normalized values.</summary>
-  static abstract TSelf FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a);
 #endif
 }

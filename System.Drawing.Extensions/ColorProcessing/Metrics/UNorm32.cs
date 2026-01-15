@@ -116,8 +116,8 @@ public readonly struct UNorm32 : IEquatable<UNorm32>, IComparable<UNorm32> {
   /// <exception cref="ArgumentOutOfRangeException">Thrown when value is outside [0.0, 1.0].</exception>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static UNorm32 FromFloat(float value) {
-    if (value < 0f || value > 1f)
-      throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be in range [0.0, 1.0]");
+    ArgumentOutOfRangeException.ThrowIfNegative(value);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 1f);
     return new((uint)(value * FromFloatMultiplier));
   }
 
@@ -127,13 +127,11 @@ public readonly struct UNorm32 : IEquatable<UNorm32>, IComparable<UNorm32> {
   /// <param name="value">A float value (clamped to [0.0, 1.0]).</param>
   /// <returns>A new UNorm32 instance.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static UNorm32 FromFloatClamped(float value) {
-    if (value <= 0f)
-      return Zero;
-    if (value >= 1f)
-      return One;
-    return new((uint)(value * FromFloatMultiplier));
-  }
+  public static UNorm32 FromFloatClamped(float value) => value switch {
+    <= 0f => Zero,
+    >= 1f => One,
+    _ => new((uint)(value * FromFloatMultiplier))
+  };
 
   #endregion
 
