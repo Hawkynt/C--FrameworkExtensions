@@ -25,6 +25,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// Defines the type/category of a dithering algorithm.
 /// </summary>
 public enum DitheringType {
+  /// <summary>No dithering - nearest neighbor quantization only.</summary>
+  None,
   /// <summary>Ordered dithering using threshold matrices (e.g., Bayer patterns).</summary>
   Ordered,
   /// <summary>Error diffusion dithering (e.g., Floyd-Steinberg, Atkinson).</summary>
