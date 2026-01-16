@@ -151,17 +151,148 @@ public readonly struct ErrorDiffusion : IDitherer {
   public bool RequiresSequentialProcessing => true;
 
   /// <inheritdoc />
-  public TResult InvokeKernel<TWork, TPixel, TDecode, TEncode, TMetric, TResult>(
-    IDithererCallback<TWork, TPixel, TDecode, TEncode, TMetric, TResult> callback,
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+    TPixel* source,
     int width,
-    int height)
-    where TWork : unmanaged, IColorSpace4F<TWork>
+    int height,
+    int stride,
+    in TDecode decoder,
+    in TMetric metric,
+    TWork[] palette)
+    where TWork : unmanaged, IColorSpace4<TWork>
     where TPixel : unmanaged, IStorageSpace
     where TDecode : struct, IDecode<TPixel, TWork>
-    where TEncode : struct, IEncode<TWork, TPixel>
-    where TMetric : struct, IColorMetric<TWork>
-    => callback.Invoke(new ErrorDiffusionKernel<TWork, TPixel, TDecode, TEncode, TMetric>(
-      width, height, this._weights, this._rowCount, this._columnCount, this._shift, this._divisor, this.Strength, this.UseSerpentine));
+    where TMetric : struct, IColorMetric<TWork> {
+
+    var indices = new byte[width * height];
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+
+    // Error buffer as ring buffer: [rowCount, width, 4 channels]
+    var rowStride = width * 4;
+    var errors = new float[this._rowCount * rowStride];
+    var invDivisor = 1f / this._divisor;
+    var baseRow = 0; // Ring buffer base index
+
+    for (var y = 0; y < height; ++y) {
+      // Serpentine: alternate direction each row
+      var reverseRow = this.UseSerpentine && (y & 1) == 1;
+
+      // Current row offset in ring buffer (row 0 = current row being processed)
+      var row0Offset = baseRow * rowStride;
+
+      // Pre-calculate row base indices
+      var rowSourceBase = y * stride;
+      var rowTargetBase = y * width;
+
+      // Direction-specific setup
+      int x, xEnd, xStep, sourceIdx, targetIdx;
+      if (reverseRow) {
+        x = width - 1;
+        xEnd = -1;
+        xStep = -1;
+        sourceIdx = rowSourceBase + width - 1;
+        targetIdx = rowTargetBase + width - 1;
+      } else {
+        x = 0;
+        xEnd = width;
+        xStep = 1;
+        sourceIdx = rowSourceBase;
+        targetIdx = rowTargetBase;
+      }
+
+      for (; x != xEnd; x += xStep, sourceIdx += xStep, targetIdx += xStep) {
+        // Decode source pixel
+        var color = decoder.Decode(source[sourceIdx]);
+
+        // Get accumulated error for this pixel and apply
+        var errIdx = row0Offset + x * 4;
+        var adjustedColor = _ApplyError(color, errors, errIdx, invDivisor, this.Strength);
+
+        // Clear this pixel's error using span
+        errors.AsSpan(errIdx, 4).Clear();
+
+        // Find nearest palette color
+        var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
+
+        // Calculate and distribute error using ring buffer
+        _DistributeErrorRing(adjustedColor, nearestColor, errors, x, y, width, height,
+          reverseRow, this._weights, this._rowCount, this._columnCount, this._shift, baseRow, rowStride);
+
+        // Store the palette index
+        indices[targetIdx] = (byte)nearestIdx;
+      }
+
+      // Rotate ring buffer: clear current row (becomes last row after rotation)
+      errors.AsSpan(row0Offset, rowStride).Clear();
+
+      // Advance base row in ring buffer
+      baseRow = (baseRow + 1) % this._rowCount;
+    }
+
+    return indices;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static TWork _ApplyError<TWork>(in TWork color, float[] errors, int errIdx, float invDivisor, float strength)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    var (c1, c2, c3, a) = color.ToNormalized();
+    var scale = invDivisor * strength;
+    return ColorFactory.FromNormalized_4<TWork>(
+      UNorm32.FromFloatClamped(c1.ToFloat() + errors[errIdx] * scale),
+      UNorm32.FromFloatClamped(c2.ToFloat() + errors[errIdx + 1] * scale),
+      UNorm32.FromFloatClamped(c3.ToFloat() + errors[errIdx + 2] * scale),
+      UNorm32.FromFloatClamped(a.ToFloat() + errors[errIdx + 3] * scale)
+    );
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void _DistributeErrorRing<TWork>(
+    in TWork adjustedColor,
+    in TWork nearestColor,
+    float[] errors,
+    int x, int y,
+    int width, int height,
+    bool reverseRow,
+    byte[] weights,
+    int matrixRowCount, int colCount, int shift,
+    int baseRow, int rowStride)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    // Calculate quantization error
+    var (ac1, ac2, ac3, aa) = adjustedColor.ToNormalized();
+    var (nc1, nc2, nc3, na) = nearestColor.ToNormalized();
+    var e1 = ac1.ToFloat() - nc1.ToFloat();
+    var e2 = ac2.ToFloat() - nc2.ToFloat();
+    var e3 = ac3.ToFloat() - nc3.ToFloat();
+    var ea = aa.ToFloat() - na.ToFloat();
+
+    // Distribute error using matrix with ring buffer indexing
+    for (var row = 0; row < matrixRowCount; ++row) {
+      var newY = y + row;
+      if (newY >= height)
+        break;
+
+      // Ring buffer row index
+      var ringRow = (baseRow + row) % matrixRowCount;
+      var ringRowOffset = ringRow * rowStride;
+
+      for (var col = 0; col < colCount; ++col) {
+        var weight = weights[row * colCount + col];
+        if (weight == 0)
+          continue;
+
+        var newX = reverseRow ? x - (col - shift) : x + (col - shift);
+        if (newX < 0 || newX >= width)
+          continue;
+
+        var targetIdx = ringRowOffset + newX * 4;
+        errors[targetIdx] += e1 * weight;
+        errors[targetIdx + 1] += e2 * weight;
+        errors[targetIdx + 2] += e3 * weight;
+        errors[targetIdx + 3] += ea * weight;
+      }
+    }
+  }
 
   #endregion
 
@@ -383,163 +514,5 @@ public readonly struct ErrorDiffusion : IDitherer {
   });
 
   #endregion
-
-}
-
-/// <summary>
-/// Error diffusion kernel that finds nearest colors in the working color space.
-/// </summary>
-file readonly struct ErrorDiffusionKernel<TWork, TPixel, TDecode, TEncode, TMetric>(
-  int width, int height,
-  byte[] weights, byte rowCount, byte columnCount, byte shift, ushort divisor,
-  float strength, bool useSerpentine)
-  : IDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric>
-  where TWork : unmanaged, IColorSpace4F<TWork>
-  where TPixel : unmanaged, IStorageSpace
-  where TDecode : struct, IDecode<TPixel, TWork>
-  where TEncode : struct, IEncode<TWork, TPixel>
-  where TMetric : struct, IColorMetric<TWork> {
-
-  public int Width => width;
-  public int Height => height;
-  public bool RequiresSequentialProcessing => true;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessOrdered(
-    TPixel* source,
-    int sourceStride,
-    int x, int y,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-    // For ordered dithering with palette, just find nearest color (no error diffusion)
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-    var sourceIdx = y * sourceStride + x;
-    var color = decoder.Decode(source[sourceIdx]);
-
-    var nearestIdx = lookup.FindNearest(color);
-    var destIdx = y * destStride + x;
-    dest[destIdx] = encoder.Encode(lookup[nearestIdx]);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessErrorDiffusion(
-    TPixel* source,
-    int sourceStride,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-
-    // Create palette lookup for nearest-neighbor search
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-
-    // Error buffer as ring buffer: [rowCount, width, 4 channels]
-    var rowStride = width * 4;
-    var errors = new float[rowCount * rowStride];
-    var invDivisor = 1f / divisor;
-    var baseRow = 0; // Ring buffer base index
-
-    for (var y = 0; y < height; ++y) {
-      // Serpentine: alternate direction each row
-      var reverseRow = useSerpentine && (y & 1) == 1;
-      var xStart = reverseRow ? width - 1 : 0;
-      var xEnd = reverseRow ? -1 : width;
-      var xStep = reverseRow ? -1 : 1;
-
-      // Current row offset in ring buffer (row 0 = current row being processed)
-      var row0Offset = baseRow * rowStride;
-
-      for (var x = xStart; x != xEnd; x += xStep) {
-        // Decode source pixel
-        var sourceIdx = y * sourceStride + x;
-        var color = decoder.Decode(source[sourceIdx]);
-
-        // Get accumulated error for this pixel and apply
-        var errIdx = row0Offset + x * 4;
-        var adjustedColor = _ApplyError(color, errors, errIdx, invDivisor, strength);
-
-        // Clear this pixel's error using span
-        errors.AsSpan(errIdx, 4).Clear();
-
-        // Find nearest palette color
-        var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
-
-        // Calculate and distribute error using ring buffer
-        _DistributeErrorRing(adjustedColor, nearestColor, errors, x, y, width, height,
-          reverseRow, weights, rowCount, columnCount, shift, baseRow, rowStride);
-
-        // Write the chosen palette color
-        var destIdx = y * destStride + x;
-        dest[destIdx] = encoder.Encode(nearestColor);
-      }
-
-      // Rotate ring buffer: clear current row (becomes last row after rotation)
-      errors.AsSpan(row0Offset, rowStride).Clear();
-
-      // Advance base row in ring buffer
-      baseRow = (baseRow + 1) % rowCount;
-    }
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static TWork _ApplyError(in TWork color, float[] errors, int errIdx, float invDivisor, float strength) {
-    var scale = invDivisor * strength;
-    var c1 = color.C1 + errors[errIdx] * scale;
-    var c2 = color.C2 + errors[errIdx + 1] * scale;
-    var c3 = color.C3 + errors[errIdx + 2] * scale;
-    var a = color.A + errors[errIdx + 3] * scale;
-    return ColorFactory.Create4F<TWork>(c1, c2, c3, a);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static void _DistributeErrorRing(
-    in TWork adjustedColor,
-    in TWork nearestColor,
-    float[] errors,
-    int x, int y,
-    int width, int height,
-    bool reverseRow,
-    byte[] weights,
-    int matrixRowCount, int colCount, int shift,
-    int baseRow, int rowStride) {
-    // Calculate quantization error
-    var e1 = adjustedColor.C1 - nearestColor.C1;
-    var e2 = adjustedColor.C2 - nearestColor.C2;
-    var e3 = adjustedColor.C3 - nearestColor.C3;
-    var ea = adjustedColor.A - nearestColor.A;
-
-    // Distribute error using matrix with ring buffer indexing
-    for (var row = 0; row < matrixRowCount; ++row) {
-      var newY = y + row;
-      if (newY >= height)
-        break;
-
-      // Ring buffer row index
-      var ringRow = (baseRow + row) % matrixRowCount;
-      var ringRowOffset = ringRow * rowStride;
-
-      for (var col = 0; col < colCount; ++col) {
-        var weight = weights[row * colCount + col];
-        if (weight == 0)
-          continue;
-
-        var newX = reverseRow ? x - (col - shift) : x + (col - shift);
-        if (newX < 0 || newX >= width)
-          continue;
-
-        var targetIdx = ringRowOffset + newX * 4;
-        errors[targetIdx] += e1 * weight;
-        errors[targetIdx + 1] += e2 * weight;
-        errors[targetIdx + 2] += e3 * weight;
-        errors[targetIdx + 3] += ea * weight;
-      }
-    }
-  }
 
 }

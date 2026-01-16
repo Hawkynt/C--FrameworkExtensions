@@ -35,7 +35,7 @@ namespace Hawkynt.ColorProcessing;
 /// <para>Use <see cref="FindNearest"/> to get the index of the closest palette color.</para>
 /// </remarks>
 public readonly struct PaletteLookup<TWork, TMetric>
-  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TWork : unmanaged, IColorSpace
   where TMetric : struct, IColorMetric<TWork> {
 
   private readonly TWork[] _palette;

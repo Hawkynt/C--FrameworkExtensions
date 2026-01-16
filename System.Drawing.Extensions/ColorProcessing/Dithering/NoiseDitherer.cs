@@ -99,32 +99,78 @@ public readonly struct NoiseDitherer : IDitherer {
   public bool RequiresSequentialProcessing => false;
 
   /// <inheritdoc />
-  public TResult InvokeKernel<TWork, TPixel, TDecode, TEncode, TMetric, TResult>(
-    IDithererCallback<TWork, TPixel, TDecode, TEncode, TMetric, TResult> callback,
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+    TPixel* source,
     int width,
-    int height)
-    where TWork : unmanaged, IColorSpace4F<TWork>
+    int height,
+    int stride,
+    in TDecode decoder,
+    in TMetric metric,
+    TWork[] palette)
+    where TWork : unmanaged, IColorSpace4<TWork>
     where TPixel : unmanaged, IStorageSpace
     where TDecode : struct, IDecode<TPixel, TWork>
-    where TEncode : struct, IEncode<TWork, TPixel>
     where TMetric : struct, IColorMetric<TWork>
-    // Switch happens ONCE here, not per-pixel - each noise type uses a specialized kernel
+    // Switch happens ONCE here, not per-pixel - each noise type uses specialized code path
     => this.NoiseType switch {
-      NoiseType.White => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, WhiteNoiseGenerator>(
-        width, height, new WhiteNoiseGenerator(this.Seed), this.Strength)),
-      NoiseType.Blue => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, BlueNoiseGenerator>(
-        width, height, new BlueNoiseGenerator(), this.Strength)),
-      NoiseType.Pink => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, PinkNoiseGenerator>(
-        width, height, new PinkNoiseGenerator(this.Seed), this.Strength)),
-      NoiseType.Brown => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, BrownNoiseGenerator>(
-        width, height, new BrownNoiseGenerator(this.Seed), this.Strength)),
-      NoiseType.Violet => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, VioletNoiseGenerator>(
-        width, height, new VioletNoiseGenerator(this.Seed), this.Strength)),
-      NoiseType.Grey => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, GreyNoiseGenerator>(
-        width, height, new GreyNoiseGenerator(this.Seed), this.Strength)),
-      _ => callback.Invoke(new NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, WhiteNoiseGenerator>(
-        width, height, new WhiteNoiseGenerator(this.Seed), this.Strength)),
+      NoiseType.White => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
+      NoiseType.Blue => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(), this.Strength),
+      NoiseType.Pink => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
+      NoiseType.Brown => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
+      NoiseType.Violet => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
+      NoiseType.Grey => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
+      _ => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
+        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
     };
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe byte[] _DitherWithNoise<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
+    TPixel* source,
+    int width,
+    int height,
+    int stride,
+    in TDecode decoder,
+    in TMetric metric,
+    TWork[] palette,
+    TNoiseGen noiseGen,
+    float strength)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TMetric : struct, IColorMetric<TWork>
+    where TNoiseGen : struct, INoiseGenerator {
+
+    var indices = new byte[width * height];
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+
+    for (var y = 0; y < height; ++y)
+    for (int x = 0, sourceIdx = y * stride, targetIdx = y * width; x < width; ++x, ++sourceIdx, ++targetIdx) {
+      var color = decoder.Decode(source[sourceIdx]);
+      var (c1, c2, c3, a) = color.ToNormalized();
+
+      // Direct call to struct method - devirtualized by JIT
+      var threshold = noiseGen.GetThreshold(x, y) * strength;
+
+      var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+        UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
+        UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
+        UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
+        a
+      );
+
+      var nearestIdx = lookup.FindNearest(adjustedColor);
+      indices[targetIdx] = (byte)nearestIdx;
+    }
+
+    return indices;
+  }
 
   #endregion
 
@@ -157,7 +203,7 @@ public readonly struct NoiseDitherer : IDitherer {
 /// <summary>
 /// Interface for noise generators - zero-cost abstraction for devirtualization.
 /// </summary>
-file interface INoiseGenerator {
+internal interface INoiseGenerator {
   /// <summary>Gets the noise threshold value at the specified position.</summary>
   float GetThreshold(int x, int y);
 }
@@ -169,7 +215,7 @@ file interface INoiseGenerator {
 /// <summary>
 /// White noise generator: uniform random distribution.
 /// </summary>
-file readonly struct WhiteNoiseGenerator(int seed) : INoiseGenerator {
+internal readonly struct WhiteNoiseGenerator(int seed) : INoiseGenerator {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float GetThreshold(int x, int y) {
     var hash = HashPosition(x, y, seed);
@@ -190,7 +236,7 @@ file readonly struct WhiteNoiseGenerator(int seed) : INoiseGenerator {
 /// <summary>
 /// Blue noise generator: spatially-filtered noise pattern.
 /// </summary>
-file readonly struct BlueNoiseGenerator : INoiseGenerator {
+internal readonly struct BlueNoiseGenerator : INoiseGenerator {
   private static readonly float[] _blueNoise64 = GenerateBlueNoise64();
   private static readonly double _GOLDEN = (Math.Sqrt(5) - 1) / 2;
 
@@ -218,7 +264,7 @@ file readonly struct BlueNoiseGenerator : INoiseGenerator {
 /// <summary>
 /// Pink noise generator: 1/f noise using octave summation.
 /// </summary>
-file readonly struct PinkNoiseGenerator(int seed) : INoiseGenerator {
+internal readonly struct PinkNoiseGenerator(int seed) : INoiseGenerator {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float GetThreshold(int x, int y) {
     var noise = 0f;
@@ -249,7 +295,7 @@ file readonly struct PinkNoiseGenerator(int seed) : INoiseGenerator {
 /// <summary>
 /// Brown/Red noise generator: 1/f² noise with spatial smoothing.
 /// </summary>
-file readonly struct BrownNoiseGenerator(int seed) : INoiseGenerator {
+internal readonly struct BrownNoiseGenerator(int seed) : INoiseGenerator {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float GetThreshold(int x, int y) {
     var sum = 0f;
@@ -279,7 +325,7 @@ file readonly struct BrownNoiseGenerator(int seed) : INoiseGenerator {
 /// <summary>
 /// Violet noise generator: f noise using differentiation.
 /// </summary>
-file readonly struct VioletNoiseGenerator(int seed) : INoiseGenerator {
+internal readonly struct VioletNoiseGenerator(int seed) : INoiseGenerator {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float GetThreshold(int x, int y) {
     var center = HashPosition(x, y, seed) & 0xFFFF;
@@ -306,12 +352,12 @@ file readonly struct VioletNoiseGenerator(int seed) : INoiseGenerator {
 /// <summary>
 /// Grey noise generator: perceptually uniform blended noise.
 /// </summary>
-file readonly struct GreyNoiseGenerator(int seed) : INoiseGenerator {
+internal readonly struct GreyNoiseGenerator(int seed) : INoiseGenerator {
   private static readonly float[] _blueNoise64 = GenerateBlueNoise64();
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public float GetThreshold(int x, int y) {
-    var white = GetWhiteNoise(x, y);
+    var white = this.GetWhiteNoise(x, y);
     var blue = _blueNoise64[(y & 63) * 64 + (x & 63)];
     return white * 0.4f + blue * 0.6f;
   }
@@ -347,95 +393,6 @@ file readonly struct GreyNoiseGenerator(int seed) : INoiseGenerator {
     }
 
     return result;
-  }
-}
-
-#endregion
-
-#region Generic Noise Ditherer Kernel
-
-/// <summary>
-/// Generic noise ditherer kernel using zero-cost noise generator abstraction.
-/// </summary>
-file readonly struct NoiseDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric, TNoiseGen>(
-  int width, int height,
-  TNoiseGen noiseGenerator, float strength)
-  : IDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric>
-  where TWork : unmanaged, IColorSpace4F<TWork>
-  where TPixel : unmanaged, IStorageSpace
-  where TDecode : struct, IDecode<TPixel, TWork>
-  where TEncode : struct, IEncode<TWork, TPixel>
-  where TMetric : struct, IColorMetric<TWork>
-  where TNoiseGen : struct, INoiseGenerator {
-
-  public int Width => width;
-  public int Height => height;
-  public bool RequiresSequentialProcessing => false;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessOrdered(
-    TPixel* source,
-    int sourceStride,
-    int x, int y,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-
-    var sourceIdx = y * sourceStride + x;
-    var color = decoder.Decode(source[sourceIdx]);
-
-    // Direct call to struct method - devirtualized by JIT
-    var threshold = noiseGenerator.GetThreshold(x, y) * strength;
-
-    var adjustedColor = ColorFactory.Create4F<TWork>(
-      color.C1 + threshold,
-      color.C2 + threshold,
-      color.C3 + threshold,
-      color.A
-    );
-
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-    var nearestIdx = lookup.FindNearest(adjustedColor);
-
-    var destIdx = y * destStride + x;
-    dest[destIdx] = encoder.Encode(lookup[nearestIdx]);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessErrorDiffusion(
-    TPixel* source,
-    int sourceStride,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-
-    for (var y = 0; y < height; ++y)
-    for (var x = 0; x < width; ++x) {
-      var sourceIdx = y * sourceStride + x;
-      var color = decoder.Decode(source[sourceIdx]);
-
-      // Direct call to struct method - devirtualized by JIT
-      var threshold = noiseGenerator.GetThreshold(x, y) * strength;
-
-      var adjustedColor = ColorFactory.Create4F<TWork>(
-        color.C1 + threshold,
-        color.C2 + threshold,
-        color.C3 + threshold,
-        color.A
-      );
-
-      var nearestIdx = lookup.FindNearest(adjustedColor);
-      var destIdx = y * destStride + x;
-      dest[destIdx] = encoder.Encode(lookup[nearestIdx]);
-    }
   }
 }
 

@@ -111,17 +111,54 @@ public readonly struct OrderedDitherer : IDitherer {
   public bool RequiresSequentialProcessing => false;
 
   /// <inheritdoc />
-  public TResult InvokeKernel<TWork, TPixel, TDecode, TEncode, TMetric, TResult>(
-    IDithererCallback<TWork, TPixel, TDecode, TEncode, TMetric, TResult> callback,
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+    TPixel* source,
     int width,
-    int height)
-    where TWork : unmanaged, IColorSpace4F<TWork>
+    int height,
+    int stride,
+    in TDecode decoder,
+    in TMetric metric,
+    TWork[] palette)
+    where TWork : unmanaged, IColorSpace4<TWork>
     where TPixel : unmanaged, IStorageSpace
     where TDecode : struct, IDecode<TPixel, TWork>
-    where TEncode : struct, IEncode<TWork, TPixel>
-    where TMetric : struct, IColorMetric<TWork>
-    => callback.Invoke(new OrderedDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric>(
-      width, height, this._thresholds, this.MatrixSize, this.Strength));
+    where TMetric : struct, IColorMetric<TWork> {
+
+    var indices = new byte[width * height];
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var matrixSize = this.MatrixSize;
+    var strength = this.Strength;
+    var thresholds = this._thresholds;
+
+    for (var y = 0; y < height; ++y) {
+      // Pre-calculate row-invariant values
+      var thresholdRowOffset = (y % matrixSize) * matrixSize;
+
+      for (int x = 0, sourceIdx = y * stride, targetIdx = y * width, mx = 0; x < width; ++x, ++sourceIdx, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
+        // Decode source pixel
+        var color = decoder.Decode(source[sourceIdx]);
+        var (c1, c2, c3, a) = color.ToNormalized();
+
+        // Get threshold from matrix (mx wraps via increment logic above)
+        var threshold = thresholds[thresholdRowOffset + mx] * strength;
+
+        // Apply threshold to color components
+        var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+          UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
+          UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
+          UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
+          a
+        );
+
+        // Find nearest palette color and store index
+        var nearestIdx = lookup.FindNearest(adjustedColor);
+        indices[targetIdx] = (byte)nearestIdx;
+      }
+    }
+
+    return indices;
+  }
 
   #endregion
 
@@ -233,97 +270,5 @@ public readonly struct OrderedDitherer : IDitherer {
   });
 
   #endregion
-
-}
-
-/// <summary>
-/// Ordered ditherer kernel that applies threshold-based dithering.
-/// </summary>
-file readonly struct OrderedDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric>(
-  int width, int height,
-  float[] thresholds, int matrixSize, float strength)
-  : IDithererKernel<TWork, TPixel, TDecode, TEncode, TMetric>
-  where TWork : unmanaged, IColorSpace4F<TWork>
-  where TPixel : unmanaged, IStorageSpace
-  where TDecode : struct, IDecode<TPixel, TWork>
-  where TEncode : struct, IEncode<TWork, TPixel>
-  where TMetric : struct, IColorMetric<TWork> {
-
-  public int Width => width;
-  public int Height => height;
-  public bool RequiresSequentialProcessing => false;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessOrdered(
-    TPixel* source,
-    int sourceStride,
-    int x, int y,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-
-    // Decode source pixel
-    var sourceIdx = y * sourceStride + x;
-    var color = decoder.Decode(source[sourceIdx]);
-
-    // Get threshold from matrix
-    var mx = x % matrixSize;
-    var my = y % matrixSize;
-    var threshold = thresholds[my * matrixSize + mx] * strength;
-
-    // Apply threshold to color
-    var adjustedColor = ColorFactory.Create4F<TWork>(
-      color.C1 + threshold,
-      color.C2 + threshold,
-      color.C3 + threshold,
-      color.A
-    );
-
-    // Find nearest palette color
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-    var nearestIdx = lookup.FindNearest(adjustedColor);
-
-    // Write result
-    var destIdx = y * destStride + x;
-    dest[destIdx] = encoder.Encode(lookup[nearestIdx]);
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void ProcessErrorDiffusion(
-    TPixel* source,
-    int sourceStride,
-    TPixel* dest,
-    int destStride,
-    in TDecode decoder,
-    in TEncode encoder,
-    in TMetric metric,
-    TWork[] palette) {
-    // Ordered dithering doesn't use error diffusion - process all pixels independently
-    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
-
-    for (var y = 0; y < height; ++y)
-    for (var x = 0; x < width; ++x) {
-      var sourceIdx = y * sourceStride + x;
-      var color = decoder.Decode(source[sourceIdx]);
-
-      var mx = x % matrixSize;
-      var my = y % matrixSize;
-      var threshold = thresholds[my * matrixSize + mx] * strength;
-
-      var adjustedColor = ColorFactory.Create4F<TWork>(
-        color.C1 + threshold,
-        color.C2 + threshold,
-        color.C3 + threshold,
-        color.A
-      );
-
-      var nearestIdx = lookup.FindNearest(adjustedColor);
-      var destIdx = y * destStride + x;
-      dest[destIdx] = encoder.Encode(lookup[nearestIdx]);
-    }
-  }
 
 }

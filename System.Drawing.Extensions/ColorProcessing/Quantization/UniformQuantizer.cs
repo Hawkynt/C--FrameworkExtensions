@@ -19,44 +19,69 @@
 
 using System;
 using System.Collections.Generic;
-using Hawkynt.ColorProcessing.Storage;
+using System.Linq;
+using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Implements the Uniform quantization algorithm.
-/// Divides the RGB color space into a uniform grid.
+/// Uniform grid color quantizer with configurable parameters.
 /// </summary>
 /// <remarks>
-/// <para>Creates evenly spaced colors regardless of the input image.</para>
-/// <para>Very fast but ignores the actual color distribution.</para>
+/// Divides color space into uniform cells and averages colors in each cell.
 /// </remarks>
-[Quantizer(QuantizationType.Fixed, DisplayName = "Uniform")]
-public class UniformQuantizer : QuantizerBase {
+[Quantizer(QuantizationType.Fixed, DisplayName = "Uniform", QualityRating = 2)]
+public struct UniformQuantizer : IQuantizer {
+
+  /// <summary>
+  /// Gets or sets whether to fill unused palette entries with generated colors.
+  /// </summary>
+  public bool AllowFillingColors { get; set; } = true;
+
+  public UniformQuantizer() { }
 
   /// <inheritdoc />
-  protected override Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram) {
-    var levelsPerChannel = (int)Math.Ceiling(Math.Pow(colorCount, 1.0 / 3.0));
-    levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 8));
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
 
-    var step = 255.0 / (levelsPerChannel - 1);
-    var result = new List<Bgra8888>(levelsPerChannel * levelsPerChannel * levelsPerChannel);
+  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
-    for (var c1 = 0; c1 < levelsPerChannel; ++c1)
-    for (var c2 = 0; c2 < levelsPerChannel; ++c2)
-    for (var c3 = 0; c3 < levelsPerChannel; ++c3) {
-      result.Add(Bgra8888.Create(
-        (byte)(c1 * step + 0.5),
-        (byte)(c2 * step + 0.5),
-        (byte)(c3 * step + 0.5),
-        255
-      ));
+    /// <inheritdoc />
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
+      switch (colorCount) {
+        case <= 0:
+          return [];
+        case 1:
+          return [histogram.FirstOrDefault().color];
+      }
 
-      if (result.Count >= colorCount)
-        return result.ToArray();
+      var reduced = _GenerateUniformPalette(colorCount);
+      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
     }
 
-    return result.ToArray();
-  }
+    private static List<TWork> _GenerateUniformPalette(int colorCount) {
+      var levelsPerChannel = (int)Math.Ceiling(Math.Pow(colorCount, 1.0 / 3.0));
+      levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 8));
 
+      var step = 1.0f / (levelsPerChannel - 1);
+      var result = new List<TWork>(levelsPerChannel * levelsPerChannel * levelsPerChannel);
+
+      for (var c1 = 0; c1 < levelsPerChannel; ++c1)
+      for (var c2 = 0; c2 < levelsPerChannel; ++c2)
+      for (var c3 = 0; c3 < levelsPerChannel; ++c3) {
+        result.Add(ColorFactory.FromNormalized_4<TWork>(
+          UNorm32.FromFloatClamped(c1 * step),
+          UNorm32.FromFloatClamped(c2 * step),
+          UNorm32.FromFloatClamped(c3 * step),
+          UNorm32.One
+        ));
+
+        if (result.Count >= colorCount)
+          return result;
+      }
+
+      return result;
+    }
+
+  }
 }

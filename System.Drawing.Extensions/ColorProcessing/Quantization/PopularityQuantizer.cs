@@ -19,27 +19,42 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Implements the Popularity quantization algorithm.
-/// Selects the most frequently occurring colors from the histogram.
+/// Popularity-based color quantizer with configurable parameters.
 /// </summary>
 /// <remarks>
-/// <para>This is one of the simplest quantization methods.</para>
-/// <para>Fast and deterministic, but may not represent the full color range well.</para>
+/// Selects the most frequently occurring colors.
 /// </remarks>
-[Quantizer(QuantizationType.Fixed, DisplayName = "Popularity")]
-public class PopularityQuantizer : QuantizerBase {
+[Quantizer(QuantizationType.Fixed, DisplayName = "Popularity", QualityRating = 3)]
+public struct PopularityQuantizer : IQuantizer {
+
+  /// <summary>
+  /// Gets or sets whether to fill unused palette entries with generated colors.
+  /// </summary>
+  public bool AllowFillingColors { get; set; } = true;
+
+  public PopularityQuantizer() { }
 
   /// <inheritdoc />
-  protected override Bgra8888[] _ReduceColorsTo(int colorCount, IEnumerable<(Bgra8888 color, uint count)> histogram)
-    => histogram
-      .OrderByDescending(h => h.count)
-      .Take(colorCount)
-      .Select(h => h.color)
-      .ToArray();
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
 
+  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+    where TWork : unmanaged, IColorSpace4<TWork> {
+
+    /// <inheritdoc />
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
+      var result = QuantizerHelper.TryHandleSimpleCases(histogram, colorCount, allowFillingColors, out var used);
+      if (result != null)
+        return result;
+
+      // Select most popular colors
+      var reduced = used.OrderByDescending(h => h.count).Take(colorCount).Select(h => h.color);
+      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
+    }
+
+  }
 }
