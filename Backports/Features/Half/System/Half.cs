@@ -17,13 +17,14 @@
 
 #endregion
 
-#if !SUPPORTS_HALF
 
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
+
+#if !SUPPORTS_HALF
 
 /// <summary>
 /// Represents a half-precision floating-point number (IEEE 754 binary16).
@@ -307,20 +308,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   public static bool operator >(Half left, Half right) => (float)left > (float)right;
   public static bool operator <=(Half left, Half right) => (float)left <= (float)right;
   public static bool operator >=(Half left, Half right) => (float)left >= (float)right;
-
-  // Arithmetic operators
-  public static Half operator +(Half left, Half right) => (Half)((float)left + (float)right);
-  public static Half operator -(Half left, Half right) => (Half)((float)left - (float)right);
-  public static Half operator *(Half left, Half right) => (Half)((float)left * (float)right);
-  public static Half operator /(Half left, Half right) => (Half)((float)left / (float)right);
-  public static Half operator %(Half left, Half right) => (Half)((float)left % (float)right);
-
-  // Unary operators
-  public static Half operator -(Half value) => (Half)(-(float)value);
-  public static Half operator +(Half value) => value;
-  public static Half operator ++(Half value) => (Half)((float)value + 1f);
-  public static Half operator --(Half value) => (Half)((float)value - 1f);
-
+  
   // Explicit conversion from float to Half
   public static explicit operator Half(float value) {
     if (float.IsNaN(value))
@@ -419,6 +407,33 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static unsafe float _Int32BitsToSingle(int value) => *(float*)&value;
+
+}
+
+#endif
+
+// Wave 2: Arithmetic operators for frameworks that have Half but not arithmetic operators (net5.0-net6.0)
+// Operators were added to Half in .NET 7.0 (SUPPORTS_HALF_ARITHMETIC)
+#if !SUPPORTS_HALF_ARITHMETIC
+
+public static partial class HalfArithmeticPolyfills {
+
+  extension(Half) {
+
+    // Binary arithmetic operators
+    public static Half operator +(Half left, Half right) => (Half)((float)left + (float)right);
+    public static Half operator -(Half left, Half right) => (Half)((float)left - (float)right);
+    public static Half operator *(Half left, Half right) => (Half)((float)left * (float)right);
+    public static Half operator /(Half left, Half right) => (Half)((float)left / (float)right);
+    public static Half operator %(Half left, Half right) => (Half)((float)left % (float)right);
+
+    // Unary operators
+    public static Half operator -(Half value) => (Half)(-(float)value);
+    public static Half operator +(Half value) => value;
+    public static Half operator ++(Half value) => (Half)((float)value + 1f);
+    public static Half operator --(Half value) => (Half)((float)value - 1f);
+
+  }
 
 }
 

@@ -106,6 +106,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
+  <!-- System.Runtime.CompilerServices.Unsafe - Explicit reference for test project -->
+  <!-- Required for Unsafe.IsNullRef tests on frameworks where it comes from NuGet -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />
