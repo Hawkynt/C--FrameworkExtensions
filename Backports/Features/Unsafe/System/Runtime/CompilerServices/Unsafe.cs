@@ -1,11 +1,11 @@
-﻿// This file is part of Hawkynt's .NET Framework extensions.
+// This file is part of Hawkynt's .NET Framework extensions.
 //
-// Hawkynt's .NET Framework extensions are free software: 
-// you can redistribute and/or modify it under the terms 
+// Hawkynt's .NET Framework extensions are free software:
+// you can redistribute and/or modify it under the terms
 // given in the LICENSE file.
 //
-// Hawkynt's .NET Framework extensions is distributed in the hope that 
-// it will be useful, but WITHOUT ANY WARRANTY without even the implied 
+// Hawkynt's .NET Framework extensions is distributed in the hope that
+// it will be useful, but WITHOUT ANY WARRANTY without even the implied
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the LICENSE file for more details.
 //
@@ -14,12 +14,22 @@
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 //
 
-#if !SUPPORTS_UNSAFE && !OFFICIAL_UNSAFE
+// Unsafe API evolution:
+// - netcoreapp1.0+: Base Unsafe class (SUPPORTS_UNSAFE)
+// - net5.0+: NullRef, IsNullRef added (SUPPORTS_UNSAFE_NULLREF)
+//
+// Wave architecture:
+// - Wave 1: Full Unsafe class polyfill without NullRef/IsNullRef (!(SUPPORTS_UNSAFE || OFFICIAL_UNSAFE))
+// - Wave 2: Extension block for NullRef/IsNullRef (!(SUPPORTS_UNSAFE_NULLREF || OFFICIAL_UNSAFE_NULLREF))
 
-using Utilities;
+using System.Runtime.CompilerServices;
 using MethodImplOptionsEx = Utilities.MethodImplOptions;
 
 namespace System.Runtime.CompilerServices;
+
+// Wave 1: Full Unsafe class polyfill (for net20-net40 where no Unsafe exists)
+#if !(SUPPORTS_UNSAFE || OFFICIAL_UNSAFE)
+
 #pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
 public static unsafe class Unsafe {
@@ -31,22 +41,19 @@ public static unsafe class Unsafe {
   public static int SizeOf<T>() =>
     // sizeof(T) doesn't work reliably for generic type parameters in older .NET Framework
     // Use type switching for known primitive types, fall back to Marshal.SizeOf
-    TypeCodeCache<T>.Code switch {
-      CachedTypeCode.Byte or CachedTypeCode.SByte or CachedTypeCode.Boolean => 1,
-      CachedTypeCode.UInt16 or CachedTypeCode.Int16 or CachedTypeCode.Char => 2,
-      CachedTypeCode.UInt32 or CachedTypeCode.Int32 or CachedTypeCode.Single => 4,
-      CachedTypeCode.UInt64 or CachedTypeCode.Int64 or CachedTypeCode.Double => 8,
-      CachedTypeCode.Decimal => 16,
-      CachedTypeCode.Pointer or CachedTypeCode.UPointer => IntPtr.Size,
+    Utilities.TypeCodeCache<T>.Code switch {
+      Utilities.CachedTypeCode.Byte or Utilities.CachedTypeCode.SByte or Utilities.CachedTypeCode.Boolean => 1,
+      Utilities.CachedTypeCode.UInt16 or Utilities.CachedTypeCode.Int16 or Utilities.CachedTypeCode.Char => 2,
+      Utilities.CachedTypeCode.UInt32 or Utilities.CachedTypeCode.Int32 or Utilities.CachedTypeCode.Single => 4,
+      Utilities.CachedTypeCode.UInt64 or Utilities.CachedTypeCode.Int64 or Utilities.CachedTypeCode.Double => 8,
+      Utilities.CachedTypeCode.Decimal => 16,
+      Utilities.CachedTypeCode.Pointer or Utilities.CachedTypeCode.UPointer => IntPtr.Size,
       _ => sizeof(T)
     }
   ;
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   internal static T* NullPtr<T>() => (T*)IntPtr.Zero;
-
-  [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
-  public static ref T NullRef<T>() => ref AsRef<T>(null);
 
   [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
   public static void* AsPointer<T>(ref T value) {
@@ -168,5 +175,40 @@ public static unsafe class Unsafe {
   public static bool IsAddressLessThan<T>(ref T left, ref T right) => AsPointer(ref left) < AsPointer(ref right);
 
 }
+
+#pragma warning restore CS8500
+
+#endif
+
+// Wave 2: Extension block for NullRef/IsNullRef
+// Applies to frameworks that have Unsafe but not NullRef (e.g., netcoreapp3.1)
+// Also applies to polyfill Unsafe class from Wave 1
+#if !(SUPPORTS_UNSAFE_NULLREF || OFFICIAL_UNSAFE_NULLREF)
+
+#pragma warning disable CS8500
+
+public static partial class UnsafePolyfills {
+
+  extension(Unsafe) {
+    /// <summary>
+    /// Returns a reference to a value of type <typeparamref name="T"/> that is a null reference.
+    /// </summary>
+    /// <typeparam name="T">The type of the reference.</typeparam>
+    /// <returns>A null reference.</returns>
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+    public static unsafe ref T NullRef<T>() => ref Unsafe.AsRef<T>(null);
+
+    /// <summary>
+    /// Determines whether the specified reference is a null reference.
+    /// </summary>
+    /// <typeparam name="T">The type of the reference.</typeparam>
+    /// <param name="source">The reference to check.</param>
+    /// <returns>true if <paramref name="source"/> is a null reference; otherwise, false.</returns>
+    [MethodImpl(MethodImplOptionsEx.AggressiveInlining)]
+    public static unsafe bool IsNullRef<T>(ref T source) => Unsafe.AsPointer(ref source) == null;
+  }
+}
+
+#pragma warning restore CS8500
 
 #endif

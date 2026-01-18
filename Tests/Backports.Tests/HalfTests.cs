@@ -148,4 +148,115 @@ public class HalfTests {
     Assert.That(a.GetHashCode(), Is.EqualTo(b.GetHashCode()));
   }
 
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Addition_Works() {
+    var a = (Half)2.0f;
+    var b = (Half)3.0f;
+    var result = a + b;
+    Assert.That((float)result, Is.EqualTo(5.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Subtraction_Works() {
+    var a = (Half)5.0f;
+    var b = (Half)2.0f;
+    var result = a - b;
+    Assert.That((float)result, Is.EqualTo(3.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Multiplication_Works() {
+    var a = (Half)3.0f;
+    var b = (Half)4.0f;
+    var result = a * b;
+    Assert.That((float)result, Is.EqualTo(12.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Division_Works() {
+    var a = (Half)10.0f;
+    var b = (Half)2.0f;
+    var result = a / b;
+    Assert.That((float)result, Is.EqualTo(5.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Modulo_Works() {
+    var a = (Half)7.0f;
+    var b = (Half)3.0f;
+    var result = a % b;
+    Assert.That((float)result, Is.EqualTo(1.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_UnaryNegation_Works() {
+    var a = (Half)5.0f;
+    var result = -a;
+    Assert.That((float)result, Is.EqualTo(-5.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_UnaryPlus_Works() {
+    var a = (Half)5.0f;
+    var result = +a;
+    Assert.That((float)result, Is.EqualTo(5.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Increment_Works() {
+    var a = (Half)5.0f;
+    var result = ++a;
+    Assert.That((float)result, Is.EqualTo(6.0f).Within(0.01f));
+    Assert.That((float)a, Is.EqualTo(6.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_Decrement_Works() {
+    var a = (Half)5.0f;
+    var result = --a;
+    Assert.That((float)result, Is.EqualTo(4.0f).Within(0.01f));
+    Assert.That((float)a, Is.EqualTo(4.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_CompoundAdditionAssignment_Works() {
+    var a = (Half)3.0f;
+    a += (Half)2.0f;
+    Assert.That((float)a, Is.EqualTo(5.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_CompoundSubtractionAssignment_Works() {
+    var a = (Half)5.0f;
+    a -= (Half)2.0f;
+    Assert.That((float)a, Is.EqualTo(3.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_CompoundMultiplicationAssignment_Works() {
+    var a = (Half)3.0f;
+    a *= (Half)4.0f;
+    Assert.That((float)a, Is.EqualTo(12.0f).Within(0.01f));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Half_CompoundDivisionAssignment_Works() {
+    var a = (Half)10.0f;
+    a /= (Half)2.0f;
+    Assert.That((float)a, Is.EqualTo(5.0f).Within(0.01f));
+  }
+
 }

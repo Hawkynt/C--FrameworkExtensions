@@ -88,18 +88,20 @@
   </ItemGroup>
 
   <!-- System.Runtime.CompilerServices.Unsafe - Provides Unsafe class -->
-  <!-- Use version 4.5.3 for net45, version 6.0.0 for net461-net48/netstandard2.0-2.1 -->
+  <!-- Use version 5.0.0 for net45 (has NullRef), version 6.0.0 for net461-net48/netstandard2.0-2.1 -->
   <!-- netcoreapp3.1+ has Unsafe built-in, no package needed -->
+  <!-- Version 5.0.0+ includes NullRef/IsNullRef (added in .NET 5) -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE</DefineConstants>
+    <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE;OFFICIAL_UNSAFE_NULLREF</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
   <!-- .NET Framework 4.6+ and netstandard need the NuGet package -->
+  <!-- Version 6.0.0 includes NullRef/IsNullRef (added in .NET 5) -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
-    <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE</DefineConstants>
+    <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE;OFFICIAL_UNSAFE_NULLREF</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
@@ -148,6 +150,12 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+  <!-- System.Reflection.Emit.Lightweight - Provides DynamicMethod for netstandard2.0 -->
+  <!-- Required for CollectionsMarshal polyfill -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
 
   <!-- System.IO.Hashing from Net8+ -->

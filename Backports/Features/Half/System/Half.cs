@@ -308,6 +308,19 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   public static bool operator <=(Half left, Half right) => (float)left <= (float)right;
   public static bool operator >=(Half left, Half right) => (float)left >= (float)right;
 
+  // Arithmetic operators
+  public static Half operator +(Half left, Half right) => (Half)((float)left + (float)right);
+  public static Half operator -(Half left, Half right) => (Half)((float)left - (float)right);
+  public static Half operator *(Half left, Half right) => (Half)((float)left * (float)right);
+  public static Half operator /(Half left, Half right) => (Half)((float)left / (float)right);
+  public static Half operator %(Half left, Half right) => (Half)((float)left % (float)right);
+
+  // Unary operators
+  public static Half operator -(Half value) => (Half)(-(float)value);
+  public static Half operator +(Half value) => value;
+  public static Half operator ++(Half value) => (Half)((float)value + 1f);
+  public static Half operator --(Half value) => (Half)((float)value - 1f);
+
   // Explicit conversion from float to Half
   public static explicit operator Half(float value) {
     if (float.IsNaN(value))

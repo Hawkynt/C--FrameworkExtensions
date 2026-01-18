@@ -40,8 +40,9 @@ Feature flags follow the naming pattern: `SUPPORTS_<FEATURE_NAME>`
 ### How Feature Flags Work
 
 1. **When a framework supports a feature natively**, the flag is defined in `VersionSpecificSymbols.Common.prop`
-2. **Polyfill code is wrapped** in `#if !SUPPORTS_<FEATURE>` to only compile when the feature is NOT available
+2. **Polyfill code is wrapped** in `#if !SUPPORTS_<FEATURE>` to only compile when the feature is NOT available in the native BCL
 3. **Official package references** use `OFFICIAL_<FEATURE>` when we depend on Microsoft's NuGet packages
+4. **Polyfill code is wrapped** in `#if !(SUPPORTS_<FEATURE> || OFFICIAL_<FEATURE>)` to only compile when the feature is neither natively available nor provided by an official package
 
 ### Example Feature Flags
 
