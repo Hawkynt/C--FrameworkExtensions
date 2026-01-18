@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -276,6 +277,306 @@ public class ParallelTests {
     });
 
     Assert.That(count, Is.EqualTo(5));
+  }
+
+  #endregion
+
+  #region Parallel.ForEach with ThreadLocal and Partitioner
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_InitializesLocalState() {
+    var items = new[] { 1, 2, 3, 4, 5 };
+    var localInitCalled = 0;
+    var localFinallyCalled = 0;
+
+    Parallel.ForEach(
+      Partitioner.Create(items),
+      () => {
+        Interlocked.Increment(ref localInitCalled);
+        return 0;
+      },
+      (item, state, local) => local + item,
+      local => Interlocked.Increment(ref localFinallyCalled)
+    );
+
+    Assert.That(localInitCalled, Is.GreaterThan(0));
+    Assert.That(localFinallyCalled, Is.EqualTo(localInitCalled));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_AccumulatesValues() {
+    var items = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    var totalSum = 0;
+    var lockObj = new object();
+
+    Parallel.ForEach(
+      Partitioner.Create(items),
+      () => 0,
+      (item, state, local) => local + item,
+      local => {
+        lock (lockObj)
+          totalSum += local;
+      }
+    );
+
+    Assert.That(totalSum, Is.EqualTo(55)); // Sum of 1..10
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_ReturnsCompletedResult() {
+    var items = new[] { 1, 2, 3 };
+
+    var result = Parallel.ForEach(
+      Partitioner.Create(items),
+      () => 0,
+      (item, state, local) => local,
+      local => { }
+    );
+
+    Assert.That(result.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_ProvidesLoopState() {
+    var items = new[] { 1, 2, 3 };
+    var stateReceived = false;
+
+    Parallel.ForEach(
+      Partitioner.Create(items),
+      () => 0,
+      (item, state, local) => {
+        stateReceived = state != null;
+        return local;
+      },
+      local => { }
+    );
+
+    Assert.That(stateReceived, Is.True);
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_Stop_StopsExecution() {
+    var items = new List<int>();
+    for (var i = 0; i < 1000; ++i)
+      items.Add(i);
+
+    var count = 0;
+
+    var result = Parallel.ForEach(
+      Partitioner.Create(items),
+      () => 0,
+      (item, state, local) => {
+        if (item == 50)
+          state.Stop();
+        Interlocked.Increment(ref count);
+        return local;
+      },
+      local => { }
+    );
+
+    Assert.That(result.IsCompleted, Is.False);
+    Assert.That(count, Is.LessThan(1000));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithPartitionerLocalAndOptions_RespectsMaxDegreeOfParallelism() {
+    var items = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    var maxConcurrent = 0;
+    var currentConcurrent = 0;
+    var lockObj = new object();
+
+    var options = new ParallelOptions { MaxDegreeOfParallelism = 2 };
+
+    Parallel.ForEach(
+      Partitioner.Create(items),
+      options,
+      () => 0,
+      (item, state, local) => {
+        lock (lockObj) {
+          ++currentConcurrent;
+          if (currentConcurrent > maxConcurrent)
+            maxConcurrent = currentConcurrent;
+        }
+
+        Thread.Sleep(10);
+
+        lock (lockObj)
+          --currentConcurrent;
+
+        return local;
+      },
+      local => { }
+    );
+
+    Assert.That(maxConcurrent, Is.GreaterThan(0));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_EmptySource_CallsNoBody() {
+    var items = new int[0];
+    var bodyCalled = false;
+    var finallyCalled = 0;
+
+    var result = Parallel.ForEach(
+      Partitioner.Create(items),
+      () => 0,
+      (item, state, local) => {
+        bodyCalled = true;
+        return local;
+      },
+      local => Interlocked.Increment(ref finallyCalled)
+    );
+
+    Assert.That(bodyCalled, Is.False);
+    Assert.That(result.IsCompleted, Is.True);
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_ExceptionInBody_ThrowsAggregateException() {
+    var items = new[] { 1, 2, 3 };
+
+    Assert.Throws<AggregateException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        () => 0,
+        (item, state, local) => {
+          if (item == 2)
+            throw new InvalidOperationException("Test exception");
+          return local;
+        },
+        local => { }
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_ExceptionInFinally_ThrowsAggregateException() {
+    var items = new[] { 1, 2, 3 };
+
+    Assert.Throws<AggregateException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        () => 0,
+        (item, state, local) => local,
+        local => throw new InvalidOperationException("Finally exception")
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_NullSource_ThrowsArgumentNullException() {
+    Partitioner<int> nullSource = null;
+
+    Assert.Throws<ArgumentNullException>(() =>
+      Parallel.ForEach(
+        nullSource,
+        () => 0,
+        (item, state, local) => local,
+        local => { }
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_NullLocalInit_ThrowsArgumentNullException() {
+    var items = new[] { 1, 2, 3 };
+    Func<int> nullInit = null;
+
+    Assert.Throws<ArgumentNullException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        nullInit,
+        (item, state, local) => local,
+        local => { }
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_NullBody_ThrowsArgumentNullException() {
+    var items = new[] { 1, 2, 3 };
+    Func<int, ParallelLoopState, int, int> nullBody = null;
+
+    Assert.Throws<ArgumentNullException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        () => 0,
+        nullBody,
+        local => { }
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerAndLocal_NullLocalFinally_ThrowsArgumentNullException() {
+    var items = new[] { 1, 2, 3 };
+    Action<int> nullFinally = null;
+
+    Assert.Throws<ArgumentNullException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        () => 0,
+        (item, state, local) => local,
+        nullFinally
+      )
+    );
+  }
+
+  [Test]
+  [Category("Exception")]
+  public void Parallel_ForEach_WithPartitionerLocalAndOptions_WithCanceledToken_ThrowsOperationCanceledException() {
+    var items = new[] { 1, 2, 3 };
+    var cts = new CancellationTokenSource();
+    cts.Cancel();
+
+    var options = new ParallelOptions { CancellationToken = cts.Token };
+
+    Assert.Throws<OperationCanceledException>(() =>
+      Parallel.ForEach(
+        Partitioner.Create(items),
+        options,
+        () => 0,
+        (item, state, local) => local,
+        local => { }
+      )
+    );
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Parallel_ForEach_WithRangePartitioner_AccumulatesCorrectly() {
+    var totalSum = 0;
+    var lockObj = new object();
+
+    Parallel.ForEach(
+      Partitioner.Create(0, 101),
+      () => 0,
+      (range, state, local) => {
+        var (from, to) = range;
+        for (var i = from; i < to; ++i)
+          local += i;
+        return local;
+      },
+      local => {
+        lock (lockObj)
+          totalSum += local;
+      }
+    );
+
+    Assert.That(totalSum, Is.EqualTo(5050)); // Sum of 0..100
   }
 
   #endregion

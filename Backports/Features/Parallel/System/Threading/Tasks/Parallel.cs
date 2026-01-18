@@ -564,6 +564,133 @@ public static class Parallel {
     };
   }
 
+  /// <summary>
+  /// Executes a foreach operation with thread-local data on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <typeparam name="TLocal">The type of the thread-local data.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="localInit">The function delegate that returns the initial state of the local data for each task.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <param name="localFinally">The delegate that performs a final action on the local state of each task.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource, TLocal>(
+    Partitioner<TSource> source,
+    Func<TLocal> localInit,
+    Func<TSource, ParallelLoopState, TLocal, TLocal> body,
+    Action<TLocal> localFinally) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(localInit);
+    ArgumentNullException.ThrowIfNull(body);
+    ArgumentNullException.ThrowIfNull(localFinally);
+
+    return _ForEachPartitionerWithLocalImpl(source, new ParallelOptions(), localInit, body, localFinally);
+  }
+
+  /// <summary>
+  /// Executes a foreach operation with thread-local data on a <see cref="Partitioner{TSource}"/> in which iterations may run in parallel and loop options can be configured.
+  /// </summary>
+  /// <typeparam name="TSource">The type of the elements in source.</typeparam>
+  /// <typeparam name="TLocal">The type of the thread-local data.</typeparam>
+  /// <param name="source">The partitioner that contains the original data source.</param>
+  /// <param name="parallelOptions">An object that configures the behavior of this operation.</param>
+  /// <param name="localInit">The function delegate that returns the initial state of the local data for each task.</param>
+  /// <param name="body">The delegate that is invoked once per iteration.</param>
+  /// <param name="localFinally">The delegate that performs a final action on the local state of each task.</param>
+  /// <returns>A <see cref="ParallelLoopResult"/> that contains information on what portion of the loop completed.</returns>
+  public static ParallelLoopResult ForEach<TSource, TLocal>(
+    Partitioner<TSource> source,
+    ParallelOptions parallelOptions,
+    Func<TLocal> localInit,
+    Func<TSource, ParallelLoopState, TLocal, TLocal> body,
+    Action<TLocal> localFinally) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentNullException.ThrowIfNull(localInit);
+    ArgumentNullException.ThrowIfNull(body);
+    ArgumentNullException.ThrowIfNull(localFinally);
+    ArgumentNullException.ThrowIfNull(parallelOptions);
+
+    return _ForEachPartitionerWithLocalImpl(source, parallelOptions, localInit, body, localFinally);
+  }
+
+  private static ParallelLoopResult _ForEachPartitionerWithLocalImpl<TSource, TLocal>(
+    Partitioner<TSource> source,
+    ParallelOptions options,
+    Func<TLocal> localInit,
+    Func<TSource, ParallelLoopState, TLocal, TLocal> body,
+    Action<TLocal> localFinally
+  ) {
+    var maxDegree = options.MaxDegreeOfParallelism;
+    if (maxDegree <= 0)
+      maxDegree = Environment.ProcessorCount;
+
+    var partitions = source.GetPartitions(maxDegree);
+    if (partitions.Count == 0)
+      return new ParallelLoopResult { IsCompleted = true };
+
+    var flags = new ParallelLoopStateFlags();
+    var state = new ParallelLoopState(flags);
+    var exceptions = new List<Exception>();
+    var lockObj = new object();
+    var tasks = new List<Task>();
+
+    foreach (var partition in partitions) {
+      var localPartition = partition;
+      var task = new Task(
+        () => {
+          var localValue = localInit();
+          try {
+            using (localPartition) {
+              while (localPartition.MoveNext()) {
+                if (flags.IsStopped || options.CancellationToken.IsCancellationRequested)
+                  break;
+
+                try {
+                  localValue = body(localPartition.Current, state, localValue);
+                } catch (Exception ex) {
+                  lock (lockObj)
+                    exceptions.Add(ex);
+                  flags.IsExceptional = true;
+                }
+              }
+            }
+          } catch (Exception ex) {
+            lock (lockObj)
+              exceptions.Add(ex);
+            flags.IsExceptional = true;
+          } finally {
+            try {
+              localFinally(localValue);
+            } catch (Exception ex) {
+              lock (lockObj)
+                exceptions.Add(ex);
+            }
+          }
+        },
+        options.CancellationToken
+      );
+      tasks.Add(task);
+      task.Start(options.TaskScheduler);
+    }
+
+    foreach (var task in tasks)
+      try {
+        task.Wait();
+      } catch {
+        // Exceptions are already captured
+      }
+
+    if (exceptions.Count > 0)
+      throw new AggregateException(exceptions);
+
+    options.CancellationToken.ThrowIfCancellationRequested();
+
+    return new ParallelLoopResult {
+      IsCompleted = !flags.IsStopped && !flags.IsBroken,
+      LowestBreakIteration = flags.LowestBreakIteration
+    };
+  }
+
   private static ParallelLoopResult _ForEachOrderablePartitionerImpl<TSource>(
     OrderablePartitioner<TSource> source,
     ParallelOptions options,
