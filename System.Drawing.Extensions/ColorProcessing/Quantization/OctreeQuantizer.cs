@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Storage;
 
@@ -35,30 +36,17 @@ namespace Hawkynt.ColorProcessing.Quantization;
 [Quantizer(QuantizationType.Tree, DisplayName = "Octree", Year = 1988, QualityRating = 7)]
 public struct OctreeQuantizer : IQuantizer {
 
-  /// <summary>
-  /// Gets or sets whether to fill unused palette entries with generated colors.
-  /// </summary>
-  public bool AllowFillingColors { get; set; } = true;
-
-  public OctreeQuantizer() { }
-
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>();
 
-  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork> : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     private const int _MAX_DEPTH = 7;
 
     /// <inheritdoc />
-    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
-      var result = QuantizerHelper.TryHandleSimpleCases(histogram, colorCount, allowFillingColors, out var used);
-      if (result != null)
-        return result;
-
-      var reduced = this._ReduceColorsTo(colorCount, used);
-      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
-    }
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount)
+      => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, this._ReduceColorsTo);
 
     private IEnumerable<TWork> _ReduceColorsTo(int colorCount, IEnumerable<(TWork color, uint count)> histogram) {
       var root = new Node();
@@ -102,11 +90,11 @@ public struct OctreeQuantizer : IQuantizer {
     private static void _SetupColor(Node node, float c1, float c2, float c3, float a, ulong pixelCount, ref int colorsCount) {
       colorsCount += node.ReferencesCount == 0 ? 1 : 0;
       ++node.ReferencesCount;
-      ++node.PixelCount;
-      node.C1Sum += c1;
-      node.C2Sum += c2;
-      node.C3Sum += c3;
-      node.ASum += a;
+      node.PixelCount += pixelCount;
+      node.C1Sum += c1 * pixelCount;
+      node.C2Sum += c2 * pixelCount;
+      node.C3Sum += c3 * pixelCount;
+      node.ASum += a * pixelCount;
     }
 
     private static TWork[] _MergeAndGeneratePalette(Node root, uint desiredColors, ref int colorsCount) {

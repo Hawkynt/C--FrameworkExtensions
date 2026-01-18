@@ -18,10 +18,13 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Dithering;
 using Hawkynt.ColorProcessing.Metrics;
@@ -29,7 +32,7 @@ using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.Drawing.Lockers;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
-namespace Hawkynt.ColorProcessing.Quantization;
+namespace Hawkynt.ColorProcessing.Internal;
 
 /// <summary>
 /// Provides an efficient pipeline for quantizing images to indexed format.
@@ -63,13 +66,15 @@ internal static class QuantizationPipeline {
   /// <param name="quantizer">The quantizer to generate the palette.</param>
   /// <param name="ditherer">The ditherer to map pixels to palette indices.</param>
   /// <param name="colorCount">The number of colors in the palette (1-256).</param>
+  /// <param name="allowFillingColors">Whether to fill unused palette entries with generated colors when the image has fewer unique colors than requested.</param>
   /// <returns>An indexed bitmap with the reduced color palette.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static unsafe Bitmap Quantize<TWork, TDecode, TEncode, TMetric>(
     Bitmap source,
     IQuantizer<TWork> quantizer,
     IDitherer ditherer,
-    int colorCount)
+    int colorCount,
+    bool allowFillingColors = true)
     where TWork : unmanaged, IColorSpace4<TWork>
     where TDecode : struct, IDecode<Bgra8888, TWork>
     where TEncode : struct, IEncode<TWork, Bgra8888>
@@ -83,28 +88,66 @@ internal static class QuantizationPipeline {
     // Step 1: Build histogram (dedupe in Bgra8888, decode to TWork)
     var histogram = _BuildHistogram<TWork, TDecode>(source, decoder);
 
-    // Step 2: Generate palette in TWork space
-    var workPalette = quantizer.GeneratePalette(histogram, colorCount);
+    var width = source.Width;
+    var height = source.Height;
+    var indices = new byte[width * height];
 
-    // Step 3: Dither to indices (no intermediate 32bpp bitmap)
-    byte[] indices;
+    // Step 2: Check for simple case - fewer unique colors than requested palette size
+    var isSimpleCase = histogram.Length <= colorCount;
+
+    // Step 3: Generate palette
+    // Simple case: use histogram colors directly (no quantization needed)
+    // Normal case: invoke quantizer
+    var quantizedPalette = isSimpleCase
+      ? histogram.Select(h => h.color).ToArray()
+      : quantizer.GeneratePalette(histogram, colorCount);
+
+    // Simple case: don't fill unused entries (just transparent) since all needed colors exist
+    // Normal case: respect user's allowFillingColors setting
+    var finalPalette = PaletteFiller.GenerateFinalPalette(quantizedPalette, colorCount, allowFillingColors && !isSimpleCase);
+
+    // Simple case: use NoDithering (exact color matches, dithering would be meaningless)
+    // Normal case: use provided ditherer
+    var effectiveDitherer = isSimpleCase ? NoDithering.Instance : ditherer;
+
+    // Step 4: Dither to indices
     using (var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly)) {
       var srcFrame = srcLocker.AsFrame();
+      var sourceStride = srcFrame.Stride;
+
       fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
-        indices = ditherer.Dither(srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride, decoder, metric, workPalette);
+      fixed (byte* indicesPtr = indices) {
+        if (effectiveDitherer.RequiresSequentialProcessing) {
+          // Sequential processing for error diffusion ditherers
+          effectiveDitherer.Dither(srcPtr, indicesPtr, width, height, sourceStride, width, 0, decoder, metric, finalPalette);
+        } else {
+          // Parallel processing for ordered/noise ditherers using row partitioning
+          // Convert fixed pointers to IntPtr to allow capture in lambda
+          var srcPtrValue = (IntPtr)srcPtr;
+          var indicesPtrValue = (IntPtr)indicesPtr;
+
+          Parallel.ForEach(Partitioner.Create(0, height), range => {
+            var (startY, endY) = range;
+            var partitionHeight = endY - startY;
+
+            effectiveDitherer.Dither((Bgra8888*)srcPtrValue, (byte*)indicesPtrValue, width, partitionHeight, sourceStride, width, startY, decoder, metric, finalPalette);
+          });
+        }
+      }
     }
 
-    // Step 4: Convert palette TWork[] -> Bgra8888[] -> Color[]
-    var gdiPalette = new Color[workPalette.Length];
-    for (var i = 0; i < workPalette.Length; ++i)
-      gdiPalette[i] = encoder.Encode(workPalette[i]).ToColor();
+    // Step 5: Convert palette TWork[] -> Bgra8888[] -> Color[]
+    var gdiPaletteResult = new Color[finalPalette.Length];
+    for (var i = 0; i < finalPalette.Length; ++i)
+      gdiPaletteResult[i] = encoder.Encode(finalPalette[i]).ToColor();
 
-    // Step 5: Create indexed bitmap with indices and palette
-    return _CreateIndexedBitmap(source.Width, source.Height, gdiPalette, indices);
+    // Step 6: Create indexed bitmap with indices and palette
+    return _CreateIndexedBitmap(width, height, gdiPaletteResult, indices);
   }
 
   /// <summary>
   /// Builds a histogram by deduplicating in Bgra8888 space, then decoding to TWork.
+  /// Uses parallel processing with thread-local histograms for performance.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static unsafe (TWork color, uint count)[] _BuildHistogram<TWork, TDecode>(
@@ -112,35 +155,69 @@ internal static class QuantizationPipeline {
     TDecode decoder)
     where TWork : unmanaged, IColorSpace4<TWork>
     where TDecode : struct, IDecode<Bgra8888, TWork> {
-    // Step 1: Dedupe in Bgra8888 space (fast, exact via packed uint)
+
     var bgra8888Histogram = new Dictionary<uint, uint>();
+    var histogramLock = new object();
 
     using (var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly)) {
       var srcFrame = srcLocker.AsFrame();
-      fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels) {
-        var width = srcFrame.Width;
-        var height = srcFrame.Height;
-        var stride = srcFrame.Stride;
+      var width = srcFrame.Width;
+      var height = srcFrame.Height;
+      var stride = srcFrame.Stride;
 
-        for (var y = 0; y < height; ++y)
-        for (var x = 0; x < width; ++x) {
-          var pixel = srcPtr[y * stride + x];
-          var packed = pixel.Packed;
-          bgra8888Histogram.TryGetValue(packed, out var count);
-          bgra8888Histogram[packed] = count + 1;
-        }
+      fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels) {
+        var srcPtrValue = (IntPtr)srcPtr;
+
+        // Build thread-local histograms in parallel, then merge
+        Parallel.ForEach<Tuple<int, int>, Dictionary<uint, uint>>(
+          Partitioner.Create(0, height),
+          () => new Dictionary<uint, uint>(),
+          (range, _, localHistogram) => {
+            var (startY, endY) = range;
+            var row = (Bgra8888*)srcPtrValue + startY * stride;
+            var rowEnd = row + width;
+
+            for (var y = startY; y < endY; ++y, row += stride, rowEnd += stride)
+            for (var pixel = row; pixel < rowEnd; ++pixel)
+              _IncrementOrAdd(localHistogram, pixel->Packed);
+
+            return localHistogram;
+          },
+          localHistogram => {
+            // Merge thread-local histogram into global histogram
+            lock (histogramLock)
+              foreach (var kvp in localHistogram) {
+                bgra8888Histogram.TryGetValue(kvp.Key, out var existingCount);
+                bgra8888Histogram[kvp.Key] = existingCount + kvp.Value;
+              }
+          }
+        );
       }
     }
 
-    // Step 2: Convert each unique Bgra8888 to TWork (single decode per unique color)
-    var result = new (TWork, uint)[bgra8888Histogram.Count];
+    // Convert each unique Bgra8888 to TWork (single decode per unique color)
+    var histogram = new (TWork, uint)[bgra8888Histogram.Count];
     var i = 0;
     foreach (var kvp in bgra8888Histogram) {
       var bgra = new Bgra8888(kvp.Key);
-      result[i++] = (decoder.Decode(bgra), kvp.Value);
+      histogram[i] = (decoder.Decode(bgra), kvp.Value);
+      ++i;
     }
 
-    return result;
+    return histogram;
+  }
+
+  /// <summary>
+  /// Increments value for key or adds with value 1. Single hash lookup on supported platforms.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void _IncrementOrAdd(Dictionary<uint, uint> histogram, uint key) {
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+    ++System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(histogram, key, out _);
+#else
+    histogram.TryGetValue(key, out var count);
+    histogram[key] = count + 1;
+#endif
   }
 
   /// <summary>

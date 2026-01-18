@@ -39,11 +39,14 @@ public readonly struct NoDithering : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
@@ -52,17 +55,15 @@ public readonly struct NoDithering : IDitherer {
     where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
-    var indices = new byte[width * height];
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
 
-    for (var y = 0; y < height; ++y)
-    for (int x = width, sourceIdx = y * stride, targetIdx = y * width; x > 0; ++sourceIdx, ++targetIdx, --x) {
+    for (var y = startY; y < endY; ++y)
+    for (int x = width, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x > 0; ++sourceIdx, ++targetIdx, --x) {
       var color = decoder.Decode(source[sourceIdx]);
       var nearestIdx = lookup.FindNearest(color);
       indices[targetIdx] = (byte)nearestIdx;
     }
-
-    return indices;
   }
 
   /// <summary>Default instance of no-dithering quantizer.</summary>

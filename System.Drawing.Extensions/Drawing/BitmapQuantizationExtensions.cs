@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Dithering;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Quantization;
 using Hawkynt.ColorProcessing.Storage;

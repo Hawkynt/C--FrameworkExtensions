@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hawkynt.ColorProcessing.Metrics;
 
-namespace Hawkynt.ColorProcessing.Quantization;
+namespace Hawkynt.ColorProcessing.Internal;
 
 /// <summary>
 /// Internal helper for common quantizer operations.
@@ -30,43 +30,25 @@ namespace Hawkynt.ColorProcessing.Quantization;
 internal static class QuantizerHelper {
 
   /// <summary>
-  /// Handles common edge cases and prepares histogram for quantization.
+  /// Generates a palette using the provided reduction algorithm.
   /// </summary>
   /// <typeparam name="TWork">The color space type.</typeparam>
   /// <param name="histogram">The input histogram of colors and counts.</param>
   /// <param name="colorCount">The requested number of palette colors.</param>
-  /// <param name="allowFillingColors">Whether to fill unused palette entries.</param>
-  /// <param name="normalizedHistogram">
-  /// Output: The deduplicated and normalized histogram for quantization.
-  /// Only valid when return value is null.
-  /// </param>
-  /// <returns>
-  /// The final palette if no quantization is needed (0/1 colors or fewer unique colors than requested),
-  /// or null if quantization is required.
-  /// </returns>
-  public static TWork[]? TryHandleSimpleCases<TWork>(
+  /// <param name="reduceColors">The reduction algorithm that converts the histogram to a reduced set of colors.</param>
+  /// <returns>The reduced palette array (may have fewer colors than requested).</returns>
+  /// <remarks>
+  /// This method normalizes the histogram and applies the reduction algorithm.
+  /// The caller (QuantizationPipeline) handles simple cases and palette filling.
+  /// </remarks>
+  public static TWork[] GeneratePaletteWithReduction<TWork>(
     IEnumerable<(TWork color, uint count)> histogram,
     int colorCount,
-    bool allowFillingColors,
-    out (TWork color, uint count)[] normalizedHistogram)
+    Func<int, (TWork color, uint count)[], IEnumerable<TWork>> reduceColors)
     where TWork : unmanaged, IColorSpace4<TWork> {
 
-    // Handle trivial cases
-    switch (colorCount) {
-      case <= 0:
-        normalizedHistogram = [];
-        return [];
-      case 1: {
-        // For single color, find most common
-        var mostCommon = histogram
-          .GroupBy(h => h.color.ToNormalized())
-          .Select(g => (color: g.First().color, count: (uint)g.Sum(h => h.count)))
-          .OrderByDescending(h => h.count)
-          .FirstOrDefault();
-        normalizedHistogram = mostCommon.count > 0 ? [mostCommon] : [];
-        return [mostCommon.color];
-      }
-    }
+    if (colorCount <= 0)
+      return [];
 
     // Deduplicate and aggregate by normalized color
     var used = histogram
@@ -74,15 +56,18 @@ internal static class QuantizerHelper {
       .Select(g => (color: g.First().color, count: (uint)g.Sum(h => h.count)))
       .ToArray();
 
-    // If we have fewer unique colors than requested, no quantization needed
-    if (used.Length <= colorCount) {
-      normalizedHistogram = used;
-      return PaletteFiller.GenerateFinalPalette(used.Select(h => h.color), colorCount, allowFillingColors);
+    if (used.Length == 0)
+      return [];
+
+    // For single color, return most common
+    if (colorCount == 1) {
+      var mostCommon = used.OrderByDescending(h => h.count).First();
+      return [mostCommon.color];
     }
 
-    // Quantization is required
-    normalizedHistogram = used;
-    return null;
+    // Apply reduction algorithm
+    var reduced = reduceColors(colorCount, used);
+    return reduced.ToArray();
   }
 
   /// <summary>
@@ -437,7 +422,7 @@ internal static class QuantizerHelper {
         }
 
         // Compute palette from assignments (weighted centroids)
-        var newPalette = _ComputePaletteFromAssignments<TWork>(colors, assignments, k);
+        var newPalette = _ComputePaletteFromAssignments<TWork>(colors, assignments, k, bestPalette);
         var quality = _EvaluatePaletteQuality<TWork>(colors, newPalette);
         antSolutions[ant] = (assignments, quality);
         if (quality <= bestQuality)
@@ -470,7 +455,8 @@ internal static class QuantizerHelper {
   private static TWork[] _ComputePaletteFromAssignments<TWork>(
     (float c1, float c2, float c3, float a, uint count)[] colors,
     int[] assignments,
-    int k)
+    int k,
+    TWork[] fallbackPalette)
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     var palette = new TWork[k];
@@ -485,16 +471,15 @@ internal static class QuantizerHelper {
       sums[slot].weight += colors[i].count;
     }
 
-    for (var j = 0; j < k; ++j) {
-      if (sums[j].weight > 0) {
-        palette[j] = ColorFactory.FromNormalized_4<TWork>(
+    for (var j = 0; j < k; ++j)
+      palette[j] = sums[j].weight > 0
+        ? ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped((float)(sums[j].c1 / sums[j].weight)),
           UNorm32.FromFloatClamped((float)(sums[j].c2 / sums[j].weight)),
           UNorm32.FromFloatClamped((float)(sums[j].c3 / sums[j].weight)),
           UNorm32.FromFloatClamped((float)(sums[j].a / sums[j].weight))
-        );
-      }
-    }
+        )
+        : fallbackPalette[j];
 
     return palette;
   }

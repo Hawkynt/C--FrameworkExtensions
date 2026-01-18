@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
@@ -34,11 +35,6 @@ namespace Hawkynt.ColorProcessing.Quantization;
 public struct KMeansQuantizer : IQuantizer {
 
   /// <summary>
-  /// Gets or sets whether to fill unused palette entries with generated colors.
-  /// </summary>
-  public bool AllowFillingColors { get; set; } = true;
-
-  /// <summary>
   /// Gets or sets the maximum number of iterations before stopping.
   /// </summary>
   public int MaxIterations { get; set; } = 100;
@@ -51,20 +47,14 @@ public struct KMeansQuantizer : IQuantizer {
   public KMeansQuantizer() { }
 
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors, this.MaxIterations, this.ConvergenceThreshold);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.MaxIterations, this.ConvergenceThreshold);
 
-  internal sealed class Kernel<TWork>(bool allowFillingColors, int maxIterations, float convergenceThreshold) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork>(int maxIterations, float convergenceThreshold) : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     /// <inheritdoc />
-    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
-      var result = QuantizerHelper.TryHandleSimpleCases(histogram, colorCount, allowFillingColors, out var used);
-      if (result != null)
-        return result;
-
-      var reduced = this._ReduceColorsTo(colorCount, used);
-      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
-    }
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount)
+      => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, this._ReduceColorsTo);
 
     private IEnumerable<TWork> _ReduceColorsTo(int colorCount, (TWork color, uint count)[] colors) {
       if (colors.Length == 0)

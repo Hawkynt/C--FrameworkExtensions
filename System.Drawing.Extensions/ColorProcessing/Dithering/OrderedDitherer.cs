@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
@@ -112,11 +113,14 @@ public readonly struct OrderedDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
@@ -125,20 +129,36 @@ public readonly struct OrderedDitherer : IDitherer {
     where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
-    var indices = new byte[width * height];
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var matrixSize = this.MatrixSize;
     var strength = this.Strength;
     var thresholds = this._thresholds;
+    var endY = startY + height;
 
-    for (var y = 0; y < height; ++y) {
+    for (var y = startY; y < endY; ++y) {
       // Pre-calculate row-invariant values
       var thresholdRowOffset = (y % matrixSize) * matrixSize;
 
-      for (int x = 0, sourceIdx = y * stride, targetIdx = y * width, mx = 0; x < width; ++x, ++sourceIdx, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
+      for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride, mx = 0; x < width; ++x, ++sourceIdx, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
         // Decode source pixel
         var color = decoder.Decode(source[sourceIdx]);
+
+        // First check if this color is very close to a palette entry (exact or near-exact match)
+        // In that case, skip threshold adjustment to preserve exact matches
+        var nearestIdx = lookup.FindNearest(color, out var nearestColor);
         var (c1, c2, c3, a) = color.ToNormalized();
+        var (n1, n2, n3, na) = nearestColor.ToNormalized();
+        var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                            Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                            Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                            Math.Abs(a.ToFloat() - na.ToFloat());
+
+        // If the color is very close to the nearest palette entry, use it directly
+        // Threshold of 0.02 allows for minor rounding/quantization differences
+        if (distToNearest < 0.02f) {
+          indices[targetIdx] = (byte)nearestIdx;
+          continue;
+        }
 
         // Get threshold from matrix (mx wraps via increment logic above)
         var threshold = thresholds[thresholdRowOffset + mx] * strength;
@@ -152,12 +172,10 @@ public readonly struct OrderedDitherer : IDitherer {
         );
 
         // Find nearest palette color and store index
-        var nearestIdx = lookup.FindNearest(adjustedColor);
+        nearestIdx = lookup.FindNearest(adjustedColor);
         indices[targetIdx] = (byte)nearestIdx;
       }
     }
-
-    return indices;
   }
 
   #endregion

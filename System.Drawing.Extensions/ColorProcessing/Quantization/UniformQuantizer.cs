@@ -33,17 +33,10 @@ namespace Hawkynt.ColorProcessing.Quantization;
 [Quantizer(QuantizationType.Fixed, DisplayName = "Uniform", QualityRating = 2)]
 public struct UniformQuantizer : IQuantizer {
 
-  /// <summary>
-  /// Gets or sets whether to fill unused palette entries with generated colors.
-  /// </summary>
-  public bool AllowFillingColors { get; set; } = true;
-
-  public UniformQuantizer() { }
-
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>();
 
-  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork> : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     /// <inheritdoc />
@@ -55,11 +48,18 @@ public struct UniformQuantizer : IQuantizer {
           return [histogram.FirstOrDefault().color];
       }
 
-      var reduced = _GenerateUniformPalette(colorCount);
-      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
+      return _GenerateUniformPalette(colorCount).ToArray();
     }
 
     private static List<TWork> _GenerateUniformPalette(int colorCount) {
+      // Special case: 2 colors should be black and white for grayscale compatibility
+      if (colorCount == 2) {
+        return [
+          ColorFactory.FromNormalized_4<TWork>(UNorm32.Zero, UNorm32.Zero, UNorm32.Zero, UNorm32.One),
+          ColorFactory.FromNormalized_4<TWork>(UNorm32.One, UNorm32.One, UNorm32.One, UNorm32.One)
+        ];
+      }
+
       var levelsPerChannel = (int)Math.Ceiling(Math.Pow(colorCount, 1.0 / 3.0));
       levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 8));
 

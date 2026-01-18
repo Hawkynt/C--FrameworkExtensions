@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
@@ -32,29 +33,16 @@ namespace Hawkynt.ColorProcessing.Quantization;
 [Quantizer(QuantizationType.Fixed, DisplayName = "Popularity", QualityRating = 3)]
 public struct PopularityQuantizer : IQuantizer {
 
-  /// <summary>
-  /// Gets or sets whether to fill unused palette entries with generated colors.
-  /// </summary>
-  public bool AllowFillingColors { get; set; } = true;
-
-  public PopularityQuantizer() { }
-
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>();
 
-  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork> : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     /// <inheritdoc />
-    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
-      var result = QuantizerHelper.TryHandleSimpleCases(histogram, colorCount, allowFillingColors, out var used);
-      if (result != null)
-        return result;
-
-      // Select most popular colors
-      var reduced = used.OrderByDescending(h => h.count).Take(colorCount).Select(h => h.color);
-      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
-    }
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount)
+      => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount,
+        (count, used) => used.OrderByDescending(h => h.count).Take(count).Select(h => h.color));
 
   }
 }

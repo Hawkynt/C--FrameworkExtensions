@@ -19,7 +19,7 @@
 
 using System.Collections.Generic;
 
-namespace Hawkynt.ColorProcessing.Quantization;
+namespace Hawkynt.ColorProcessing;
 
 /// <summary>
 /// Public marker interface for color quantizers with configurable parameters.
@@ -32,17 +32,17 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// </remarks>
 /// <example>
 /// <code>
-/// var quantizer = new OctreeQuantizer { AllowFillingColors = true };
+/// var quantizer = new OctreeQuantizer();
 /// using var indexed = bitmap.ReduceColors&lt;OctreeQuantizer, FloydSteinberg&gt;(quantizer, default, 16);
 /// </code>
 /// </example>
 public interface IQuantizer {
 
   /// <summary>
-  /// Creates a quantizer worker for OkLab color space (perceptually uniform, high quality).
+  /// Creates a quantizer worker for the specified color space.
   /// </summary>
-  /// <returns>A quantizer worker operating in OkLab color space.</returns>
-  internal IQuantizer<TWork> CreateKernel<TWork>() where TWork: unmanaged, IColorSpace4<TWork>;
+  /// <returns>A quantizer worker operating in the specified color space.</returns>
+  internal IQuantizer<TWork> CreateKernel<TWork>() where TWork : unmanaged, IColorSpace4<TWork>;
 
 }
 

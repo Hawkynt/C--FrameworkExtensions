@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Hawkynt.ColorProcessing.Metrics;
 
-namespace Hawkynt.ColorProcessing.Quantization;
+namespace Hawkynt.ColorProcessing.Internal;
 
 /// <summary>
 /// Internal helper for filling palette entries when quantizers produce fewer colors than requested.

@@ -152,11 +152,14 @@ public readonly struct ErrorDiffusion : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
@@ -165,8 +168,8 @@ public readonly struct ErrorDiffusion : IDitherer {
     where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
-    var indices = new byte[width * height];
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
 
     // Error buffer as ring buffer: [rowCount, width, 4 channels]
     var rowStride = width * 4;
@@ -174,7 +177,7 @@ public readonly struct ErrorDiffusion : IDitherer {
     var invDivisor = 1f / this._divisor;
     var baseRow = 0; // Ring buffer base index
 
-    for (var y = 0; y < height; ++y) {
+    for (var y = startY; y < endY; ++y) {
       // Serpentine: alternate direction each row
       var reverseRow = this.UseSerpentine && (y & 1) == 1;
 
@@ -182,8 +185,8 @@ public readonly struct ErrorDiffusion : IDitherer {
       var row0Offset = baseRow * rowStride;
 
       // Pre-calculate row base indices
-      var rowSourceBase = y * stride;
-      var rowTargetBase = y * width;
+      var rowSourceBase = y * sourceStride;
+      var rowTargetBase = y * targetStride;
 
       // Direction-specific setup
       int x, xEnd, xStep, sourceIdx, targetIdx;
@@ -216,7 +219,7 @@ public readonly struct ErrorDiffusion : IDitherer {
         var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
 
         // Calculate and distribute error using ring buffer
-        _DistributeErrorRing(adjustedColor, nearestColor, errors, x, y, width, height,
+        _DistributeErrorRing(adjustedColor, nearestColor, errors, x, y, width, endY,
           reverseRow, this._weights, this._rowCount, this._columnCount, this._shift, baseRow, rowStride);
 
         // Store the palette index
@@ -229,8 +232,6 @@ public readonly struct ErrorDiffusion : IDitherer {
       // Advance base row in ring buffer
       baseRow = (baseRow + 1) % this._rowCount;
     }
-
-    return indices;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

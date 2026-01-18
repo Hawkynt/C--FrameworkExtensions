@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
@@ -33,28 +34,15 @@ namespace Hawkynt.ColorProcessing.Quantization;
 [Quantizer(QuantizationType.Splitting, DisplayName = "Wu", Author = "Xiaolin Wu", Year = 1991, QualityRating = 9)]
 public struct WuQuantizer : IQuantizer {
 
-  /// <summary>
-  /// Gets or sets whether to fill unused palette entries with generated colors.
-  /// </summary>
-  public bool AllowFillingColors { get; set; } = true;
-
-  public WuQuantizer() { }
-
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.AllowFillingColors);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>();
 
-  internal sealed class Kernel<TWork>(bool allowFillingColors) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork> : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     /// <inheritdoc />
-    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
-      var result = QuantizerHelper.TryHandleSimpleCases(histogram, colorCount, allowFillingColors, out var used);
-      if (result != null)
-        return result;
-
-      var reduced = _ReduceColorsTo(colorCount, used);
-      return PaletteFiller.GenerateFinalPalette(reduced, colorCount, allowFillingColors);
-    }
+    public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount)
+      => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, _ReduceColorsTo);
 
     private static IEnumerable<TWork> _ReduceColorsTo(int colorCount, IEnumerable<(TWork color, uint count)> histogram) {
       var smallHistogram = new HistogramEntry[32, 32, 32];
@@ -75,16 +63,18 @@ public struct WuQuantizer : IQuantizer {
 
       var cubes = new List<ColorCube> { new(smallHistogram) };
       while (cubes.Count < colorCount) {
-        var largestCube = cubes.OrderByDescending(c => c.Volume).First();
-        if (largestCube.Volume <= 0)
+        // Find the largest cube that actually has data
+        var largestCube = cubes.Where(c => c.HasData).OrderByDescending(c => c.Volume).FirstOrDefault();
+        if (largestCube == null || largestCube.Volume <= 0)
           break;
 
         cubes.Remove(largestCube);
         var splitCubes = largestCube.Split();
-        cubes.AddRange(splitCubes);
+        // Only add cubes that contain actual color data
+        cubes.AddRange(splitCubes.Where(c => c.HasData));
       }
 
-      return cubes.Select(c => c.AverageColor);
+      return cubes.Where(c => c.HasData).Select(c => c.AverageColor);
     }
 
     private static int _FloatToIndex(float value) => Math.Max(0, Math.Min(31, (int)(value * 31.0f + 0.5f)));
@@ -113,7 +103,18 @@ public struct WuQuantizer : IQuantizer {
 
       public int Volume => (this._c1Max - this._c1Min) * (this._c2Max - this._c2Min) * (this._c3Max - this._c3Min);
 
+      public bool HasData => this._GetPixelCount() > 0;
+
       public TWork AverageColor => this._GetAverageColor();
+
+      private ulong _GetPixelCount() {
+        ulong count = 0;
+        for (var c1 = this._c1Min; c1 <= this._c1Max; ++c1)
+        for (var c2 = this._c2Min; c2 <= this._c2Max; ++c2)
+        for (var c3 = this._c3Min; c3 <= this._c3Max; ++c3)
+          count += this._histogram[c1, c2, c3].Count;
+        return count;
+      }
 
       private TWork _GetAverageColor() {
         double c1Sum = 0, c2Sum = 0, c3Sum = 0, aSum = 0;
@@ -147,7 +148,7 @@ public struct WuQuantizer : IQuantizer {
 
         int mid;
         if (c1Range >= c2Range && c1Range >= c3Range) {
-          mid = (this._c1Min + c1Range) >> 1;
+          mid = this._c1Min + (c1Range >> 1);
           return [
             new(this._histogram, this._c1Min, mid, this._c2Min, this._c2Max, this._c3Min, this._c3Max),
             new(this._histogram, mid + 1, this._c1Max, this._c2Min, this._c2Max, this._c3Min, this._c3Max)
@@ -155,14 +156,14 @@ public struct WuQuantizer : IQuantizer {
         }
 
         if (c2Range >= c1Range && c2Range >= c3Range) {
-          mid = (this._c2Min + c2Range) >> 1;
+          mid = this._c2Min + (c2Range >> 1);
           return [
             new(this._histogram, this._c1Min, this._c1Max, this._c2Min, mid, this._c3Min, this._c3Max),
             new(this._histogram, this._c1Min, this._c1Max, mid + 1, this._c2Max, this._c3Min, this._c3Max)
           ];
         }
 
-        mid = (this._c3Min + c3Range) >> 1;
+        mid = this._c3Min + (c3Range >> 1);
         return [
           new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, this._c3Min, mid),
           new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, mid + 1, this._c3Max)

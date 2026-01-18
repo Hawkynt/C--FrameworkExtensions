@@ -100,42 +100,63 @@ public readonly struct NoiseDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
     where TPixel : unmanaged, IStorageSpace
     where TDecode : struct, IDecode<TPixel, TWork>
-    where TMetric : struct, IColorMetric<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
     // Switch happens ONCE here, not per-pixel - each noise type uses specialized code path
-    => this.NoiseType switch {
-      NoiseType.White => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-      NoiseType.Blue => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(), this.Strength),
-      NoiseType.Pink => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-      NoiseType.Brown => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-      NoiseType.Violet => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-      NoiseType.Grey => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-      _ => _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
-        source, width, height, stride, decoder, metric, palette, new(this.Seed), this.Strength),
-    };
+    switch (this.NoiseType) {
+      case NoiseType.White:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+      case NoiseType.Blue:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(), this.Strength);
+        break;
+      case NoiseType.Pink:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+      case NoiseType.Brown:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+      case NoiseType.Violet:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+      case NoiseType.Grey:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+      default:
+        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        break;
+    }
+  }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe byte[] _DitherWithNoise<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
+  private static unsafe void _DitherWithNoise<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette,
@@ -147,29 +168,79 @@ public readonly struct NoiseDitherer : IDitherer {
     where TMetric : struct, IColorMetric<TWork>
     where TNoiseGen : struct, INoiseGenerator {
 
-    var indices = new byte[width * height];
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
 
-    for (var y = 0; y < height; ++y)
-    for (int x = 0, sourceIdx = y * stride, targetIdx = y * width; x < width; ++x, ++sourceIdx, ++targetIdx) {
+    for (var y = startY; y < endY; ++y)
+    for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
       var color = decoder.Decode(source[sourceIdx]);
-      var (c1, c2, c3, a) = color.ToNormalized();
+
+      // Find the two closest palette colors
+      var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+      var secondNearestIdx = _FindSecondNearest(color, palette, nearestIdx, lookup);
+
+      // Calculate how far the original is between the nearest and second-nearest colors
+      var (c1, c2, c3, _) = color.ToNormalized();
+      var (n1, n2, n3, _) = nearestColor.ToNormalized();
+      var (s1, s2, s3, _) = palette[secondNearestIdx].ToNormalized();
+
+      var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                          Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                          Math.Abs(c3.ToFloat() - n3.ToFloat());
+
+      var distToSecond = Math.Abs(c1.ToFloat() - s1.ToFloat()) +
+                         Math.Abs(c2.ToFloat() - s2.ToFloat()) +
+                         Math.Abs(c3.ToFloat() - s3.ToFloat());
+
+      var totalDist = distToNearest + distToSecond;
 
       // Direct call to struct method - devirtualized by JIT
-      var threshold = noiseGen.GetThreshold(x, y) * strength;
+      // Get noise value and clamp to [0, 1] range
+      var noiseValue = noiseGen.GetThreshold(x, y);
+      var threshold = Math.Max(0f, Math.Min(1f, (noiseValue + 0.5f) * strength));
 
-      var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-        UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
-        UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
-        UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
-        a
-      );
+      // Use threshold to decide between nearest and second-nearest based on relative distances
+      // ratio = 0 means we're exactly on nearest, ratio = 1 means we're exactly on second-nearest
+      var ratio = totalDist > 0.001f ? distToNearest / totalDist : 0f;
+      // Only select second-nearest if we're meaningfully between colors AND threshold exceeds our position
+      var selectedIdx = threshold > 1f - ratio ? secondNearestIdx : nearestIdx;
 
-      var nearestIdx = lookup.FindNearest(adjustedColor);
-      indices[targetIdx] = (byte)nearestIdx;
+      indices[targetIdx] = (byte)selectedIdx;
+    }
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _FindSecondNearest<TWork, TMetric>(
+    TWork color,
+    TWork[] palette,
+    int excludeIndex,
+    in PaletteLookup<TWork, TMetric> lookup)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+
+    if (palette.Length <= 1)
+      return excludeIndex;
+
+    var (c1, c2, c3, _) = color.ToNormalized();
+    var bestIdx = excludeIndex == 0 ? 1 : 0;
+    var bestDist = float.MaxValue;
+
+    for (var i = 0; i < palette.Length; ++i) {
+      if (i == excludeIndex)
+        continue;
+
+      var (p1, p2, p3, _) = palette[i].ToNormalized();
+      var dist = Math.Abs(c1.ToFloat() - p1.ToFloat()) +
+                 Math.Abs(c2.ToFloat() - p2.ToFloat()) +
+                 Math.Abs(c3.ToFloat() - p3.ToFloat());
+
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
     }
 
-    return indices;
+    return bestIdx;
   }
 
   #endregion

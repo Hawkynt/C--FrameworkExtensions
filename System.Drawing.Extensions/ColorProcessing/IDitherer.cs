@@ -20,7 +20,7 @@
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 
-namespace Hawkynt.ColorProcessing.Dithering;
+namespace Hawkynt.ColorProcessing;
 
 /// <summary>
 /// Interface for dithering algorithms that output palette indices.
@@ -55,18 +55,27 @@ public interface IDitherer {
   /// <typeparam name="TDecode">The decoder type (TPixel -> TWork).</typeparam>
   /// <typeparam name="TMetric">The color distance metric type operating on TWork.</typeparam>
   /// <param name="source">Pointer to source pixel data.</param>
+  /// <param name="indices">Pointer to caller-allocated index buffer (width * height bytes).</param>
   /// <param name="width">Width of the image in pixels.</param>
-  /// <param name="height">Height of the image in pixels.</param>
-  /// <param name="stride">Source image stride in pixels (not bytes).</param>
+  /// <param name="height">Number of rows to process.</param>
+  /// <param name="sourceStride">Source image stride in pixels (not bytes).</param>
+  /// <param name="targetStride">Target index buffer stride in pixels.</param>
+  /// <param name="startY">Starting row index for processing (enables row partitioning).</param>
   /// <param name="decoder">The pixel decoder (TPixel -> TWork).</param>
   /// <param name="metric">The color distance metric.</param>
   /// <param name="palette">The palette colors in TWork space.</param>
-  /// <returns>An array of palette indices, one per pixel (row-major order).</returns>
-  unsafe byte[] Dither<TWork, TPixel, TDecode, TMetric>(
+  /// <remarks>
+  /// The caller is responsible for allocating the indices buffer. When <see cref="RequiresSequentialProcessing"/>
+  /// is <c>false</c>, the caller may partition the image into row ranges and process them in parallel.
+  /// </remarks>
+  unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
     TPixel* source,
+    byte* indices,
     int width,
     int height,
-    int stride,
+    int sourceStride,
+    int targetStride,
+    int startY,
     in TDecode decoder,
     in TMetric metric,
     TWork[] palette)

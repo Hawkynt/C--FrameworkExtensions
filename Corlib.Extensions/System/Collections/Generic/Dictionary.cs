@@ -697,6 +697,29 @@ public static partial class DictionaryExtensions {
   }
 
   /// <summary>
+  ///   Increments the value for the given key, or adds the key with value 1 if not present.
+  ///   Optimized for histogram building - single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to increment.</param>
+  [DebuggerStepThrough]
+  public static void IncrementOrAdd<TKey>(this Dictionary<TKey, uint> @this, TKey key) {
+    Against.ThisIsNull(@this);
+
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+
+    ++CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+
+#else
+
+    @this.TryGetValue(key, out var count);
+    @this[key] = count + 1;
+
+#endif
+  }
+
+  /// <summary>
   ///   Tries to remove a key.
   /// </summary>
   /// <typeparam name="TKey">The type of the keys.</typeparam>
