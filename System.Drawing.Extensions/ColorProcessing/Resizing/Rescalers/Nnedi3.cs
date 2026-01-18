@@ -376,10 +376,10 @@ file readonly struct Nnedi32xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var e00 = center;
 
     // Compute interpolated pixels using NNEDI3 prediction
-    var e01 = maxEdge < threshold ? lerp.Lerp(center, window.P0P1.Work) : _PredictPixel(window, neighborhood, edgeStrengths, 0.5f, 0f, lerp);
-    var e10 = maxEdge < threshold ? lerp.Lerp(center, window.P1P0.Work) : _PredictPixel(window, neighborhood, edgeStrengths, 0f, 0.5f, lerp);
+    var e01 = maxEdge < threshold ? lerp.Lerp(center, window.P0P1.Work) : this._PredictPixel(window, neighborhood, edgeStrengths, 0.5f, 0f, lerp);
+    var e10 = maxEdge < threshold ? lerp.Lerp(center, window.P1P0.Work) : this._PredictPixel(window, neighborhood, edgeStrengths, 0f, 0.5f, lerp);
     var e11 = maxEdge < threshold ? lerp.Lerp(lerp.Lerp(center, window.P0P1.Work), lerp.Lerp(window.P1P0.Work, window.P1P1.Work))
-                                  : _PredictPixel(window, neighborhood, edgeStrengths, 0.5f, 0.5f, lerp);
+                                  : this._PredictPixel(window, neighborhood, edgeStrengths, 0.5f, 0.5f, lerp);
 
     var row0 = destTopLeft;
     var row1 = destTopLeft + destStride;
@@ -508,9 +508,9 @@ file readonly struct Nnedi33xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
         if (ox == 0 && oy == 0) {
           result = window.P0P0.Work;
         } else if (maxEdge < threshold) {
-          result = _BilinearFallback(window, fx, fy);
+          result = this._BilinearFallback(window, fx, fy);
         } else {
-          result = _PredictPixel(window, neighborhood, edgeStrengths, fx, fy);
+          result = this._PredictPixel(window, neighborhood, edgeStrengths, fx, fy);
         }
 
         rowPtr[ox] = encoder.Encode(result);
@@ -572,7 +572,7 @@ file readonly struct Nnedi33xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     }
 
     if (totalWeight < 0.01f)
-      return _BilinearFallback(window, fx, fy);
+      return this._BilinearFallback(window, fx, fy);
 
     resultR /= totalWeight;
     resultG /= totalWeight;
@@ -584,7 +584,7 @@ file readonly struct Nnedi33xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     resultB = Nnedi3.Sigmoid(resultB);
 
     var blendFactor = 1f - (neuronCount / 128f);
-    var bilinear = _BilinearFallback(window, fx, fy);
+    var bilinear = this._BilinearFallback(window, fx, fy);
     var computed = ColorConverter.FromNormalizedRgba<TWork>(resultR, resultG, resultB, resultA);
 
     return lerp.Lerp(computed, bilinear, blendFactor);
@@ -634,9 +634,9 @@ file readonly struct Nnedi34xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
         if (ox == 0 && oy == 0) {
           result = window.P0P0.Work;
         } else if (maxEdge < threshold) {
-          result = _BilinearFallback(window, fx, fy);
+          result = this._BilinearFallback(window, fx, fy);
         } else {
-          result = _PredictPixel(window, neighborhood, edgeStrengths, fx, fy);
+          result = this._PredictPixel(window, neighborhood, edgeStrengths, fx, fy);
         }
 
         rowPtr[ox] = encoder.Encode(result);
@@ -698,7 +698,7 @@ file readonly struct Nnedi34xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     }
 
     if (totalWeight < 0.01f)
-      return _BilinearFallback(window, fx, fy);
+      return this._BilinearFallback(window, fx, fy);
 
     resultR /= totalWeight;
     resultG /= totalWeight;
@@ -710,7 +710,7 @@ file readonly struct Nnedi34xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     resultB = Nnedi3.Sigmoid(resultB);
 
     var blendFactor = 1f - (neuronCount / 128f);
-    var bilinear = _BilinearFallback(window, fx, fy);
+    var bilinear = this._BilinearFallback(window, fx, fy);
     var computed = ColorConverter.FromNormalizedRgba<TWork>(resultR, resultG, resultB, resultA);
 
     return lerp.Lerp(computed, bilinear, blendFactor);

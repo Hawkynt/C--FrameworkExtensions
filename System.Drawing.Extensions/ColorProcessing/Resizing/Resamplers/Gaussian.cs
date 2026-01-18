@@ -144,7 +144,7 @@ file readonly struct GaussianKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
     for (var kx = -radius + 1; kx <= radius; ++kx) {
       var dx = fx - kx;
       var dy = fy - ky;
-      var weight = GaussianWeight(dx, dy);
+      var weight = this.GaussianWeight(dx, dy);
       if (weight < 1e-6f)
         continue;
 

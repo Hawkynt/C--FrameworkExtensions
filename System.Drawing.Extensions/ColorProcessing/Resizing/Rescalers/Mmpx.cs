@@ -155,25 +155,25 @@ file readonly struct Mmpx2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode
     // 1:1 Slope Rules with full reference conditions
     // J = D when: (D==B && D!=H && D!=F) && (lE>=lD || E==A) && any_eq3(E,A,C,G) && (lE<lD || A!=D || E!=P || E!=Q)
     if (equality.Equals(kD, kB) && !equality.Equals(kD, kH) && !equality.Equals(kD, kF))
-      if ((lE >= lD || equality.Equals(kE, kA)) && AnyEq3(kE, kA, kC, kG))
+      if ((lE >= lD || equality.Equals(kE, kA)) && this.AnyEq3(kE, kA, kC, kG))
         if (lE < lD || !equality.Equals(kA, kD) || !equality.Equals(kE, kP) || !equality.Equals(kE, kQ))
           j = lerp.Lerp(d.Work, b.Work);
 
     // K = B when: (B==F && B!=D && B!=H) && (lE>=lB || E==C) && any_eq3(E,A,C,I) && (lE<lB || C!=B || E!=P || E!=R)
     if (equality.Equals(kB, kF) && !equality.Equals(kB, kD) && !equality.Equals(kB, kH))
-      if ((lE >= lB || equality.Equals(kE, kC)) && AnyEq3(kE, kA, kC, kI))
+      if ((lE >= lB || equality.Equals(kE, kC)) && this.AnyEq3(kE, kA, kC, kI))
         if (lE < lB || !equality.Equals(kC, kB) || !equality.Equals(kE, kP) || !equality.Equals(kE, kR))
           k = lerp.Lerp(b.Work, f.Work);
 
     // L = H when: (H==D && H!=F && H!=B) && (lE>=lH || E==G) && any_eq3(E,A,G,I) && (lE<lH || G!=H || E!=S || E!=Q)
     if (equality.Equals(kH, kD) && !equality.Equals(kH, kF) && !equality.Equals(kH, kB))
-      if ((lE >= lH || equality.Equals(kE, kG)) && AnyEq3(kE, kA, kG, kI))
+      if ((lE >= lH || equality.Equals(kE, kG)) && this.AnyEq3(kE, kA, kG, kI))
         if (lE < lH || !equality.Equals(kG, kH) || !equality.Equals(kE, kS) || !equality.Equals(kE, kQ))
           l = lerp.Lerp(d.Work, h.Work);
 
     // M = F when: (F==H && F!=B && F!=D) && (lE>=lF || E==I) && any_eq3(E,C,G,I) && (lE<lF || I!=H || E!=R || E!=S)
     if (equality.Equals(kF, kH) && !equality.Equals(kF, kB) && !equality.Equals(kF, kD))
-      if ((lE >= lF || equality.Equals(kE, kI)) && AnyEq3(kE, kC, kG, kI))
+      if ((lE >= lF || equality.Equals(kE, kI)) && this.AnyEq3(kE, kC, kG, kI))
         if (lE < lF || !equality.Equals(kI, kH) || !equality.Equals(kE, kR) || !equality.Equals(kE, kS))
           m = lerp.Lerp(f.Work, h.Work);
 

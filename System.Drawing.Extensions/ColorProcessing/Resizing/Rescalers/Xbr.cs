@@ -227,10 +227,10 @@ file readonly struct Xbr2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     var e3 = pe.Work;
 
     // Apply kernels for each corner (rotated 4 times)
-    _Kernel2Xv5(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref e1, ref e2, ref e3);
-    _Kernel2Xv5(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e0, ref e3, ref e1);
-    _Kernel2Xv5(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e2, ref e1, ref e0);
-    _Kernel2Xv5(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref e3, ref e0, ref e2);
+    this._Kernel2Xv5(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref e1, ref e2, ref e3);
+    this._Kernel2Xv5(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e0, ref e3, ref e1);
+    this._Kernel2Xv5(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e2, ref e1, ref e0);
+    this._Kernel2Xv5(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref e3, ref e0, ref e2);
 
     // Write output
     destTopLeft[0] = encoder.Encode(e0);
@@ -279,13 +279,13 @@ file readonly struct Xbr2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
       if (ke * 2 <= ki && ex3 || ke >= ki * 2 && ex2) {
         if (ke * 2 <= ki && ex3)
-          _Left2_2X(ref n3, ref n2, px);
+          this._Left2_2X(ref n3, ref n2, px);
         if (ke >= ki * 2 && ex2)
-          _Up2_2X(ref n3, ref n1, px);
+          this._Up2_2X(ref n3, ref n1, px);
       } else
-        _Dia_2X(ref n3, px);
+        this._Dia_2X(ref n3, px);
     } else if (e <= i)
-      _AlphaBlend64W(ref n3, px);
+      this._AlphaBlend64W(ref n3, px);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -318,18 +318,18 @@ file readonly struct Xbr2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Left2_2X(ref TWork n3, ref TWork n2, in TWork pixel) {
-    _AlphaBlend192W(ref n3, pixel);
-    _AlphaBlend64W(ref n2, pixel);
+    this._AlphaBlend192W(ref n3, pixel);
+    this._AlphaBlend64W(ref n2, pixel);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Up2_2X(ref TWork n3, ref TWork n1, in TWork pixel) {
-    _AlphaBlend192W(ref n3, pixel);
-    _AlphaBlend64W(ref n1, pixel);
+    this._AlphaBlend192W(ref n3, pixel);
+    this._AlphaBlend64W(ref n1, pixel);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private void _Dia_2X(ref TWork n3, in TWork pixel) => _AlphaBlend128W(ref n3, pixel);
+  private void _Dia_2X(ref TWork n3, in TWork pixel) => this._AlphaBlend128W(ref n3, pixel);
 }
 
 #endregion
@@ -419,10 +419,10 @@ file readonly struct Xbr3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     var e8 = pe.Work;
 
     // Apply kernels for each corner (rotated 4 times)
-    _Kernel3X(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref e2, ref e5, ref e6, ref e7, ref e8);
-    _Kernel3X(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e0, ref e1, ref e8, ref e5, ref e2);
-    _Kernel3X(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e6, ref e3, ref e2, ref e1, ref e0);
-    _Kernel3X(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref e8, ref e7, ref e0, ref e3, ref e6);
+    this._Kernel3X(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref e2, ref e5, ref e6, ref e7, ref e8);
+    this._Kernel3X(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e0, ref e1, ref e8, ref e5, ref e2);
+    this._Kernel3X(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e6, ref e3, ref e2, ref e1, ref e0);
+    this._Kernel3X(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref e8, ref e7, ref e0, ref e3, ref e6);
 
     // Write output
     var row0 = destTopLeft;
@@ -493,15 +493,15 @@ file readonly struct Xbr3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
       var condUp = ke >= ki * 2 && ex2;
 
       if (condLeft && condUp)
-        _LeftUp2_3X(ref n7, out n5, ref n6, ref n2, out n8, px);
+        this._LeftUp2_3X(ref n7, out n5, ref n6, ref n2, out n8, px);
       else if (condLeft)
-        _Left2_3X(ref n7, ref n5, ref n6, out n8, px);
+        this._Left2_3X(ref n7, ref n5, ref n6, out n8, px);
       else if (condUp)
-        _Up2_3X(ref n5, ref n7, ref n2, out n8, px);
+        this._Up2_3X(ref n5, ref n7, ref n2, out n8, px);
       else
-        _Dia_3X(ref n8, ref n5, ref n7, px);
+        this._Dia_3X(ref n8, ref n5, ref n7, px);
     } else if (e <= i)
-      _AlphaBlend128W(ref n8, metric.Distance(pe.Key, pf.Key) <= metric.Distance(pe.Key, ph.Key) ? pf.Work : ph.Work);
+      this._AlphaBlend128W(ref n8, metric.Distance(pe.Key, pf.Key) <= metric.Distance(pe.Key, ph.Key) ? pf.Work : ph.Work);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -534,8 +534,8 @@ file readonly struct Xbr3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _LeftUp2_3X(ref TWork n7, out TWork n5, ref TWork n6, ref TWork n2, out TWork n8, in TWork pixel) {
-    _AlphaBlend192W(ref n7, pixel);
-    _AlphaBlend64W(ref n6, pixel);
+    this._AlphaBlend192W(ref n7, pixel);
+    this._AlphaBlend64W(ref n6, pixel);
     n5 = n7;
     n2 = n6;
     n8 = pixel;
@@ -543,25 +543,25 @@ file readonly struct Xbr3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Left2_3X(ref TWork n7, ref TWork n5, ref TWork n6, out TWork n8, in TWork pixel) {
-    _AlphaBlend192W(ref n7, pixel);
-    _AlphaBlend64W(ref n5, pixel);
-    _AlphaBlend64W(ref n6, pixel);
+    this._AlphaBlend192W(ref n7, pixel);
+    this._AlphaBlend64W(ref n5, pixel);
+    this._AlphaBlend64W(ref n6, pixel);
     n8 = pixel;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Up2_3X(ref TWork n5, ref TWork n7, ref TWork n2, out TWork n8, in TWork pixel) {
-    _AlphaBlend192W(ref n5, pixel);
-    _AlphaBlend64W(ref n7, pixel);
-    _AlphaBlend64W(ref n2, pixel);
+    this._AlphaBlend192W(ref n5, pixel);
+    this._AlphaBlend64W(ref n7, pixel);
+    this._AlphaBlend64W(ref n2, pixel);
     n8 = pixel;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Dia_3X(ref TWork n8, ref TWork n5, ref TWork n7, in TWork pixel) {
-    _AlphaBlend224W(ref n8, pixel);
-    _AlphaBlend32W(ref n5, pixel);
-    _AlphaBlend32W(ref n7, pixel);
+    this._AlphaBlend224W(ref n8, pixel);
+    this._AlphaBlend32W(ref n5, pixel);
+    this._AlphaBlend32W(ref n7, pixel);
   }
 }
 
@@ -659,10 +659,10 @@ file readonly struct Xbr4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     var ef = pe.Work;
 
     // Apply kernels for each corner (rotated 4 times)
-    _Kernel4Xv2(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref ef, ref ee, ref eb, ref e3, ref e7, ref ea, ref ed, ref ec);
-    _Kernel4Xv2(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e3, ref e7, ref e2, ref e0, ref e1, ref e6, ref eb, ref ef);
-    _Kernel4Xv2(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e0, ref e1, ref e4, ref ec, ref e8, ref e5, ref e2, ref e3);
-    _Kernel4Xv2(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref ec, ref e8, ref ed, ref ef, ref ee, ref e9, ref e4, ref e0);
+    this._Kernel4Xv2(pe, pi, ph, pf, pg, pc, pd, pb, f4, i4, h5, i5, ref ef, ref ee, ref eb, ref e3, ref e7, ref ea, ref ed, ref ec);
+    this._Kernel4Xv2(pe, pc, pf, pb, pi, pa, ph, pd, b1, c1, f4, c4, ref e3, ref e7, ref e2, ref e0, ref e1, ref e6, ref eb, ref ef);
+    this._Kernel4Xv2(pe, pa, pb, pd, pc, pg, pf, ph, d0, a0, b1, a1, ref e0, ref e1, ref e4, ref ec, ref e8, ref e5, ref e2, ref e3);
+    this._Kernel4Xv2(pe, pg, pd, ph, pa, pi, pb, pf, h5, g5, d0, g0, ref ec, ref e8, ref ed, ref ef, ref ee, ref e9, ref e4, ref e0);
 
     // Write output
     var row0 = destTopLeft;
@@ -731,13 +731,13 @@ file readonly struct Xbr4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
       if (ke * 2 <= ki && ex3 || ke >= ki * 2 && ex2) {
         if (ke * 2 <= ki && ex3)
-          _Left2(out n15, out n14, ref n11, ref n13, ref n12, ref n10, px);
+          this._Left2(out n15, out n14, ref n11, ref n13, ref n12, ref n10, px);
         if (ke >= ki * 2 && ex2)
-          _Up2(out n15, ref n14, out n11, ref n3, ref n7, ref n10, px);
+          this._Up2(out n15, ref n14, out n11, ref n3, ref n7, ref n10, px);
       } else
-        _Dia(out n15, ref n14, ref n11, px);
+        this._Dia(out n15, ref n14, ref n11, px);
     } else if (e <= i)
-      _AlphaBlend128W(ref n15, px);
+      this._AlphaBlend128W(ref n15, px);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -759,8 +759,8 @@ file readonly struct Xbr4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _LeftUp2(out TWork n15, out TWork n14, out TWork n11, ref TWork n13, ref TWork n12, out TWork n10, out TWork n7, out TWork n3, in TWork pixel) {
-    _AlphaBlend192W(ref n13, pixel);
-    _AlphaBlend64W(ref n12, pixel);
+    this._AlphaBlend192W(ref n13, pixel);
+    this._AlphaBlend64W(ref n12, pixel);
     n15 = pixel;
     n14 = pixel;
     n11 = pixel;
@@ -771,28 +771,28 @@ file readonly struct Xbr4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Left2(out TWork n15, out TWork n14, ref TWork n11, ref TWork n13, ref TWork n12, ref TWork n10, in TWork pixel) {
-    _AlphaBlend192W(ref n11, pixel);
-    _AlphaBlend192W(ref n13, pixel);
-    _AlphaBlend64W(ref n10, pixel);
-    _AlphaBlend64W(ref n12, pixel);
+    this._AlphaBlend192W(ref n11, pixel);
+    this._AlphaBlend192W(ref n13, pixel);
+    this._AlphaBlend64W(ref n10, pixel);
+    this._AlphaBlend64W(ref n12, pixel);
     n14 = pixel;
     n15 = pixel;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Up2(out TWork n15, ref TWork n14, out TWork n11, ref TWork n3, ref TWork n7, ref TWork n10, in TWork pixel) {
-    _AlphaBlend192W(ref n14, pixel);
-    _AlphaBlend192W(ref n7, pixel);
-    _AlphaBlend64W(ref n10, pixel);
-    _AlphaBlend64W(ref n3, pixel);
+    this._AlphaBlend192W(ref n14, pixel);
+    this._AlphaBlend192W(ref n7, pixel);
+    this._AlphaBlend64W(ref n10, pixel);
+    this._AlphaBlend64W(ref n3, pixel);
     n11 = pixel;
     n15 = pixel;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _Dia(out TWork n15, ref TWork n14, ref TWork n11, in TWork pixel) {
-    _AlphaBlend128W(ref n11, pixel);
-    _AlphaBlend128W(ref n14, pixel);
+    this._AlphaBlend128W(ref n11, pixel);
+    this._AlphaBlend128W(ref n14, pixel);
     n15 = pixel;
   }
 }

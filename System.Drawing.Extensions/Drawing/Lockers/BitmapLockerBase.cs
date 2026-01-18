@@ -117,7 +117,8 @@ internal abstract class BitmapLockerBase : IBitmapLocker {
     this.Width = rect.Width;
     this.Height = rect.Height;
     this._data = bitmap.LockBits(rect, lockMode, targetFormat);
-    this.BytesPerPixel = bytesPerPixel > 0 ? bytesPerPixel : Image.GetPixelFormatSize(targetFormat) / 8;
+    // Round up to handle sub-byte formats (1bpp, 4bpp): (bits + 7) / 8 ensures at least 1
+    this.BytesPerPixel = bytesPerPixel > 0 ? bytesPerPixel : (Image.GetPixelFormatSize(targetFormat) + 7) / 8;
     this.Stride = this._data.Stride / this.BytesPerPixel;
   }
 

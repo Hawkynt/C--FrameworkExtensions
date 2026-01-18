@@ -206,8 +206,8 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
       var r = MathF.Sqrt(dx * dx + dy * dy);
 
       var weight = jincType == JincType.EwaLanczos
-        ? EwaLanczosWeight(r)
-        : JincWeight(r);
+        ? this.EwaLanczosWeight(r)
+        : this.JincWeight(r);
 
       if (weight == 0f)
         continue;

@@ -170,8 +170,8 @@ file readonly struct Eedi2Kernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
       result = BilinearInterpolate(c11, c21, c12, c22, fx, fy);
     } else {
       // High contrast: find best direction
-      var bestDir = FindBestDirection(frame, x0, y0, fx, fy, l11, l21, l12, l22);
-      result = DirectionalInterpolate(frame, x0, y0, fx, fy, bestDir);
+      var bestDir = this.FindBestDirection(frame, x0, y0, fx, fy, l11, l21, l12, l22);
+      result = this.DirectionalInterpolate(frame, x0, y0, fx, fy, bestDir);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(result);

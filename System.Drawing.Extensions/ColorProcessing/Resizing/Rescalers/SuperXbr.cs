@@ -176,10 +176,10 @@ file readonly struct SuperXbrKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var p44 = window.P2P2.Work;
 
     // Apply edge-directed interpolation for each output pixel
-    var e00 = _InterpolateDiagonal(p22, p12, p21, p11, p13, p31, p23, p33, p02, p20, p24, p42);
-    var e01 = _InterpolateDiagonal(p22, p13, p23, p12, p14, p32, p24, p34, p03, p21, p33, p43);
-    var e10 = _InterpolateDiagonal(p22, p21, p32, p11, p31, p13, p33, p23, p20, p02, p42, p24);
-    var e11 = _InterpolateDiagonal(p22, p23, p33, p12, p32, p14, p34, p24, p21, p03, p43, p31);
+    var e00 = this._InterpolateDiagonal(p22, p12, p21, p11, p13, p31, p23, p33, p02, p20, p24, p42);
+    var e01 = this._InterpolateDiagonal(p22, p13, p23, p12, p14, p32, p24, p34, p03, p21, p33, p43);
+    var e10 = this._InterpolateDiagonal(p22, p21, p32, p11, p31, p13, p33, p23, p20, p02, p42, p24);
+    var e11 = this._InterpolateDiagonal(p22, p23, p33, p12, p32, p14, p34, p24, p21, p03, p43, p31);
 
     // Apply anti-ringing using 3x3 neighborhood around center
     e00 = _ApplyAntiRinging(e00, p11, p12, p13, p21, p22, p23, p31, p32, p33);
@@ -313,10 +313,10 @@ file readonly struct SuperXbrFastKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLe
     var p33 = window.P1P1.Work;
 
     // Simple edge-directed interpolation without second pass
-    var e00 = _InterpolateFast(p22, p12, p21, p11);
-    var e01 = _InterpolateFast(p22, p12, p23, p13);
-    var e10 = _InterpolateFast(p22, p21, p32, p31);
-    var e11 = _InterpolateFast(p22, p23, p32, p33);
+    var e00 = this._InterpolateFast(p22, p12, p21, p11);
+    var e01 = this._InterpolateFast(p22, p12, p23, p13);
+    var e10 = this._InterpolateFast(p22, p21, p32, p31);
+    var e11 = this._InterpolateFast(p22, p23, p32, p33);
 
     // Write 2x2 output
     var row0 = destTopLeft;
