@@ -19,9 +19,9 @@
 
 #if !SUPPORTS_RUNTIMEHELPERS_GETSUBARRAY
 
-namespace System.Runtime.CompilerServices;
-
 #pragma warning disable CS0436 // Type conflicts with imported type - intentional polyfill for compiler well-known members
+
+namespace System.Runtime.CompilerServices;
 
 /// <summary>
 /// Provides compiler-required members for <see cref="RuntimeHelpers"/> on older frameworks.
@@ -43,7 +43,7 @@ public static partial class RuntimeHelpers {
   /// On 32-bit systems this returns 8 (4-byte object header + 4-byte length).
   /// On 64-bit systems this returns 12 (8-byte object header + 4-byte length).
   /// </remarks>
-  [Obsolete("Dummy for Compiler – DO NOT CALL!", true)]
+  [Obsolete("Dummy for Compiler ï¿½ DO NOT CALL!", true)]
   public static int OffsetToStringData => IntPtr.Size + sizeof(int);
 
   /// <summary>
@@ -71,8 +71,6 @@ public static partial class RuntimeHelpers {
 
 }
 
-#pragma warning restore CS0436
-
 /// <summary>
 /// Provides extension methods for <see cref="RuntimeHelpers"/> on older frameworks.
 /// </summary>
@@ -93,5 +91,7 @@ public static partial class RuntimeHelpersPolyfills {
   }
 
 }
+
+#pragma warning restore CS0436
 
 #endif

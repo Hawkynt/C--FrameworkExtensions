@@ -192,8 +192,7 @@ public partial class MathTests {
   [Description("Validates float FusedDivideAdd computes correctly")]
   public void FusedDivideAdd_Float_ComputesCorrectly(float value, float divisor, float addend, float expected) {
     var result = value.FusedDivideAdd(divisor, addend);
-    // Uses ReciprocalEstimate internally so larger tolerance needed
-    Assert.That(result, Is.EqualTo(expected).Within(0.01f));
+    Assert.That(result, Is.EqualTo(expected).Within(1e-6f));
   }
 
   [Test]
@@ -230,8 +229,7 @@ public partial class MathTests {
   [Description("Validates float FusedDivideSubtract computes correctly")]
   public void FusedDivideSubtract_Float_ComputesCorrectly(float value, float divisor, float subtrahend, float expected) {
     var result = value.FusedDivideSubtract(divisor, subtrahend);
-    // Uses ReciprocalEstimate internally so larger tolerance needed
-    Assert.That(result, Is.EqualTo(expected).Within(0.01f));
+    Assert.That(result, Is.EqualTo(expected).Within(1e-6f));
   }
 
   [Test]

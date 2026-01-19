@@ -15,12 +15,12 @@
 
   <PropertyGroup Condition="'$(HasCustomNUnit)' == 'true'">
     <!-- Custom NUnit available: include net20 target -->
-    <TargetFrameworks>net20;net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;net45;net46;net461;net462;net47;net471;net472;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(HasCustomNUnit)' != 'true'">
     <!-- Custom NUnit not available: start from net35 using NuGet packages -->
-    <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net35;net40;net45;net46;net461;net462;net47;net471;net472;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,6 +35,7 @@
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <SuppressTfmSupportBuildErrors>True</SuppressTfmSupportBuildErrors>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <NoWarn>$(NoWarn);NU1701</NoWarn><!-- NUnit3TestAdapter is .NET Framework only but works via netstandard2.0 -->
     <NoWarn>$(NoWarn);MSB3268</NoWarn><!-- Microsoft.BCL.Async indirect dependencies on net40 can't be resolved but library works -->
@@ -102,21 +103,37 @@
   </ItemGroup>
 
   <!-- Microsoft.CSharp - Required for 'dynamic' keyword support on .NET Framework -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <!-- System.Runtime.CompilerServices.Unsafe - Explicit reference for test project -->
   <!-- Required for Unsafe.IsNullRef tests on frameworks where it comes from NuGet -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <!-- Use version 5.0.0 for net45/net46 (6.0.0 requires net461+), version 6.0.0 for net461+ -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 
+  <!-- System.Collections.Immutable - Explicit reference for tests of Immutable/Frozen collections -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Collections.Immutable" Version="9.0.1" />
+  </ItemGroup>
+
+  <!-- Microsoft.Bcl.AsyncInterfaces - Required for IAsyncEnumerable tests -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.1" />
+  </ItemGroup>
+
+  <!-- System.Text.Json - Explicit reference for tests (Backports uses NuGet package for net462+) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Text.Json" Version="9.0.1" />
+  </ItemGroup>
+
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
@@ -161,7 +178,7 @@
     This exclusion should be removed when Roslyn fixes the bug or when dropping legacy framework support.
     See: https://github.com/dotnet/roslyn/issues/ (TODO: file bug report)
   -->
-  <ItemGroup Condition="('$(HasCustomNUnit)' == 'true' AND '$(TargetFramework)' == 'net20') OR '$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="('$(HasCustomNUnit)' == 'true' AND '$(TargetFramework)' == 'net20') OR '$(TargetFramework)' == 'net35' OR '$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <Compile Remove="TensorTests.cs" />
   </ItemGroup>
 
@@ -190,7 +207,7 @@
     - They can only be created by ASP.NET infrastructure, not instantiated directly in test code
     - Our polyfill (used on net20-net35, netstandard, netcore) allows direct instantiation for testing
   -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' OR '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
     <Compile Remove="HttpContextTests.cs" />
   </ItemGroup>
 

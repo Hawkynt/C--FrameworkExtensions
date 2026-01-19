@@ -16,7 +16,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <LangVersion>default</LangVersion>
     <DebugType>embedded</DebugType>
-    <TargetFrameworks>net35;net40;net45;net48;netstandard2.0;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net35;net40;net45;net46;net461;net462;net47;net471;net472;net48;netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
@@ -24,6 +24,7 @@
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS8785</NoWarn><!-- Suppresses the JsonSourceGenerator warning -->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
     <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
@@ -62,6 +63,11 @@
     <None Update="Guard\Against.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Against.T4.cs</LastGenOutput>
+    </None>
+
+    <None Update="System\Collections\Generic\Dictionary.IncrementOrAdd.T4.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Dictionary.IncrementOrAdd.T4.cs</LastGenOutput>
     </None>
     <None Update="System\IO\FileInfo.T4.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -217,6 +223,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Cache.T4.tt</DependentUpon>
+    </Compile>
+    <Compile Update="System\Collections\Generic\Dictionary.IncrementOrAdd.T4.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Dictionary.IncrementOrAdd.T4.tt</DependentUpon>
     </Compile>
     <Compile Update="System\Collections\Generic\Enumerable.T4.cs">
       <DesignTime>True</DesignTime>

@@ -1,16 +1,16 @@
-﻿#region (c)2010-2042 Hawkynt
+#region (c)2010-2042 Hawkynt
 
 // This file is part of Hawkynt's .NET Framework extensions.
-// 
+//
 // Hawkynt's .NET Framework extensions are free software:
 // you can redistribute and/or modify it under the terms
 // given in the LICENSE file.
-// 
+//
 // Hawkynt's .NET Framework extensions is distributed in the hope that
 // it will be useful, but WITHOUT ANY WARRANTY without even the implied
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the LICENSE file for more details.
-// 
+//
 // You should have received a copy of the License along with Hawkynt's
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
@@ -19,17 +19,15 @@
 
 using System.Diagnostics;
 using System.Linq;
-using Guard;
 using System.Runtime.CompilerServices;
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
 using System.Runtime.InteropServices;
-#endif
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.Generic;
 
 public static partial class DictionaryExtensions {
+
   #region nested types
 
   public enum ChangeType {
@@ -61,744 +59,649 @@ public static partial class DictionaryExtensions {
 
   #endregion
 
-  /// <summary>
-  ///   Adds the given key/value pairs.
-  ///   Note: the number of parameters must be divisble by two to add all keys.
-  /// </summary>
+  #region IDictionary<TKey, TValue> extensions
+
+  /// <param name="this">This Dictionary.</param>
   /// <typeparam name="TKey">The type of the keys.</typeparam>
   /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="keyValuePairs">The key/value pairs.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> @this, params object[] keyValuePairs) {
-    Against.ThisIsNull(@this);
+  extension<TKey, TValue>(IDictionary<TKey, TValue> @this) {
 
-    if (keyValuePairs == null)
-      return;
+    /// <summary>
+    ///   Adds the specified value to a dictionary by using the output of a function as the key name.
+    /// </summary>
+    /// <param name="value">The value to add.</param>
+    /// <param name="generatorFunction">The generator function.</param>
+    /// <returns>
+    ///   The key added.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    /// <remarks>
+    ///   Can loop infinitely, depending on the function !!!
+    /// </remarks>
+    [DebuggerStepThrough]
+    public TKey Add(TValue value, Func<TKey> generatorFunction) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(generatorFunction);
 
-    var length = keyValuePairs.LongLength;
-    if ((length & 1) == 1)
-      --length;
-
-    for (var i = 0; i < length; i += 2) {
-      var key = keyValuePairs[i];
-      var value = keyValuePairs[i + 1];
-      @this.Add((TKey)key, (TValue)value);
-    }
-  }
-
-  /// <summary>
-  ///   Adds a range of key/value pairs to a given dictionary.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="keyValuePairs">The key/value pairs.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(keyValuePairs);
-
-    foreach (var kvp in keyValuePairs)
-      @this.Add(kvp.Key, kvp.Value);
-  }
-
-  /// <summary>
-  ///   Determines whether the given dictionary has a key and if so, passes the key and its value to the given function.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup.</param>
-  /// <param name="action">The function to execute.</param>
-  /// <returns>
-  ///   <c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static bool HasKeyDo<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Action<TKey, TValue> action) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(action);
-
-    var result = @this.TryGetValue(key, out var value);
-    if (result)
-      action(key, value);
-    return result;
-  }
-
-  /// <summary>
-  ///   Determines whether the given dictionary has a key and if so, passes the value to the given function.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup.</param>
-  /// <param name="action">The function to execute.</param>
-  /// <returns>
-  ///   <c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static bool HasKeyDo<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Action<TValue> action) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(action);
-
-    var result = @this.TryGetValue(key, out var value);
-    if (result)
-      action(value);
-    return result;
-  }
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <returns>The value from the Dictionary or a default value</returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : default;
-  }
-
-#if SUPPORTS_READ_ONLY_COLLECTIONS
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <returns>The value from the Dictionary or a default value</returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : default;
-  }
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <returns>The value from the Dictionary or a default value</returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : default;
-  }
-
-#endif
-
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>
-  ///   The value from the Dictionary or a default value
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : defaultValue;
-  }
-
-#if SUPPORTS_READ_ONLY_COLLECTIONS
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>
-  ///   The value from the Dictionary or a default value
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : defaultValue;
-  }
-
-  /// <summary>
-  ///   Gets the value or a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>
-  ///   The value from the Dictionary or a default value
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : defaultValue;
-  }
-
-#endif
-
-  /// <summary>
-  ///   Gets the value or generates a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="defaultValueFactory">The default value factory.</param>
-  /// <returns>
-  ///   The value from the Dictionary or a default value
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Func<TValue> defaultValueFactory) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(defaultValueFactory);
-
-    return @this.TryGetValue(key, out var result) ? result : defaultValueFactory();
-  }
-
-  /// <summary>
-  ///   Gets the value or generates a default.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="defaultValueFactory">The default value factory.</param>
-  /// <returns>
-  ///   The value from the Dictionary or a default value
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Func<TKey, TValue> defaultValueFactory) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(defaultValueFactory);
-
-    return @this.TryGetValue(key, out var result) ? result : defaultValueFactory(key);
-  }
-
-  /// <summary>
-  ///   Gets the value or null.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="_">Reserved, to be filled by the compiler.</param>
-  /// <returns>
-  ///   The value of the key or <c>null</c>
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __ClassForcingTag<TValue> _ = null) where TValue : class {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : null;
-  }
-
-  /// <summary>
-  ///   Gets the value or null.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the key.</typeparam>
-  /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="_">Reserved, to be filled by the compiler.</param>
-  /// <returns>
-  ///   The value of the key or <c>null</c>
-  /// </returns>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __StructForcingTag<TValue> _ = null) where TValue : struct {
-    Against.ThisIsNull(@this);
-
-    return @this.TryGetValue(key, out var result) ? result : null;
-  }
-
-  /// <summary>
-  ///   Adds a value or updates an existing.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to add/update.</param>
-  /// <param name="value">The new value.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
-    Against.ThisIsNull(@this);
-
-    @this[key] = value;
-  }
-
-  /// <summary>
-  ///   Adds values or updates existings.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="values">The values.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<Tuple<TKey, TValue>> values) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    foreach (var kvp in values)
-      @this[kvp.Item1] = kvp.Item2;
-  }
-
-  /// <summary>
-  ///   Adds values or updates existings.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="values">The values.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, params Tuple<TKey, TValue>[] values) {
-    Against.ThisIsNull(@this);
-
-    foreach (var kvp in values)
-      @this[kvp.Item1] = kvp.Item2;
-  }
-
-  /// <summary>
-  ///   Adds values or updates existings.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="values">The values.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  /// <exception cref="ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, IEnumerable<KeyValuePair<TKey, TValue>> values) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(values);
-
-    foreach (var kvp in values)
-      @this[kvp.Key] = kvp.Value;
-  }
-
-  /// <summary>
-  ///   Adds values or updates existings.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="values">The values.</param>
-  /// <exception cref="NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, params KeyValuePair<TKey, TValue>[] values) {
-    Against.ThisIsNull(@this);
-
-    foreach (var kvp in values)
-      @this[kvp.Key] = kvp.Value;
-  }
-
-  /// <summary>
-  ///   Gets the key's value from a dictionary or adds the key with the default value.
-  /// </summary>
-  /// <typeparam name="TKey">Type of the keys.</typeparam>
-  /// <typeparam name="TValue">Type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup/add.</param>
-  /// <returns>
-  ///   The key's value or the default value.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetOrAddDefault<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    if (@this is Dictionary<TKey, TValue> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
-      return ptrResult;
+      TKey result;
+      do
+        result = generatorFunction();
+      while (@this.ContainsKey(result));
+      @this.Add(result, value);
+      return result;
     }
 
-#endif
+    /// <summary>
+    ///   Adds the specified value to a dictionary by using an enumerator.
+    /// </summary>
+    /// <param name="value">The value to add.</param>
+    /// <param name="keyEnumerator">The enumeration that returns possible key names.</param>
+    /// <returns>
+    ///   The key added.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    /// <remarks>
+    ///   Can loop infinitely, depending on the enumeration !!!
+    /// </remarks>
+    [DebuggerStepThrough]
+    public TKey Add(TValue value, IEnumerator<TKey> keyEnumerator) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(keyEnumerator);
 
-    if (!@this.TryGetValue(key, out var result))
-      @this.Add(key, result = default);
+      TKey result;
+      do {
+        keyEnumerator.MoveNext();
+        result = keyEnumerator.Current;
+      } while (@this.ContainsKey(result));
 
-    return result;
-  }
-
-  /// <summary>
-  ///   Gets the key's value from a dictionary or adds the key with the default value.
-  /// </summary>
-  /// <typeparam name="TKey">Type of the keys.</typeparam>
-  /// <typeparam name="TValue">Type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup/add.</param>
-  /// <param name="defaultValue">The default value.</param>
-  /// <returns>
-  ///   The key's value or the default value.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue defaultValue) {
-    Against.ThisIsNull(@this);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    if (@this is Dictionary<TKey, TValue> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
-      if (!existed)
-        ptrResult = defaultValue;
-
-      return ptrResult;
+      @this.Add(result, value);
+      return result;
     }
 
-#endif
+    /// <summary>
+    ///   Adds a value or updates an existing.
+    /// </summary>
+    /// <param name="key">The key to add/update.</param>
+    /// <param name="value">The new value.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public void AddOrUpdate(TKey key, TValue value) {
+      Against.ThisIsNull(@this);
 
-    if (!@this.TryGetValue(key, out var result))
-      @this.Add(key, result = defaultValue);
-
-    return result;
-  }
-  
-  /// <summary>
-  ///   Gets the key's value from a dictionary or adds the key with the default value.
-  /// </summary>
-  /// <typeparam name="TKey">Type of the keys.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup/add.</param>
-  /// <returns>
-  ///   The key's value or the default value.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    if (@this is Dictionary<TKey, TKey> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
-      if (!existed)
-        ptrResult = key;
-
-      return ptrResult;
+      @this[key] = value;
     }
 
-#endif
+    /// <summary>
+    ///   Adds values or updates existings.
+    /// </summary>
+    /// <param name="values">The values.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TValue>> values) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(values);
 
-    if (!@this.TryGetValue(key, out var result))
-      @this.Add(key, result = key);
-
-    return result;
-  }
-
-  /// <summary>
-  ///   Gets the key's value from a dictionary or adds the key with the default value.
-  /// </summary>
-  /// <typeparam name="TKey">Type of the keys.</typeparam>
-  /// <typeparam name="TValue">Type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup/add.</param>
-  /// <param name="defaultValueFactory">The default value factory.</param>
-  /// <returns>
-  ///   The key's value or the default value.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  /// <exception cref="System.ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Func<TValue> defaultValueFactory) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(defaultValueFactory);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    if (@this is Dictionary<TKey, TValue> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
-      if (!existed)
-        ptrResult = defaultValueFactory();
-
-      return ptrResult;
+      foreach (var kvp in values)
+        @this[kvp.Key] = kvp.Value;
     }
 
-#endif
+    /// <summary>
+    ///   Adds values or updates existings.
+    /// </summary>
+    /// <param name="values">The values.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public void AddOrUpdate(IEnumerable<Tuple<TKey, TValue>> values) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(values);
 
-    if (!@this.TryGetValue(key, out var result))
-      @this.Add(key, result = defaultValueFactory());
-
-    return result;
-  }
-
-  /// <summary>
-  ///   Gets the key's value from a dictionary or adds the key with the default value.
-  /// </summary>
-  /// <typeparam name="TKey">Type of the keys.</typeparam>
-  /// <typeparam name="TValue">Type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to lookup/add.</param>
-  /// <param name="defaultValueFactory">The default value factory.</param>
-  /// <returns>
-  ///   The key's value or the default value.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  /// <exception cref="System.ArgumentNullException"></exception>
-  [DebuggerStepThrough]
-  public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, Func<TKey, TValue> defaultValueFactory) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(defaultValueFactory);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    if (@this is Dictionary<TKey, TValue> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
-      if (!existed)
-        ptrResult = defaultValueFactory(key);
-
-      return ptrResult;
+      foreach (var kvp in values)
+        @this[kvp.Item1] = kvp.Item2;
     }
 
-#endif
+    /// <summary>
+    ///   Adds values or updates existings.
+    /// </summary>
+    /// <param name="values">The values.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public void AddOrUpdate(params KeyValuePair<TKey, TValue>[] values) {
+      Against.ThisIsNull(@this);
 
-    if (!@this.TryGetValue(key, out var result))
-      @this.Add(key, result = defaultValueFactory(key));
+      foreach (var kvp in values)
+        @this[kvp.Key] = kvp.Value;
+    }
 
-    return result;
-  }
+    /// <summary>
+    ///   Adds values or updates existings.
+    /// </summary>
+    /// <param name="values">The values.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public void AddOrUpdate(params Tuple<TKey, TValue>[] values) {
+      Against.ThisIsNull(@this);
 
-  /// <summary>
-  ///   Adds the specified value to a dictionary by using the output of a function as the key name.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="value">The value to add.</param>
-  /// <param name="generatorFunction">The generator function.</param>
-  /// <returns>
-  ///   The key added.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  /// <exception cref="System.ArgumentNullException"></exception>
-  /// <remarks>
-  ///   Can loop infinitely, depending on the function !!!
-  /// </remarks>
-  [DebuggerStepThrough]
-  public static TKey Add<TKey, TValue>(this IDictionary<TKey, TValue> @this, TValue value, Func<TKey> generatorFunction) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(generatorFunction);
+      foreach (var kvp in values)
+        @this[kvp.Item1] = kvp.Item2;
+    }
 
-    TKey result;
-    do
-      result = generatorFunction();
-    while (@this.ContainsKey(result));
-    @this.Add(result, value);
-    return result;
-  }
+    /// <summary>
+    ///   Adds the given key/value pairs.
+    ///   Note: the number of parameters must be divisble by two to add all keys.
+    /// </summary>
+    /// <param name="keyValuePairs">The key/value pairs.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public void AddRange(params object[] keyValuePairs) {
+      Against.ThisIsNull(@this);
 
-  /// <summary>
-  ///   Adds the specified value to a dictionary by using an enumerator.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="value">The value to add.</param>
-  /// <param name="keyEnumerator">The enumeration that returns possible key names.</param>
-  /// <returns>
-  ///   The key added.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  /// <exception cref="System.ArgumentNullException"></exception>
-  /// <remarks>
-  ///   Can loop infinitely, depending on the enumeration !!!
-  /// </remarks>
-  [DebuggerStepThrough]
-  public static TKey Add<TKey, TValue>(this IDictionary<TKey, TValue> @this, TValue value, IEnumerator<TKey> keyEnumerator) {
-    Against.ThisIsNull(@this);
-    Against.ArgumentIsNull(keyEnumerator);
+      if (keyValuePairs == null)
+        return;
 
-    TKey result;
-    do {
-      keyEnumerator.MoveNext();
-      result = keyEnumerator.Current;
-    } while (@this.ContainsKey(result));
+      var length = keyValuePairs.LongLength;
+      if ((length & 1) == 1)
+        --length;
 
-    @this.Add(result, value);
-    return result;
-  }
+      for (var i = 0; i < length; i += 2) {
+        var key = keyValuePairs[i];
+        var value = keyValuePairs[i + 1];
+        @this.Add((TKey)key, (TValue)value);
+      }
+    }
 
-  /// <summary>
-  ///   Tries to add a key.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="value">The value.</param>
-  /// <returns>
-  ///   <c>true</c> on success; otherwise, <c>false</c>.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue value) {
-    Against.ThisIsNull(@this);
+    /// <summary>
+    ///   Adds a range of key/value pairs to a given dictionary.
+    /// </summary>
+    /// <param name="keyValuePairs">The key/value pairs.</param>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(keyValuePairs);
 
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
+      foreach (var kvp in keyValuePairs)
+        @this.Add(kvp.Key, kvp.Value);
+    }
 
-    if (@this is Dictionary<TKey, TValue> dict) {
-      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
-      if (existed)
+    /// <summary>
+    ///   Casts a dictionary fully.
+    /// </summary>
+    /// <typeparam name="TKeyTarget">The type of the keys in the target dictionary.</typeparam>
+    /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
+    /// <returns>A new dictionary with the casted values.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
+    public Dictionary<TKeyTarget, TValueTarget> FullCast<TKeyTarget, TValueTarget>() {
+      Against.ThisIsNull(@this);
+
+      return @this.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value);
+    }
+
+    /// <summary>
+    ///   Gets the key's value from a dictionary or adds the key with the default value.
+    /// </summary>
+    /// <param name="key">The key to lookup/add.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    ///   The key's value or the default value.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetOrAdd(TKey key, TValue defaultValue) {
+      Against.ThisIsNull(@this);
+
+      if (@this is Dictionary<TKey, TValue> dict) {
+        ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+        if (!existed)
+          ptrResult = defaultValue;
+
+        return ptrResult;
+      }
+
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = defaultValue);
+
+      return result;
+    }
+
+    /// <summary>
+    ///   Gets the key's value from a dictionary or adds the key with the default value.
+    /// </summary>
+    /// <param name="key">The key to lookup/add.</param>
+    /// <param name="defaultValueFactory">The default value factory.</param>
+    /// <returns>
+    ///   The key's value or the default value.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetOrAdd(TKey key, Func<TKey, TValue> defaultValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(defaultValueFactory);
+
+      if (@this is Dictionary<TKey, TValue> dict) {
+        ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+        if (!existed)
+          ptrResult = defaultValueFactory(key);
+
+        return ptrResult;
+      }
+
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = defaultValueFactory(key));
+
+      return result;
+    }
+
+    /// <summary>
+    ///   Gets the key's value from a dictionary or adds the key with the default value.
+    /// </summary>
+    /// <param name="key">The key to lookup/add.</param>
+    /// <param name="defaultValueFactory">The default value factory.</param>
+    /// <returns>
+    ///   The key's value or the default value.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    /// <exception cref="System.ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetOrAdd(TKey key, Func<TValue> defaultValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(defaultValueFactory);
+
+      if (@this is Dictionary<TKey, TValue> dict) {
+        ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+        if (!existed)
+          ptrResult = defaultValueFactory();
+
+        return ptrResult;
+      }
+
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = defaultValueFactory());
+
+      return result;
+    }
+
+    /// <summary>
+    ///   Gets the key's value from a dictionary or adds the key with the default value.
+    /// </summary>
+    /// <param name="key">The key to lookup/add.</param>
+    /// <returns>
+    ///   The key's value or the default value.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetOrAddDefault(TKey key) {
+      Against.ThisIsNull(@this);
+
+      if (@this is Dictionary<TKey, TValue> dict) {
+        ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
+        return ptrResult;
+      }
+
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = default);
+
+      return result;
+    }
+
+    /// <summary>
+    ///   Gets the value or a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns>The value from the Dictionary or a default value</returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : default;
+    }
+
+    /// <summary>
+    ///   Gets the value or a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    ///   The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key, TValue defaultValue) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValue;
+    }
+
+    /// <summary>
+    ///   Gets the value or generates a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValueFactory">The default value factory.</param>
+    /// <returns>
+    ///   The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key, Func<TKey, TValue> defaultValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(defaultValueFactory);
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValueFactory(key);
+    }
+
+    /// <summary>
+    ///   Gets the value or generates a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValueFactory">The default value factory.</param>
+    /// <returns>
+    ///   The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key, Func<TValue> defaultValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(defaultValueFactory);
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValueFactory();
+    }
+
+    /// <summary>
+    ///   Determines whether the given dictionary has a key and if so, passes the key and its value to the given function.
+    /// </summary>
+    /// <param name="key">The key to lookup.</param>
+    /// <param name="action">The function to execute.</param>
+    /// <returns>
+    ///   <c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public bool HasKeyDo(TKey key, Action<TKey, TValue> action) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(action);
+
+      var result = @this.TryGetValue(key, out var value);
+      if (result)
+        action(key, value);
+      return result;
+    }
+
+    /// <summary>
+    ///   Determines whether the given dictionary has a key and if so, passes the value to the given function.
+    /// </summary>
+    /// <param name="key">The key to lookup.</param>
+    /// <param name="action">The function to execute.</param>
+    /// <returns>
+    ///   <c>true</c> if the key exists in the dictionary; otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    [DebuggerStepThrough]
+    public bool HasKeyDo(TKey key, Action<TValue> action) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(action);
+
+      var result = @this.TryGetValue(key, out var value);
+      if (result)
+        action(value);
+      return result;
+    }
+
+    /// <summary>
+    ///   Checks if the given key is missing.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
+    public bool MissesKey(TKey key) {
+      Against.ThisIsNull(@this);
+
+      return !@this.ContainsKey(key);
+    }
+
+    /// <summary>
+    ///   Tries to add a key.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="value">The value.</param>
+    /// <returns>
+    ///   <c>true</c> on success; otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public bool TryAdd(TKey key, TValue value) {
+      Against.ThisIsNull(@this);
+
+      if (@this is Dictionary<TKey, TValue> dict) {
+        ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+        if (existed)
+          return false;
+
+        ptrResult = value;
+        return true;
+      }
+
+      if (@this.ContainsKey(key))
         return false;
 
-      ptrResult = value;
+      @this.Add(key, value);
       return true;
     }
 
-#endif
+    /// <summary>
+    ///   Tries to remove a key.
+    /// </summary>
+    /// <param name="key">The key to remove.</param>
+    /// <param name="value">The value if the keys was present.</param>
+    /// <returns>
+    ///   A value indicating whether the key was found and removed, or not.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public bool TryRemove(TKey key, out TValue value) {
+      Against.ThisIsNull(@this);
 
-    if (@this.ContainsKey(key))
-      return false;
+      var result = @this.TryGetValue(key, out value);
+      if (result)
+        @this.Remove(key);
 
-    @this.Add(key, value);
-    return true;
+      return result;
+    }
+
+    /// <summary>
+    ///   Tries to update a given keys' value when it matches a comparison value.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="newValue">The new value.</param>
+    /// <param name="comparisonValue">The comparison value.</param>
+    /// <param name="comparer">The comparer.</param>
+    /// <returns>
+    ///   <c>true</c> if update was successful; otherwise, <c>false</c>.
+    /// </returns>
+    /// <exception cref="System.NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public bool TryUpdate(TKey key, TValue newValue, TValue comparisonValue, IEqualityComparer<TValue> comparer = null) {
+      Against.ThisIsNull(@this);
+
+      var result = @this.TryGetValue(key, out var oldValue) && (comparer ?? EqualityComparer<TValue>.Default).Equals(oldValue, comparisonValue);
+      if (result)
+        @this[key] = newValue;
+
+      return result;
+    }
+
   }
 
-  /// <summary>
-  ///   Increments the value for the given key, or adds the key with value 1 if not present.
-  ///   Optimized for histogram building - single hash lookup on supported platforms.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  #endregion
+
+  #region IReadOnlyDictionary<TKey, TValue> extensions
+
   /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to increment.</param>
-  [DebuggerStepThrough]
-  public static void IncrementOrAdd<TKey>(this Dictionary<TKey, uint> @this, TKey key) {
-    Against.ThisIsNull(@this);
-
-#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
-
-    ++CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
-
-#else
-
-    @this.TryGetValue(key, out var count);
-    @this[key] = count + 1;
-
-#endif
-  }
-
-  /// <summary>
-  ///   Tries to remove a key.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key to remove.</param>
-  /// <param name="value">The value if the keys was present.</param>
-  /// <returns>
-  ///   A value indicating whether the key was found and removed, or not.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static bool TryRemove<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, out TValue value) {
-    Against.ThisIsNull(@this);
-
-    var result = @this.TryGetValue(key, out value);
-    if (result)
-      @this.Remove(key);
-
-    return result;
-  }
-
-  /// <summary>
-  ///   Tries to update a given keys' value when it matches a comparison value.
-  /// </summary>
-  /// <typeparam name="TKey">The type of the keys.</typeparam>
-  /// <typeparam name="TValue">The type of the values.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <param name="newValue">The new value.</param>
-  /// <param name="comparisonValue">The comparison value.</param>
-  /// <param name="comparer">The comparer.</param>
-  /// <returns>
-  ///   <c>true</c> if update was successful; otherwise, <c>false</c>.
-  /// </returns>
-  /// <exception cref="System.NullReferenceException"></exception>
-  [DebuggerStepThrough]
-  public static bool TryUpdate<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, TValue newValue, TValue comparisonValue, IEqualityComparer<TValue> comparer = null) {
-    Against.ThisIsNull(@this);
-
-    var result = @this.TryGetValue(key, out var oldValue) && (comparer ?? EqualityComparer<TValue>.Default).Equals(oldValue, comparisonValue);
-    if (result)
-      @this[key] = newValue;
-
-    return result;
-  }
-
-  /// <summary>
-  ///   Casts a dictionary fully.
-  /// </summary>
-  /// <typeparam name="TKeySource">The type of the keys in the source dictionary.</typeparam>
-  /// <typeparam name="TValueSource">The type of the values in the source dictionary.</typeparam>
-  /// <typeparam name="TKeyTarget">The type of the keys in the target dictionary.</typeparam>
-  /// <typeparam name="TValueTarget">The type of the values in the target dictionary.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <returns>A new dictionary with the casted values.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static Dictionary<TKeyTarget, TValueTarget> FullCast<TKeySource, TValueSource, TKeyTarget, TValueTarget>(this IDictionary<TKeySource, TValueSource> @this) {
-    Against.ThisIsNull(@this);
-
-    return @this.ToDictionary(kvp => (TKeyTarget)(object)kvp.Key, kvp => (TValueTarget)(object)kvp.Value);
-  }
-
-  /// <summary>
-  ///   Checks if the given key is missing.
-  /// </summary>
   /// <typeparam name="TKey">The type of the key.</typeparam>
   /// <typeparam name="TValue">The type of the value.</typeparam>
-  /// <param name="this">This Dictionary.</param>
-  /// <param name="key">The key.</param>
-  /// <returns><c>true</c> when the key is missing; otherwise, <c>false</c>.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static bool MissesKey<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key) {
-    Against.ThisIsNull(@this);
+  extension<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> @this) {
 
-    return !@this.ContainsKey(key);
+    /// <summary>
+    ///   Gets the value or a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns>The value from the Dictionary or a default value</returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : default;
+    }
+
+    /// <summary>
+    ///   Gets the value or a default.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    ///   The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key, TValue defaultValue) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValue;
+    }
+
   }
+
+  #endregion
+
+  #region Dictionary<TKey, TValue> extensions
+
+  /// <param name="this">This Dictionary.</param>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <typeparam name="TValue">The type of the values.</typeparam>
+  extension<TKey, TValue>(Dictionary<TKey, TValue> @this) {
+
+    /// <summary>
+    ///   Adds a key/value pair if the key doesn't exist, or updates it using the factory if it does.
+    ///   Optimized for single hash lookup on supported platforms.
+    /// </summary>
+    /// <param name="key">The key to add or update.</param>
+    /// <param name="addValue">The value to add if the key doesn't exist.</param>
+    /// <param name="updateValueFactory">Factory function to create the new value if the key exists, given the current value.</param>
+    /// <returns>The new value for the key.</returns>
+    [DebuggerStepThrough]
+    public TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(updateValueFactory);
+
+      ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+      value = exists ? updateValueFactory(key, value) : addValue;
+      return value;
+    }
+
+    /// <summary>
+    ///   Adds a key/value pair if the key doesn't exist, or updates it using the factory if it does.
+    ///   Optimized for single hash lookup on supported platforms.
+    /// </summary>
+    /// <param name="key">The key to add or update.</param>
+    /// <param name="addValueFactory">Factory function to create the value if the key doesn't exist.</param>
+    /// <param name="updateValueFactory">Factory function to create the new value if the key exists, given the current value.</param>
+    /// <returns>The new value for the key.</returns>
+    [DebuggerStepThrough]
+    public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(addValueFactory);
+      Against.ArgumentIsNull(updateValueFactory);
+
+      ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+      value = exists ? updateValueFactory(key, value) : addValueFactory(key);
+      return value;
+    }
+
+    /// <summary>
+    ///   Gets the value for the given key, or adds it with the specified default value if not present.
+    ///   Optimized for single hash lookup on supported platforms.
+    /// </summary>
+    /// <param name="key">The key to look up or add.</param>
+    /// <param name="defaultValue">The default value to add if the key doesn't exist.</param>
+    /// <returns>The existing or newly added value.</returns>
+    [DebuggerStepThrough]
+    public TValue GetOrAdd(TKey key, TValue defaultValue) {
+      Against.ThisIsNull(@this);
+
+      ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+      if (!exists)
+        value = defaultValue;
+
+      return value;
+    }
+
+    /// <summary>
+    ///   Gets the value for the given key, or adds it using the factory if not present.
+    ///   Optimized for single hash lookup on supported platforms.
+    /// </summary>
+    /// <param name="key">The key to look up or add.</param>
+    /// <param name="valueFactory">Factory function to create the value if the key doesn't exist.</param>
+    /// <returns>The existing or newly added value.</returns>
+    [DebuggerStepThrough]
+    public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory) {
+      Against.ThisIsNull(@this);
+      Against.ArgumentIsNull(valueFactory);
+
+      ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+      if (!exists)
+        value = valueFactory(key);
+
+      return value;
+    }
+
+    /// <summary>
+    ///   Gets the value or a default.
+    ///   This overload exists to avoid ambiguity when Dictionary implements IReadOnlyDictionary.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns>The value from the Dictionary or a default value</returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : default;
+    }
+
+    /// <summary>
+    ///   Gets the value or a default.
+    ///   This overload exists to avoid ambiguity when Dictionary implements IReadOnlyDictionary.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>
+    ///   The value from the Dictionary or a default value
+    /// </returns>
+    /// <exception cref="NullReferenceException"></exception>
+    [DebuggerStepThrough]
+    public TValue GetValueOrDefault(TKey key, TValue defaultValue) {
+      Against.ThisIsNull(@this);
+
+      return @this.TryGetValue(key, out var result) ? result : defaultValue;
+    }
+
+  }
+
+  #endregion
+
+  #region static methods
 
   /// <summary>
   ///   Compares two dictionaries against each other.
@@ -862,7 +765,6 @@ public static partial class DictionaryExtensions {
     }
   }
 
-#if SUPPORTS_READ_ONLY_COLLECTIONS
   /// <summary>
   ///   Compares two dictionaries against each other.
   /// </summary>
@@ -908,5 +810,76 @@ public static partial class DictionaryExtensions {
       }
     }
   }
-#endif
+
+  /// <summary>
+  ///   Gets the value or null.
+  /// </summary>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key.</param>
+  /// <param name="_">Reserved, to be filled by the compiler.</param>
+  /// <typeparam name="TKey">The type of the key.</typeparam>
+  /// <typeparam name="TValue">The type of the value.</typeparam>
+  /// <returns>
+  ///   The value of the key or <c>null</c>
+  /// </returns>
+  /// <exception cref="NullReferenceException"></exception>
+  [DebuggerStepThrough]
+  public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __ClassForcingTag<TValue> _ = null) where TValue : class {
+    Against.ThisIsNull(@this);
+
+    return @this.TryGetValue(key, out var result) ? result : null;
+  }
+
+  /// <summary>
+  ///   Gets the value or null.
+  /// </summary>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key.</param>
+  /// <param name="_">Reserved, to be filled by the compiler.</param>
+  /// <typeparam name="TKey">The type of the key.</typeparam>
+  /// <typeparam name="TValue">The type of the value.</typeparam>
+  /// <returns>
+  ///   The value of the key or <c>null</c>
+  /// </returns>
+  /// <exception cref="NullReferenceException"></exception>
+  [DebuggerStepThrough]
+  public static TValue? GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> @this, TKey key, __StructForcingTag<TValue> _ = null) where TValue : struct {
+    Against.ThisIsNull(@this);
+
+    return @this.TryGetValue(key, out var result) ? result : null;
+  }
+
+  // NOTE: IncrementOrAdd overloads are generated by Dictionary.IncrementOrAdd.T4.tt
+
+  /// <summary>
+  ///   Gets the key's value from a dictionary or adds the key as both key and value.
+  ///   This method is for dictionaries where the key and value are the same type.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys and values.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to lookup/add.</param>
+  /// <returns>
+  ///   The key's value or the key itself if it was added.
+  /// </returns>
+  /// <exception cref="System.NullReferenceException"></exception>
+  [DebuggerStepThrough]
+  public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
+    Against.ThisIsNull(@this);
+
+    if (@this is Dictionary<TKey, TKey> dict) {
+      ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
+      if (!existed)
+        ptrResult = key;
+
+      return ptrResult;
+    }
+
+    if (!@this.TryGetValue(key, out var result))
+      @this.Add(key, result = key);
+
+    return result;
+  }
+
+  #endregion
+
 }

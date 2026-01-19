@@ -46,7 +46,10 @@ as the last line before </Project> like
         <NetStandardVersion Condition="$(IsNetStandard)">$(TargetFramework.Replace('netstandard',''))</NetStandardVersion>
         
         <IsNetFramework Condition="!$(IsNetCore) AND !$(IsNetStandard) AND ($(TargetFramework.StartsWith(net)) OR ('$(TargetFrameworkVersion)' != ''))">true</IsNetFramework>
-        <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFramework)' != ''">$(TargetFramework.Substring(3,1)).$(TargetFramework.Substring(4))</NetFrameworkVersion>
+        <!-- Handle 2-digit TFMs like net35, net46, net48 (length=5) → X.Y format -->
+        <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFramework)' != '' AND $(TargetFramework.Length) == 5">$(TargetFramework.Substring(3,1)).$(TargetFramework.Substring(4,1))</NetFrameworkVersion>
+        <!-- Handle 3-digit TFMs like net461, net471, net472 (length=6) → X.Y.Z format -->
+        <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFramework)' != '' AND $(TargetFramework.Length) == 6">$(TargetFramework.Substring(3,1)).$(TargetFramework.Substring(4,1)).$(TargetFramework.Substring(5,1))</NetFrameworkVersion>
         <NetFrameworkVersion Condition="$(IsNetFramework) AND '$(TargetFrameworkVersion)' != ''">$(TargetFrameworkVersion.Substring(1))</NetFrameworkVersion>
         
         <DefineConstants Condition="$(IsNetFramework)">$(DefineConstants);NETFRAMEWORK</DefineConstants>

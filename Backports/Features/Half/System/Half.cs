@@ -24,6 +24,12 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System;
 
+// Full Half polyfill: Only for frameworks without BCL Half (net20-netcoreapp3.1).
+// net5.0+ has Half in the BCL. net7.0+ has arithmetic operators.
+// NOTE: We cannot polyfill Half operators for net5.0/net6.0 because:
+// 1. Extension blocks with operators cause CS7069 type confusion in consuming assemblies
+// 2. Type shadowing causes CS0433 ambiguity in consuming assemblies
+// See: Backports/CONTRIBUTING.md for details on these limitations.
 #if !SUPPORTS_HALF
 
 /// <summary>
@@ -408,15 +414,28 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static unsafe float _Int32BitsToSingle(int value) => *(float*)&value;
 
+  // Arithmetic operators - included in our polyfill for <net5.0 frameworks
+  // BCL Half in net5.0/net6.0 does NOT have these operators; they were added in net7.0
+  public static Half operator +(Half left, Half right) => (Half)((float)left + (float)right);
+  public static Half operator -(Half left, Half right) => (Half)((float)left - (float)right);
+  public static Half operator *(Half left, Half right) => (Half)((float)left * (float)right);
+  public static Half operator /(Half left, Half right) => (Half)((float)left / (float)right);
+  public static Half operator %(Half left, Half right) => (Half)((float)left % (float)right);
+
+  public static Half operator -(Half value) => (Half)(-(float)value);
+  public static Half operator +(Half value) => value;
+  public static Half operator ++(Half value) => (Half)((float)value + 1f);
+  public static Half operator --(Half value) => (Half)((float)value - 1f);
+
 }
 
 #endif
 
-// Wave 2: Arithmetic operators for frameworks that have Half but not arithmetic operators (net5.0-net6.0)
-// Operators were added to Half in .NET 7.0 (SUPPORTS_HALF_ARITHMETIC)
-#if !SUPPORTS_HALF_ARITHMETIC
+// Extension operators for Half on net5.0/net6.0 where BCL Half exists but lacks arithmetic operators
+// Uses C# 14 extension blocks to add operators to the existing BCL type
+#if SUPPORTS_HALF && !SUPPORTS_HALF_ARITHMETIC
 
-public static partial class HalfArithmeticPolyfills {
+public static partial class HalfPolyfills {
 
   extension(Half) {
 

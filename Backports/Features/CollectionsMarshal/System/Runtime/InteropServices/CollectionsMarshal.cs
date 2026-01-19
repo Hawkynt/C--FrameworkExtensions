@@ -17,6 +17,9 @@
 
 #endregion
 
+// Disable nullable warnings for reflection-heavy code that can't be properly annotated
+#nullable disable
+
 // CollectionsMarshal API evolution:
 // - net5.0: AsSpan (SUPPORTS_COLLECTIONSMARSHAL_ASSPAN)
 // - net6.0: GetValueRefOrAddDefault, GetValueRefOrNullRef (SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT)
@@ -56,7 +59,7 @@ public static class CollectionsMarshal {
   /// <param name="list">The list to get the data view over.</param>
   /// <returns>A <see cref="Span{T}"/> instance over the <see cref="List{T}"/>.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Span<T> AsSpan<T>(List<T>? list) => ListAccessor<T>.AsSpan(list);
+  public static Span<T> AsSpan<T>(List<T> list) => ListAccessor<T>.AsSpan(list);
 
   /// <summary>
   /// Provides access to List internals using reflection.
@@ -77,7 +80,7 @@ public static class CollectionsMarshal {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Span<T> AsSpan(List<T>? list) {
+    public static Span<T> AsSpan(List<T> list) {
       if (list == null)
         return Span<T>.Empty;
 

@@ -20,6 +20,8 @@
 // ReferenceEqualityComparer was added in .NET 5.0
 #if !SUPPORTS_REFERENCE_EQUALITY_COMPARER
 
+#pragma warning disable CS0436 // Type conflicts with imported type - intentional use of RuntimeHelpers polyfill
+
 using System.Runtime.CompilerServices;
 
 namespace System.Collections.Generic;
@@ -56,5 +58,7 @@ public sealed class ReferenceEqualityComparer : IEqualityComparer<object?>, IEqu
     => RuntimeHelpers.GetHashCode(obj!);
 
 }
+
+#pragma warning restore CS0436
 
 #endif

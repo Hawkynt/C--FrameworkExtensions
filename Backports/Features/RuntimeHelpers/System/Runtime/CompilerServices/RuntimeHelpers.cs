@@ -22,6 +22,8 @@
 // method in our partial class as well.
 #if !SUPPORTS_RUNTIMEHELPERS_GETSUBARRAY
 
+#pragma warning disable CS0436 // Type conflicts with imported type - intentional polyfill for compiler well-known members
+
 namespace System.Runtime.CompilerServices;
 
 /// <summary>
@@ -57,5 +59,7 @@ public static partial class RuntimeHelpersPolyfills {
   }
 
 }
+
+#pragma warning restore CS0436
 
 #endif

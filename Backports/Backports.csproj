@@ -16,12 +16,13 @@
     <DebugType>embedded</DebugType>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
-    <TargetFrameworks>net20;net35;net40;net45;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;net45;net46;net461;net462;net47;net471;net472;net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <PlatformTarget Condition="'$(Platform)' == 'x86'">x86</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'x64'">x64</PlatformTarget>
     <PlatformTarget Condition="'$(Platform)' == 'AnyCPU'">AnyCPU</PlatformTarget>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
     <NoWarn>$(NoWarn);MSB3270</NoWarn><!-- Suppresses the processor architecture mismatch warning -->
@@ -88,22 +89,22 @@
   </ItemGroup>
 
   <!-- System.Runtime.CompilerServices.Unsafe - Provides Unsafe class -->
-  <!-- Use version 5.0.0 for net45 (has NullRef), version 6.0.0 for net461-net48/netstandard2.0-2.1 -->
+  <!-- Use version 5.0.0 for net45/net46 (6.0.0 requires net461+), version 6.0.0 for net461+ -->
   <!-- netcoreapp3.1+ has Unsafe built-in, no package needed -->
   <!-- Version 5.0.0+ includes NullRef/IsNullRef (added in .NET 5) -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46'">
     <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE;OFFICIAL_UNSAFE_NULLREF</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
-  <!-- .NET Framework 4.6+ and netstandard need the NuGet package -->
+  <!-- .NET Framework 4.6.1+ and netstandard need the NuGet package -->
   <!-- Version 6.0.0 includes NullRef/IsNullRef (added in .NET 5) -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <DefineConstants>$(DefineConstants);OFFICIAL_UNSAFE;OFFICIAL_UNSAFE_NULLREF</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 
@@ -147,7 +148,7 @@
   </ItemGroup>
 
   <!-- System.IO.Compression - Provides ZipArchive for .NET Framework 4.5+ (reference GAC assemblies for SDK-style projects) -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net48'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
