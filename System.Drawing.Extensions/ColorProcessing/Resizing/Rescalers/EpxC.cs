@@ -120,9 +120,6 @@ file readonly struct EpxCKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(
     /// <inheritdoc />
     public int ScaleY => 2;
 
-    // Weight for 2-color blend: 3:1 ratio = 1/4 for secondary
-    private const float QuarterWeight = 0.25f;
-
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void Scale(
@@ -245,11 +242,11 @@ file readonly struct EpxCKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(
           if (eq75)
             e11 = lerp.Lerp(c7.Work, c5.Work);
 
-          // Blend with center at 3:1 ratio
-          e00 = lerp.Lerp(c4Work, e00, QuarterWeight);
-          e01 = lerp.Lerp(c4Work, e01, QuarterWeight);
-          e10 = lerp.Lerp(c4Work, e10, QuarterWeight);
-          e11 = lerp.Lerp(c4Work, e11, QuarterWeight);
+          // Blend with center at 3:1 ratio (75% center, 25% corner)
+          e00 = lerp.Lerp(c4Work, e00, 3, 1);
+          e01 = lerp.Lerp(c4Work, e01, 3, 1);
+          e10 = lerp.Lerp(c4Work, e10, 3, 1);
+          e11 = lerp.Lerp(c4Work, e11, 3, 1);
         }
       }
 

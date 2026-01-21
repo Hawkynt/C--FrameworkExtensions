@@ -221,7 +221,7 @@ public static class BitmapScalerExtensions {
 
   /// <summary>
   /// Fast quality path using identity codecs (Bgra8888 throughout).
-  /// Uses integer-only lerp and squared distance metric (no sqrt) for maximum performance.
+  /// Uses 8-bit integer-only lerp and squared distance metric (no sqrt) for maximum performance.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleFast<TScaler>(Bitmap source, TScaler scaler)
@@ -246,8 +246,8 @@ public static class BitmapScalerExtensions {
       Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source);
     return scaler.InvokeKernel<
       LinearRgbaF, OklabF, Bgra8888,
-      Euclidean3F<OklabF>, ThresholdEquality<OklabF, Euclidean3F<OklabF>>,
-      Color4FLerp<LinearRgbaF>, LinearRgbaFToSrgb32, Bitmap>(callback, new(0.02f));
+      Euclidean3F<OklabF>, ThresholdEquality3<OklabF>,
+      Color4FLerp<LinearRgbaF>, LinearRgbaFToSrgb32, Bitmap>(callback, new(0.02f, 0.04f, 0.04f));
   }
 
   #region Convenience Overload Helpers
@@ -265,7 +265,7 @@ public static class BitmapScalerExtensions {
     return scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
       TMetric, ExactEquality<Bgra8888>,
-      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+      Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
   }
 
   /// <summary>
@@ -281,7 +281,7 @@ public static class BitmapScalerExtensions {
     return scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
       CompuPhaseSquared4<Bgra8888>, TEquality,
-      Color4BLerp<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback, equality);
+      Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback, equality);
   }
 
   /// <summary>

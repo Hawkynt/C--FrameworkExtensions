@@ -287,7 +287,9 @@ public readonly struct Nedi : IPixelScaler {
     var sum01 = lerp.Lerp(v0, v1);
     var sum23 = lerp.Lerp(v2, v3);
 
-    return lerp.Lerp(sum01, sum23, a1 / (a0 + a1 + 0.0001f));
+    var total = a0 + a1 + 0.0001f;
+    var w2 = (int)(a1 / total * 256f);
+    return lerp.Lerp(sum01, sum23, 256 - w2, w2);
   }
 
   /// <summary>
@@ -307,7 +309,8 @@ public readonly struct Nedi : IPixelScaler {
     var rightRight = window.P0P2.Work;
 
     var (w0, w1) = CalculateCardinalWeights(leftLeft, left, right, rightRight);
-    return lerp.Lerp(left, right, w1);
+    var iw2 = (int)(w1 * 256f);
+    return lerp.Lerp(left, right, 256 - iw2, iw2);
   }
 
   /// <summary>
@@ -327,7 +330,8 @@ public readonly struct Nedi : IPixelScaler {
     var bottomBottom = window.P2P0.Work;
 
     var (w0, w1) = CalculateCardinalWeights(topTop, top, bottom, bottomBottom);
-    return lerp.Lerp(top, bottom, w1);
+    var iw2 = (int)(w1 * 256f);
+    return lerp.Lerp(top, bottom, 256 - iw2, iw2);
   }
 
   /// <summary>
@@ -431,9 +435,11 @@ file readonly struct Nedi3xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp ler
       var fx = (ox + 0.5f) / 3f;
       var fy = (oy + 0.5f) / 3f;
 
-      var top = lerp.Lerp(center, horiz, fx);
-      var bottom = lerp.Lerp(vert, diag, fx);
-      var result = lerp.Lerp(top, bottom, fy);
+      var wFx2 = (int)(fx * 256f);
+      var wFy2 = (int)(fy * 256f);
+      var top = lerp.Lerp(center, horiz, 256 - wFx2, wFx2);
+      var bottom = lerp.Lerp(vert, diag, 256 - wFx2, wFx2);
+      var result = lerp.Lerp(top, bottom, 256 - wFy2, wFy2);
 
       var rowPtr = destTopLeft + oy * destStride;
       rowPtr[ox] = encoder.Encode(result);
@@ -470,9 +476,11 @@ file readonly struct Nedi4xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp ler
       var fx = (ox + 0.5f) / 4f;
       var fy = (oy + 0.5f) / 4f;
 
-      var top = lerp.Lerp(center, horiz, fx);
-      var bottom = lerp.Lerp(vert, diag, fx);
-      var result = lerp.Lerp(top, bottom, fy);
+      var wFx2 = (int)(fx * 256f);
+      var wFy2 = (int)(fy * 256f);
+      var top = lerp.Lerp(center, horiz, 256 - wFx2, wFx2);
+      var bottom = lerp.Lerp(vert, diag, 256 - wFx2, wFx2);
+      var result = lerp.Lerp(top, bottom, 256 - wFy2, wFy2);
 
       var rowPtr = destTopLeft + oy * destStride;
       rowPtr[ox] = encoder.Encode(result);

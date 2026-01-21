@@ -184,6 +184,18 @@ public static class ColorFactory {
 #endif
 
   /// <summary>
+  /// Creates a 3-component color from normalized values (base interface).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T FromNormalized_3<T>(UNorm32 c1, UNorm32 c2, UNorm32 c3)
+    where T : unmanaged, IColorSpace3<T>
+#if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
+    => T.FromNormalized(c1, c2, c3);
+#else
+    => ColorFactory3<T>.FromNormalized(c1, c2, c3);
+#endif
+
+  /// <summary>
   /// Creates a 4-component color from normalized values (base interface).
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -193,6 +205,18 @@ public static class ColorFactory {
     => T.FromNormalized(c1, c2, c3, a);
 #else
     => ColorFactory4<T>.FromNormalized(c1, c2, c3, a);
+#endif
+
+  /// <summary>
+  /// Creates a 5-component color from normalized values (base interface).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T FromNormalized_5<T>(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a)
+    where T : unmanaged, IColorSpace5<T>
+#if SUPPORTS_ABSTRACT_INTERFACE_MEMBERS
+    => T.FromNormalized(c1, c2, c3, c4, a);
+#else
+    => ColorFactory5<T>.FromNormalized(c1, c2, c3, c4, a);
 #endif
 }
 
@@ -359,6 +383,20 @@ internal static class ColorFactory5F<T> where T : unmanaged, IColorSpace5F<T> {
 }
 
 /// <summary>
+/// Cached delegate factory for IColorSpace3 types (base interface, pre-.NET 7).
+/// </summary>
+internal static class ColorFactory3<T> where T : unmanaged, IColorSpace3<T> {
+
+  private delegate T FromNormalizedDelegate(UNorm32 c1, UNorm32 c2, UNorm32 c3);
+
+  private static readonly FromNormalizedDelegate _fromNormalized =
+    ColorFactoryHelper.BuildCreateDelegate<FromNormalizedDelegate, T>(nameof(Bgr888.FromNormalized), typeof(UNorm32), typeof(UNorm32), typeof(UNorm32));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3) => _fromNormalized(c1, c2, c3);
+}
+
+/// <summary>
 /// Cached delegate factory for IColorSpace4 types (base interface, pre-.NET 7).
 /// </summary>
 internal static class ColorFactory4<T> where T : unmanaged, IColorSpace4<T> {
@@ -370,6 +408,20 @@ internal static class ColorFactory4<T> where T : unmanaged, IColorSpace4<T> {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static T FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a) => _fromNormalized(c1, c2, c3, a);
+}
+
+/// <summary>
+/// Cached delegate factory for IColorSpace5 types (base interface, pre-.NET 7).
+/// </summary>
+internal static class ColorFactory5<T> where T : unmanaged, IColorSpace5<T> {
+
+  private delegate T FromNormalizedDelegate(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a);
+
+  private static readonly FromNormalizedDelegate _fromNormalized =
+    ColorFactoryHelper.BuildCreateDelegate<FromNormalizedDelegate, T>(nameof(Cmyka88888.FromNormalized), typeof(UNorm32), typeof(UNorm32), typeof(UNorm32), typeof(UNorm32), typeof(UNorm32));
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static T FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a) => _fromNormalized(c1, c2, c3, c4, a);
 }
 
 #endif

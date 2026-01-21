@@ -66,73 +66,142 @@ public readonly struct ThresholdEquality<TKey, TMetric> : IColorEquality<TKey>
     => this._metric.Distance(a, b) < this._threshold;
 }
 
-public readonly struct ThresholdEquality3F<TKey>(float d1, float d2, float d3) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace3F<TKey> {
+/// <summary>
+/// Per-component threshold equality for 3-component color spaces using UNorm32 internally.
+/// </summary>
+/// <typeparam name="TKey">The key color type implementing IColorSpace3.</typeparam>
+public readonly struct ThresholdEquality3<TKey> : IColorEquality<TKey>
+  where TKey : unmanaged, IColorSpace3<TKey> {
+
+  private readonly UNorm32 _d1, _d2, _d3;
+
+  /// <summary>Creates with per-component UNorm32 thresholds.</summary>
+  public ThresholdEquality3(UNorm32 d1, UNorm32 d2, UNorm32 d3) {
+    this._d1 = d1;
+    this._d2 = d2;
+    this._d3 = d3;
+  }
+
+  /// <summary>Creates with per-component float thresholds (0.0-1.0).</summary>
+  public ThresholdEquality3(float d1, float d2, float d3)
+    : this(UNorm32.FromFloat(d1), UNorm32.FromFloat(d2), UNorm32.FromFloat(d3)) { }
+
+  /// <summary>Creates with per-component byte thresholds (0-255).</summary>
+  public ThresholdEquality3(byte d1, byte d2, byte d3)
+    : this(UNorm32.FromByte(d1), UNorm32.FromByte(d2), UNorm32.FromByte(d3)) { }
+
+  /// <summary>Creates with a single threshold for all components.</summary>
+  public ThresholdEquality3(UNorm32 threshold) : this(threshold, threshold, threshold) { }
+
+  /// <summary>Creates with a single float threshold for all components.</summary>
+  public ThresholdEquality3(float threshold) : this(UNorm32.FromFloat(threshold)) { }
+
+  /// <summary>Creates with a single byte threshold for all components.</summary>
+  public ThresholdEquality3(byte threshold) : this(UNorm32.FromByte(threshold)) { }
+
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-    && MathF.Abs(a.C2 - b.C2) < d2
-    && MathF.Abs(a.C3 - b.C3) < d3;
+  public bool Equals(in TKey a, in TKey b) {
+    var (a1, a2, a3) = a.ToNormalized();
+    var (b1, b2, b3) = b.ToNormalized();
+    return UNorm32.AbsDiff(a1, b1) < this._d1
+        && UNorm32.AbsDiff(a2, b2) < this._d2
+        && UNorm32.AbsDiff(a3, b3) < this._d3;
+  }
 }
 
-public readonly struct ThresholdEquality4F<TKey>(float d1, float d2, float d3, float d4) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace4F<TKey> {
+/// <summary>
+/// Per-component threshold equality for 4-component color spaces using UNorm32 internally.
+/// </summary>
+/// <typeparam name="TKey">The key color type implementing IColorSpace4.</typeparam>
+public readonly struct ThresholdEquality4<TKey> : IColorEquality<TKey>
+  where TKey : unmanaged, IColorSpace4<TKey> {
+
+  private readonly UNorm32 _d1, _d2, _d3, _dA;
+
+  /// <summary>Creates with per-component UNorm32 thresholds.</summary>
+  public ThresholdEquality4(UNorm32 d1, UNorm32 d2, UNorm32 d3, UNorm32 dA) {
+    this._d1 = d1;
+    this._d2 = d2;
+    this._d3 = d3;
+    this._dA = dA;
+  }
+
+  /// <summary>Creates with per-component float thresholds (0.0-1.0).</summary>
+  public ThresholdEquality4(float d1, float d2, float d3, float dA)
+    : this(UNorm32.FromFloat(d1), UNorm32.FromFloat(d2), UNorm32.FromFloat(d3), UNorm32.FromFloat(dA)) { }
+
+  /// <summary>Creates with per-component byte thresholds (0-255).</summary>
+  public ThresholdEquality4(byte d1, byte d2, byte d3, byte dA)
+    : this(UNorm32.FromByte(d1), UNorm32.FromByte(d2), UNorm32.FromByte(d3), UNorm32.FromByte(dA)) { }
+
+  /// <summary>Creates with a single threshold for all components.</summary>
+  public ThresholdEquality4(UNorm32 threshold) : this(threshold, threshold, threshold, threshold) { }
+
+  /// <summary>Creates with a single float threshold for all components.</summary>
+  public ThresholdEquality4(float threshold) : this(UNorm32.FromFloat(threshold)) { }
+
+  /// <summary>Creates with a single byte threshold for all components.</summary>
+  public ThresholdEquality4(byte threshold) : this(UNorm32.FromByte(threshold)) { }
+
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-       && MathF.Abs(a.C2 - b.C2) < d2
-       && MathF.Abs(a.C3 - b.C3) < d3
-       && MathF.Abs(a.A - b.A) < d4;
+  public bool Equals(in TKey a, in TKey b) {
+    var (a1, a2, a3, aA) = a.ToNormalized();
+    var (b1, b2, b3, bA) = b.ToNormalized();
+    return UNorm32.AbsDiff(a1, b1) < this._d1
+        && UNorm32.AbsDiff(a2, b2) < this._d2
+        && UNorm32.AbsDiff(a3, b3) < this._d3
+        && UNorm32.AbsDiff(aA, bA) < this._dA;
+  }
 }
 
-public readonly struct ThresholdEquality5F<TKey>(float d1, float d2, float d3, float d4, float d5) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace5F<TKey> {
+/// <summary>
+/// Per-component threshold equality for 5-component color spaces using UNorm32 internally.
+/// </summary>
+/// <typeparam name="TKey">The key color type implementing IColorSpace5.</typeparam>
+public readonly struct ThresholdEquality5<TKey> : IColorEquality<TKey>
+  where TKey : unmanaged, IColorSpace5<TKey> {
+
+  private readonly UNorm32 _d1, _d2, _d3, _d4, _dA;
+
+  /// <summary>Creates with per-component UNorm32 thresholds.</summary>
+  public ThresholdEquality5(UNorm32 d1, UNorm32 d2, UNorm32 d3, UNorm32 d4, UNorm32 dA) {
+    this._d1 = d1;
+    this._d2 = d2;
+    this._d3 = d3;
+    this._d4 = d4;
+    this._dA = dA;
+  }
+
+  /// <summary>Creates with per-component float thresholds (0.0-1.0).</summary>
+  public ThresholdEquality5(float d1, float d2, float d3, float d4, float dA)
+    : this(UNorm32.FromFloat(d1), UNorm32.FromFloat(d2), UNorm32.FromFloat(d3), UNorm32.FromFloat(d4), UNorm32.FromFloat(dA)) { }
+
+  /// <summary>Creates with per-component byte thresholds (0-255).</summary>
+  public ThresholdEquality5(byte d1, byte d2, byte d3, byte d4, byte dA)
+    : this(UNorm32.FromByte(d1), UNorm32.FromByte(d2), UNorm32.FromByte(d3), UNorm32.FromByte(d4), UNorm32.FromByte(dA)) { }
+
+  /// <summary>Creates with a single threshold for all components.</summary>
+  public ThresholdEquality5(UNorm32 threshold) : this(threshold, threshold, threshold, threshold, threshold) { }
+
+  /// <summary>Creates with a single float threshold for all components.</summary>
+  public ThresholdEquality5(float threshold) : this(UNorm32.FromFloat(threshold)) { }
+
+  /// <summary>Creates with a single byte threshold for all components.</summary>
+  public ThresholdEquality5(byte threshold) : this(UNorm32.FromByte(threshold)) { }
+
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => MathF.Abs(a.C1 - b.C1) < d1
-       && MathF.Abs(a.C2 - b.C2) < d2
-       && MathF.Abs(a.C3 - b.C3) < d3
-       && MathF.Abs(a.C4 - b.C4) < d4
-       && MathF.Abs(a.A - b.A) < d5;
-}
-
-public readonly struct ThresholdEquality3B<TKey>(byte d1, byte d2, byte d3) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace3B<TKey> {
-  /// <inheritdoc />
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => _AbsDiff(a.C1, b.C1) < d1
-       && _AbsDiff(a.C2, b.C2) < d2
-       && _AbsDiff(a.C3, b.C3) < d3;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
-}
-
-public readonly struct ThresholdEquality4B<TKey>(byte d1, byte d2, byte d3, byte d4) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace4B<TKey> {
-  /// <inheritdoc />
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => _AbsDiff(a.C1, b.C1) < d1
-       && _AbsDiff(a.C2, b.C2) < d2
-       && _AbsDiff(a.C3, b.C3) < d3
-       && _AbsDiff(a.A, b.A) < d4;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
-}
-
-public readonly struct ThresholdEquality5B<TKey>(byte d1, byte d2, byte d3, byte d4, byte d5) : IColorEquality<TKey> where TKey : unmanaged, IColorSpace5B<TKey> {
-  /// <inheritdoc />
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(in TKey a, in TKey b)
-    => _AbsDiff(a.C1, b.C1) < d1
-       && _AbsDiff(a.C2, b.C2) < d2
-       && _AbsDiff(a.C3, b.C3) < d3
-       && _AbsDiff(a.C4, b.C4) < d4
-       && _AbsDiff(a.A, b.A) < d5;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _AbsDiff(byte x, byte y) => x > y ? x - y : y - x;
+  public bool Equals(in TKey a, in TKey b) {
+    var (a1, a2, a3, a4, aA) = a.ToNormalized();
+    var (b1, b2, b3, b4, bA) = b.ToNormalized();
+    return UNorm32.AbsDiff(a1, b1) < this._d1
+        && UNorm32.AbsDiff(a2, b2) < this._d2
+        && UNorm32.AbsDiff(a3, b3) < this._d3
+        && UNorm32.AbsDiff(a4, b4) < this._d4
+        && UNorm32.AbsDiff(aA, bA) < this._dA;
+  }
 }
 
 /// <summary>

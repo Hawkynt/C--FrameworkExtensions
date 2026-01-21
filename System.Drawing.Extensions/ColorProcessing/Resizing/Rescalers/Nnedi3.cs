@@ -443,7 +443,9 @@ file readonly struct Nnedi32xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
       var c10 = window.P0P1.Work;
       var c01 = window.P1P0.Work;
       var c11 = window.P1P1.Work;
-      return lerp.Lerp(lerp.Lerp(c00, c10, fx), lerp.Lerp(c01, c11, fx), fy);
+      var wFx2 = (int)(fx * 256f);
+    var wFy2 = (int)(fy * 256f);
+    return lerp.Lerp(lerp.Lerp(c00, c10, 256 - wFx2, wFx2), lerp.Lerp(c01, c11, 256 - wFx2, wFx2), 256 - wFy2, wFy2);
     }
 
     resultR /= totalWeight;
@@ -458,10 +460,13 @@ file readonly struct Nnedi32xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
 
     // Blend with bilinear for smoother results
     var blendFactor = 1f - (neuronCount / 128f);
-    var bilinear = lerp.Lerp(lerp.Lerp(window.P0P0.Work, window.P0P1.Work, fx), lerp.Lerp(window.P1P0.Work, window.P1P1.Work, fx), fy);
+    var blendW2 = (int)(blendFactor * 256f);
+    var wFx2_b = (int)(fx * 256f);
+    var wFy2_b = (int)(fy * 256f);
+    var bilinear = lerp.Lerp(lerp.Lerp(window.P0P0.Work, window.P0P1.Work, 256 - wFx2_b, wFx2_b), lerp.Lerp(window.P1P0.Work, window.P1P1.Work, 256 - wFx2_b, wFx2_b), 256 - wFy2_b, wFy2_b);
     var computed = ColorConverter.FromNormalizedRgba<TWork>(resultR, resultG, resultB, resultA);
 
-    return lerp.Lerp(computed, bilinear, blendFactor);
+    return lerp.Lerp(computed, bilinear, 256 - blendW2, blendW2);
   }
 }
 
@@ -524,7 +529,9 @@ file readonly struct Nnedi33xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var c10 = window.P0P1.Work;
     var c01 = window.P1P0.Work;
     var c11 = window.P1P1.Work;
-    return lerp.Lerp(lerp.Lerp(c00, c10, fx), lerp.Lerp(c01, c11, fx), fy);
+    var wFx2 = (int)(fx * 256f);
+    var wFy2 = (int)(fy * 256f);
+    return lerp.Lerp(lerp.Lerp(c00, c10, 256 - wFx2, wFx2), lerp.Lerp(c01, c11, 256 - wFx2, wFx2), 256 - wFy2, wFy2);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -584,10 +591,11 @@ file readonly struct Nnedi33xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     resultB = Nnedi3.Sigmoid(resultB);
 
     var blendFactor = 1f - (neuronCount / 128f);
+    var blendW2 = (int)(blendFactor * 256f);
     var bilinear = this._BilinearFallback(window, fx, fy);
     var computed = ColorConverter.FromNormalizedRgba<TWork>(resultR, resultG, resultB, resultA);
 
-    return lerp.Lerp(computed, bilinear, blendFactor);
+    return lerp.Lerp(computed, bilinear, 256 - blendW2, blendW2);
   }
 }
 
@@ -650,7 +658,9 @@ file readonly struct Nnedi34xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var c10 = window.P0P1.Work;
     var c01 = window.P1P0.Work;
     var c11 = window.P1P1.Work;
-    return lerp.Lerp(lerp.Lerp(c00, c10, fx), lerp.Lerp(c01, c11, fx), fy);
+    var wFx2 = (int)(fx * 256f);
+    var wFy2 = (int)(fy * 256f);
+    return lerp.Lerp(lerp.Lerp(c00, c10, 256 - wFx2, wFx2), lerp.Lerp(c01, c11, 256 - wFx2, wFx2), 256 - wFy2, wFy2);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -710,9 +720,10 @@ file readonly struct Nnedi34xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     resultB = Nnedi3.Sigmoid(resultB);
 
     var blendFactor = 1f - (neuronCount / 128f);
+    var blendW2 = (int)(blendFactor * 256f);
     var bilinear = this._BilinearFallback(window, fx, fy);
     var computed = ColorConverter.FromNormalizedRgba<TWork>(resultR, resultG, resultB, resultA);
 
-    return lerp.Lerp(computed, bilinear, blendFactor);
+    return lerp.Lerp(computed, bilinear, 256 - blendW2, blendW2);
   }
 }

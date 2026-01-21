@@ -160,7 +160,8 @@ file readonly struct MameTv2xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     in TEncode encoder
   ) {
     var pixel = window.P0P0.Work;
-    var subPixel = lerp.Lerp(default, pixel, gamma);
+    var gammaW2 = (int)(gamma * 256f);
+    var subPixel = lerp.Lerp(default, pixel, 256 - gammaW2, gammaW2);
 
     var encodedPixel = encoder.Encode(pixel);
     var encodedSubPixel = encoder.Encode(subPixel);
@@ -194,8 +195,10 @@ file readonly struct MameTv3xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     in TEncode encoder
   ) {
     var pixel = window.P0P0.Work;
-    var subPixel1 = lerp.Lerp(default, pixel, gamma1);
-    var subPixel2 = lerp.Lerp(default, pixel, gamma2);
+    var gamma1W2 = (int)(gamma1 * 256f);
+    var gamma2W2 = (int)(gamma2 * 256f);
+    var subPixel1 = lerp.Lerp(default, pixel, 256 - gamma1W2, gamma1W2);
+    var subPixel2 = lerp.Lerp(default, pixel, 256 - gamma2W2, gamma2W2);
 
     var encodedPixel = encoder.Encode(pixel);
     var encodedSubPixel1 = encoder.Encode(subPixel1);

@@ -144,16 +144,16 @@ file readonly struct Eagle3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncod
 
     // Corners: interpolate if diagonal matches adjacent
     if (corner00)
-      e00 = lerp.Lerp(lerp.Lerp(c0.Work, c1.Work), c3.Work, 1f / 3f);
+      e00 = lerp.Lerp(lerp.Lerp(c0.Work, c1.Work), c3.Work, 2, 1);
 
     if (corner02)
-      e02 = lerp.Lerp(lerp.Lerp(c2.Work, c1.Work), c5.Work, 1f / 3f);
+      e02 = lerp.Lerp(lerp.Lerp(c2.Work, c1.Work), c5.Work, 2, 1);
 
     if (corner20)
-      e20 = lerp.Lerp(lerp.Lerp(c6.Work, c3.Work), c7.Work, 1f / 3f);
+      e20 = lerp.Lerp(lerp.Lerp(c6.Work, c3.Work), c7.Work, 2, 1);
 
     if (corner22)
-      e22 = lerp.Lerp(lerp.Lerp(c8.Work, c5.Work), c7.Work, 1f / 3f);
+      e22 = lerp.Lerp(lerp.Lerp(c8.Work, c5.Work), c7.Work, 2, 1);
 
     // Edges: interpolate if BOTH adjacent corners meet their conditions
     if (corner00 && corner02)
@@ -288,16 +288,16 @@ file readonly struct Eagle3xBKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnco
 
     // Corners only - no edge interpolation
     if (equality.Equals(k0, k1) && equality.Equals(k0, k3))
-      e00 = lerp.Lerp(lerp.Lerp(c0.Work, c1.Work), c3.Work, 1f / 3f);
+      e00 = lerp.Lerp(lerp.Lerp(c0.Work, c1.Work), c3.Work, 2, 1);
 
     if (equality.Equals(k2, k1) && equality.Equals(k2, k5))
-      e02 = lerp.Lerp(lerp.Lerp(c2.Work, c1.Work), c5.Work, 1f / 3f);
+      e02 = lerp.Lerp(lerp.Lerp(c2.Work, c1.Work), c5.Work, 2, 1);
 
     if (equality.Equals(k6, k3) && equality.Equals(k6, k7))
-      e20 = lerp.Lerp(lerp.Lerp(c6.Work, c3.Work), c7.Work, 1f / 3f);
+      e20 = lerp.Lerp(lerp.Lerp(c6.Work, c3.Work), c7.Work, 2, 1);
 
     if (equality.Equals(k8, k5) && equality.Equals(k8, k7))
-      e22 = lerp.Lerp(lerp.Lerp(c8.Work, c5.Work), c7.Work, 1f / 3f);
+      e22 = lerp.Lerp(lerp.Lerp(c8.Work, c5.Work), c7.Work, 2, 1);
 
     // Write 3x3 output - edges and center are always center pixel
     var row0 = destTopLeft;

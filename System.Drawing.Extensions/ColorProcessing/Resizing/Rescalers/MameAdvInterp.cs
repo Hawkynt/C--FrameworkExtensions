@@ -159,22 +159,22 @@ file readonly struct MameAdvInterp2xKernel<TWork, TKey, TPixel, TEquality, TLerp
 
       if (equality.Equals(k3, k1)) {
         var avg = lerp.Lerp(c1.Work, c3.Work);
-        e00 = lerp.Lerp(avg, center, 3f / 8f);
+        e00 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k5, k1)) {
         var avg = lerp.Lerp(c1.Work, c5.Work);
-        e01 = lerp.Lerp(avg, center, 3f / 8f);
+        e01 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k3, k7)) {
         var avg = lerp.Lerp(c7.Work, c3.Work);
-        e10 = lerp.Lerp(avg, center, 3f / 8f);
+        e10 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k5, k7)) {
         var avg = lerp.Lerp(c7.Work, c5.Work);
-        e11 = lerp.Lerp(avg, center, 3f / 8f);
+        e11 = lerp.Lerp(avg, center, 5, 3);
       }
     }
 
@@ -252,22 +252,22 @@ file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp
 
       if (equality.Equals(k3, k1)) {
         var avg = lerp.Lerp(c3.Work, c1.Work);
-        e00 = lerp.Lerp(avg, center, 3f / 8f);
+        e00 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k1, k5)) {
         var avg = lerp.Lerp(c5.Work, c1.Work);
-        e02 = lerp.Lerp(avg, center, 3f / 8f);
+        e02 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k3, k7)) {
         var avg = lerp.Lerp(c3.Work, c7.Work);
-        e20 = lerp.Lerp(avg, center, 3f / 8f);
+        e20 = lerp.Lerp(avg, center, 5, 3);
       }
 
       if (equality.Equals(k7, k5)) {
         var avg = lerp.Lerp(c7.Work, c5.Work);
-        e22 = lerp.Lerp(avg, center, 3f / 8f);
+        e22 = lerp.Lerp(avg, center, 5, 3);
       }
 
       // Edge interpolation
@@ -280,7 +280,7 @@ file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp
       if (eq31 && !equality.Equals(k4, k2) && eq15 && !equality.Equals(k4, k0)) {
         // Equal blend of 3 colors: (c1 + c3 + c5) / 3
         var avg = lerp.Lerp(c3.Work, c5.Work);
-        e01 = lerp.Lerp(avg, c1.Work, 1f / 3f);
+        e01 = lerp.Lerp(avg, c1.Work, 2, 1);
       } else if (eq31 && !equality.Equals(k4, k2)) {
         // 50/50 blend: (c3 + c1) / 2
         e01 = lerp.Lerp(c3.Work, c1.Work);
@@ -293,7 +293,7 @@ file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp
       if (eq31 && !equality.Equals(k4, k6) && eq37 && !equality.Equals(k4, k0)) {
         // Equal blend of 3 colors: (c3 + c1 + c7) / 3
         var avg = lerp.Lerp(c1.Work, c7.Work);
-        e10 = lerp.Lerp(avg, c3.Work, 1f / 3f);
+        e10 = lerp.Lerp(avg, c3.Work, 2, 1);
       } else if (eq31 && !equality.Equals(k4, k6)) {
         // 50/50 blend: (c3 + c1) / 2
         e10 = lerp.Lerp(c3.Work, c1.Work);
@@ -306,7 +306,7 @@ file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp
       if (eq15 && !equality.Equals(k4, k8) && eq75 && !equality.Equals(k4, k2)) {
         // Equal blend of 3 colors: (c5 + c1 + c7) / 3
         var avg = lerp.Lerp(c1.Work, c7.Work);
-        e12 = lerp.Lerp(avg, c5.Work, 1f / 3f);
+        e12 = lerp.Lerp(avg, c5.Work, 2, 1);
       } else if (eq15 && !equality.Equals(k4, k8)) {
         // 50/50 blend: (c5 + c1) / 2
         e12 = lerp.Lerp(c5.Work, c1.Work);
@@ -319,7 +319,7 @@ file readonly struct MameAdvInterp3xKernel<TWork, TKey, TPixel, TEquality, TLerp
       if (eq37 && !equality.Equals(k4, k8) && eq75 && !equality.Equals(k4, k6)) {
         // Equal blend of 3 colors: (c7 + c3 + c5) / 3
         var avg = lerp.Lerp(c3.Work, c5.Work);
-        e21 = lerp.Lerp(avg, c7.Work, 1f / 3f);
+        e21 = lerp.Lerp(avg, c7.Work, 2, 1);
       } else if (eq37 && !equality.Equals(k4, k8)) {
         // 50/50 blend: (c3 + c7) / 2
         e21 = lerp.Lerp(c3.Work, c7.Work);

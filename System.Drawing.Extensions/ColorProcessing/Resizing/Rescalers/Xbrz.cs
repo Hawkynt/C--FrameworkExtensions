@@ -488,7 +488,7 @@ file readonly struct Xbrz2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (!doLineBlend) {
       // BlendCorner for 2x: blend pixel (1,1) with weight 21/100
-      dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 0.21f));
+      dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 79, 21));
       return;
     }
 
@@ -506,7 +506,7 @@ file readonly struct Xbrz2xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         // BlendLineSteepAndShallow
         dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
         dest[ri1_0 * destStride + rj0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
-        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 5f / 6f));
+        dest[ri1 * destStride + rj1] = encoder.Encode(lerp.Lerp(we, px, 1, 5));
       } else {
         // BlendLineShallow
         dest[ri0 * destStride + rj1_0] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
@@ -614,7 +614,7 @@ file readonly struct Xbrz3xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (!doLineBlend) {
       // BlendCorner for 3x: blend pixel (2,2) with weight 45/100
-      dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(lerp.Lerp(we, px, 0.45f));
+      dest[ri2j2i * destStride + ri2j2j] = encoder.Encode(lerp.Lerp(we, px, 11, 9));
       return;
     }
 
@@ -762,9 +762,9 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (!doLineBlend) {
       // BlendCorner for 4x
-      dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 0.68f));
-      dest[ri32i * destStride + ri32j] = encoder.Encode(lerp.Lerp(we, px, 0.09f));
-      dest[ri23i * destStride + ri23j] = encoder.Encode(lerp.Lerp(we, px, 0.09f));
+      dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 8, 17));
+      dest[ri32i * destStride + ri32j] = encoder.Encode(lerp.Lerp(we, px, 91, 9));
+      dest[ri23i * destStride + ri23j] = encoder.Encode(lerp.Lerp(we, px, 91, 9));
       return;
     }
 
@@ -787,7 +787,7 @@ file readonly struct Xbrz4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         dest[ri13i * destStride + ri13j] = encoder.Encode(lerp.Lerp(we, px, 1, 3));
         dest[ri30i * destStride + ri30j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
         dest[ri03i * destStride + ri03j] = encoder.Encode(lerp.Lerp(we, px, 3, 1));
-        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 1f / 3f));
+        dest[ri22i * destStride + ri22j] = encoder.Encode(lerp.Lerp(we, px, 2, 1));
         dest[ri33i * destStride + ri33j] = encoder.Encode(px);
         dest[ri32i * destStride + ri32j] = encoder.Encode(px);
         dest[ri23i * destStride + ri23j] = encoder.Encode(px);
@@ -922,9 +922,9 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (!doLineBlend) {
       // BlendCorner for 5x
-      dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px, 0.86f));
-      dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 0.23f));
-      dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 0.23f));
+      dest[ri44i * destStride + ri44j] = encoder.Encode(lerp.Lerp(we, px, 7, 43));
+      dest[ri43i * destStride + ri43j] = encoder.Encode(lerp.Lerp(we, px, 77, 23));
+      dest[ri34i * destStride + ri34j] = encoder.Encode(lerp.Lerp(we, px, 77, 23));
       return;
     }
 
@@ -956,7 +956,7 @@ file readonly struct Xbrz5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
         dest[ri34i * destStride + ri34j] = encoder.Encode(px);
         dest[ri43i * destStride + ri43j] = encoder.Encode(px);
         dest[ri44i * destStride + ri44j] = encoder.Encode(px);
-        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 2f / 3f));
+        dest[ri33i * destStride + ri33j] = encoder.Encode(lerp.Lerp(we, px, 1, 2));
       } else {
         // BlendLineShallow for 5x
         var (ri40i, ri40j) = RotationLookup.Get(5, rotDeg, 4, 0);
@@ -1103,13 +1103,13 @@ file readonly struct Xbrz6xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp
 
     if (!doLineBlend) {
       // BlendCorner for 6x - exact weights from reference: 97/100, 42/100, 6/100
-      dest[ri55i * destStride + ri55j] = encoder.Encode(lerp.Lerp(we, px, 0.97f));
-      dest[ri54i * destStride + ri54j] = encoder.Encode(lerp.Lerp(we, px, 0.42f));
-      dest[ri45i * destStride + ri45j] = encoder.Encode(lerp.Lerp(we, px, 0.42f));
+      dest[ri55i * destStride + ri55j] = encoder.Encode(lerp.Lerp(we, px, 3, 97));
+      dest[ri54i * destStride + ri54j] = encoder.Encode(lerp.Lerp(we, px, 29, 21));
+      dest[ri45i * destStride + ri45j] = encoder.Encode(lerp.Lerp(we, px, 29, 21));
       var (ri53i, ri53j) = RotationLookup.Get(6, rotDeg, 5, 3);
       var (ri35i, ri35j) = RotationLookup.Get(6, rotDeg, 3, 5);
-      dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 0.06f));
-      dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 0.06f));
+      dest[ri53i * destStride + ri53j] = encoder.Encode(lerp.Lerp(we, px, 47, 3));
+      dest[ri35i * destStride + ri35j] = encoder.Encode(lerp.Lerp(we, px, 47, 3));
       return;
     }
 

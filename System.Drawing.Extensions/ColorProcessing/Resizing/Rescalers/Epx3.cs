@@ -172,28 +172,28 @@ file readonly struct Epx3Kernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(
 
         // Edges
         if (eq51 && neq40 && eq13 && neq42)
-          e01 = lerp.Lerp(lerp.Lerp(c1.Work, c3.Work), c5.Work, 1f / 3f);
+          e01 = lerp.Lerp(lerp.Lerp(c1.Work, c3.Work), c5.Work, 2, 1);
         else if (eq51 && neq40)
           e01 = lerp.Lerp(c1.Work, c5.Work);
         else if (eq13 && neq42)
           e01 = lerp.Lerp(c1.Work, c3.Work);
 
         if (eq13 && neq46 && eq37 && neq40)
-          e10 = lerp.Lerp(lerp.Lerp(c3.Work, c1.Work), c7.Work, 1f / 3f);
+          e10 = lerp.Lerp(lerp.Lerp(c3.Work, c1.Work), c7.Work, 2, 1);
         else if (eq13 && neq46)
           e10 = lerp.Lerp(c3.Work, c1.Work);
         else if (eq37 && neq40)
           e10 = lerp.Lerp(c3.Work, c7.Work);
 
         if (eq75 && neq42 && eq51 && neq48)
-          e12 = lerp.Lerp(lerp.Lerp(c5.Work, c1.Work), c7.Work, 1f / 3f);
+          e12 = lerp.Lerp(lerp.Lerp(c5.Work, c1.Work), c7.Work, 2, 1);
         else if (eq75 && neq42)
           e12 = lerp.Lerp(c5.Work, c7.Work);
         else if (eq51 && neq48)
           e12 = lerp.Lerp(c5.Work, c1.Work);
 
         if (eq37 && neq48 && eq75 && neq46)
-          e21 = lerp.Lerp(lerp.Lerp(c7.Work, c3.Work), c5.Work, 1f / 3f);
+          e21 = lerp.Lerp(lerp.Lerp(c7.Work, c3.Work), c5.Work, 2, 1);
         else if (eq75 && neq46)
           e21 = lerp.Lerp(c7.Work, c5.Work);
         else if (eq37 && neq48)

@@ -376,7 +376,7 @@ file readonly struct Scl2xUltraKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     // Using lerp: enhanced = lerp(c2, c1, 2.0) [extrapolate], then average
     // Since we can't easily extrapolate, we use: lerp(c1, enhanced, 0.5)
     // A simpler approximation: lerp back toward c1 after boosting
-    var enhanced = lerp.Lerp(c2, c1, 2f); // This extrapolates: 2*c1 - c2
+    var enhanced = lerp.Lerp(c2, c1, -1, 2); // This extrapolates: 2*c1 - c2
     return lerp.Lerp(enhanced, c2);        // Average: (enhanced + c2) / 2
   }
 }

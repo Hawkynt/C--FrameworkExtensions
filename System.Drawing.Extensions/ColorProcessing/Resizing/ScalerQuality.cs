@@ -28,11 +28,11 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// </remarks>
 public enum ScalerQuality {
   /// <summary>
-  /// Fast mode: uses direct sRGB operations.
+  /// Fast mode: uses direct sRGB operations with integer precision.
   /// </summary>
   /// <remarks>
   /// Pattern matching uses exact byte comparison.
-  /// Interpolation uses linear RGB blending.
+  /// Interpolation uses UNorm32 integer arithmetic.
   /// Best for pixel-art where preserving exact colors is preferred.
   /// </remarks>
   Fast,
