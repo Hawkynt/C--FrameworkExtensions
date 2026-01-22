@@ -207,7 +207,8 @@ public readonly struct Fxaa : IPixelScaler {
     else
       pixelToBlend = is1Steepest ? e : w;
 
-    return lerp.Lerp(center, pixelToBlend, blendL);
+    var blendW2 = (int)(blendL * 256f);
+    return lerp.Lerp(center, pixelToBlend, 256 - blendW2, blendW2);
   }
 }
 

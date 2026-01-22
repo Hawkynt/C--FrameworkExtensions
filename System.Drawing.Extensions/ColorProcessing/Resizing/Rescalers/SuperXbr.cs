@@ -227,7 +227,8 @@ file readonly struct SuperXbrKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var edgeColor = lerp.Lerp(n, e);
     var diagColor = lerp.Lerp(nw, se);
 
-    return lerp.Lerp(edgeColor, diagColor, edgeStrength);
+    var w2Edge = (int)(edgeStrength * 256f);
+    return lerp.Lerp(edgeColor, diagColor, 256 - w2Edge, w2Edge);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -338,7 +339,8 @@ file readonly struct SuperXbrFastKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLe
     if (diffDiag < diffA + diffB - SuperXbr.SmallNumber) {
       // Diagonal edge detected
       var blend = diffA / (diffA + diffB + SuperXbr.SmallNumber);
-      return lerp.Lerp(a, b, blend);
+      var w2 = (int)(blend * 256f);
+      return lerp.Lerp(a, b, 256 - w2, w2);
     }
 
     // No clear edge, use center

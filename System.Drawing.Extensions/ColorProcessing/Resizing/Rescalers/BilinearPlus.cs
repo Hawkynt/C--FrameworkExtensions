@@ -194,7 +194,8 @@ file readonly struct BilinearPlusKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLe
   where TLerp : struct, ILerp<TWork>
   where TEncode : struct, IEncode<TWork, TPixel> {
 
-  private const float Gamma = 14f / 16f;
+  private const int GammaW1 = 2;  // 14/16 = 7/8, so w1=1, w2=7 (or 2:14)
+  private const int GammaW2 = 14;
 
   public int ScaleX => 2;
   public int ScaleY => 2;
@@ -217,7 +218,7 @@ file readonly struct BilinearPlusKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLe
     // neighbor = (c10 + c01) / 2, then blend 5:1 = c00 * 5/7 + neighbor * 2/7
     var neighbor = lerp.Lerp(c10, c01); // average of c10 and c01
     var weighted = lerp.Lerp(c00, neighbor, 5, 2); // 5/7 c00 + 2/7 neighbor
-    var e00 = lerp.Lerp(default, weighted, Gamma); // apply gamma darkening
+    var e00 = lerp.Lerp(default(TWork), weighted, GammaW1, GammaW2); // apply gamma darkening
 
     // e01 = (c00 + c10) / 2
     var e01 = lerp.Lerp(c00, c10);

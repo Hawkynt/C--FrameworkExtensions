@@ -26,18 +26,9 @@ namespace Hawkynt.ColorProcessing.ColorMath;
 /// <remarks>
 /// <para>Used in scaling algorithms and color blending operations.</para>
 /// <para>Implementations should operate in linear color space for correct results.</para>
-/// <para>Includes both float and integer weight methods for flexibility and performance.</para>
+/// <para>Uses integer weights for all interpolation to ensure pure integer operations in fast mode.</para>
 /// </remarks>
 public interface ILerp<T> where T : unmanaged {
-
-  /// <summary>
-  /// Linearly interpolates between two colors.
-  /// </summary>
-  /// <param name="a">The start color (t=0).</param>
-  /// <param name="b">The end color (t=1).</param>
-  /// <param name="t">The interpolation factor (0.0 to 1.0).</param>
-  /// <returns>The interpolated color.</returns>
-  T Lerp(in T a, in T b, float t);
 
   /// <summary>
   /// Linearly interpolates between two colors at the midpoint (50/50 blend).

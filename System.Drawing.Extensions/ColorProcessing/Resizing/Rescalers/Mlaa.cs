@@ -178,11 +178,15 @@ public readonly struct Mlaa : IPixelScaler {
     where TWork : unmanaged, IColorSpace
     where TLerp : struct, ILerp<TWork> {
     // L-shape: edge on one side only
-    if (edgeA && !edgeB && pos < 0.5f)
-      return lerp.Lerp(edgeNeighbor, sideA, pos);
+    if (edgeA && !edgeB && pos < 0.5f) {
+      var w2 = (int)(pos * 256f);
+      return lerp.Lerp(edgeNeighbor, sideA, 256 - w2, w2);
+    }
 
-    if (edgeB && !edgeA && pos > 0.5f)
-      return lerp.Lerp(edgeNeighbor, sideB, 1f - pos);
+    if (edgeB && !edgeA && pos > 0.5f) {
+      var w2 = (int)((1f - pos) * 256f);
+      return lerp.Lerp(edgeNeighbor, sideB, 256 - w2, w2);
+    }
 
     // Default: use edge neighbor
     return edgeNeighbor;
@@ -209,7 +213,8 @@ public readonly struct Mlaa : IPixelScaler {
       // Check for NW diagonal edge (L-pattern going up-left)
       if (IsEdge(center, top, threshold) && IsEdge(center, left, threshold) && !IsEdge(top, left, threshold)) {
         var diagonalBlend = (0.5f - fx) * (0.5f - fy) * 2f * 0.3f;
-        result = lerp.Lerp(result, topLeft, diagonalBlend);
+        var w2 = (int)(diagonalBlend * 256f);
+        result = lerp.Lerp(result, topLeft, 256 - w2, w2);
       }
     }
 
@@ -217,7 +222,8 @@ public readonly struct Mlaa : IPixelScaler {
       // Check for NE diagonal edge
       if (IsEdge(center, top, threshold) && IsEdge(center, right, threshold) && !IsEdge(top, right, threshold)) {
         var diagonalBlend = (fx - 0.5f) * (0.5f - fy) * 2f * 0.3f;
-        result = lerp.Lerp(result, topRight, diagonalBlend);
+        var w2 = (int)(diagonalBlend * 256f);
+        result = lerp.Lerp(result, topRight, 256 - w2, w2);
       }
     }
 
@@ -225,7 +231,8 @@ public readonly struct Mlaa : IPixelScaler {
       // Check for SW diagonal edge
       if (IsEdge(center, bottom, threshold) && IsEdge(center, left, threshold) && !IsEdge(bottom, left, threshold)) {
         var diagonalBlend = (0.5f - fx) * (fy - 0.5f) * 2f * 0.3f;
-        result = lerp.Lerp(result, bottomLeft, diagonalBlend);
+        var w2 = (int)(diagonalBlend * 256f);
+        result = lerp.Lerp(result, bottomLeft, 256 - w2, w2);
       }
     }
 
@@ -233,7 +240,8 @@ public readonly struct Mlaa : IPixelScaler {
       // Check for SE diagonal edge
       if (IsEdge(center, bottom, threshold) && IsEdge(center, right, threshold) && !IsEdge(bottom, right, threshold)) {
         var diagonalBlend = (fx - 0.5f) * (fy - 0.5f) * 2f * 0.3f;
-        result = lerp.Lerp(result, bottomRight, diagonalBlend);
+        var w2 = (int)(diagonalBlend * 256f);
+        result = lerp.Lerp(result, bottomRight, 256 - w2, w2);
       }
     }
   }
@@ -290,18 +298,22 @@ file readonly struct Mlaa2xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp ler
         // Apply MLAA blending based on detected edge patterns
         if (edgeTop && fy < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, 0.5f - fy, edgeLeft, edgeRight, left, right, top, lerp);
-          result = lerp.Lerp(center, blend, (0.5f - fy) * 2f);
+          var blendW2 = (int)((0.5f - fy) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         } else if (edgeBottom && fy > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, fy - 0.5f, edgeLeft, edgeRight, left, right, bottom, lerp);
-          result = lerp.Lerp(center, blend, (fy - 0.5f) * 2f);
+          var blendW2 = (int)((fy - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         }
 
         if (edgeLeft && fx < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, 0.5f - fx, edgeTop, edgeBottom, top, bottom, left, lerp);
-          result = lerp.Lerp(result, blend, (0.5f - fx) * 2f);
+          var blendW2 = (int)((0.5f - fx) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         } else if (edgeRight && fx > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, fx - 0.5f, edgeTop, edgeBottom, top, bottom, right, lerp);
-          result = lerp.Lerp(result, blend, (fx - 0.5f) * 2f);
+          var blendW2 = (int)((fx - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         }
 
         // Apply diagonal pattern detection for L and Z shapes
@@ -364,18 +376,22 @@ file readonly struct Mlaa3xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp ler
 
         if (edgeTop && fy < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, 0.5f - fy, edgeLeft, edgeRight, left, right, top, lerp);
-          result = lerp.Lerp(center, blend, (0.5f - fy) * 2f);
+          var blendW2 = (int)((0.5f - fy) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         } else if (edgeBottom && fy > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, fy - 0.5f, edgeLeft, edgeRight, left, right, bottom, lerp);
-          result = lerp.Lerp(center, blend, (fy - 0.5f) * 2f);
+          var blendW2 = (int)((fy - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         }
 
         if (edgeLeft && fx < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, 0.5f - fx, edgeTop, edgeBottom, top, bottom, left, lerp);
-          result = lerp.Lerp(result, blend, (0.5f - fx) * 2f);
+          var blendW2 = (int)((0.5f - fx) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         } else if (edgeRight && fx > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, fx - 0.5f, edgeTop, edgeBottom, top, bottom, right, lerp);
-          result = lerp.Lerp(result, blend, (fx - 0.5f) * 2f);
+          var blendW2 = (int)((fx - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         }
 
         Mlaa.ApplyDiagonalBlending(ref result, fx, fy, center,
@@ -437,18 +453,22 @@ file readonly struct Mlaa4xKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp ler
 
         if (edgeTop && fy < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, 0.5f - fy, edgeLeft, edgeRight, left, right, top, lerp);
-          result = lerp.Lerp(center, blend, (0.5f - fy) * 2f);
+          var blendW2 = (int)((0.5f - fy) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         } else if (edgeBottom && fy > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fx, fy - 0.5f, edgeLeft, edgeRight, left, right, bottom, lerp);
-          result = lerp.Lerp(center, blend, (fy - 0.5f) * 2f);
+          var blendW2 = (int)((fy - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(center, blend, 256 - blendW2, blendW2);
         }
 
         if (edgeLeft && fx < 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, 0.5f - fx, edgeTop, edgeBottom, top, bottom, left, lerp);
-          result = lerp.Lerp(result, blend, (0.5f - fx) * 2f);
+          var blendW2 = (int)((0.5f - fx) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         } else if (edgeRight && fx > 0.5f) {
           var blend = Mlaa.CalculateEdgeBlend(fy, fx - 0.5f, edgeTop, edgeBottom, top, bottom, right, lerp);
-          result = lerp.Lerp(result, blend, (fx - 0.5f) * 2f);
+          var blendW2 = (int)((fx - 0.5f) * 2f * 256f);
+          result = lerp.Lerp(result, blend, 256 - blendW2, blendW2);
         }
 
         Mlaa.ApplyDiagonalBlending(ref result, fx, fy, center,

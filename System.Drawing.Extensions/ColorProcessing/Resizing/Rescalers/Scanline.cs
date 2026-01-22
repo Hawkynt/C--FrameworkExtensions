@@ -110,7 +110,8 @@ file readonly struct ScanlineHorizontalKernel<TWork, TKey, TPixel, TLerp, TEncod
     in TEncode encoder
   ) {
     var pixel = window.P0P0.Work;
-    var darkened = lerp.Lerp(default, pixel, brightness);
+    var w2 = (int)(brightness * 256f);
+    var darkened = lerp.Lerp(default(TWork), pixel, 256 - w2, w2);
 
     destTopLeft[0] = encoder.Encode(pixel);
     destTopLeft[1] = encoder.Encode(darkened);
@@ -200,7 +201,8 @@ file readonly struct ScanlineVerticalKernel<TWork, TKey, TPixel, TLerp, TEncode>
     in TEncode encoder
   ) {
     var pixel = window.P0P0.Work;
-    var darkened = lerp.Lerp(default, pixel, brightness);
+    var w2 = (int)(brightness * 256f);
+    var darkened = lerp.Lerp(default(TWork), pixel, 256 - w2, w2);
 
     destTopLeft[0] = encoder.Encode(pixel);
     destTopLeft[destStride] = encoder.Encode(darkened);
