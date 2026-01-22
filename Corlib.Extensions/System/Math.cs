@@ -316,6 +316,44 @@ public static partial class MathEx {
     public ulong RotateRight(byte count) => BitOperations.RotateRight(@this, count);
   }
 
+  /// <param name="this">The <see cref="UInt96"/> value to rotate.</param>
+  extension(UInt96 @this) {
+    /// <summary>
+    /// Performs a bitwise left rotation on a 96-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="UInt96"/> result.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UInt96 RotateLeft(byte count) => UInt96.RotateLeft(@this, count);
+
+    /// <summary>
+    /// Performs a bitwise right rotation on a 96-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="UInt96"/> result.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UInt96 RotateRight(byte count) => UInt96.RotateRight(@this, count);
+  }
+
+  /// <param name="this">The <see cref="UInt128"/> value to rotate.</param>
+  extension(UInt128 @this) {
+    /// <summary>
+    /// Performs a bitwise left rotation on a 128-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate left by.</param>
+    /// <returns>The rotated <see cref="UInt128"/> result.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UInt128 RotateLeft(byte count) => UInt128.RotateLeft(@this, count);
+
+    /// <summary>
+    /// Performs a bitwise right rotation on a 128-bit unsigned integer.
+    /// </summary>
+    /// <param name="count">The number of bits to rotate right by.</param>
+    /// <returns>The rotated <see cref="UInt128"/> result.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UInt128 RotateRight(byte count) => UInt128.RotateRight(@this, count);
+  }
+
   /// <summary>
   /// Counts the number of trailing zero bits in the specified <see cref="byte"/> value.
   /// </summary>
@@ -707,6 +745,410 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool Parity(this ulong value) => (CountSetBits(value) & 1) == 0;
+
+  #region 96-bit and 128-bit Bit Operations
+
+  /// <summary>
+  /// Counts the number of trailing zero bits in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits following the least significant bit. Returns 96 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingZeroCount(this UInt96 @this) => (byte)UInt96.TrailingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of trailing zero bits in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits following the least significant bit. Returns 96 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingZeroCount(this Int96 @this) => (byte)Int96.TrailingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of trailing zero bits in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits following the least significant bit. Returns 128 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingZeroCount(this UInt128 @this) => (byte)UInt128.TrailingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of trailing zero bits in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits following the least significant bit. Returns 128 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingZeroCount(this Int128 @this) => (byte)Int128.TrailingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of leading zero bits in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits before the most significant set bit. Returns 96 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingZeroCount(this UInt96 @this) => (byte)UInt96.LeadingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of leading zero bits in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits before the most significant set bit. Returns 96 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingZeroCount(this Int96 @this) => (byte)Int96.LeadingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of leading zero bits in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits before the most significant set bit. Returns 128 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingZeroCount(this UInt128 @this) => (byte)UInt128.LeadingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of leading zero bits in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of zero bits before the most significant set bit. Returns 128 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingZeroCount(this Int128 @this) => (byte)Int128.LeadingZeroCount(@this);
+
+  /// <summary>
+  /// Counts the number of trailing one bits in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the least significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingOneCount(this UInt96 @this) => TrailingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of trailing one bits in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the least significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingOneCount(this Int96 @this) => TrailingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of trailing one bits in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the least significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingOneCount(this UInt128 @this) => TrailingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of trailing one bits in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the least significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte TrailingOneCount(this Int128 @this) => TrailingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of leading one bits in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the most significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingOneCount(this UInt96 @this) => LeadingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of leading one bits in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the most significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingOneCount(this Int96 @this) => LeadingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of leading one bits in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the most significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingOneCount(this UInt128 @this) => LeadingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of leading one bits in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The number of consecutive one bits starting from the most significant bit.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte LeadingOneCount(this Int128 @this) => LeadingZeroCount(@this.Not());
+
+  /// <summary>
+  /// Counts the number of bits set to 1 (population count) in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 1.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this UInt96 @this) => (byte)UInt96.PopCount(@this);
+
+  /// <summary>
+  /// Counts the number of bits set to 1 (population count) in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 1.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this Int96 @this) => (byte)Int96.PopCount(@this);
+
+  /// <summary>
+  /// Counts the number of bits set to 1 (population count) in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 1.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this UInt128 @this) => (byte)UInt128.PopCount(@this);
+
+  /// <summary>
+  /// Counts the number of bits set to 1 (population count) in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 1.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountSetBits(this Int128 @this) => (byte)Int128.PopCount(@this);
+
+  /// <summary>
+  /// Counts the number of bits set to 0 in the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this UInt96 @this) => (byte)(96 - CountSetBits(@this));
+
+  /// <summary>
+  /// Counts the number of bits set to 0 in the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this Int96 @this) => (byte)(96 - CountSetBits(@this));
+
+  /// <summary>
+  /// Counts the number of bits set to 0 in the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this UInt128 @this) => (byte)(128 - CountSetBits(@this));
+
+  /// <summary>
+  /// Counts the number of bits set to 0 in the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to examine.</param>
+  /// <returns>The count of bits that are set to 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte CountUnsetBits(this Int128 @this) => (byte)(128 - CountSetBits(@this));
+
+  /// <summary>
+  /// Determines whether the number of set bits in the specified <see cref="UInt96"/> value is even (even parity).
+  /// </summary>
+  /// <param name="value">The value to evaluate.</param>
+  /// <returns><see langword="true"/> if the number of bits set to <see langword="1"/> is even; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Parity(this UInt96 value) => (CountSetBits(value) & 1) == 0;
+
+  /// <summary>
+  /// Determines whether the number of set bits in the specified <see cref="Int96"/> value is even (even parity).
+  /// </summary>
+  /// <param name="value">The value to evaluate.</param>
+  /// <returns><see langword="true"/> if the number of bits set to <see langword="1"/> is even; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Parity(this Int96 value) => (CountSetBits(value) & 1) == 0;
+
+  /// <summary>
+  /// Determines whether the number of set bits in the specified <see cref="UInt128"/> value is even (even parity).
+  /// </summary>
+  /// <param name="value">The value to evaluate.</param>
+  /// <returns><see langword="true"/> if the number of bits set to <see langword="1"/> is even; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Parity(this UInt128 value) => (CountSetBits(value) & 1) == 0;
+
+  /// <summary>
+  /// Determines whether the number of set bits in the specified <see cref="Int128"/> value is even (even parity).
+  /// </summary>
+  /// <param name="value">The value to evaluate.</param>
+  /// <returns><see langword="true"/> if the number of bits set to <see langword="1"/> is even; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool Parity(this Int128 value) => (CountSetBits(value) & 1) == 0;
+
+  /// <summary>
+  /// Returns the base-2 logarithm of the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <returns>The floor of log base 2 of the input. Returns 0 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Log2(this UInt96 @this) => UInt96.Log2(@this);
+
+  /// <summary>
+  /// Returns the base-2 logarithm of the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <returns>The floor of log base 2 of the input. Returns 0 if the input is 0 or negative.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Log2(this Int96 @this) => Int96.Log2(@this);
+
+  /// <summary>
+  /// Returns the base-2 logarithm of the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <returns>The floor of log base 2 of the input. Returns 0 if the input is 0.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Log2(this UInt128 @this) => (int)UInt128.Log2(@this);
+
+  /// <summary>
+  /// Returns the base-2 logarithm of the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to compute the logarithm for.</param>
+  /// <returns>The floor of log base 2 of the input. Returns 0 if the input is 0 or negative.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static int Log2(this Int128 @this) => (int)Int128.Log2(@this);
+
+  /// <summary>
+  /// Reverses the bit order of the specified <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The value to reverse.</param>
+  /// <returns>A <see cref="UInt96"/> whose bits are in reverse order from the input.</returns>
+  public static UInt96 ReverseBits(this UInt96 @this) {
+    // UInt96 has Upper (uint, 32 bits) and Lower (ulong, 64 bits)
+    // After reversal: Upper gets reversed Lower's upper 32 bits, Lower gets reversed Upper + reversed Lower's lower 32 bits
+    var reversedLower = ReverseBits(@this.Lower);
+    var reversedUpper = ReverseBits(@this.Upper);
+    // New Upper (32 bits) = upper 32 bits of reversedLower
+    // New Lower (64 bits) = lower 32 bits of reversedLower (shifted left 32) + reversedUpper
+    var newUpper = (uint)(reversedLower >> 32);
+    var newLower = (reversedLower << 32) | reversedUpper;
+    return new(newUpper, newLower);
+  }
+
+  /// <summary>
+  /// Reverses the bit order of the specified <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The value to reverse.</param>
+  /// <returns>A <see cref="Int96"/> whose bits are in reverse order from the input.</returns>
+  public static Int96 ReverseBits(this Int96 @this) {
+    var reversedLower = ReverseBits(@this.Lower);
+    var reversedUpper = ReverseBits(@this.Upper);
+    var newUpper = (uint)(reversedLower >> 32);
+    var newLower = (reversedLower << 32) | reversedUpper;
+    return new(newUpper, newLower);
+  }
+
+  /// <summary>
+  /// Reverses the bit order of the specified <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The value to reverse.</param>
+  /// <returns>A <see cref="UInt128"/> whose bits are in reverse order from the input.</returns>
+  public static UInt128 ReverseBits(this UInt128 @this) {
+    var upper = (ulong)(@this >> 64);
+    var lower = (ulong)@this;
+    return new(ReverseBits(lower), ReverseBits(upper));
+  }
+
+  /// <summary>
+  /// Reverses the bit order of the specified <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The value to reverse.</param>
+  /// <returns>A <see cref="Int128"/> whose bits are in reverse order from the input.</returns>
+  public static Int128 ReverseBits(this Int128 @this) {
+    var upper = (ulong)((UInt128)@this >> 64);
+    var lower = (ulong)@this;
+    return new(ReverseBits(lower), ReverseBits(upper));
+  }
+
+  /// <summary>
+  /// Extracts bits from the source <see cref="UInt96"/> according to the specified <paramref name="mask"/> using parallel bit extraction (PEXT).
+  /// </summary>
+  /// <param name="this">The source value from which to extract bits.</param>
+  /// <param name="mask">A bitmask indicating which bits to extract.</param>
+  /// <returns>A compacted <see cref="UInt96"/> value containing the extracted bits.</returns>
+  public static UInt96 ParallelBitExtract(this UInt96 @this, UInt96 mask) {
+    var result = UInt96.Zero;
+    if ((@this & mask) == UInt96.Zero)
+      return result;
+
+    var bitPos = 0;
+    do {
+      var lowestBit = mask & (~mask + UInt96.One);
+      var bitSetMask = @this & lowestBit;
+      var isOneOrZero = bitSetMask == UInt96.Zero ? UInt96.Zero : UInt96.One;
+      result |= isOneOrZero << bitPos;
+      ++bitPos;
+      mask ^= lowestBit;
+    } while (mask != UInt96.Zero);
+    return result;
+  }
+
+  /// <summary>
+  /// Extracts bits from the source <see cref="Int96"/> according to the specified <paramref name="mask"/> using parallel bit extraction (PEXT).
+  /// </summary>
+  /// <param name="this">The source value from which to extract bits.</param>
+  /// <param name="mask">A bitmask indicating which bits to extract.</param>
+  /// <returns>A compacted <see cref="Int96"/> value containing the extracted bits.</returns>
+  public static Int96 ParallelBitExtract(this Int96 @this, Int96 mask) {
+    var result = Int96.Zero;
+    if ((@this & mask) == Int96.Zero)
+      return result;
+
+    var bitPos = 0;
+    do {
+      var lowestBit = mask & (~mask + Int96.One);
+      var bitSetMask = @this & lowestBit;
+      var isOneOrZero = bitSetMask == Int96.Zero ? Int96.Zero : Int96.One;
+      result |= isOneOrZero << bitPos;
+      ++bitPos;
+      mask ^= lowestBit;
+    } while (mask != Int96.Zero);
+    return result;
+  }
+
+  /// <summary>
+  /// Extracts bits from the source <see cref="UInt128"/> according to the specified <paramref name="mask"/> using parallel bit extraction (PEXT).
+  /// </summary>
+  /// <param name="this">The source value from which to extract bits.</param>
+  /// <param name="mask">A bitmask indicating which bits to extract.</param>
+  /// <returns>A compacted <see cref="UInt128"/> value containing the extracted bits.</returns>
+  public static UInt128 ParallelBitExtract(this UInt128 @this, UInt128 mask) {
+    var result = UInt128.Zero;
+    if ((@this & mask) == UInt128.Zero)
+      return result;
+
+    var bitPos = 0;
+    do {
+      var lowestBit = mask & (~mask + UInt128.One);
+      var bitSetMask = @this & lowestBit;
+      var isOneOrZero = bitSetMask == UInt128.Zero ? UInt128.Zero : UInt128.One;
+      result |= isOneOrZero << bitPos;
+      ++bitPos;
+      mask ^= lowestBit;
+    } while (mask != UInt128.Zero);
+    return result;
+  }
+
+  /// <summary>
+  /// Extracts bits from the source <see cref="Int128"/> according to the specified <paramref name="mask"/> using parallel bit extraction (PEXT).
+  /// </summary>
+  /// <param name="this">The source value from which to extract bits.</param>
+  /// <param name="mask">A bitmask indicating which bits to extract.</param>
+  /// <returns>A compacted <see cref="Int128"/> value containing the extracted bits.</returns>
+  public static Int128 ParallelBitExtract(this Int128 @this, Int128 mask) {
+    var result = Int128.Zero;
+    if ((@this & mask) == Int128.Zero)
+      return result;
+
+    var bitPos = 0;
+    do {
+      var lowestBit = mask & (~mask + Int128.One);
+      var bitSetMask = @this & lowestBit;
+      var isOneOrZero = bitSetMask == Int128.Zero ? Int128.Zero : Int128.One;
+      result |= isOneOrZero << bitPos;
+      ++bitPos;
+      mask ^= lowestBit;
+    } while (mask != Int128.Zero);
+    return result;
+  }
+
+  #endregion
 
   /// <summary>
   /// Reverses the bit order of the specified <see cref="byte"/> value.
@@ -1154,6 +1596,94 @@ public static partial class MathEx {
   );
 
   /// <summary>
+  /// Deinterleaves a 96-bit unsigned integer into two 48-bit streams by splitting adjacent bit pairs.
+  /// </summary>
+  /// <param name="this">The 96-bit value to deinterleave.</param>
+  /// <returns>
+  /// A tuple with <c>odd</c> and <c>even</c> 64-bit values representing extracted 2-bit groups (48 bits each).
+  /// </returns>
+  /// <remarks>
+  /// Uses <see cref="ParallelBitExtract(UInt96, UInt96)"/> with interleaved 2-bit pair masks.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// UInt96 value = 0x123456789ABC;
+  /// var (odd, even) = value.PairwiseDeinterleaveBits();
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ulong odd, ulong even) PairwiseDeinterleaveBits(this UInt96 @this) => (
+    (ulong)ParallelBitExtract(@this, new UInt96(0x33333333U, 0x3333333333333333UL)),
+    (ulong)ParallelBitExtract(@this, new UInt96(0xCCCCCCCCU, 0xCCCCCCCCCCCCCCCCUL))
+  );
+
+  /// <summary>
+  /// Deinterleaves a 96-bit signed integer into two 48-bit streams by splitting adjacent bit pairs.
+  /// </summary>
+  /// <param name="this">The 96-bit value to deinterleave.</param>
+  /// <returns>
+  /// A tuple with <c>odd</c> and <c>even</c> 64-bit values representing extracted 2-bit groups (48 bits each).
+  /// </returns>
+  /// <remarks>
+  /// Uses <see cref="ParallelBitExtract(Int96, Int96)"/> with interleaved 2-bit pair masks.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Int96 value = 0x123456789ABC;
+  /// var (odd, even) = value.PairwiseDeinterleaveBits();
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ulong odd, ulong even) PairwiseDeinterleaveBits(this Int96 @this) => (
+    (ulong)ParallelBitExtract(@this, new Int96(0x33333333U, 0x3333333333333333UL)),
+    (ulong)ParallelBitExtract(@this, new Int96(0xCCCCCCCCU, 0xCCCCCCCCCCCCCCCCUL))
+  );
+
+  /// <summary>
+  /// Deinterleaves a 128-bit unsigned integer into two 64-bit streams by splitting adjacent bit pairs.
+  /// </summary>
+  /// <param name="this">The 128-bit value to deinterleave.</param>
+  /// <returns>
+  /// A tuple with <c>odd</c> and <c>even</c> 64-bit values representing extracted 2-bit groups.
+  /// </returns>
+  /// <remarks>
+  /// Uses <see cref="ParallelBitExtract(UInt128, UInt128)"/> with interleaved 2-bit pair masks.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// UInt128 value = 0x123456789ABCDEF0;
+  /// var (odd, even) = value.PairwiseDeinterleaveBits();
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ulong odd, ulong even) PairwiseDeinterleaveBits(this UInt128 @this) => (
+    (ulong)ParallelBitExtract(@this, new UInt128(0x3333333333333333UL, 0x3333333333333333UL)),
+    (ulong)ParallelBitExtract(@this, new UInt128(0xCCCCCCCCCCCCCCCCUL, 0xCCCCCCCCCCCCCCCCUL))
+  );
+
+  /// <summary>
+  /// Deinterleaves a 128-bit signed integer into two 64-bit streams by splitting adjacent bit pairs.
+  /// </summary>
+  /// <param name="this">The 128-bit value to deinterleave.</param>
+  /// <returns>
+  /// A tuple with <c>odd</c> and <c>even</c> 64-bit values representing extracted 2-bit groups.
+  /// </returns>
+  /// <remarks>
+  /// Uses <see cref="ParallelBitExtract(Int128, Int128)"/> with interleaved 2-bit pair masks.
+  /// </remarks>
+  /// <example>
+  /// <code>
+  /// Int128 value = 0x123456789ABCDEF0;
+  /// var (odd, even) = value.PairwiseDeinterleaveBits();
+  /// </code>
+  /// </example>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static (ulong odd, ulong even) PairwiseDeinterleaveBits(this Int128 @this) => (
+    (ulong)ParallelBitExtract(@this, new Int128(0x3333333333333333UL, 0x3333333333333333UL)),
+    (ulong)ParallelBitExtract(@this, new Int128(0xCCCCCCCCCCCCCCCCUL, 0xCCCCCCCCCCCCCCCCUL))
+  );
+
+  /// <summary>
   /// Toggles (inverts) the bit at the specified index in the <see cref="byte"/> value.
   /// </summary>
   /// <param name="this">The source byte.</param>
@@ -1344,6 +1874,154 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static ulong ClearBit(this ulong @this, byte index) => @this & ~(1UL << (index & 63));
+
+  #region 96-bit and 128-bit Bit Manipulation
+
+  /// <summary>
+  /// Gets the value of the bit at the specified index in the <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns><see langword="true"/> if the bit is set; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this UInt96 @this, byte index) => (@this & (UInt96.One << (index % 96))) != UInt96.Zero;
+
+  /// <summary>
+  /// Gets the value of the bit at the specified index in the <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns><see langword="true"/> if the bit is set; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this Int96 @this, byte index) => (@this & (Int96.One << (index % 96))) != Int96.Zero;
+
+  /// <summary>
+  /// Gets the value of the bit at the specified index in the <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns><see langword="true"/> if the bit is set; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this UInt128 @this, byte index) => (@this & (UInt128.One << (index & 127))) != UInt128.Zero;
+
+  /// <summary>
+  /// Gets the value of the bit at the specified index in the <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns><see langword="true"/> if the bit is set; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GetBit(this Int128 @this, byte index) => (@this & (Int128.One << (index & 127))) != Int128.Zero;
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="UInt96"/> to 1.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="UInt96"/> with the specified bit set.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt96 SetBit(this UInt96 @this, byte index) => @this | (UInt96.One << (index % 96));
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="Int96"/> to 1.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="Int96"/> with the specified bit set.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int96 SetBit(this Int96 @this, byte index) => @this | (Int96.One << (index % 96));
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="UInt128"/> to 1.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="UInt128"/> with the specified bit set.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt128 SetBit(this UInt128 @this, byte index) => @this | (UInt128.One << (index & 127));
+
+  /// <summary>
+  /// Sets the bit at the specified index in the <see cref="Int128"/> to 1.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="Int128"/> with the specified bit set.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int128 SetBit(this Int128 @this, byte index) => @this | (Int128.One << (index & 127));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="UInt96"/>.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="UInt96"/> with the specified bit cleared.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt96 ClearBit(this UInt96 @this, byte index) => @this & ~(UInt96.One << (index % 96));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="Int96"/>.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="Int96"/> with the specified bit cleared.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int96 ClearBit(this Int96 @this, byte index) => @this & ~(Int96.One << (index % 96));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="UInt128"/>.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="UInt128"/> with the specified bit cleared.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt128 ClearBit(this UInt128 @this, byte index) => @this & ~(UInt128.One << (index & 127));
+
+  /// <summary>
+  /// Clears (sets to 0) the bit at the specified index in the <see cref="Int128"/>.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="Int128"/> with the specified bit cleared.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int128 ClearBit(this Int128 @this, byte index) => @this & ~(Int128.One << (index & 127));
+
+  /// <summary>
+  /// Toggles (inverts) the bit at the specified index in the <see cref="UInt96"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="UInt96"/> with the specified bit flipped.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt96 FlipBit(this UInt96 @this, byte index) => @this ^ (UInt96.One << (index % 96));
+
+  /// <summary>
+  /// Toggles (inverts) the bit at the specified index in the <see cref="Int96"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–95). Values outside the range are wrapped using modulo 96.</param>
+  /// <returns>A new <see cref="Int96"/> with the specified bit flipped.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int96 FlipBit(this Int96 @this, byte index) => @this ^ (Int96.One << (index % 96));
+
+  /// <summary>
+  /// Toggles (inverts) the bit at the specified index in the <see cref="UInt128"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="UInt128"/> with the specified bit flipped.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static UInt128 FlipBit(this UInt128 @this, byte index) => @this ^ (UInt128.One << (index & 127));
+
+  /// <summary>
+  /// Toggles (inverts) the bit at the specified index in the <see cref="Int128"/> value.
+  /// </summary>
+  /// <param name="this">The source value.</param>
+  /// <param name="index">The bit index (0–127). Values outside the range are masked with 127.</param>
+  /// <returns>A new <see cref="Int128"/> with the specified bit flipped.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Int128 FlipBit(this Int128 @this, byte index) => @this ^ (Int128.One << (index & 127));
+
+  #endregion
 
   /// <summary>
   /// Performs linear interpolation between two byte values using a normalized byte parameter.
@@ -2079,8 +2757,8 @@ public static partial class MathEx {
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public decimal Pow(decimal exponent, decimal epsilon = 0) {
-      Against.NegativeValues(epsilon);
-
+      ArgumentOutOfRangeException.ThrowIfNegative(epsilon);
+      
       return exponent switch {
         0 => 1,
         1 => @this,
@@ -2360,6 +3038,393 @@ public static partial class MathEx {
     /// </example>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float LogN(float @base) => MathF.Log(@this, @base);
+
+    /// <summary>
+    ///   Calculates the cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Cot() => MathF.Cos(@this) / MathF.Sin(@this);
+
+    /// <summary>
+    ///   Calculates the hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Coth() {
+      var ex = MathF.Exp(@this);
+      var em = 1f / ex;
+      return (ex + em) / (ex - em);
+    }
+
+    /// <summary>
+    ///   Calculates the cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Csc() => 1f / MathF.Sin(@this);
+
+    /// <summary>
+    ///   Calculates the hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Csch() {
+      var ex = MathF.Exp(@this);
+      return 2f / (ex - 1f / ex);
+    }
+
+    /// <summary>
+    ///   Calculates the secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Sec() => 1f / MathF.Cos(@this);
+
+    /// <summary>
+    ///   Calculates the hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Sech() {
+      var ex = MathF.Exp(@this);
+      return 2f / (ex + 1f / ex);
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Arsinh() => MathF.Log(@this + MathF.Sqrt(@this * @this + 1f));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Arcosh() => MathF.Log(@this + MathF.Sqrt(@this * @this - 1f));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Artanh() => 0.5f * MathF.Log((1f + @this) / (1f - @this));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Arcoth() => 0.5f * MathF.Log((@this + 1f) / (@this - 1f));
+
+    /// <summary>
+    ///   Calculates the area hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Arsech() => MathF.Log((1f + MathF.Sqrt(1f - @this * @this)) / @this);
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Arcsch() => MathF.Log((1f + MathF.Sqrt(1f + @this * @this)) / @this);
+
+    /// <summary>
+    ///   Calculates the arcus sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Asin() => MathF.Asin(@this);
+
+    /// <summary>
+    ///   Calculates the arcus cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Acos() => MathF.Acos(@this);
+
+    /// <summary>
+    ///   Calculates the arcus tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Atan() => MathF.Atan(@this);
+
+    /// <summary>
+    ///   Calculates the arcus cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Acot() => MathF.Atan(1f / @this);
+
+    /// <summary>
+    ///   Calculates the arcus secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Asec() => MathF.Acos(1f / @this);
+
+    /// <summary>
+    ///   Calculates the arcus cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Acsc() => MathF.Asin(1f / @this);
+  }
+
+  /// <param name="this">This Half value.</param>
+  extension(Half @this)
+  {
+    /// <summary>
+    /// Returns the largest integral value less than or equal to the specified half-precision floating-point number.
+    /// </summary>
+    /// <returns>The largest integer less than or equal to <paramref name="this"/>.</returns>
+    /// <example>
+    /// <code>
+    /// Half value = (Half)3.7f;
+    /// Half result = value.Floor(); // result = 3.0
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Floor() => (Half)MathF.Floor((float)@this);
+
+    /// <summary>
+    /// Returns the smallest integral value greater than or equal to the specified half-precision floating-point number.
+    /// </summary>
+    /// <returns>The smallest integer greater than or equal to <paramref name="this"/>.</returns>
+    /// <example>
+    /// <code>
+    /// Half value = (Half)3.2f;
+    /// Half result = value.Ceiling(); // result = 4.0
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Ceiling() => (Half)MathF.Ceiling((float)@this);
+
+    /// <summary>
+    /// Calculates the integral part of the specified half-precision floating-point number by removing any fractional digits.
+    /// </summary>
+    /// <returns>The integral part of <paramref name="this"/>, rounded toward zero.</returns>
+    /// <example>
+    /// <code>
+    /// Half value = (Half)(-3.9f);
+    /// Half result = value.Truncate(); // result = -3.0
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Truncate() => (Half)MathF.Truncate((float)@this);
+
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <returns>
+    ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+    ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+    ///   returned.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Round() => (Half)MathF.Round((float)@this);
+
+    /// <summary>Rounds a value to the nearest integral value, and rounds midpoint values to the nearest even number.</summary>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <returns>
+    ///   The integer nearest the <paramref name="this" /> parameter. If the fractional component of
+    ///   <paramref name="this" /> is halfway between two integers, one of which is even and the other odd, the even number is
+    ///   returned.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Round(int digits) {
+      Against.ValuesOutOfRange(digits, 0, 15);
+
+      return (Half)MathF.Round((float)@this, digits);
+    }
+
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Round(MidpointRounding method) => (Half)MathF.Round((float)@this, method);
+
+    /// <summary>Rounds a value to an integer using the specified rounding convention.</summary>
+    /// <param name="digits">The number of decimal places in the return value.</param>
+    /// <param name="method">One of the enumeration values that specifies which rounding strategy to use.</param>
+    /// <returns>The integer that <paramref name="this" /> is rounded to.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Round(int digits, MidpointRounding method) {
+      Against.ValuesOutOfRange(digits, 0, 15);
+      Against.UnknownEnumValues(method);
+
+      return (Half)MathF.Round((float)@this, digits, method);
+    }
+
+    /// <summary>
+    /// Calculates the logarithm of a specified number in a specified base.
+    /// </summary>
+    /// <param name="base">(Base) The base of the logarithm.</param>
+    /// <returns>The logarithm of <paramref name="this"/> in the specified <paramref name="base"/>.</returns>
+    /// <example>
+    /// <code>
+    /// Half result = ((Half)8).LogN((Half)2); // result = 3.0
+    /// </code>
+    /// </example>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half LogN(Half @base) => (Half)MathF.Log((float)@this, (float)@base);
+
+    /// <summary>
+    ///   Calculates the cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Cot() => (Half)(MathF.Cos((float)@this) / MathF.Sin((float)@this));
+
+    /// <summary>
+    ///   Calculates the hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Coth() {
+      var ex = MathF.Exp((float)@this);
+      var em = 1f / ex;
+      return (Half)((ex + em) / (ex - em));
+    }
+
+    /// <summary>
+    ///   Calculates the cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Csc() => (Half)(1f / MathF.Sin((float)@this));
+
+    /// <summary>
+    ///   Calculates the hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Csch() {
+      var ex = MathF.Exp((float)@this);
+      return (Half)(2f / (ex - 1f / ex));
+    }
+
+    /// <summary>
+    ///   Calculates the secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Sec() => (Half)(1f / MathF.Cos((float)@this));
+
+    /// <summary>
+    ///   Calculates the hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Sech() {
+      var ex = MathF.Exp((float)@this);
+      return (Half)(2f / (ex + 1f / ex));
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Arsinh() {
+      var f = (float)@this;
+      return (Half)MathF.Log(f + MathF.Sqrt(f * f + 1f));
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Arcosh() {
+      var f = (float)@this;
+      return (Half)MathF.Log(f + MathF.Sqrt(f * f - 1f));
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Artanh() {
+      var f = (float)@this;
+      return (Half)(0.5f * MathF.Log((1f + f) / (1f - f)));
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Arcoth() {
+      var f = (float)@this;
+      return (Half)(0.5f * MathF.Log((f + 1f) / (f - 1f)));
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Arsech() {
+      var f = (float)@this;
+      return (Half)MathF.Log((1f + MathF.Sqrt(1f - f * f)) / f);
+    }
+
+    /// <summary>
+    ///   Calculates the area hyperbolic cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Arcsch() {
+      var f = (float)@this;
+      return (Half)MathF.Log((1f + MathF.Sqrt(1f + f * f)) / f);
+    }
+
+    /// <summary>
+    ///   Calculates the arcus sine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Asin() => (Half)MathF.Asin((float)@this);
+
+    /// <summary>
+    ///   Calculates the arcus cosine.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Acos() => (Half)MathF.Acos((float)@this);
+
+    /// <summary>
+    ///   Calculates the arcus tangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Atan() => (Half)MathF.Atan((float)@this);
+
+    /// <summary>
+    ///   Calculates the arcus cotangent.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Acot() => (Half)MathF.Atan(1f / (float)@this);
+
+    /// <summary>
+    ///   Calculates the arcus secant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Asec() => (Half)MathF.Acos(1f / (float)@this);
+
+    /// <summary>
+    ///   Calculates the arcus cosecant.
+    /// </summary>
+    /// <returns>Calculation result</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Half Acsc() => (Half)MathF.Asin(1f / (float)@this);
   }
 
   /// <summary>
@@ -2455,6 +3520,38 @@ public static partial class MathEx {
   /// </example>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsPowerOfTwo(this ulong @this) => @this != 0 && (@this & (@this - 1)) == 0;
+
+  /// <summary>
+  /// Determines whether the specified value is a power of two.
+  /// </summary>
+  /// <param name="this">The value to test.</param>
+  /// <returns><see langword="true"/> if the value is a power of two; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPowerOfTwo(this UInt96 @this) => @this != UInt96.Zero && (@this & (@this - UInt96.One)) == UInt96.Zero;
+
+  /// <summary>
+  /// Determines whether the specified value is a power of two.
+  /// </summary>
+  /// <param name="this">The value to test.</param>
+  /// <returns><see langword="true"/> if the value is a power of two; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPowerOfTwo(this Int96 @this) => @this > Int96.Zero && (@this & (@this - Int96.One)) == Int96.Zero;
+
+  /// <summary>
+  /// Determines whether the specified value is a power of two.
+  /// </summary>
+  /// <param name="this">The value to test.</param>
+  /// <returns><see langword="true"/> if the value is a power of two; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPowerOfTwo(this UInt128 @this) => @this != UInt128.Zero && (@this & (@this - UInt128.One)) == UInt128.Zero;
+
+  /// <summary>
+  /// Determines whether the specified value is a power of two.
+  /// </summary>
+  /// <param name="this">The value to test.</param>
+  /// <returns><see langword="true"/> if the value is a power of two; otherwise, <see langword="false"/>.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsPowerOfTwo(this Int128 @this) => @this > Int128.Zero && (@this & (@this - Int128.One)) == Int128.Zero;
 
   /// <param name="this">The exponent value.</param>
   extension(decimal @this)

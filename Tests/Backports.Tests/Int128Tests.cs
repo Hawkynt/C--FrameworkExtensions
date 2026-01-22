@@ -212,6 +212,35 @@ public class Int128Tests {
   }
 
   [Test]
+  public void Int128_RightShift_Negative_SignExtends() {
+    Int128 a = Int128.MinValue;
+    var result = a >> 1;
+    Assert.That(Int128.IsNegative(result), Is.True);
+  }
+
+  [Test]
+  public void Int128_UnsignedRightShift_Works() {
+    Int128 a = 16;
+    Assert.That(a >>> 2, Is.EqualTo((Int128)4));
+  }
+
+  [Test]
+  public void Int128_UnsignedRightShift_Negative_ZeroFills() {
+    Int128 a = Int128.MinValue;
+    var result = a >>> 1;
+    Assert.That(Int128.IsNegative(result), Is.False);
+    Assert.That(Int128.IsPositive(result), Is.True);
+  }
+
+  [Test]
+  public void Int128_UnsignedRightShift_DiffersFromRightShift_ForNegative() {
+    Int128 a = -1;
+    Assert.That(a >> 1, Is.EqualTo((Int128)(-1)));
+    Assert.That(a >>> 1, Is.Not.EqualTo(a >> 1));
+    Assert.That(Int128.IsPositive(a >>> 1), Is.True);
+  }
+
+  [Test]
   public void Int128_ToString_Works() {
     Int128 a = 12345;
     Assert.That(a.ToString(), Is.EqualTo("12345"));

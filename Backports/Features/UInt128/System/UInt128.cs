@@ -450,6 +450,8 @@ public readonly struct UInt128 : IComparable, IComparable<UInt128>, IEquatable<U
     return new(value._upper >> shiftAmount, (value._lower >> shiftAmount) | (value._upper << (64 - shiftAmount)));
   }
 
+  public static UInt128 operator >>>(UInt128 value, int shiftAmount) => value >> shiftAmount;
+
   // Implicit conversions from smaller types
   public static implicit operator UInt128(byte value) => new(0, value);
   public static implicit operator UInt128(ushort value) => new(0, value);

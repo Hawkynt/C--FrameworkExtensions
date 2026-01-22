@@ -183,6 +183,25 @@ public class UInt128Tests {
   }
 
   [Test]
+  public void UInt128_UnsignedRightShift_Works() {
+    UInt128 a = 16;
+    Assert.That(a >>> 2, Is.EqualTo((UInt128)4));
+  }
+
+  [Test]
+  public void UInt128_UnsignedRightShift_SameAsRightShift_ForUnsignedType() {
+    UInt128 a = UInt128.MaxValue;
+    Assert.That(a >>> 4, Is.EqualTo(a >> 4));
+  }
+
+  [Test]
+  public void UInt128_UnsignedRightShift_LargeShift_Works() {
+    var a = new UInt128(0x8000000000000000, 0);
+    var result = a >>> 64;
+    Assert.That(result, Is.EqualTo((UInt128)0x8000000000000000));
+  }
+
+  [Test]
   public void UInt128_ToString_Works() {
     UInt128 a = 12345;
     Assert.That(a.ToString(), Is.EqualTo("12345"));

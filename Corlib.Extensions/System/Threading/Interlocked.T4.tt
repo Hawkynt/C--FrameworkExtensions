@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -8,19 +8,19 @@
 /*
   This file is part of Hawkynt's .NET Framework extensions.
 
-    Hawkynt's .NET Framework extensions are free software: 
+    Hawkynt's .NET Framework extensions are free software:
     you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    Hawkynt's .NET Framework extensions is distributed in the hope that 
-    it will be useful, but WITHOUT ANY WARRANTY; without even the implied 
+    Hawkynt's .NET Framework extensions is distributed in the hope that
+    it will be useful, but WITHOUT ANY WARRANTY; without even the implied
     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
     the GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Hawkynt's .NET Framework extensions.  
+    along with Hawkynt's .NET Framework extensions.
     If not, see <http://www.gnu.org/licenses/>.
 */
 #endregion
@@ -36,316 +36,448 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 // ReSharper disable CompareOfFloatsByEqualityOperator
 namespace System.Threading;
 
+/// <summary>
+/// Contains helper classes for unsigned integer atomic operations that require IL generation.
+/// </summary>
+<#foreach(var type in new[]{"uint","ulong"}){
+    var signedType=type.Substring(1);
+    var helperClassName="InterlockedHelperFor"+type[0].ToString().ToUpperInvariant()+type.Substring(1);
+#>
+
+file static class <#=helperClassName#> {
+  public delegate <#=type#> CompareExchangeDelegateType(ref <#=type#> source, <#=type#> value, <#=type#> comparand);
+  public delegate <#=type#> ExchangeDelegateType(ref <#=type#> source, <#=type#> value);
+  public static readonly CompareExchangeDelegateType CompareExchangeImplementation = _CreateCompareExchangeImplementation();
+  public static readonly ExchangeDelegateType ExchangeImplementation = _CreateExchangeImplementation();
+
+  private static CompareExchangeDelegateType _CreateCompareExchangeImplementation() {
+    var originalType = typeof(<#=type#>);
+    var signedType = typeof(<#=signedType#>);
+    DynamicMethod dynamicMethod = new(string.Empty, originalType, [originalType.MakeByRefType(), originalType, originalType]);
+    var ilGenerator = dynamicMethod.GetILGenerator();
+    ilGenerator.Emit(OpCodes.Ldarg_0);
+    ilGenerator.Emit(OpCodes.Ldarg_1);
+    ilGenerator.Emit(OpCodes.Ldarg_2);
+    ilGenerator.Emit(
+      OpCodes.Call,
+      typeof(Interlocked).GetMethod(
+        nameof(Interlocked.CompareExchange),
+        BindingFlags.Static | BindingFlags.Public,
+        null,
+        [signedType.MakeByRefType(), signedType, signedType],
+        null
+      )
+    );
+    ilGenerator.Emit(OpCodes.Ret);
+    return (CompareExchangeDelegateType)dynamicMethod.CreateDelegate(typeof(CompareExchangeDelegateType));
+  }
+
+  private static ExchangeDelegateType _CreateExchangeImplementation() {
+    var originalType = typeof(<#=type#>);
+    var signedType = typeof(<#=signedType#>);
+    DynamicMethod dynamicMethod = new(string.Empty, originalType, [originalType.MakeByRefType(), originalType]);
+    var ilGenerator = dynamicMethod.GetILGenerator();
+    ilGenerator.Emit(OpCodes.Ldarg_0);
+    ilGenerator.Emit(OpCodes.Ldarg_1);
+    ilGenerator.Emit(
+      OpCodes.Call,
+      typeof(Interlocked).GetMethod(
+        nameof(Interlocked.Exchange),
+        BindingFlags.Static | BindingFlags.Public,
+        null,
+        [signedType.MakeByRefType(), signedType],
+        null
+      )
+    );
+    ilGenerator.Emit(OpCodes.Ret);
+    return (ExchangeDelegateType)dynamicMethod.CreateDelegate(typeof(ExchangeDelegateType));
+  }
+}
+<#}#>
+
+/// <summary>
+/// Provides extended atomic operations for numeric types via extension methods on <see cref="Interlocked"/>.
+/// Supports int, long, float, double, uint, and ulong with operations like Add, Multiply, Divide, and bitwise operations.
+/// </summary>
 public static partial class InterlockedEx {
-      
-  <#foreach(var type in new[]{"int","long","float","double","uint","ulong"}){
-      var isIntegerType=type=="int"||type=="long"||type=="uint"||type=="ulong";
-      var isUnsupported=type=="uint"||type=="ulong";
-      var isUnsigned=type=="uint"||type=="ulong";
-      var unsignedType=isUnsigned?type:"u"+type;
-      var signedType=isUnsigned?type.Substring(1):type;
-      var supportsNativeIncrementDecrement=type=="int"||type=="long";
-      var supportsNativeAdd=type=="int"||type=="long";
-      var supportsNativeExchange=type=="int"||type=="long"||type=="float"||type=="double";
-      var helperClassName="HelperFor"+type[0].ToString().ToUpperInvariant()+type.Substring(1);
-      var bitsUsed=type=="uint"||type=="int"||type=="float"?32:64;
-  #>
 
+  extension(Interlocked) {
+<#foreach(var type in new[]{"int","long","float","double","uint","ulong"}){
+    var isIntegerType=type=="int"||type=="long"||type=="uint"||type=="ulong";
+    var isUnsupported=type=="uint"||type=="ulong";
+    var isUnsigned=type=="uint"||type=="ulong";
+    var unsignedType=isUnsigned?type:"u"+type;
+    var signedType=isUnsigned?type.Substring(1):type;
+    var supportsNativeIncrementDecrement=type=="int"||type=="long";
+    var supportsNativeAdd=type=="int"||type=="long";
+    var supportsNativeExchange=type=="int"||type=="long"||type=="float"||type=="double";
+    var helperClassName="InterlockedHelperFor"+type[0].ToString().ToUpperInvariant()+type.Substring(1);
+    var bitsUsed=type=="uint"||type=="int"||type=="float"?32:64;
+    // And/Or are provided by BCL (.NET 5+) or InterlockedPolyfills (older frameworks) for int, long, uint, ulong
+    var hasBuiltInAndOr=type=="int"||type=="long"||type=="uint"||type=="ulong";
+#>
+
+    #region <#=type#>
+
+    /// <summary>Compares two values for equality and, if they are equal, replaces the first value.</summary>
+    /// <param name="source">The destination, whose value is compared with <paramref name="comparand"/> and possibly replaced.</param>
+    /// <param name="value">The value that replaces the destination value if the comparison results in equality.</param>
+    /// <param name="comparand">The value that is compared to the value at <paramref name="source"/>.</param>
+    /// <returns>The original value in <paramref name="source"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
 <#if(isUnsupported){#>
-  private static class <#=helperClassName#> {
-    public delegate <#=type#> CompareExchangeDelegateType(ref <#=type#> source, <#=type#> value, <#=type#> comparand);
-    public delegate <#=type#> ExchangeDelegateType(ref <#=type#> source, <#=type#> value);
-    public static readonly CompareExchangeDelegateType CompareExchangeImplementation = _CreateCompareExchangeImplementation();
-    public static readonly ExchangeDelegateType ExchangeImplementation = _CreateExchangeImplementation();
-      
-    private static CompareExchangeDelegateType _CreateCompareExchangeImplementation() {
-      var originalType = typeof(<#=type#>);
-      var signedType = typeof(<#=signedType#>);
-      DynamicMethod dynamicMethod = new(string.Empty, originalType, [originalType.MakeByRefType(), originalType, originalType]);
-      var ilGenerator = dynamicMethod.GetILGenerator();
-      ilGenerator.Emit(OpCodes.Ldarg_0);
-      ilGenerator.Emit(OpCodes.Ldarg_1);
-      ilGenerator.Emit(OpCodes.Ldarg_2);
-      ilGenerator.Emit(
-        OpCodes.Call,
-        typeof(Interlocked).GetMethod(
-          nameof(Interlocked.CompareExchange),
-          BindingFlags.Static | BindingFlags.Public,
-          null,
-          [signedType.MakeByRefType(), signedType, signedType],
-          null
-        )
-      );
-      ilGenerator.Emit(OpCodes.Ret);
-      return (CompareExchangeDelegateType)dynamicMethod.CreateDelegate(typeof(CompareExchangeDelegateType));
-    }
-
-    private static ExchangeDelegateType _CreateExchangeImplementation() {
-      var originalType = typeof(<#=type#>);
-      var signedType = typeof(<#=signedType#>);
-      DynamicMethod dynamicMethod = new(string.Empty, originalType, [originalType.MakeByRefType(), originalType]);
-      var ilGenerator = dynamicMethod.GetILGenerator();
-      ilGenerator.Emit(OpCodes.Ldarg_0);
-      ilGenerator.Emit(OpCodes.Ldarg_1);
-      ilGenerator.Emit(
-        OpCodes.Call,
-        typeof(Interlocked).GetMethod(
-          nameof(Interlocked.Exchange),
-          BindingFlags.Static | BindingFlags.Public,
-          null,
-          [signedType.MakeByRefType(), signedType],
-          null
-        )
-      );
-      ilGenerator.Emit(OpCodes.Ret);
-      return (ExchangeDelegateType)dynamicMethod.CreateDelegate(typeof(ExchangeDelegateType));
-    }
-  }
-<#}#>
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-<#if(isUnsupported){#>
-  public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => <#=helperClassName#>.CompareExchangeImplementation(ref source, value, comparand);
+    public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand)
+      => <#=helperClassName#>.CompareExchangeImplementation(ref source, value, comparand);
 <#}else{#>
-  public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand) => Interlocked.CompareExchange(ref source, value, comparand);
+    public static <#=type#> CompareExchange(ref <#=type#> source, <#=type#> value, <#=type#> comparand)
+      => Interlocked.CompareExchange(ref source, value, comparand);
 <#}#>
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
+    /// <summary>Returns a value, loaded as an atomic operation.</summary>
+    /// <param name="source">The variable to load.</param>
+    /// <returns>The loaded value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
 <#if(isUnsupported){#>
-  public static <#=type#> Read(ref <#=type#> source) => <#=helperClassName#>.CompareExchangeImplementation(ref source, 0, 0);
+    public static <#=type#> Read(ref <#=type#> source)
+      => <#=helperClassName#>.CompareExchangeImplementation(ref source, 0, 0);
 <#}else{#>
-  public static <#=type#> Read(ref <#=type#> source) => Interlocked.CompareExchange(ref source, 0, 0);
+    public static <#=type#> Read(ref <#=type#> source)
+      => Interlocked.CompareExchange(ref source, 0, 0);
 <#}#>
 
+    /// <summary>Sets a variable to a specified value and returns the original value, as an atomic operation.</summary>
+    /// <param name="source">The variable to set to the specified value.</param>
+    /// <param name="value">The value to which the <paramref name="source"/> parameter is set.</param>
+    /// <returns>The original value of <paramref name="source"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
 <#if(supportsNativeExchange){#>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Exchange(ref <#=type#> source, <#=type#> value) => Interlocked.Exchange(ref source, value);
+    public static <#=type#> Exchange(ref <#=type#> source, <#=type#> value)
+      => Interlocked.Exchange(ref source, value);
 <#}else{#>
-  public static <#=type#> Exchange(ref <#=type#> source, <#=type#> value) => <#=helperClassName#>.ExchangeImplementation(ref source, value);
+    public static <#=type#> Exchange(ref <#=type#> source, <#=type#> value)
+      => <#=helperClassName#>.ExchangeImplementation(ref source, value);
 <#}#>
 
+    /// <summary>Increments a specified variable and stores the result, as an atomic operation.</summary>
+    /// <param name="source">The variable whose value is to be incremented.</param>
+    /// <returns>The incremented value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
 <#if(supportsNativeIncrementDecrement){#>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Increment(ref <#=type#> source) => Interlocked.Increment(ref source);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Decrement(ref <#=type#> source) => Interlocked.Decrement(ref source);
+    public static <#=type#> Increment(ref <#=type#> source)
+      => Interlocked.Increment(ref source);
 <#}else{#>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Increment(ref <#=type#> source) => Add(ref source, 1);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Decrement(ref <#=type#> source) => Substract(ref source, 1);
+    public static <#=type#> Increment(ref <#=type#> source)
+      => Add(ref source, 1);
 <#}#>
 
+    /// <summary>Decrements a specified variable and stores the result, as an atomic operation.</summary>
+    /// <param name="source">The variable whose value is to be decremented.</param>
+    /// <returns>The decremented value.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
+<#if(supportsNativeIncrementDecrement){#>
+    public static <#=type#> Decrement(ref <#=type#> source)
+      => Interlocked.Decrement(ref source);
+<#}else{#>
+    public static <#=type#> Decrement(ref <#=type#> source)
+      => Subtract(ref source, 1);
+<#}#>
+
+    /// <summary>Adds two values and replaces the first value with the sum, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value to be added. The sum of the two values is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to be added to the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
 <#if(supportsNativeAdd){#>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Add(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, value);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  [DebuggerStepThrough]
-  public static <#=type#> Substract(ref <#=type#> source, <#=type#> value) => Interlocked.Add(ref source, -value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
+    public static <#=type#> Add(ref <#=type#> source, <#=type#> value)
+      => Interlocked.Add(ref source, value);
 <#}else{#>
-  public static <#=type#> Add(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current + value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
+    public static <#=type#> Add(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current + value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
     }
-  }
-
-  public static <#=type#> Substract(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current - value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
 <#}#>
 
-  public static <#=type#> Multiply(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current * value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
+    /// <summary>Subtracts a value from another and replaces the first value with the difference, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be subtracted from. The difference is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to be subtracted from the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+<#if(supportsNativeAdd){#>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [DebuggerStepThrough]
+    public static <#=type#> Subtract(ref <#=type#> source, <#=type#> value)
+      => Interlocked.Add(ref source, -value);
+<#}else{#>
+    public static <#=type#> Subtract(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current - value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
     }
-  }
+<#}#>
 
-  public static <#=type#> Divide(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current / value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
+    /// <summary>Multiplies two values and replaces the first value with the product, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value to be multiplied. The product is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to multiply with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Multiply(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current * value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
     }
-  }
 
-  public static <#=type#> Modulo(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current % value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
+    /// <summary>Divides a value by another and replaces the first value with the quotient, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the dividend. The quotient is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The divisor.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Divide(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current / value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
     }
-  }
+
+    /// <summary>Computes the modulo of a value and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the dividend. The remainder is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The divisor.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Modulo(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current % value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
 <#if(isIntegerType){#>
+<#if(!hasBuiltInAndOr){#>
 
-  public static <#=type#> And(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current & value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
+    /// <summary>Bitwise ANDs two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to AND with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> And(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.And(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
     }
-  }
-
-  public static <#=type#> NAnd(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = ~(current & value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> Or(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current | value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> NOr(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = ~(current | value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> Xor(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current ^ value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> NXor(ref <#=type#> source, <#=type#> value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = ~(current ^ value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> Not(ref <#=type#> source) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = ~current;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-<#if(isUnsigned){#>
-  public static <#=type#> ShiftLeft(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current << value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> ShiftRight(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current >> value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> RotateLeft(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current << value | current >> (<#=bitsUsed#> - value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> RotateRight(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current >> value | current << (<#=bitsUsed#> - value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-<#}else{#>
-  public static <#=type#> ArithmeticShiftLeft(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current << value;
-      if(next < current)
-        throw new OverflowException("Shifted value bits into the sign bit");
-
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> ArithmeticShiftRight(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = current >> value;
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> LogicalShiftLeft(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      var next = (<#=type#>)((<#=unsignedType#>)current << value);
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
-
-  public static <#=type#> LogicalShiftRight(ref <#=type#> source, int value) {
-    for (;;) {
-      var current = Read(ref source);
-      //var next = (<#=type#>)((<#=unsignedType#>)current >> value);
-      var next = current >>> value;
-      if(next > current)
-        throw new OverflowException("Shifted sign bit into value bits");
-
-      if (CompareExchange(ref source, next, current) == current)
-        return next;
-    }
-  }
 <#}#>
 
-    <#}#>
-  <#}#>
+    /// <summary>Bitwise NANDs two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to NAND with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> NAnd(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Nand(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
 
+<#if(!hasBuiltInAndOr){#>
+    /// <summary>Bitwise ORs two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to OR with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Or(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Or(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+<#}#>
+
+    /// <summary>Bitwise NORs two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to NOR with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> NOr(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Nor(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Bitwise XORs two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to XOR with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Xor(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Xor(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Bitwise XNORs (equivalence) two values and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to XNOR with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> NXor(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Equ(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Bitwise NOTs a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be inverted. The result is stored in <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> Not(ref <#=type#> source) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.Not();
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+<#if(isUnsigned){#>
+
+    /// <summary>Left-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> ShiftLeft(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current << value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Right-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> ShiftRight(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current >> value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Rotates a value left and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be rotated. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to rotate.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> RotateLeft(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.RotateLeft(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Rotates a value right and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be rotated. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to rotate.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> RotateRight(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.RotateRight(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+<#}else{#>
+
+    /// <summary>Arithmetic left-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    /// <exception cref="OverflowException">Thrown when the shift causes overflow into the sign bit.</exception>
+    public static <#=type#> ArithmeticShiftLeft(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current << value;
+        if (next < current)
+          throw new OverflowException("Shifted value bits into the sign bit");
+
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Arithmetic right-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> ArithmeticShiftRight(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current >> value;
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Logical left-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> LogicalShiftLeft(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = (<#=type#>)((<#=unsignedType#>)current << value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Logical right-shifts a value and replaces it with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the value to be shifted. The result is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The number of bits to shift.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    /// <exception cref="OverflowException">Thrown when the shift causes the sign bit to move into value bits.</exception>
+    public static <#=type#> LogicalShiftRight(ref <#=type#> source, byte value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current >>> value;
+        if (next > current)
+          throw new OverflowException("Shifted sign bit into value bits");
+
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+<#}#>
+<#}#>
+
+    #endregion
+<#}#>
+  }
 }

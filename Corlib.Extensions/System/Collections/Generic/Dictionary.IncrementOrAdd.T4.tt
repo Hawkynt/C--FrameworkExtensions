@@ -32,26 +32,34 @@ using Guard;
 namespace System.Collections.Generic;
 
 public static partial class DictionaryExtensions {
-  
-<#
-// Numeric types that support IncrementOrAdd with default value of 1
-var types = new[] { "byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong", "float", "double", "decimal", "Half", "Int128", "UInt128" };
 
-foreach(var type in types) {
+<#
+// Numeric types that support arithmetic operations
+var numericTypes = new[] { "byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong", "float", "double", "decimal", "Half", "Int96", "UInt96", "Int128", "UInt128" };
+
+// Integer types that support bitwise operations
+var integerTypes = new[] { "byte", "sbyte", "short", "ushort", "int", "uint", "long", "ulong", "Int96", "UInt96", "Int128", "UInt128" };
+
+// Unsigned types that support rotation (signed types are excluded due to sign bit ambiguity)
+var unsignedTypes = new[] { "byte", "ushort", "uint", "ulong", "UInt96", "UInt128" };
+
+foreach(var type in numericTypes) {
+  var isInteger = integerTypes.Contains(type);
+  var isUnsigned = unsignedTypes.Contains(type);
 #>
 
+  #region <#= type #>
+
   /// <summary>
-  ///   Increments the value for the given key by the specified amount, or adds the key with the amount if not present.
+  ///   Increments the value for the given key by 1, or adds the key with value 1 if not present.
   ///   Optimized for histogram building - single hash lookup on supported platforms.
   /// </summary>
   /// <typeparam name="TKey">The type of the keys.</typeparam>
   /// <param name="this">This Dictionary.</param>
   /// <param name="key">The key to increment.</param>
-  /// <param name="amount">The amount to add.</param>
   [DebuggerStepThrough]
   public static void IncrementOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key)
-    => IncrementOrAdd<TKey>(@this, key, (<#= type #>) 1)
-    ;
+    => IncrementOrAdd<TKey>(@this, key, (<#= type #>)1);
 
   /// <summary>
   ///   Increments the value for the given key by the specified amount, or adds the key with the amount if not present.
@@ -66,6 +74,345 @@ foreach(var type in types) {
     Against.ThisIsNull(@this);
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) += amount;
   }
+
+  /// <summary>
+  ///   Decrements the value for the given key by 1, or adds the key with value -1 if not present.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to decrement.</param>
+  [DebuggerStepThrough]
+  public static void DecrementOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key)
+    => DecrementOrAdd<TKey>(@this, key, (<#= type #>)1);
+
+  /// <summary>
+  ///   Decrements the value for the given key by the specified amount, or adds the key with the negated amount if not present.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to decrement.</param>
+  /// <param name="amount">The amount to subtract.</param>
+  [DebuggerStepThrough]
+  public static void DecrementOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> amount) {
+    Against.ThisIsNull(@this);
+    CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) -= amount;
+  }
+
+  /// <summary>
+  ///   Sets the value for the given key and returns the previous value (or default if key was not present).
+  ///   Similar to <see cref="System.Threading.Interlocked.Exchange(ref int, int)"/>.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to set.</param>
+  /// <param name="value">The new value.</param>
+  /// <returns>The previous value, or default if the key was not present.</returns>
+  [DebuggerStepThrough]
+  public static <#= type #> ExchangeOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    var oldValue = slot;
+    slot = value;
+    return oldValue;
+  }
+
+  /// <summary>
+  ///   Compares the value for the given key with <paramref name="comparand"/> and, if equal, replaces it with <paramref name="value"/>.
+  ///   Similar to <see cref="System.Threading.Interlocked.CompareExchange(ref int, int, int)"/>.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to compare and set.</param>
+  /// <param name="value">The new value to set if comparison succeeds.</param>
+  /// <param name="comparand">The value to compare against.</param>
+  /// <returns>The original value. If this equals <paramref name="comparand"/>, the exchange succeeded.</returns>
+  [DebuggerStepThrough]
+  public static <#= type #> CompareExchangeOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value, <#= type #> comparand) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    var oldValue = slot;
+    if (oldValue == comparand)
+      slot = value;
+    return oldValue;
+  }
+
+  /// <summary>
+  ///   Multiplies the value for the given key by the specified factor, or sets the key to the factor if not present.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to multiply.</param>
+  /// <param name="factor">The factor to multiply by (or set as initial value).</param>
+  [DebuggerStepThrough]
+  public static void MultiplyOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> factor) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? (<#= type #>)(slot * factor) : factor;
+  }
+
+  /// <summary>
+  ///   Updates the value for the given key to be the maximum of the current value and the specified value.
+  ///   If the key is not present, adds it with the specified value.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to compare against.</param>
+  [DebuggerStepThrough]
+  public static void MaxOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    if (!exists || value > slot)
+      slot = value;
+  }
+
+  /// <summary>
+  ///   Updates the value for the given key to be the minimum of the current value and the specified value.
+  ///   If the key is not present, adds it with the specified value.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to compare against.</param>
+  [DebuggerStepThrough]
+  public static void MinOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    if (!exists || value < slot)
+      slot = value;
+  }
+
+  /// <summary>
+  ///   Divides the value for the given key by the specified divisor, or sets the key to the divisor if not present.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to divide.</param>
+  /// <param name="divisor">The divisor to divide by (or set as initial value).</param>
+  [DebuggerStepThrough]
+  public static void DivideOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> divisor) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? (<#= type #>)(slot / divisor) : divisor;
+  }
+
+  /// <summary>
+  ///   Computes the modulo of the value for the given key with the specified divisor, or sets the key to the divisor if not present.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to compute modulo for.</param>
+  /// <param name="divisor">The divisor for modulo (or set as initial value).</param>
+  [DebuggerStepThrough]
+  public static void ModuloOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> divisor) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? (<#= type #>)(slot % divisor) : divisor;
+  }
+<# if (isInteger) { #>
+
+  /// <summary>
+  ///   Performs a bitwise OR on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with the specified value.
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to OR with.</param>
+  [DebuggerStepThrough]
+  public static void OrOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) |= value;
+  }
+
+  /// <summary>
+  ///   Performs a bitwise AND on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with the default value (0) ANDed with the specified value (resulting in 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to AND with.</param>
+  [DebuggerStepThrough]
+  public static void AndOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) &= value;
+  }
+
+  /// <summary>
+  ///   Performs a bitwise XOR on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with the specified value (0 XOR value = value).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to XOR with.</param>
+  [DebuggerStepThrough]
+  public static void XorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) ^= value;
+  }
+
+  /// <summary>
+  ///   Performs a bitwise NAND (NOT AND) on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with ~value (since ~(0 &amp; value) = ~0 for all bits, but we use ~value for consistency).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to NAND with.</param>
+  [DebuggerStepThrough]
+  public static void NandOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? slot.Nand(value) : value.Not();
+  }
+
+  /// <summary>
+  ///   Performs a bitwise NOR (NOT OR) on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with ~value (since ~(0 | value) = ~value).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to NOR with.</param>
+  [DebuggerStepThrough]
+  public static void NorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? slot.Nor(value) : value.Not();
+  }
+
+  /// <summary>
+  ///   Performs a bitwise XNOR (NOT XOR, equivalence) on the value for the given key with the specified value.
+  ///   If the key is not present, adds it with ~value (since ~(0 ^ value) = ~value).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="value">The value to XNOR with.</param>
+  [DebuggerStepThrough]
+  public static void XnorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? slot.Equ(value) : value.Not();
+  }
+
+  /// <summary>
+  ///   Performs a bitwise NOT on the value for the given key.
+  ///   If the key is not present, adds it with all bits set (~0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  [DebuggerStepThrough]
+  public static void NotOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
+    slot = exists ? slot.Not() : default(<#= type #>).Not();
+  }
+
+  /// <summary>
+  ///   Left-shifts the value for the given key by the specified amount.
+  ///   If the key is not present, adds it with 0 (since 0 &lt;&lt; n = 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="amount">The number of bits to shift left.</param>
+  [DebuggerStepThrough]
+  public static void LeftShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    slot = (<#= type #>)(slot << amount);
+  }
+
+  /// <summary>
+  ///   Right-shifts the value for the given key by the specified amount (arithmetic shift for signed types).
+  ///   If the key is not present, adds it with 0 (since 0 &gt;&gt; n = 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="amount">The number of bits to shift right.</param>
+  [DebuggerStepThrough]
+  public static void RightShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    slot = (<#= type #>)(slot >> amount);
+  }
+
+  /// <summary>
+  ///   Unsigned right-shifts the value for the given key by the specified amount (logical shift, zero-fill).
+  ///   If the key is not present, adds it with 0 (since 0 &gt;&gt;&gt; n = 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="amount">The number of bits to shift right.</param>
+  [DebuggerStepThrough]
+  public static void UnsignedRightShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    slot = (<#= type #>)(slot >>> amount);
+  }
+
+<# if (isUnsigned) { #>
+
+  /// <summary>
+  ///   Rotates the value for the given key left by the specified amount.
+  ///   If the key is not present, adds it with 0 (since rotating 0 yields 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="amount">The number of bits to rotate left.</param>
+  [DebuggerStepThrough]
+  public static void RotateLeftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    slot = slot.RotateLeft((byte)amount);
+  }
+
+  /// <summary>
+  ///   Rotates the value for the given key right by the specified amount.
+  ///   If the key is not present, adds it with 0 (since rotating 0 yields 0).
+  ///   Single hash lookup on supported platforms.
+  /// </summary>
+  /// <typeparam name="TKey">The type of the keys.</typeparam>
+  /// <param name="this">This Dictionary.</param>
+  /// <param name="key">The key to update.</param>
+  /// <param name="amount">The number of bits to rotate right.</param>
+  [DebuggerStepThrough]
+  public static void RotateRightOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
+    Against.ThisIsNull(@this);
+    ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
+    slot = slot.RotateRight((byte)amount);
+  }
+<# } #>
 <# } #>
 
+  #endregion
+
+<# } #>
 }

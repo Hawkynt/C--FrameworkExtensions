@@ -387,6 +387,8 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
     return new(value.Upper >> shiftAmount, (value.Lower >> shiftAmount) | ((ulong)value.Upper << (64 - shiftAmount)));
   }
 
+  public static UInt96 operator >>>(UInt96 value, int shiftAmount) => value >> shiftAmount;
+
   // Implicit conversions from smaller types
   public static implicit operator UInt96(byte value) => new(0, value);
   public static implicit operator UInt96(ushort value) => new(0, value);

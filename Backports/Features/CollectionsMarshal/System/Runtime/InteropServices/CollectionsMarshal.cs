@@ -138,12 +138,16 @@ public static partial class CollectionsMarshalPolyfills {
   /// </summary>
   private static class DictionaryAccessor<TKey, TValue> {
     // ReSharper disable StaticMemberInGenericType
+    private static readonly FieldInfo _bucketsField;
     private static readonly FieldInfo _entriesField;
     private static readonly Type _entryType;
     private static readonly FieldInfo _entryHashCodeField;
+    private static readonly FieldInfo _entryNextField;
     private static readonly FieldInfo _entryKeyField;
     private static readonly FieldInfo _entryValueField;
     private static readonly IEqualityComparer<TKey> _comparer;
+    private static readonly bool _hashCodeIsUInt;
+    private static readonly bool _bucketsAre1Based; // .NET Core uses 1-based bucket indices, .NET Framework uses 0-based
     // ReSharper restore StaticMemberInGenericType
 
     // Delegate that returns pointer to value field in entries array
@@ -155,13 +159,22 @@ public static partial class CollectionsMarshalPolyfills {
       const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
       // Get dictionary fields (handle both .NET Framework and .NET Core naming)
+      // .NET Framework uses "buckets" (no underscore), .NET Core uses "_buckets"
+      var bucketsFieldWithoutUnderscore = dictType.GetField("buckets", flags);
+      _bucketsField = (bucketsFieldWithoutUnderscore ?? dictType.GetField("_buckets", flags)) ?? throw new InvalidOperationException();
       _entriesField = (dictType.GetField("entries", flags) ?? dictType.GetField("_entries", flags)) ?? throw new InvalidOperationException();
+
+      // .NET Framework uses 0-based bucket indices (with -1 sentinel for empty)
+      // .NET Core uses 1-based bucket indices (with 0 sentinel for empty, subtract 1 to get entry index)
+      _bucketsAre1Based = bucketsFieldWithoutUnderscore == null;
 
       // Get Entry type and its fields
       _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException();
       _entryHashCodeField = (_entryType.GetField("hashCode", flags | BindingFlags.Public) ?? _entryType.GetField("_hashCode", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
+      _entryNextField = (_entryType.GetField("next", flags | BindingFlags.Public) ?? _entryType.GetField("_next", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
       _entryKeyField = (_entryType.GetField("key", flags | BindingFlags.Public) ?? _entryType.GetField("_key", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
       _entryValueField = (_entryType.GetField("value", flags | BindingFlags.Public) ?? _entryType.GetField("_value", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
+      _hashCodeIsUInt = _entryHashCodeField.FieldType == typeof(uint);
 
       // Cache default comparer
       _comparer = EqualityComparer<TKey>.Default;
@@ -216,8 +229,8 @@ public static partial class CollectionsMarshalPolyfills {
       // Get the entries array
       var entries = (Array)_entriesField.GetValue(dictionary);
 
-      // Find the entry index
-      var index = FindEntryIndex(key, entries);
+      // Find the entry index using bucket chain traversal
+      var index = FindEntryIndex(dictionary, key, entries);
       if (index < 0)
         throw new InvalidOperationException("Entry not found after adding to dictionary.");
 
@@ -236,8 +249,8 @@ public static partial class CollectionsMarshalPolyfills {
       // Get the entries array
       var entries = (Array)_entriesField.GetValue(dictionary);
 
-      // Find the entry index
-      var index = FindEntryIndex(key, entries);
+      // Find the entry index using bucket chain traversal
+      var index = FindEntryIndex(dictionary, key, entries);
       if (index < 0) {
         // Return null ref - works on all frameworks
         unsafe {
@@ -253,24 +266,46 @@ public static partial class CollectionsMarshalPolyfills {
       }
     }
 
-    private static int FindEntryIndex(TKey key, Array entries) {
-      // Simple linear search through entries - more robust than bucket lookup
-      // since dictionary internal structure may vary across .NET versions
-      var count = entries.Length;
-      for (var i = 0; i < count; ++i) {
+    private static int FindEntryIndex(Dictionary<TKey, TValue> dictionary, TKey key, Array entries) {
+      // Use bucket chain traversal to find the entry
+      // This is the same algorithm Dictionary uses internally
+      var buckets = (int[])_bucketsField.GetValue(dictionary);
+      if (buckets == null || buckets.Length == 0)
+        return -1;
+
+      // Compute hash code for the key
+      var keyHashCode = key != null ? _comparer.GetHashCode(key) : 0;
+
+      // In .NET Framework/Core, hashCode in entry is stored as (hashCode & 0x7FFFFFFF) for int type
+      // In .NET 5+, hashCode in entry is stored as uint
+      // For bucket lookup, we need the raw hash code masked appropriately
+      var bucketIndex = (keyHashCode & 0x7FFFFFFF) % buckets.Length;
+
+      // Get the first entry index from the bucket
+      // .NET Framework: buckets are 0-based (bucket value is entry index directly, -1 means empty)
+      // .NET Core: buckets are 1-based (bucket value - 1 is entry index, 0 means empty)
+      var i = _bucketsAre1Based ? buckets[bucketIndex] - 1 : buckets[bucketIndex];
+
+      // Follow the chain
+      while (i >= 0) {
         var entry = entries.GetValue(i);
-        if (entry == null)
-          continue;
 
-        // Check if this entry has a valid hashCode (non-negative means occupied)
-        var hashCode = (int)_entryHashCodeField.GetValue(entry);
-        if (hashCode < 0)
-          continue;
+        // Get the stored hash code
+        int storedHashCode;
+        if (_hashCodeIsUInt)
+          storedHashCode = (int)(uint)_entryHashCodeField.GetValue(entry);
+        else
+          storedHashCode = (int)_entryHashCodeField.GetValue(entry);
 
-        // Check if the key matches
-        var entryKey = (TKey)_entryKeyField.GetValue(entry);
-        if (_comparer.Equals(entryKey, key))
-          return i;
+        // Compare hash codes (masked to positive) and then keys
+        if ((storedHashCode & 0x7FFFFFFF) == (keyHashCode & 0x7FFFFFFF)) {
+          var entryKey = (TKey)_entryKeyField.GetValue(entry);
+          if (_comparer.Equals(entryKey, key))
+            return i;
+        }
+
+        // Move to next entry in the chain
+        i = (int)_entryNextField.GetValue(entry);
       }
 
       return -1;
