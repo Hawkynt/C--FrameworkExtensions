@@ -133,90 +133,169 @@ public static partial class CollectionsMarshalPolyfills {
       => ref DictionaryAccessor<TKey, TValue>.GetValueRefOrNullRef(dictionary, key);
   }
 
+#if NETFRAMEWORK
+
   /// <summary>
-  /// Provides access to Dictionary internals using reflection and IL emit.
+  /// Dictionary handler for .NET Framework dictionaries (net20-net48).
+  /// Field names: entries, hashCode, key, value (no underscore prefix).
+  /// hashCode is int, negative values indicate unused entries.
   /// </summary>
-  private static class DictionaryAccessor<TKey, TValue> {
+  private readonly struct DictionaryHandler<TKey, TValue> {
     // ReSharper disable StaticMemberInGenericType
-    private static readonly FieldInfo _bucketsField;
     private static readonly FieldInfo _entriesField;
     private static readonly Type _entryType;
     private static readonly FieldInfo _entryHashCodeField;
-    private static readonly FieldInfo _entryNextField;
     private static readonly FieldInfo _entryKeyField;
     private static readonly FieldInfo _entryValueField;
-    private static readonly IEqualityComparer<TKey> _comparer;
-    private static readonly bool _hashCodeIsUInt;
-    private static readonly bool _bucketsAre1Based; // .NET Core uses 1-based bucket indices, .NET Framework uses 0-based
+    private static readonly GetValuePtrDelegate _getValuePtr;
     // ReSharper restore StaticMemberInGenericType
 
-    // Delegate that returns pointer to value field in entries array
     private delegate IntPtr GetValuePtrDelegate(Array entries, int index);
-    private static readonly GetValuePtrDelegate _getValuePtr;
 
-    static DictionaryAccessor() {
+    static DictionaryHandler() {
       var dictType = typeof(Dictionary<TKey, TValue>);
       const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+      const BindingFlags entryFlags = flags | BindingFlags.Public;
 
-      // Get dictionary fields (handle both .NET Framework and .NET Core naming)
-      // .NET Framework uses "buckets" (no underscore), .NET Core uses "_buckets"
-      var bucketsFieldWithoutUnderscore = dictType.GetField("buckets", flags);
-      _bucketsField = (bucketsFieldWithoutUnderscore ?? dictType.GetField("_buckets", flags)) ?? throw new InvalidOperationException();
-      _entriesField = (dictType.GetField("entries", flags) ?? dictType.GetField("_entries", flags)) ?? throw new InvalidOperationException();
-
-      // .NET Framework uses 0-based bucket indices (with -1 sentinel for empty)
-      // .NET Core uses 1-based bucket indices (with 0 sentinel for empty, subtract 1 to get entry index)
-      _bucketsAre1Based = bucketsFieldWithoutUnderscore == null;
-
-      // Get Entry type and its fields
-      _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException();
-      _entryHashCodeField = (_entryType.GetField("hashCode", flags | BindingFlags.Public) ?? _entryType.GetField("_hashCode", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
-      _entryNextField = (_entryType.GetField("next", flags | BindingFlags.Public) ?? _entryType.GetField("_next", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
-      _entryKeyField = (_entryType.GetField("key", flags | BindingFlags.Public) ?? _entryType.GetField("_key", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
-      _entryValueField = (_entryType.GetField("value", flags | BindingFlags.Public) ?? _entryType.GetField("_value", flags | BindingFlags.Public)) ?? throw new InvalidOperationException();
-      _hashCodeIsUInt = _entryHashCodeField.FieldType == typeof(uint);
-
-      // Cache default comparer
-      _comparer = EqualityComparer<TKey>.Default;
-
-      // Create dynamic method to get pointer to value field
+      _entriesField = dictType.GetField("entries", flags) ?? throw new InvalidOperationException("Cannot find 'entries' field in Dictionary.");
+      _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
+      _entryHashCodeField = _entryType.GetField("hashCode", entryFlags) ?? throw new InvalidOperationException("Cannot find 'hashCode' field in Entry.");
+      _entryKeyField = _entryType.GetField("key", entryFlags) ?? throw new InvalidOperationException("Cannot find 'key' field in Entry.");
+      _entryValueField = _entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
       _getValuePtr = CreateGetValuePtrDelegate();
     }
 
     private static GetValuePtrDelegate CreateGetValuePtrDelegate() {
-      // DynamicMethod can return IntPtr (pointer), which we then convert to ref
-      var entriesArrayType = _entriesField.FieldType; // Entry[]
-
+      var entriesArrayType = _entriesField.FieldType;
       var method = new DynamicMethod(
         "GetValuePtr",
         typeof(IntPtr),
         [typeof(Array), typeof(int)],
-        typeof(DictionaryAccessor<TKey, TValue>),
+        typeof(DictionaryHandler<TKey, TValue>),
         skipVisibility: true
       );
 
       var il = method.GetILGenerator();
-
-      // Load and cast the array to Entry[]
       il.Emit(OpCodes.Ldarg_0);
       il.Emit(OpCodes.Castclass, entriesArrayType);
-
-      // Load the index
       il.Emit(OpCodes.Ldarg_1);
-
-      // ldelema - load element address (gets pointer to Entry at index)
       il.Emit(OpCodes.Ldelema, _entryType);
-
-      // ldflda - load field address (gets pointer to value field within Entry)
       il.Emit(OpCodes.Ldflda, _entryValueField);
-
-      // conv.i - convert managed pointer to native int (IntPtr)
       il.Emit(OpCodes.Conv_I);
-
-      // Return the IntPtr
       il.Emit(OpCodes.Ret);
 
       return (GetValuePtrDelegate)method.CreateDelegate(typeof(GetValuePtrDelegate));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Array GetEntries(Dictionary<TKey, TValue> dictionary)
+      => (Array)_entriesField.GetValue(dictionary);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsEntryInUse(object entry) {
+      // .NET Framework: hashCode < 0 means unused (-1 sentinel)
+      var hashCode = (int)_entryHashCodeField.GetValue(entry);
+      return hashCode >= 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TKey GetEntryKey(object entry)
+      => (TKey)_entryKeyField.GetValue(entry);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IntPtr GetValuePtr(Array entries, int index)
+      => _getValuePtr(entries, index);
+  }
+
+#else
+
+  /// <summary>
+  /// Dictionary handler for .NET Core dictionaries (netcoreapp3.1, net5.0).
+  /// Field names: _entries, next, key, value (with underscore prefix on dictionary fields).
+  /// Free entries have next &lt; -1 (encodes free list).
+  /// </summary>
+  private readonly struct DictionaryHandler<TKey, TValue> {
+    // ReSharper disable StaticMemberInGenericType
+    private static readonly FieldInfo _entriesField;
+    private static readonly Type _entryType;
+    private static readonly FieldInfo _entryNextField;
+    private static readonly FieldInfo _entryKeyField;
+    private static readonly FieldInfo _entryValueField;
+    private static readonly GetValuePtrDelegate _getValuePtr;
+    // ReSharper restore StaticMemberInGenericType
+
+    private delegate IntPtr GetValuePtrDelegate(Array entries, int index);
+
+    static DictionaryHandler() {
+      var dictType = typeof(Dictionary<TKey, TValue>);
+      const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+      const BindingFlags entryFlags = flags | BindingFlags.Public;
+
+      _entriesField = dictType.GetField("_entries", flags) ?? throw new InvalidOperationException("Cannot find '_entries' field in Dictionary.");
+      _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
+      _entryNextField = _entryType.GetField("next", entryFlags) ?? throw new InvalidOperationException("Cannot find 'next' field in Entry.");
+      _entryKeyField = _entryType.GetField("key", entryFlags) ?? throw new InvalidOperationException("Cannot find 'key' field in Entry.");
+      _entryValueField = _entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
+      _getValuePtr = CreateGetValuePtrDelegate();
+    }
+
+    private static GetValuePtrDelegate CreateGetValuePtrDelegate() {
+      var entriesArrayType = _entriesField.FieldType;
+      var method = new DynamicMethod(
+        "GetValuePtr",
+        typeof(IntPtr),
+        [typeof(Array), typeof(int)],
+        typeof(DictionaryHandler<TKey, TValue>),
+        skipVisibility: true
+      );
+
+      var il = method.GetILGenerator();
+      il.Emit(OpCodes.Ldarg_0);
+      il.Emit(OpCodes.Castclass, entriesArrayType);
+      il.Emit(OpCodes.Ldarg_1);
+      il.Emit(OpCodes.Ldelema, _entryType);
+      il.Emit(OpCodes.Ldflda, _entryValueField);
+      il.Emit(OpCodes.Conv_I);
+      il.Emit(OpCodes.Ret);
+
+      return (GetValuePtrDelegate)method.CreateDelegate(typeof(GetValuePtrDelegate));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Array GetEntries(Dictionary<TKey, TValue> dictionary)
+      => (Array)_entriesField.GetValue(dictionary);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsEntryInUse(object entry) {
+      // .NET Core: free entries have next field value < -1 (e.g., -2, -3 encode free list)
+      var next = (int)_entryNextField.GetValue(entry);
+      return next >= -1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public TKey GetEntryKey(object entry)
+      => (TKey)_entryKeyField.GetValue(entry);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IntPtr GetValuePtr(Array entries, int index)
+      => _getValuePtr(entries, index);
+  }
+
+#endif
+
+  /// <summary>
+  /// Provides access to Dictionary internals using reflection and IL emit.
+  /// Handler is selected at compile time based on target framework.
+  /// </summary>
+  private static class DictionaryAccessor<TKey, TValue> {
+    // ReSharper disable StaticMemberInGenericType
+    private static readonly DictionaryHandler<TKey, TValue> _handler;
+    private static readonly IEqualityComparer<TKey> _comparer;
+    // ReSharper restore StaticMemberInGenericType
+
+    static DictionaryAccessor() {
+      _handler = new();
+      _comparer = EqualityComparer<TKey>.Default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -227,17 +306,17 @@ public static partial class CollectionsMarshalPolyfills {
         dictionary[key] = default;
 
       // Get the entries array
-      var entries = (Array)_entriesField.GetValue(dictionary);
+      var entries = _handler.GetEntries(dictionary);
 
-      // Find the entry index using bucket chain traversal
-      var index = FindEntryIndex(dictionary, key, entries);
+      // Find the entry index
+      var index = FindEntryIndex(key, entries);
       if (index < 0)
         throw new InvalidOperationException("Entry not found after adding to dictionary.");
 
       // Get pointer to value field and convert to ref
       // Note: The returned ref must be used before any dictionary modification
       // that could cause a resize (which reallocates the entries array)
-      var ptr = _getValuePtr(entries, index);
+      var ptr = _handler.GetValuePtr(entries, index);
 
       unsafe {
         return ref *(TValue*)ptr.ToPointer();
@@ -247,10 +326,10 @@ public static partial class CollectionsMarshalPolyfills {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref TValue GetValueRefOrNullRef(Dictionary<TKey, TValue> dictionary, TKey key) {
       // Get the entries array
-      var entries = (Array)_entriesField.GetValue(dictionary);
+      var entries = _handler.GetEntries(dictionary);
 
-      // Find the entry index using bucket chain traversal
-      var index = FindEntryIndex(dictionary, key, entries);
+      // Find the entry index
+      var index = FindEntryIndex(key, entries);
       if (index < 0) {
         // Return null ref - works on all frameworks
         unsafe {
@@ -259,53 +338,26 @@ public static partial class CollectionsMarshalPolyfills {
       }
 
       // Get pointer to value field and convert to ref
-      var ptr = _getValuePtr(entries, index);
+      var ptr = _handler.GetValuePtr(entries, index);
 
       unsafe {
         return ref *(TValue*)ptr.ToPointer();
       }
     }
 
-    private static int FindEntryIndex(Dictionary<TKey, TValue> dictionary, TKey key, Array entries) {
-      // Use bucket chain traversal to find the entry
-      // This is the same algorithm Dictionary uses internally
-      var buckets = (int[])_bucketsField.GetValue(dictionary);
-      if (buckets == null || buckets.Length == 0)
-        return -1;
-
-      // Compute hash code for the key
-      var keyHashCode = key != null ? _comparer.GetHashCode(key) : 0;
-
-      // In .NET Framework/Core, hashCode in entry is stored as (hashCode & 0x7FFFFFFF) for int type
-      // In .NET 5+, hashCode in entry is stored as uint
-      // For bucket lookup, we need the raw hash code masked appropriately
-      var bucketIndex = (keyHashCode & 0x7FFFFFFF) % buckets.Length;
-
-      // Get the first entry index from the bucket
-      // .NET Framework: buckets are 0-based (bucket value is entry index directly, -1 means empty)
-      // .NET Core: buckets are 1-based (bucket value - 1 is entry index, 0 means empty)
-      var i = _bucketsAre1Based ? buckets[bucketIndex] - 1 : buckets[bucketIndex];
-
-      // Follow the chain
-      while (i >= 0) {
+    private static int FindEntryIndex(TKey key, Array entries) {
+      // Linear search through all entries to find the key
+      for (var i = 0; i < entries.Length; ++i) {
         var entry = entries.GetValue(i);
 
-        // Get the stored hash code
-        int storedHashCode;
-        if (_hashCodeIsUInt)
-          storedHashCode = (int)(uint)_entryHashCodeField.GetValue(entry);
-        else
-          storedHashCode = (int)_entryHashCodeField.GetValue(entry);
+        // Use the handler to check if entry is in use
+        if (!_handler.IsEntryInUse(entry))
+          continue;
 
-        // Compare hash codes (masked to positive) and then keys
-        if ((storedHashCode & 0x7FFFFFFF) == (keyHashCode & 0x7FFFFFFF)) {
-          var entryKey = (TKey)_entryKeyField.GetValue(entry);
-          if (_comparer.Equals(entryKey, key))
-            return i;
-        }
-
-        // Move to next entry in the chain
-        i = (int)_entryNextField.GetValue(entry);
+        // Compare keys
+        var entryKey = _handler.GetEntryKey(entry);
+        if (_comparer.Equals(entryKey, key))
+          return i;
       }
 
       return -1;
