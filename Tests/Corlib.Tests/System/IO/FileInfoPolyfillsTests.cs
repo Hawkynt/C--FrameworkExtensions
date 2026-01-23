@@ -18,7 +18,7 @@ public class FileInfoPolyfillsTests {
 
   [SetUp]
   public void SetUp() {
-    // Erstelle ein Testverzeichnis
+    // Create a test directory
     this._testDirectory = Path.Combine(Path.GetTempPath(), "MoveToOverwriteTests_" + Guid.NewGuid().ToString("N"));
     this._sourceDirectory = Path.Combine(this._TestDirectory, "Source");
     this._targetDirectory = Path.Combine(this._TestDirectory, "Target");
@@ -29,12 +29,12 @@ public class FileInfoPolyfillsTests {
 
   [TearDown]
   public void TearDown() {
-    // Bereinige Testverzeichnisse
+    // Clean up test directories
     try {
       if (Directory.Exists(this._TestDirectory))
         Directory.Delete(this._TestDirectory, true);
     } catch {
-      // Ignoriere Fehler beim Aufräumen
+      // Ignore cleanup errors
     }
   }
 
@@ -49,10 +49,10 @@ public class FileInfoPolyfillsTests {
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Dateiinhalt sollte identisch sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "File content should be identical");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
   }
 
   [Test]
@@ -61,16 +61,16 @@ public class FileInfoPolyfillsTests {
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
-    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Create destination file
 
-    // Act
-    sourceFile.MoveTo(destPath, true);
+    // Act - use retry logic for transient Windows file system issues
+    ExecuteWithRetry(() => sourceFile.MoveTo(destPath, true));
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Zieldatei sollte überschrieben worden sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Destination file should have been overwritten");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
   }
 
   [Test]
@@ -79,14 +79,14 @@ public class FileInfoPolyfillsTests {
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
-    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Create destination file
 
     // Act & Assert
     var ex = Assert.Throws<IOException>(() => sourceFile.MoveTo(destPath, false));
-    Assert.IsTrue(File.Exists(originalPath), "Quelldatei sollte noch existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte unverändert sein");
-    Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte unverändert sein");
-    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+    Assert.IsTrue(File.Exists(originalPath), "Source file should still exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should be unchanged");
+    Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Destination file should be unchanged");
+    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
   }
 
   [Test]
@@ -95,16 +95,16 @@ public class FileInfoPolyfillsTests {
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._SourceDirectory, "dest.txt");
-    this.CreateTestFile(this._SourceDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    this.CreateTestFile(this._SourceDirectory, "dest.txt", TestContent2); // Create destination file
 
     // Act
     sourceFile.MoveTo(destPath, true);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Zieldatei sollte überschrieben worden sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Destination file should have been overwritten");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
   }
 
   [Test]
@@ -117,14 +117,14 @@ public class FileInfoPolyfillsTests {
 
     // Act & Assert
     Assert.Throws<DirectoryNotFoundException>(() => sourceFile.MoveTo(destPath, true));
-    Assert.IsTrue(File.Exists(originalPath), "Quelldatei sollte noch existieren");
-    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+    Assert.IsTrue(File.Exists(originalPath), "Source file should still exist");
+    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
   }
 
   [Test]
   public void MoveTo_LargeFile_CorrectlyMoves() {
     // Arrange
-    var largeContent = new string('A', 10 * 1024 * 1024); // 10 MB Datei
+    var largeContent = new string('A', 10 * 1024 * 1024); // 10 MB file
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "large.txt", largeContent);
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "large_dest.txt");
@@ -133,10 +133,10 @@ public class FileInfoPolyfillsTests {
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(largeContent.Length, new FileInfo(destPath).Length, "Dateigröße sollte identisch sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(largeContent.Length, new FileInfo(destPath).Length, "File size should be identical");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
   }
 
   [Test]
@@ -147,22 +147,22 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "hidden_dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "hidden_dest.txt", TestContent2);
 
-    // Zieldatei als versteckt markieren
-    File.SetAttributes(destPath, FileAttributes.Hidden);
+    // Mark destination file as hidden
+    SetFileAttributesWithRetry(destPath, FileAttributes.Hidden);
 
-    // Act
-    sourceFile.MoveTo(destPath, true);
+    // Act - use retry logic for transient Windows file system issues
+    ExecuteWithRetry(() => sourceFile.MoveTo(destPath, true));
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Zieldatei sollte überschrieben worden sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Destination file should have been overwritten");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
 
-    // Prüfen, ob das Hidden-Attribut erhalten bleibt oder nicht
-    // Je nach Implementierung kann das Attribut erhalten bleiben oder verloren gehen
-    // Das ist hauptsächlich eine Frage der Implementierungsdetails
-    Assert.IsFalse((File.GetAttributes(destPath) & FileAttributes.Hidden) == FileAttributes.Hidden, "Zieldatei sollte nicht mehr versteckt sein");
+    // Check whether the Hidden attribute is preserved or not
+    // Depending on implementation, the attribute may be preserved or lost
+    // This is mainly a matter of implementation details
+    Assert.IsFalse((File.GetAttributes(destPath) & FileAttributes.Hidden) == FileAttributes.Hidden, "Destination file should no longer be hidden");
   }
 
   [Test]
@@ -173,21 +173,21 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "system_dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "system_dest.txt", TestContent2);
 
-    // Zieldatei als Systemdatei markieren
-    File.SetAttributes(destPath, FileAttributes.System);
+    // Mark destination file as system file
+    SetFileAttributesWithRetry(destPath, FileAttributes.System);
 
-    // Act
-    sourceFile.MoveTo(destPath, true);
+    // Act - use retry logic for transient Windows file system issues
+    ExecuteWithRetry(() => sourceFile.MoveTo(destPath, true));
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Zieldatei sollte überschrieben worden sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Destination file should have been overwritten");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
 
-    // Prüfen, ob das System-Attribut erhalten bleibt oder nicht
-    // Je nach Implementierung kann das Attribut erhalten bleiben oder verloren gehen
-    Assert.IsFalse((File.GetAttributes(destPath) & FileAttributes.System) == FileAttributes.System, "Zieldatei sollte keine Systemdatei mehr sein");
+    // Check whether the System attribute is preserved or not
+    // Depending on implementation, the attribute may be preserved or lost
+    Assert.IsFalse((File.GetAttributes(destPath) & FileAttributes.System) == FileAttributes.System, "Destination file should no longer be a system file");
   }
 
   [Test]
@@ -198,17 +198,17 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "multi_attr_dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "multi_attr_dest.txt", TestContent2);
 
-    // Zieldatei mit Hidden und System Attributen markieren (aber nicht ReadOnly)
-    File.SetAttributes(destPath, FileAttributes.Hidden | FileAttributes.System);
+    // Mark destination file with Hidden and System attributes (but not ReadOnly)
+    SetFileAttributesWithRetry(destPath, FileAttributes.Hidden | FileAttributes.System);
 
-    // Act
-    sourceFile.MoveTo(destPath, true);
+    // Act - use retry logic for transient Windows file system issues
+    ExecuteWithRetry(() => sourceFile.MoveTo(destPath, true));
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Zieldatei sollte überschrieben worden sein");
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert sein");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+    Assert.AreEqual(TestContent, File.ReadAllText(destPath), "Destination file should have been overwritten");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
   }
 
   [Test]
@@ -219,7 +219,7 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "readonly_dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "readonly_dest.txt", TestContent2);
 
-    // Zieldatei als schreibgeschützt markieren
+    // Mark destination file as read-only
     File.SetAttributes(destPath, FileAttributes.ReadOnly);
 
     // Act
@@ -240,26 +240,26 @@ public class FileInfoPolyfillsTests {
     if (Environment.OSVersion.Platform == PlatformID.Unix) {
       // On Unix, the move may succeed, so check accordingly
       if (File.Exists(originalPath)) {
-        Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte nicht ï¿½berschrieben worden sein");
-        Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte nicht ï¿½berschrieben worden sein");
-        Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverï¿½ndert sein");
+        Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should not have been overwritten");
+        Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Destination file should not have been overwritten");
+        Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
       } else {
         // Move succeeded on Unix despite read-only attribute
-        Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte nach erfolgreichem Move existieren");
+        Assert.IsTrue(File.Exists(destPath), "Destination file should exist after successful move");
       }
     } else {
-      Assert.IsTrue(File.Exists(originalPath), "Ursprï¿½nglicher Dateipfad sollte existieren");
-      Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte nicht ï¿½berschrieben worden sein");
-      Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte nicht ï¿½berschrieben worden sein");
-      Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverï¿½ndert sein");
+      Assert.IsTrue(File.Exists(originalPath), "Original file path should exist");
+      Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should not have been overwritten");
+      Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Destination file should not have been overwritten");
+      Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
     }
     // On Linux, ReadOnly attribute may not be preserved
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (File.GetAttributes(destPath) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-        "Zieldatei sollte immer noch schreibgeschï¿½tzt sein"
+        "Destination file should still be read-only"
       );
     }
   }
@@ -272,7 +272,7 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "multi_attr_dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "multi_attr_dest.txt", TestContent2);
 
-    // Zieldatei mit mehreren Attributen markieren
+    // Mark destination file with multiple attributes
     File.SetAttributes(destPath, FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System);
 
     // Act
@@ -293,36 +293,36 @@ public class FileInfoPolyfillsTests {
     if (Environment.OSVersion.Platform == PlatformID.Unix) {
       // On Unix, the move may succeed, so check accordingly
       if (File.Exists(originalPath)) {
-        Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte nicht überschrieben worden sein");
-        Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte nicht überschrieben worden sein");
+        Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should not have been overwritten");
+        Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Destination file should not have been overwritten");
       } else {
         // Move succeeded on Unix despite attributes
-        Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte nach erfolgreichem Move existieren");
+        Assert.IsTrue(File.Exists(destPath), "Destination file should exist after successful move");
       }
     } else {
-      Assert.IsTrue(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte existieren");
-      Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
-      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte nicht überschrieben worden sein");
-      Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Zieldatei sollte nicht überschrieben worden sein");
+      Assert.IsTrue(File.Exists(originalPath), "Original file path should exist");
+      Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
+      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should not have been overwritten");
+      Assert.AreEqual(TestContent2, File.ReadAllText(destPath), "Destination file should not have been overwritten");
     }
-    Assert.AreEqual(destPath, destFile.FullName, "FileInfo.FullName sollte nicht aktualisiert sein");
+    Assert.AreEqual(destPath, destFile.FullName, "FileInfo.FullName should not be updated");
 
     var attributes = File.GetAttributes(destPath);
     // On Linux, ReadOnly attribute may not be preserved
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-      "Zieldatei sollte immer noch schreibgeschützt sein"
+      "Destination file should still be read-only"
       );
     }
     Assert.IsTrue(
       (attributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-      "Zieldatei sollte immer noch versteckt sein"
+      "Destination file should still be hidden"
     );
     Assert.IsTrue(
       (attributes & FileAttributes.System) == FileAttributes.System,
-      "Zieldatei sollte immer noch eine Systemdatei sein"
+      "Destination file should still be a system file"
     );
   }
 
@@ -334,7 +334,7 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
     var destFile = this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2);
 
-    // Öffne die Zieldatei mit FileShare.None, um sie zu sperren
+    // Open the destination file with FileShare.None to lock it
     using var fileStream = new FileStream(destPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
     // Act & Assert
@@ -351,19 +351,19 @@ public class FileInfoPolyfillsTests {
       Assert.Throws<UnauthorizedAccessException>(() => sourceFile.MoveTo(destPath, true));
     }
 
-    // Stelle sicher, dass die Quelldatei noch existiert
+    // Ensure that the source file still exists
     // On Linux, file locking may not work the same way
     if (Environment.OSVersion.Platform == PlatformID.Unix) {
       // On Unix, the move may succeed despite file locking attempts
       if (File.Exists(originalPath)) {
-        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte unverändert sein");
-        Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+        Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should be unchanged");
+        Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
       }
       // Move may have succeeded despite the lock attempt
     } else {
-      Assert.IsTrue(File.Exists(originalPath), "Quelldatei sollte noch existieren");
-      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Quelldatei sollte unverändert sein");
-      Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+      Assert.IsTrue(File.Exists(originalPath), "Source file should still exist");
+      Assert.AreEqual(TestContent, File.ReadAllText(originalPath), "Source file should be unchanged");
+      Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
     }
   }
 
@@ -378,11 +378,11 @@ public class FileInfoPolyfillsTests {
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName sollte aktualisiert werden");
-    Assert.AreEqual("dest.txt", sourceFile.Name, "FileInfo.Name sollte aktualisiert werden");
-    Assert.AreEqual(this._TargetDirectory, sourceFile.DirectoryName, "FileInfo.DirectoryName sollte aktualisiert werden");
-    Assert.IsTrue(sourceFile.Exists, "FileInfo.Exists sollte true sein");
-    Assert.IsFalse(File.Exists(originalFullName), "Originaldatei sollte nicht mehr existieren");
+    Assert.AreEqual(destPath, sourceFile.FullName, "FileInfo.FullName should be updated");
+    Assert.AreEqual("dest.txt", sourceFile.Name, "FileInfo.Name should be updated");
+    Assert.AreEqual(this._TargetDirectory, sourceFile.DirectoryName, "FileInfo.DirectoryName should be updated");
+    Assert.IsTrue(sourceFile.Exists, "FileInfo.Exists should be true");
+    Assert.IsFalse(File.Exists(originalFullName), "Original file should no longer exist");
   }
 
   [Test]
@@ -405,7 +405,7 @@ public class FileInfoPolyfillsTests {
     var exceptions = new Exception[fileCount];
 
     for (var i = 0; i < fileCount; i++) {
-      var index = i; // Lokale Kopie für Lambda-Ausdruck
+      var index = i; // Local copy for lambda expression
       threads[i] = new(
         () => {
           try {
@@ -423,21 +423,21 @@ public class FileInfoPolyfillsTests {
 
     // Assert
     for (var i = 0; i < fileCount; i++) {
-      Assert.IsNull(exceptions[i], $"Operation für Datei {i} sollte erfolgreich sein");
+      Assert.IsNull(exceptions[i], $"Operation for file {i} should succeed");
       Assert.IsFalse(
         File.Exists(originalPaths[i]),
-        $"Ursprünglicher Dateipfad für Quelldatei {i} sollte nicht mehr existieren"
+        $"Original file path for source file {i} should no longer exist"
       );
-      Assert.IsTrue(File.Exists(destPaths[i]), $"Zieldatei {i} sollte existieren");
+      Assert.IsTrue(File.Exists(destPaths[i]), $"Destination file {i} should exist");
       Assert.AreEqual(
         TestContent + i,
         File.ReadAllText(destPaths[i]),
-        $"Zieldatei {i} sollte den korrekten Inhalt haben"
+        $"Destination file {i} should have the correct content"
       );
       Assert.AreEqual(
         destPaths[i],
         sourceFiles[i].FullName,
-        $"FileInfo.FullName für Datei {i} sollte aktualisiert sein"
+        $"FileInfo.FullName for file {i} should be updated"
       );
     }
   }
@@ -451,7 +451,7 @@ public class FileInfoPolyfillsTests {
 
     // Act & Assert
     var ex = Assert.Throws<FileNotFoundException>(() => nonExistentFile.MoveTo(destPath, true));
-    Assert.AreEqual(originalPath, nonExistentFile.FullName, "FileInfo.FullName sollte unverändert sein");
+    Assert.AreEqual(originalPath, nonExistentFile.FullName, "FileInfo.FullName should be unchanged");
   }
 
   [Test]
@@ -459,7 +459,7 @@ public class FileInfoPolyfillsTests {
     // Arrange
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
-    var destDirectory = this._TargetDirectory; // Zielpfad ist ein Verzeichnis
+    var destDirectory = this._TargetDirectory; // Target path is a directory
 
     // Act & Assert
     // On Linux, moving to directory throws IOException instead of UnauthorizedAccessException
@@ -468,8 +468,8 @@ public class FileInfoPolyfillsTests {
     } else {
       var ex = Assert.Throws<UnauthorizedAccessException>(() => sourceFile.MoveTo(destDirectory, true));
     }
-    Assert.IsTrue(File.Exists(originalPath), "Quelldatei sollte noch existieren");
-    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+    Assert.IsTrue(File.Exists(originalPath), "Source file should still exist");
+    Assert.AreEqual(originalPath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
   }
 
   [Test]
@@ -479,20 +479,60 @@ public class FileInfoPolyfillsTests {
     var sourceContent = File.ReadAllText(sourceFile.FullName);
     var sourceFilePath = sourceFile.FullName;
 
-    // Act - Verschieben an denselben Ort
+    // Act - Move to the same location
     sourceFile.MoveTo(sourceFilePath, true);
 
     // Assert
-    Assert.IsTrue(File.Exists(sourceFilePath), "Datei sollte weiterhin existieren");
-    Assert.AreEqual(sourceContent, File.ReadAllText(sourceFilePath), "Inhalt sollte unverändert sein");
-    Assert.AreEqual(sourceFilePath, sourceFile.FullName, "FileInfo.FullName sollte unverändert sein");
+    Assert.IsTrue(File.Exists(sourceFilePath), "File should still exist");
+    Assert.AreEqual(sourceContent, File.ReadAllText(sourceFilePath), "Content should be unchanged");
+    Assert.AreEqual(sourceFilePath, sourceFile.FullName, "FileInfo.FullName should be unchanged");
   }
 
-  // Hilfsmethode zum Erstellen von Testdateien
+  // Helper method to create test files
   private FileInfo CreateTestFile(string directory, string fileName, string content) {
     var filePath = Path.Combine(directory, fileName);
-    File.WriteAllText(filePath, content, new UTF8Encoding(false));
+
+    // Use explicit FileStream to ensure proper handle release
+    using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+    using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) {
+      writer.Write(content);
+      writer.Flush();
+      stream.Flush();
+    }
+
+    // Give Windows time to fully release file handles (anti-virus, search indexer, etc.)
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
+
     return new(filePath);
+  }
+
+  // Helper to ensure file attributes can be set reliably
+  private static void SetFileAttributesWithRetry(string path, FileAttributes attributes, int maxRetries = 3) {
+    for (var i = 0; i < maxRetries; ++i)
+      try {
+        File.SetAttributes(path, attributes);
+        return;
+      } catch (IOException) when (i < maxRetries - 1) {
+        Thread.Sleep(50);
+      }
+  }
+
+  // Helper to perform file operations with retry logic for transient Windows file system issues
+  private static void ExecuteWithRetry(Action action, int maxRetries = 3) {
+    for (var i = 0; i < maxRetries; ++i)
+      try {
+        action();
+        return;
+      } catch (UnauthorizedAccessException) when (i < maxRetries - 1) {
+        Thread.Sleep(100);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+      } catch (IOException) when (i < maxRetries - 1) {
+        Thread.Sleep(100);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+      }
   }
 
   [Test]
@@ -502,27 +542,27 @@ public class FileInfoPolyfillsTests {
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
-    // Setze verschiedene Attribute auf die Quelldatei
+    // Set various attributes on the source file
     File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.Hidden);
 
     // Act
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
 
     var targetAttributes = File.GetAttributes(destPath);
-    
+
     // On Linux, Archive and Hidden attributes may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-        "Archive-Attribut sollte auf die Zieldatei übertragen werden"
+        "Archive attribute should be transferred to the destination file"
       );
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-        "Hidden-Attribut sollte auf die Zieldatei übertragen werden"
+        "Hidden attribute should be transferred to the destination file"
       );
     }
   }
@@ -533,29 +573,29 @@ public class FileInfoPolyfillsTests {
     var sourceFile = this.CreateTestFile(this._SourceDirectory, "source.txt", TestContent);
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
-    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Zieldatei erstellen
+    this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2); // Create destination file
 
-    // Setze verschiedene Attribute auf die Quelldatei
+    // Set various attributes on the source file
     File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.System);
 
     // Act
     sourceFile.MoveTo(destPath, true);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
 
     var targetAttributes = File.GetAttributes(destPath);
-    
+
     // On Linux, some attributes may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-        "Archive-Attribut sollte auf die Zieldatei übertragen werden"
+        "Archive attribute should be transferred to the destination file"
       );
       Assert.IsTrue(
         (targetAttributes & FileAttributes.System) == FileAttributes.System,
-        "System-Attribut sollte auf die Zieldatei übertragen werden"
+        "System attribute should be transferred to the destination file"
       );
     }
   }
@@ -568,40 +608,40 @@ public class FileInfoPolyfillsTests {
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
     this.CreateTestFile(this._TargetDirectory, "dest.txt", TestContent2);
 
-    // Setze unterschiedliche Attribute auf Quell- und Zieldatei
-    File.SetAttributes(originalPath, FileAttributes.Archive | FileAttributes.Hidden);
-    File.SetAttributes(destPath, FileAttributes.System | FileAttributes.Temporary);
+    // Set different attributes on source and destination files
+    SetFileAttributesWithRetry(originalPath, FileAttributes.Archive | FileAttributes.Hidden);
+    SetFileAttributesWithRetry(destPath, FileAttributes.System | FileAttributes.Temporary);
 
-    // Act
-    sourceFile.MoveTo(destPath, true);
+    // Act - use retry logic for transient Windows file system issues
+    ExecuteWithRetry(() => sourceFile.MoveTo(destPath, true));
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
 
     var targetAttributes = File.GetAttributes(destPath);
 
-    // Die Attribute der Quelldatei sollten erhalten bleiben
+    // Source file attributes should be preserved
     // On Linux, some attributes may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-        "Archive-Attribut der Quelldatei sollte erhalten bleiben"
+        "Archive attribute of the source file should be preserved"
       );
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-        "Hidden-Attribut der Quelldatei sollte erhalten bleiben"
+        "Hidden attribute of the source file should be preserved"
       );
     }
 
-    // Die Attribute der Zieldatei sollten nicht mehr vorhanden sein
+    // Destination file attributes should no longer be present
     Assert.IsFalse(
       (targetAttributes & FileAttributes.System) == FileAttributes.System,
-      "System-Attribut der Zieldatei sollte nicht erhalten bleiben"
+      "System attribute of the destination file should not be preserved"
     );
     Assert.IsFalse(
       (targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
-      "Temporary-Attribut der Zieldatei sollte nicht erhalten bleiben"
+      "Temporary attribute of the destination file should not be preserved"
     );
   }
 
@@ -612,20 +652,20 @@ public class FileInfoPolyfillsTests {
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
-    // Setze ReadOnly-Attribut auf die Quelldatei
+    // Set ReadOnly attribute on the source file
     File.SetAttributes(originalPath, FileAttributes.ReadOnly);
 
     // Act
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
 
     var targetAttributes = File.GetAttributes(destPath);
     Assert.IsTrue(
       (targetAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly,
-      "ReadOnly-Attribut sollte auf die Zieldatei übertragen werden"
+      "ReadOnly attribute should be transferred to the destination file"
     );
   }
 
@@ -636,7 +676,7 @@ public class FileInfoPolyfillsTests {
     var originalPath = sourceFile.FullName;
     var destPath = Path.Combine(this._TargetDirectory, "dest.txt");
 
-    // Setze mehrere Attribute auf die Quelldatei
+    // Set multiple attributes on the source file
     var sourceAttributes = FileAttributes.Archive | FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary;
     File.SetAttributes(originalPath, sourceAttributes);
 
@@ -644,35 +684,35 @@ public class FileInfoPolyfillsTests {
     sourceFile.MoveTo(destPath, false);
 
     // Assert
-    Assert.IsFalse(File.Exists(originalPath), "Ursprünglicher Dateipfad sollte nicht mehr existieren");
-    Assert.IsTrue(File.Exists(destPath), "Zieldatei sollte existieren");
+    Assert.IsFalse(File.Exists(originalPath), "Original file path should no longer exist");
+    Assert.IsTrue(File.Exists(destPath), "Destination file should exist");
 
     var targetAttributes = File.GetAttributes(destPath);
 
-    // überprüfe alle Attribute einzeln
+    // Check all attributes individually
     // On Linux, some attributes may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Archive) == FileAttributes.Archive,
-        "Archive-Attribut sollte erhalten bleiben"
+        "Archive attribute should be preserved"
       );
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Hidden) == FileAttributes.Hidden,
-        "Hidden-Attribut sollte erhalten bleiben"
+        "Hidden attribute should be preserved"
       );
     }
     // On Linux, System attribute may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.System) == FileAttributes.System,
-        "System-Attribut sollte erhalten bleiben"
+        "System attribute should be preserved"
       );
     }
     // On Linux, Temporary attribute may not be supported
     if (Environment.OSVersion.Platform != PlatformID.Unix) {
       Assert.IsTrue(
         (targetAttributes & FileAttributes.Temporary) == FileAttributes.Temporary,
-        "Temporary-Attribut sollte erhalten bleiben"
+        "Temporary attribute should be preserved"
       );
     }
   }

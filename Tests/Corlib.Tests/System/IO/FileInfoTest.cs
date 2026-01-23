@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading;
 using Corlib.Tests.NUnit;
 using NUnit.Framework;
 
@@ -263,10 +264,37 @@ internal class FileInfoTest {
 
       // Setup initial file states for each test
       this._sourceFile = new(Path.Combine(this._testDirectory, "source.txt"));
-      File.WriteAllText(this._sourceFile.FullName, "Source file content");
+      WriteFileWithFlush(this._sourceFile.FullName, "Source file content");
 
       this._destinationFile = new(Path.Combine(this._testDirectory, "destination.txt"));
       this._backupFile = new(Path.Combine(this._testDirectory, "backup.txt"));
+    }
+
+    // Helper to ensure proper file handle release after writing
+    private static void WriteFileWithFlush(string path, string content) {
+      using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+      using (var writer = new StreamWriter(stream, Encoding.UTF8)) {
+        writer.Write(content);
+        writer.Flush();
+        stream.Flush();
+      }
+
+      // Give Windows time to fully release file handles
+      GC.Collect();
+      GC.WaitForPendingFinalizers();
+    }
+
+    // Helper to perform file operations with retry logic for transient Windows file system issues
+    private static void ExecuteWithRetry(Action action, int maxRetries = 3) {
+      for (var i = 0; i < maxRetries; ++i)
+        try {
+          action();
+          return;
+        } catch (IOException) when (i < maxRetries - 1) {
+          Thread.Sleep(100);
+          GC.Collect();
+          GC.WaitForPendingFinalizers();
+        }
     }
 
     [TearDown]
@@ -279,7 +307,7 @@ internal class FileInfoTest {
 
     [Test]
     public void ReplaceWith_WhenDestinationDoesNotExist_ShouldMoveFile() {
-      this._destinationFile.ReplaceWith(this._sourceFile, null, false);
+      ExecuteWithRetry(() => this._destinationFile.ReplaceWith(this._sourceFile, null, false));
       this._sourceFile!.Refresh();
       this._destinationFile!.Refresh();
       this._backupFile!.Refresh();
@@ -291,8 +319,8 @@ internal class FileInfoTest {
 
     [Test]
     public void ReplaceWith_WhenDestinationExists_ShouldReplaceFile() {
-      File.WriteAllText(this._destinationFile!.FullName, "Original destination content");
-      this._destinationFile.ReplaceWith(this._sourceFile, null, false);
+      WriteFileWithFlush(this._destinationFile!.FullName, "Original destination content");
+      ExecuteWithRetry(() => this._destinationFile.ReplaceWith(this._sourceFile, null, false));
       this._sourceFile!.Refresh();
       this._destinationFile.Refresh();
       this._backupFile!.Refresh();
@@ -304,8 +332,8 @@ internal class FileInfoTest {
 
     [Test]
     public void ReplaceWith_WhenBackupIsProvided_ShouldBackupDestination() {
-      File.WriteAllText(this._destinationFile!.FullName, "Original destination content");
-      this._destinationFile.ReplaceWith(this._sourceFile, this._backupFile, false);
+      WriteFileWithFlush(this._destinationFile!.FullName, "Original destination content");
+      ExecuteWithRetry(() => this._destinationFile.ReplaceWith(this._sourceFile, this._backupFile, false));
       this._sourceFile!.Refresh();
       this._destinationFile.Refresh();
       this._backupFile!.Refresh();

@@ -1215,8 +1215,28 @@ public class IOComprehensiveTest {
     var sourceFile = this.CreateTestFile("source content");
     var targetFile = this.CreateTestFile("target content");
 
+    // Force release of file handles before attempting to overwrite
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
+
     try {
-      sourceFile.CopyTo(targetFile.FullName, overwrite: true, allowHardLinking: true);
+      // Retry loop for transient Windows file system issues
+      IOException lastException = null;
+      for (var i = 0; i < 5; ++i) {
+        try {
+          sourceFile.CopyTo(targetFile.FullName, overwrite: true, allowHardLinking: true);
+          lastException = null;
+          break;
+        } catch (IOException ex) when (i < 4) {
+          lastException = ex;
+          Thread.Sleep(100);
+          GC.Collect();
+          GC.WaitForPendingFinalizers();
+        }
+      }
+
+      if (lastException != null)
+        throw lastException;
 
       targetFile.Refresh();
       Assert.That(targetFile.ReadAllText(), Is.EqualTo("source content"));
@@ -1293,19 +1313,35 @@ public class IOComprehensiveTest {
       Assert.That(tempFile.Exists, Is.True);
     }
 
+    // Force garbage collection to release file handles
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
+
     using (var dirToken = PathExtensions.GetTempDirectoryToken()) {
       tempDir = dirToken.Directory;
       Assert.That(tempDir.Exists, Is.True);
     }
 
-    // Give cleanup a moment
-    Thread.Sleep(100);
-    tempFile.Refresh();
-    tempDir.Refresh();
+    // Force garbage collection to release directory handles
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
+
+    // Retry loop for Windows file system timing issues
+    var fileDeleted = false;
+    var dirDeleted = false;
+    for (var i = 0; i < 10 && (!fileDeleted || !dirDeleted); ++i) {
+      Thread.Sleep(100);
+      GC.Collect();
+      GC.WaitForPendingFinalizers();
+      tempFile.Refresh();
+      tempDir.Refresh();
+      fileDeleted = !tempFile.Exists;
+      dirDeleted = !tempDir.Exists;
+    }
 
     // Files should be cleaned up
-    Assert.That(tempFile.Exists, Is.False);
-    Assert.That(tempDir.Exists, Is.False);
+    Assert.That(tempFile.Exists, Is.False, "Temp file was not cleaned up after dispose");
+    Assert.That(tempDir.Exists, Is.False, "Temp directory was not cleaned up after dispose");
   }
 
   [Test]
