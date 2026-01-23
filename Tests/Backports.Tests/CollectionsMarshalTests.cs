@@ -260,4 +260,97 @@ public class CollectionsMarshalTests {
   }
 
   #endregion
+
+  #region Regression Tests (bucket chain traversal fix)
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill bug where keys with hash code 0 (like '\\0') were not found after adding")]
+  public void GetValueRefOrAddDefault_WithNullCharKey_WorksCorrectly() {
+    var dictionary = new Dictionary<char, int>();
+
+    ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out var exists);
+
+    Assert.That(exists, Is.False);
+    Assert.That(value, Is.EqualTo(0));
+    Assert.That(dictionary.ContainsKey('\0'), Is.True);
+    Assert.That(dictionary['\0'], Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill - multiple operations with null char key")]
+  public void GetValueRefOrAddDefault_WithNullCharKey_MultipleOperations_WorksCorrectly() {
+    var dictionary = new Dictionary<char, int>();
+
+    ref var value1 = ref CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out var exists1);
+    value1 = 42;
+
+    ref var value2 = ref CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out var exists2);
+
+    Assert.That(exists1, Is.False);
+    Assert.That(exists2, Is.True);
+    Assert.That(value2, Is.EqualTo(42));
+    Assert.That(dictionary['\0'], Is.EqualTo(42));
+  }
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill - increment pattern with null char key")]
+  public void GetValueRefOrAddDefault_WithNullCharKey_IncrementPattern_WorksCorrectly() {
+    var dictionary = new Dictionary<char, int>();
+
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out _);
+
+    Assert.That(dictionary['\0'], Is.EqualTo(3));
+  }
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill - GetValueRefOrNullRef with null char key")]
+  public void GetValueRefOrNullRef_WithNullCharKey_WorksCorrectly() {
+    var dictionary = new Dictionary<char, int> { { '\0', 42 } };
+
+    ref var value = ref CollectionsMarshal.GetValueRefOrNullRef(dictionary, '\0');
+
+    Assert.That(Unsafe.IsNullRef(ref value), Is.False);
+    Assert.That(value, Is.EqualTo(42));
+  }
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill - mixed char keys including null char")]
+  public void GetValueRefOrAddDefault_MixedCharKeys_WorksCorrectly() {
+    var dictionary = new Dictionary<char, int>();
+
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, 'A', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\t', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, '\0', out _);
+    ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, 'A', out _);
+
+    Assert.That(dictionary['\0'], Is.EqualTo(2));
+    Assert.That(dictionary['A'], Is.EqualTo(2));
+    Assert.That(dictionary['\t'], Is.EqualTo(1));
+    Assert.That(dictionary.Count, Is.EqualTo(3));
+  }
+
+  [Test]
+  [Category("Regression")]
+  [Description("Regression test for polyfill - histogram pattern with char keys including null")]
+  public void GetValueRefOrAddDefault_HistogramWithNullChar_WorksCorrectly() {
+    var dictionary = new Dictionary<char, uint>();
+    var data = new[] { '\0', 'a', 'b', '\0', 'a', '\0', '\0', 'b', 'a', '\0' };
+
+    foreach (var item in data)
+      ++CollectionsMarshal.GetValueRefOrAddDefault(dictionary, item, out _);
+
+    Assert.That(dictionary['\0'], Is.EqualTo(5u));
+    Assert.That(dictionary['a'], Is.EqualTo(3u));
+    Assert.That(dictionary['b'], Is.EqualTo(2u));
+  }
+
+  #endregion
 }
