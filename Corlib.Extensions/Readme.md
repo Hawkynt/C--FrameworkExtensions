@@ -10,17 +10,6 @@
 
 Extension methods for core .NET types, providing additional functionality across strings, collections, math, I/O, threading, and other common operations. Supports .NET 3.5 through .NET 9.0.
 
-### Key Features
-
-- **3,300+ Extension Methods** across common .NET types
-  - **600+ String extensions** - parsing, formatting, case conversion, text analysis, phonetics
-  - **900+ Math & Numeric extensions** - numeric types with SIMD optimizations and hardware intrinsics
-  - **300+ Array extensions** - array operations, slicing, algorithms
-  - **400+ I/O extensions** - FileInfo, DirectoryInfo, Stream operations
-  - **350+ Collection extensions** - Dictionary, List, HashSet, concurrent collections, LINQ enhancements
-  - **200+ Threading extensions** - Interlocked operations, task management, synchronization
-  - **550+ Additional extensions** - DateTime, TimeSpan, reflection, data access, networking
-
 ### Technical Details
 
 - **T4 Code Generation** - Type-safe methods generated across numeric types
@@ -35,7 +24,7 @@ Extension methods for core .NET types, providing additional functionality across
 
 ## Extension Methods by Type
 
-> **Completeness Note**: This README serves as a comprehensive reference document covering all major extension method categories and new types in the library. While the library contains lots of extension methods (many T4-generated for all numeric types), this documentation provides:
+> **Completeness Note**: This README serves as a comprehensive reference document covering all major extension method categories and new types in the library. While the library contains lots of extension methods, this documentation should provide:
 > - All extension method **categories** with representative methods
 > - All **new types** (classes, structs, records, interfaces, enums)
 > - Complete coverage of **public API surface**
@@ -220,12 +209,12 @@ Linguistic analysis and text processing utilities
 - **`WordWrap()`** - Wrap text to specified line width
 - **`RemoveDiacritics()`** - Remove accents and diacritical marks (e.g., "café" → "cafe")
 
-#### Cryptography & Hashing (2 methods)
+#### Cryptography & Hashing
 
 - **`ComputeHash<TAlgorithm>()`** - Generic hash computation with any HashAlgorithm
 - **`ComputeHash(hashAlgorithm)`** - Hash with specific algorithm instance
 
-#### Regular Expressions (8+ methods)
+#### Regular Expressions
 
 - **`IsMatch(regex)` / `IsNotMatch(regex)`** - Pattern matching with Regex objects
 - **`IsMatch(pattern, options)` / `IsNotMatch(pattern, options)`** - Pattern matching with string patterns
@@ -233,7 +222,7 @@ Linguistic analysis and text processing utilities
 - **`MatchGroups(pattern, options)`** - Extract regex capture groups
 - **`AsRegularExpression(options)`** - Convert string to compiled Regex
 
-#### Advanced Formatting (8+ methods)
+#### Advanced Formatting
 
 - **`FormatWith(parameters)`** - Enhanced string.Format with better error handling
 - **`FormatWithEx(fields, comparer)`** - Template-based formatting with custom field resolution
@@ -241,7 +230,7 @@ Linguistic analysis and text processing utilities
 - **`FormatWithEx(IDictionary<string, string>)`** - Dictionary-based formatting
 - **`FormatWithObject<T>(object)`** - Format using object properties via reflection
 
-#### Type-Safe Parsing (400+ methods)
+#### Type-Safe Parsing
 
 Generated via T4 templates for 15 data types: Float, Double, Decimal, Byte, SByte, UInt16, Int16, UInt32, Int32, UInt64, Int64, TimeSpan, DateTime, Boolean, Color
 
@@ -254,18 +243,18 @@ Generated via T4 templates for 15 data types: Float, Double, Decimal, Byte, SByt
 - **`Parse{Type}OrNull()`** - Nullable parsing for value types
 - **ReadOnlySpan&lt;char&gt; support** for zero-allocation parsing
 
-#### Database & Special Formats (3+ methods)
+#### Database & Special Formats
 
 - **`ToLinq2SqlConnectionString()`** - Convert to LINQ-to-SQL connection format
 - **`MsSqlIdentifierEscape()`** - Escape SQL Server identifiers
 - **Line breaking and special format utilities**
 
-#### Character Access (4 methods)
+#### Character Access
 
 - **`First()` / `FirstOrDefault(defaultChar)`** - Get first character safely
 - **`Last()` / `LastOrDefault(defaultChar)`** - Get last character safely
 
-#### Modern .NET Features (5+ methods)
+#### Modern .NET Features
 
 - **`CopyTo(Span<char> target)`** - Copy to span for zero-allocation scenarios
 - **Span-based operations** with `ReadOnlySpan<char>` support
@@ -634,7 +623,7 @@ For integer types (byte through long)
 - High-precision algorithms (Taylor series, Newton-Raphson methods)
 - Overflow detection for safe arithmetic
 - Epsilon-based comparisons for floating-point operations
-- SIMD optimizations where hardware supports it
+- SIMD and Vector optimizations where hardware supports it
 - Lookup tables for bit manipulation operations
 - Branch reduction using bitwise operations
 
@@ -980,24 +969,378 @@ Advanced property and state management utilities
 
 ---
 
-### Utility Types
-
-Essential utility types for common programming patterns
-
-#### Core Utilities
-
-- **`Range`** - Enhanced range operations and arithmetic
-- **`Span` Enhancements** - Extended span utilities and operations
-
-#### Validation Framework
-
-- **`Against`** - Comprehensive parameter validation with performance optimization
-- **`AlwaysThrow`** - Exception throwing utilities with stack trace and inlining optimization
-
 #### Text Processing
 
 - **`TextAnalyzer`** - Advanced text analysis with readability metrics
 - **`ReadabilityScoreCalculator`** - Multiple readability algorithm implementations
+
+---
+
+### String Types
+
+Specialized string types for interoperability, memory efficiency, and encoding-specific scenarios.
+
+#### Overview
+
+| Type | Storage | Encoding | Behavior |
+|------|---------|----------|----------|
+| `StringZ` | `string` | UTF-16 | Cuts at first '\0' |
+| `AsciiZ` | `byte[]` (7-bit packed) | 7-bit ASCII | Cuts at first 0x00 |
+| `AnsiZ` | `byte[]` | Windows-1252 | Cuts at first 0x00 |
+| `AsciiString` | `byte[]` (7-bit packed) | 7-bit ASCII | Full content preserved |
+| `AnsiString` | `byte[]` | Windows-1252 | Full content preserved |
+| `FixedString` | `char[]` | UTF-16 | Fixed capacity via constructor |
+| `FixedAscii` | `byte[]` (7-bit packed) | 7-bit ASCII | Fixed capacity via constructor |
+| `FixedAnsi` | `byte[]` | Windows-1252 | Fixed capacity via constructor |
+
+**Memory Efficiency**: ASCII types use 7-bit packing, storing 8 characters in 7 bytes (12.5% memory savings). SIMD-accelerated operations for validation, packing, and unpacking.
+
+#### Zero-Terminated Strings
+
+Null-terminated string types for C/native interoperability. Content after the first NUL character is discarded.
+
+- **`StringZ`** - Zero-terminated UTF-16 string wrapper around `string`
+- **`AsciiZ`** - Zero-terminated 7-bit ASCII string (values 0-127 only)
+- **`AnsiZ`** - Zero-terminated Windows-1252 (ANSI) string
+
+```csharp
+// StringZ - UTF-16 zero-terminated
+StringZ sz = "Hello\0World";  // Only "Hello" is stored
+Console.WriteLine(sz.Length); // 5
+Console.WriteLine(sz);        // "Hello"
+
+// AsciiZ - 7-bit ASCII zero-terminated with 12.5% memory savings
+var az = new AsciiZ("Hello\0World");
+Console.WriteLine(az.Length); // 5
+byte[] forPInvoke = az.ToNullTerminatedArray(); // For native interop
+
+// AnsiZ - Windows-1252 zero-terminated
+var anz = new AnsiZ("Héllo\0World"); // Supports extended characters (128-255)
+Console.WriteLine(anz.Length); // 5
+```
+
+#### Variable-Length Strings
+
+Full-content string types that preserve all bytes including embedded NUL characters.
+
+- **`AsciiString`** - 7-bit ASCII string (values 0-127 only, 7-bit packed)
+- **`AnsiString`** - Windows-1252 (ANSI) string (full 0-255 range)
+
+```csharp
+// AsciiString - preserves embedded nulls, 7-bit packed storage
+var ascii = new AsciiString("Hello\0World");
+Console.WriteLine(ascii.Length);  // 11 (embedded null preserved)
+Console.WriteLine(ascii[5]);      // 0 (the null byte)
+
+// AnsiString - Windows-1252 encoding
+AnsiString ansi = "Café résumé";
+Console.WriteLine(ansi.Length);   // 11
+byte[] bytes = ansi.ToArray();    // Get raw bytes
+
+// Implicit conversions
+string s = ascii;                 // AsciiString → string
+AnsiString a = "text";            // string → AnsiString
+```
+
+#### Fixed-Capacity Strings
+
+Fixed-length string types with capacity specified at construction. Useful for structured data, binary protocols, and memory-mapped scenarios.
+
+- **`FixedString`** - Fixed-capacity UTF-16 string
+- **`FixedAscii`** - Fixed-capacity 7-bit ASCII string (7-bit packed)
+- **`FixedAnsi`** - Fixed-capacity Windows-1252 string
+
+```csharp
+// FixedString - 32-char capacity, UTF-16
+var name = new FixedString(32, "John Doe");
+Console.WriteLine(name.Capacity); // 32
+Console.WriteLine(name.Length);   // 8
+var padded = name.PadRight();     // Pad to capacity with '\0'
+
+// FixedAscii - 20-byte capacity, 7-bit packed (saves 12.5% memory)
+var code = new FixedAscii(20, "ABC123");
+Console.WriteLine(code.Capacity); // 20
+Console.WriteLine(code.Length);   // 6
+var leftPad = code.PadLeft((byte)' '); // Pad left with spaces
+
+// FixedAnsi - 50-byte capacity, Windows-1252
+var desc = new FixedAnsi(50, "Prodüct Déscription");
+Console.WriteLine(desc.Capacity); // 50
+var trimmed = desc.TrimEnd();     // Remove trailing nulls/whitespace
+```
+
+#### Invalid Character Handling
+
+Control how non-ASCII characters are handled in ASCII types:
+
+```csharp
+// InvalidCharBehavior enum
+public enum InvalidCharBehavior {
+  Throw,   // Throw ArgumentException (default)
+  Replace, // Replace with '?' (0x3F)
+  Skip     // Skip invalid characters entirely
+}
+
+// Usage examples
+var strict = new AsciiString("Héllo");                              // Throws - 'é' > 127
+var replaced = new AsciiString("Héllo", InvalidCharBehavior.Replace); // "H?llo"
+var skipped = new AsciiString("Héllo", InvalidCharBehavior.Skip);     // "Hllo"
+
+// Works with all ASCII types
+var fa = new FixedAscii(10, "Tëst", InvalidCharBehavior.Replace); // "T?st"
+```
+
+#### Type Conversions
+
+Implicit conversions (safe, no precision loss):
+- `AsciiZ` → `AsciiString`, `AnsiZ`, `AnsiString`
+- `AsciiString` → `AnsiString`
+- `FixedAscii` → `AsciiString`, `AnsiString`
+- `AnsiZ` → `AnsiString`
+- `FixedAnsi` → `AnsiString`
+- All types → `string`
+
+Explicit conversions (may truncate or throw):
+- `AsciiString` → `AsciiZ` (truncates at first null)
+- `FixedAscii` → `AsciiZ` (truncates at first null)
+- `AnsiString` → `AsciiString` (throws if bytes > 127)
+- `AnsiZ` → `AsciiZ`, `AsciiString` (throws if bytes > 127)
+- `FixedAnsi` → `AsciiString` (throws if bytes > 127)
+- `FixedString` → `StringZ` (truncates at first null)
+
+```csharp
+// Implicit - always safe
+AsciiString ascii = new AsciiZ("Hello");
+AnsiString ansi = ascii;  // ASCII is subset of ANSI
+string str = ansi;
+
+// Explicit - may truncate or throw
+AsciiZ az = (AsciiZ)new AsciiString("Hello\0World"); // Truncates to "Hello"
+AsciiString a = (AsciiString)new AnsiString("Test"); // OK if all bytes ≤ 127
+// AsciiString a2 = (AsciiString)new AnsiString("Tëst"); // Throws!
+```
+
+#### Common API Surface
+
+All string types implement:
+
+**Properties:**
+- `Length` - Number of characters
+- `IsEmpty` - True if length is zero
+- `Capacity` - Maximum characters (fixed types only)
+
+**Indexers:**
+- `this[int index]` - Character/byte at position
+- `this[Index index]` - Character/byte using Index (^1 for last)
+- `this[Range range]` - Substring using Range (1..4)
+
+**Methods:**
+- `Substring(start)`, `Substring(start, length)` - Extract substring
+- `AsSpan()` - Get ReadOnlySpan without allocation
+- `ToString()` - Convert to string
+- `ToArray()` - Get byte array (byte-based types)
+- `ToNullTerminatedArray()` - Get null-terminated array for P/Invoke
+- `GetPinnableReference()` - For use with `fixed` statement
+
+**Fixed types additionally:**
+- `PadRight(char)`, `PadLeft(char)` - Pad to capacity
+- `TrimEnd()` - Remove trailing nulls/whitespace
+
+**Operators:**
+- `==`, `!=`, `<`, `>`, `<=`, `>=` - Comparison
+- `+` - Concatenation
+- Implicit/explicit conversions as documented above
+
+#### P/Invoke and Unsafe Usage
+
+```csharp
+// Get null-terminated array for native calls
+var ascii = new AsciiZ("filename.txt");
+byte[] nullTerminated = ascii.ToNullTerminatedArray();
+
+// Use with fixed statement
+fixed (byte* ptr = ascii) {
+  // ptr points to packed data
+  NativeMethod(ptr);
+}
+
+// Direct span access (no allocation)
+ReadOnlySpan<byte> span = ascii.AsSpan();
+```
+
+---
+
+### Numeric Types
+
+Extended numeric types for machine learning, scientific computing, and scenarios requiring non-standard precision.
+
+#### Overview
+
+| Type | Size | Format | Exponent | Mantissa | Bias | Use Case |
+|------|------|--------|----------|----------|------|----------|
+| `BFloat8` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | Truncated Half, ML inference |
+| `BFloat16` | 16-bit | 1+8+7 | 8 bits | 7 bits | 127 | Upper 16 bits of float32, ML training |
+| `BFloat32` | 32-bit | 1+11+20 | 11 bits | 20 bits | 1023 | Upper 32 bits of double |
+| `BFloat64` | 64-bit | 1+15+48 | 15 bits | 48 bits | 16383 | Extended range (quad exponent) |
+| `Quarter` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | IEEE 754 minifloat |
+| `E4M3` | 8-bit | 1+4+3 | 4 bits | 3 bits | 7 | ML format, no infinity |
+| `E5M2` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | ML format, IEEE 754 conventions |
+| `Int96` | 96-bit | signed | - | - | - | Extended integer range |
+| `UInt96` | 96-bit | unsigned | - | - | - | Extended unsigned integer range |
+
+#### Brain Float Types
+
+Brain Float (BFloat) types truncate the mantissa of standard IEEE 754 formats while preserving the full exponent range. This provides the same dynamic range with reduced precision, ideal for machine learning where the range matters more than precision.
+
+- **`BFloat8`** - 8-bit brain float (1+5+2), same range as Half
+- **`BFloat16`** - 16-bit brain float (1+8+7), same range as float
+- **`BFloat32`** - 32-bit brain float (1+11+20), same range as double
+- **`BFloat64`** - 64-bit brain float (1+15+48), quad-precision exponent range
+
+```csharp
+// BFloat16 - widely used in ML training (same range as float, half the bits)
+BFloat16 weight = (BFloat16)0.5f;
+float backToFloat = (float)weight;
+Console.WriteLine(BFloat16.IsNaN(weight));      // false
+Console.WriteLine(BFloat16.IsInfinity(weight)); // false
+
+// BFloat8 - compact 8-bit format
+BFloat8 compact = (BFloat8)1.5f;
+Console.WriteLine(compact);  // ~1.5 (reduced precision)
+
+// Special values
+var inf = BFloat16.PositiveInfinity;
+var nan = BFloat16.NaN;
+var max = BFloat16.MaxValue;
+var eps = BFloat16.Epsilon;  // Smallest positive subnormal
+```
+
+#### ML Floating-Point Formats
+
+Specialized 8-bit formats optimized for machine learning workloads, balancing range and precision differently.
+
+- **`E4M3`** - 8-bit ML format (1+4+3), more precision, no infinity representation
+- **`E5M2`** - 8-bit ML format (1+5+2), more range, IEEE 754 infinity/NaN
+
+```csharp
+// E4M3 - 4 exponent bits, 3 mantissa bits (more precision, no infinity)
+E4M3 e4 = (E4M3)1.25f;
+Console.WriteLine(E4M3.IsFinite(e4));           // true (E4M3 has no infinity)
+Console.WriteLine(E4M3.IsNaN(E4M3.MaxValue));   // false
+
+// E5M2 - 5 exponent bits, 2 mantissa bits (more range, has infinity)
+E5M2 e5 = (E5M2)100.0f;
+Console.WriteLine(E5M2.IsInfinity(E5M2.PositiveInfinity)); // true
+Console.WriteLine(E5M2.IsNaN(E5M2.NaN));                    // true
+
+// Conversions between formats
+float original = 3.14159f;
+E4M3 e4val = (E4M3)original;
+E5M2 e5val = (E5M2)original;
+float fromE4 = (float)e4val;  // ~3.0 (3 mantissa bits)
+float fromE5 = (float)e5val;  // ~3.0 (2 mantissa bits)
+```
+
+#### IEEE 754 Minifloat
+
+- **`Quarter`** - 8-bit IEEE 754 minifloat (1+5+2), standard IEEE 754 semantics
+
+```csharp
+// Quarter - standard 8-bit IEEE 754 minifloat
+Quarter q = (Quarter)1.0f;
+Console.WriteLine(q == Quarter.One);  // true
+
+// Full IEEE 754 semantics
+Console.WriteLine(Quarter.IsNaN(Quarter.NaN));                    // true
+Console.WriteLine(Quarter.IsInfinity(Quarter.PositiveInfinity)); // true
+Console.WriteLine(Quarter.IsSubnormal(Quarter.Epsilon));          // true
+
+// Arithmetic and comparisons
+Quarter a = (Quarter)2.0f;
+Quarter b = (Quarter)3.0f;
+Console.WriteLine(a < b);  // true
+```
+
+#### Extended Integer Types
+
+96-bit integer types for scenarios requiring values beyond the 64-bit range.
+
+- **`Int96`** - 96-bit signed integer (range: -2^95 to 2^95-1)
+- **`UInt96`** - 96-bit unsigned integer (range: 0 to 2^96-1)
+
+```csharp
+// Int96 - 96-bit signed integer
+Int96 big = new Int96(0x12345678, 0xDEADBEEFCAFEBABE);
+Console.WriteLine(Int96.IsNegative(big));   // false
+Console.WriteLine(Int96.IsPositive(big));   // true
+Console.WriteLine(Int96.IsPow2(Int96.One)); // true
+
+// UInt96 - 96-bit unsigned integer
+UInt96 huge = UInt96.MaxValue;
+Console.WriteLine(huge);  // 79228162514264337593543950335
+
+// Arithmetic operations
+Int96 a = new Int96(0, 100);
+Int96 b = new Int96(0, 50);
+Int96 sum = a + b;
+Int96 diff = a - b;
+Int96 neg = -a;
+
+// Comparison
+Console.WriteLine(a > b);               // true
+Console.WriteLine(a == new Int96(0, 100)); // true
+
+// Bit operations
+Int96 shifted = a << 10;
+Int96 anded = a & b;
+Int96 ored = a | b;
+
+// Conversion
+long smallValue = (long)new Int96(0, 42);  // 42
+```
+
+#### Common Numeric API Surface
+
+All numeric types implement:
+
+**Interfaces:**
+- `IComparable`, `IComparable<T>` - Comparison support
+- `IEquatable<T>` - Equality support
+- `IFormattable` - String formatting support
+- `IParsable<T>` - Parsing support
+
+**Properties (floating-point types):**
+- `RawValue` - Raw bit representation
+- `Zero`, `One` - Common values
+- `Epsilon` - Smallest positive subnormal
+- `MaxValue`, `MinValue` - Finite bounds
+- `PositiveInfinity`, `NegativeInfinity` - Infinity values (except E4M3)
+- `NaN` - Not a Number value
+
+**Static Methods (floating-point types):**
+- `IsNaN(value)` - Check for NaN
+- `IsInfinity(value)` - Check for infinity
+- `IsPositiveInfinity(value)`, `IsNegativeInfinity(value)` - Specific infinity checks
+- `IsFinite(value)` - Check if finite (not NaN or infinity)
+- `IsSubnormal(value)` - Check for subnormal values
+- `FromRaw(bits)` - Create from raw bits
+
+**Properties (integer types):**
+- `Upper`, `Lower` - Component access
+- `Zero`, `One` - Common values
+- `MaxValue`, `MinValue` - Bounds
+
+**Static Methods (integer types):**
+- `IsNegative(value)`, `IsPositive(value)` - Sign checks
+- `IsEvenInteger(value)`, `IsOddInteger(value)` - Parity checks
+- `IsPow2(value)` - Power of two check
+
+**Operators:**
+- `==`, `!=`, `<`, `>`, `<=`, `>=` - Comparison
+- `+`, `-`, `*`, `/` - Arithmetic (integer types)
+- `&`, `|`, `^`, `~` - Bitwise (integer types)
+- `<<`, `>>` - Shift (integer types)
+- Explicit/implicit conversions to/from standard types
 
 ---
 

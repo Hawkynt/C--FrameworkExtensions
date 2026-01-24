@@ -534,6 +534,50 @@ public static class Vector {
   }
 
   /// <summary>
+  /// Returns a value that indicates whether all elements in the first vector are greater than or equal to their corresponding elements in the second vector.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GreaterThanOrEqualAll<T>(Vector<T> left, Vector<T> right) where T : struct {
+    for (var i = 0; i < Vector<T>.Count; ++i)
+      if (!Scalar<T>.GreaterThanOrEqual(left[i], right[i]))
+        return false;
+    return true;
+  }
+
+  /// <summary>
+  /// Returns a value that indicates whether any element in the first vector is greater than or equal to its corresponding element in the second vector.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool GreaterThanOrEqualAny<T>(Vector<T> left, Vector<T> right) where T : struct {
+    for (var i = 0; i < Vector<T>.Count; ++i)
+      if (Scalar<T>.GreaterThanOrEqual(left[i], right[i]))
+        return true;
+    return false;
+  }
+
+  /// <summary>
+  /// Returns a value that indicates whether all elements in the first vector are less than or equal to their corresponding elements in the second vector.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool LessThanOrEqualAll<T>(Vector<T> left, Vector<T> right) where T : struct {
+    for (var i = 0; i < Vector<T>.Count; ++i)
+      if (!Scalar<T>.LessThanOrEqual(left[i], right[i]))
+        return false;
+    return true;
+  }
+
+  /// <summary>
+  /// Returns a value that indicates whether any element in the first vector is less than or equal to its corresponding element in the second vector.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool LessThanOrEqualAny<T>(Vector<T> left, Vector<T> right) where T : struct {
+    for (var i = 0; i < Vector<T>.Count; ++i)
+      if (Scalar<T>.LessThanOrEqual(left[i], right[i]))
+        return true;
+    return false;
+  }
+
+  /// <summary>
   /// Returns a new vector by selecting values from an input vector using a set of indices.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

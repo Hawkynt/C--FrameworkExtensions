@@ -83,16 +83,16 @@ static partial class FileInfoExtensions {
       this._token.Dispose();
     }
 
-    private static void _ReplaceWithRetry(FileInfo target, FileInfo source, int maxRetries = 3, int delayMs = 100) {
+    private static void _ReplaceWithRetry(FileInfo target, FileInfo source, int maxRetries = 5, int delayMs = 100) {
       for (var attempt = 1; ; ++attempt) {
         try {
           target.ReplaceWith(source);
           return;
         } catch (IOException) when (attempt < maxRetries) {
-          // File might be temporarily locked due to lingering handles, force cleanup and retry
+          // File might be temporarily locked due to lingering handles (antivirus, file system watchers, etc.)
           GC.Collect();
           GC.WaitForPendingFinalizers();
-          Threading.Thread.Sleep(delayMs);
+          Threading.Thread.Sleep(delayMs * attempt); // Exponential backoff
         }
       }
     }
