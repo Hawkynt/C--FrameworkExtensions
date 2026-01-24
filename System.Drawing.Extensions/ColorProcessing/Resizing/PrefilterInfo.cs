@@ -117,6 +117,16 @@ public readonly struct PrefilterInfo {
   public static PrefilterInfo BSpline3 => new(-0.26794919243112270f, 6f);
 
   /// <summary>
+  /// Prefilter for quartic B-spline (BSpline4).
+  /// </summary>
+  /// <remarks>
+  /// Two poles: α₁ ≈ -0.0620, α₂ ≈ -0.3799, Scale = 24.
+  /// </remarks>
+  public static PrefilterInfo BSpline4 => new(
+    [-0.06198932482659890f, -0.37988461839253600f],
+    24f);
+
+  /// <summary>
   /// Prefilter for quintic B-spline (BSpline5).
   /// </summary>
   /// <remarks>

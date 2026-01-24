@@ -78,6 +78,61 @@ public readonly struct BSpline2 : IResampler {
 
 #endregion
 
+#region BSpline4
+
+/// <summary>
+/// Quartic B-spline resampler (degree 4), also known as Parzen window.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Uses quartic B-spline basis function with radius 2.5.
+/// Provides smooth interpolation between quadratic and quintic.
+/// </para>
+/// <para>
+/// This is equivalent to the Parzen window function used in ImageMagick.
+/// </para>
+/// <para>
+/// <b>Note:</b> For proper interpolation, this filter requires prefiltering
+/// the source image with <see cref="PrefilterInfo.BSpline4"/>.
+/// </para>
+/// </remarks>
+[ScalerInfo("B-Spline 4", Year = 1978,
+  Description = "Quartic B-spline interpolation (degree 4) / Parzen window", Category = ScalerCategory.Resampler)]
+public readonly struct BSpline4 : IResampler {
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => 3; // ceil(2.5) = 3
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => PrefilterInfo.BSpline4;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new BSplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, BSplineType.BSpline4));
+
+  /// <summary>
+  /// Gets the default configuration.
+  /// </summary>
+  public static BSpline4 Default => new();
+}
+
+#endregion
+
 #region BSpline5
 
 /// <summary>
@@ -290,6 +345,7 @@ public readonly struct BSpline11 : IResampler {
 
 file enum BSplineType {
   BSpline2,
+  BSpline4,
   BSpline5,
   BSpline7,
   BSpline9,
@@ -308,6 +364,7 @@ file readonly struct BSplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
 
   public int Radius => type switch {
     BSplineType.BSpline2 => 2,
+    BSplineType.BSpline4 => 3,
     BSplineType.BSpline5 => 3,
     BSplineType.BSpline7 => 4,
     BSplineType.BSpline9 => 5,
@@ -364,6 +421,7 @@ file readonly struct BSplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private float Weight(float x) => type switch {
     BSplineType.BSpline2 => BSpline2Weight(x),
+    BSplineType.BSpline4 => BSpline4Weight(x),
     BSplineType.BSpline5 => BSpline5Weight(x),
     BSplineType.BSpline7 => BSpline7Weight(x),
     BSplineType.BSpline9 => BSpline9Weight(x),
@@ -382,6 +440,40 @@ file readonly struct BSplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
     if (x < 1.5f) {
       var t = 1.5f - x;
       return t * t * 0.5f;
+    }
+
+    return 0f;
+  }
+
+  /// <summary>
+  /// Quartic B-spline (degree 4) weight, equivalent to Parzen window.
+  /// </summary>
+  /// <remarks>
+  /// Support: [-2.5, 2.5], piecewise polynomial of degree 4.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float BSpline4Weight(float x) {
+    x = MathF.Abs(x);
+    if (x <= 0.5f) {
+      var x2 = x * x;
+      // (115/192) - (5/8)x² + (1/4)x⁴
+      return 0.59895833333333f - x2 * (0.625f - x2 * 0.25f);
+    }
+
+    if (x < 1.5f) {
+      // For 0.5 < |x| <= 1.5: use shifted polynomial
+      var t = x - 1f;
+      var t2 = t * t;
+      // (55/96) - (5/24)|t| - (5/4)t² + (5/6)|t|³ - (1/6)t⁴
+      var absT = MathF.Abs(t);
+      return 0.57291666666667f - absT * (0.20833333333333f + t2 * (1.25f - absT * (0.83333333333333f - t2 * 0.16666666666667f)));
+    }
+
+    if (x < 2.5f) {
+      // (1/24)(2.5 - |x|)⁴
+      var t = 2.5f - x;
+      var t2 = t * t;
+      return t2 * t2 * 0.04166666666667f;
     }
 
     return 0f;
