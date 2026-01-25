@@ -532,6 +532,216 @@ Generates an image and text column for the property.
 | FixedImageHeight        | uint    | uint value           | The fixed height of the image. |
 | KeepAspectRatio         | bool    | bool value           | Whether to keep the aspect ratio of the image. |
 
+## List Control Extensions (ListView, ListBox, ComboBox)
+
+Attribute-based data binding and styling for list controls, similar to DataGridView's declarative model.
+
+### Quick Start
+
+```csharp
+// Shared attributes work with ListView, ListBox, and ComboBox
+[ListItemStyle(foreColor: "Red", conditionalPropertyName: nameof(IsOnSale))]
+[ListItemImage(imageListPropertyName: nameof(Icons), imageKeyPropertyName: nameof(StatusIcon))]
+public class Product {
+  [ListViewColumn("Name", Width = 200)]  // ListView only
+  public string Name { get; set; }
+
+  [ListViewColumn("Price", Width = 80, Alignment = HorizontalAlignment.Right)]  // ListView only
+  [ListViewColumnColor(foreColor: "Green", conditionalPropertyName: nameof(IsDiscounted))]  // ListView only
+  public decimal Price { get; set; }
+
+  [ListViewColumn("Rating")]  // ListView only
+  [ListViewRepeatedImage(nameof(StarImages), "star", 5)]  // ListView only
+  public int Rating { get; set; }
+
+  public bool IsOnSale { get; set; }
+  public bool IsDiscounted { get; set; }
+  public ImageList Icons { get; set; }
+  public string StatusIcon { get; set; }
+  public ImageList StarImages { get; set; }
+}
+
+// ListView
+listView.EnableExtendedAttributes();
+listView.SetDataSource(products);
+
+// ListBox
+listBox.EnableExtendedAttributes();
+listBox.DataSource = products;
+
+// ComboBox
+comboBox.EnableExtendedAttributes();
+comboBox.DataSource = products;
+```
+
+### Shared Attributes (All Controls)
+
+#### ListItemStyleAttribute (Class-Level)
+
+Applied to the data class to style the entire item row. Multiple attributes can be used with conditions.
+
+| Parameter | Type | Target Signature | Description |
+|-----------|------|------------------|-------------|
+| foreColor | string | colorstring | The foreground color for the item (e.g., "Red", "#FF0000"). |
+| backColor | string | colorstring | The background color for the item. |
+| foreColorPropertyName | string | Color propertyname | Property that provides dynamic foreground color. |
+| backColorPropertyName | string | Color propertyname | Property that provides dynamic background color. |
+| conditionalPropertyName | string | bool propertyname | Only apply style when this boolean property is true. |
+
+```csharp
+[ListItemStyle(foreColor: "Red", conditionalPropertyName: nameof(IsOverdue))]
+[ListItemStyle(foreColor: "Green", conditionalPropertyName: nameof(IsComplete))]
+public class Task { ... }
+```
+
+#### ListItemImageAttribute (Class-Level)
+
+Applied to the data class to display an image next to each item.
+
+| Parameter | Type | Target Signature | Description |
+|-----------|------|------------------|-------------|
+| imageListPropertyName | string | ImageList propertyname | Property providing the ImageList containing images. |
+| imageKeyPropertyName | string | string propertyname | Property providing the image key. |
+| imageIndexPropertyName | string | int propertyname | Alternative: property providing the image index. |
+
+```csharp
+[ListItemImage(imageListPropertyName: nameof(Icons), imageKeyPropertyName: nameof(StatusIcon))]
+public class Task {
+  public ImageList Icons { get; set; }
+  public string StatusIcon { get; set; }
+}
+```
+
+### ListView-Specific Attributes
+
+#### ListViewColumnAttribute (Property-Level)
+
+Defines column configuration for ListView in Details view.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| HeaderText | string | Column header text (defaults to property name). |
+| Width | int | Column width in pixels (-1 for auto). |
+| DisplayIndex | int | Column display order (-1 for natural order). |
+| Alignment | HorizontalAlignment | Text alignment (Left, Center, Right). |
+| Visible | bool | Whether the column is visible. |
+| Format | string | Format string for IFormattable values. |
+
+```csharp
+[ListViewColumn("Price", Width = 80, Alignment = HorizontalAlignment.Right, Format = "C2")]
+public decimal Price { get; set; }
+```
+
+#### ListViewColumnColorAttribute (Property-Level)
+
+Applied to properties to override row colors for specific columns. Multiple attributes allowed.
+
+| Parameter | Type | Target Signature | Description |
+|-----------|------|------------------|-------------|
+| foreColor | string | colorstring | The foreground color for this column. |
+| backColor | string | colorstring | The background color for this column. |
+| foreColorPropertyName | string | Color propertyname | Property for dynamic foreground color. |
+| backColorPropertyName | string | Color propertyname | Property for dynamic background color. |
+| conditionalPropertyName | string | bool propertyname | Only apply when this property is true. |
+
+```csharp
+// Row is red when overdue, but Status column can be orange when pending
+[ListItemStyle(foreColor: "Red", conditionalPropertyName: nameof(IsOverdue))]
+public class Task {
+  [ListViewColumn("Status")]
+  [ListViewColumnColor(foreColor: "Orange", conditionalPropertyName: nameof(IsPending))]
+  public string Status { get; set; }
+
+  public bool IsOverdue { get; set; }
+  public bool IsPending { get; set; }
+}
+```
+
+#### ListViewRepeatedImageAttribute (Property-Level)
+
+Displays repeated images based on a numeric property value (e.g., star ratings).
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| imageListPropertyName | string | Property name providing the ImageList. |
+| imageKey | string | Key of the image to repeat in the ImageList. |
+| maxCount | int | Maximum number of repetitions (default: 5). |
+
+**Special Features:**
+
+- **Fractional values**: When the property value is a floating-point number (float, double, decimal), partial images are displayed. For example, a value of 3.5 shows 3 full stars and a half star (only the left portion of the fourth star is drawn).
+- **Negative values**: When the property value is negative, images are rendered in grayscale. The absolute value determines the count. For example, -3 shows 3 grayscale stars, and -2.5 shows 2 full grayscale stars and a partial grayscale star.
+
+```csharp
+[ListViewColumn("Rating")]
+[ListViewRepeatedImage(nameof(StarImages), "star", 5)]  // maxCount = 5
+public double Rating { get; set; }  // Shows 0-5 stars based on value
+
+// Examples:
+// Rating = 4     -> 4 full stars
+// Rating = 3.5   -> 3 full stars + half star
+// Rating = -2    -> 2 grayscale stars (indicates negative/bad rating)
+// Rating = -1.5  -> 1 full grayscale star + half grayscale star
+
+public ImageList StarImages { get; set; }
+```
+
+### Extension Methods
+
+#### All Controls
+
+| Method | Description |
+|--------|-------------|
+| `EnableExtendedAttributes()` | Enable attribute-based rendering (required for custom styling). |
+| `PauseUpdates()` | Returns `ISuspendedUpdateToken` to suspend updates during batch operations. |
+| `SelectAll()` | Select all items (multi-select modes). |
+| `SelectNone()` | Deselect all items. |
+| `EnableDoubleBuffering()` | Reduce flicker during rendering. |
+| `GetBoundData<T>()` | Get typed data objects from all items. |
+
+#### ListView-Specific
+
+| Method | Description |
+|--------|-------------|
+| `SetDataSource(items)` | Set data source and auto-configure columns from attributes. |
+| `GetDataSource()` | Get the current data source. |
+| `ConfigureColumnsFromType<T>()` | Configure columns from `ListViewColumnAttribute`. |
+| `AddItem(text)` | Add item with text. |
+| `AddItem(text, subItems)` | Add item with sub-items. |
+| `AddItem<T>(data)` | Add item from data object using attributes. |
+| `AddItems<T>(dataItems)` | Add multiple items from data objects. |
+| `RemoveWhere(predicate)` | Remove items matching predicate. |
+| `Filter(predicate)` | Show only matching items. |
+| `FilterByText(searchText)` | Filter by text (case-insensitive). |
+| `ClearFilter()` | Restore all items after filtering. |
+| `SortByColumn(index, ascending)` | Sort by column index. |
+| `GetSelectedItems<T>()` | Get typed data from selected items. |
+| `GetCheckedItems<T>()` | Get typed data from checked items. |
+| `CheckAll()` / `UncheckAll()` | Check/uncheck all items. |
+| `InvertSelection()` | Invert current selection. |
+| `SelectWhere(predicate)` | Select items matching predicate. |
+| `ScrollToItem(item)` | Scroll to make item visible. |
+| `ScrollToEnd()` | Scroll to last item. |
+
+#### ListBox-Specific
+
+| Method | Description |
+|--------|-------------|
+| `GetSelectedItems<T>()` | Get typed data from selected items. |
+| `GetSelectedItem<T>()` | Get typed data from single selected item. |
+| `SelectWhere(predicate)` | Select items matching predicate. |
+| `Filter(predicate)` | Show only matching items. |
+| `ClearFilter()` | Restore all items after filtering. |
+| `ScrollToItem(item)` | Scroll to make item visible. |
+
+#### ComboBox-Specific
+
+| Method | Description |
+|--------|-------------|
+| `GetSelectedItem<T>()` | Get typed data from selected item. |
+| `SelectWhere(predicate)` | Select first item matching predicate. |
+| `AutoAdjustWidth()` | Adjust width to fit longest item. |
+
 ## RichTextBox Extensions
 
 - **Syntax Highlighting**: Adds syntax highlighting capabilities to RichTextBox controls, making it easier to implement features for code editors or similar applications.
@@ -539,3 +749,477 @@ Generates an image and text column for the property.
 ## TabControl Extensions
 
 - **Tab Headers**: Adds coloring and images to tab page headers.
+
+## Custom Controls
+
+Modern UI controls for Windows Forms applications.
+
+### Input Controls
+
+#### PlaceholderTextBox
+
+A TextBox with watermark/placeholder text that disappears when the user types.
+
+```csharp
+var textBox = new PlaceholderTextBox {
+  PlaceholderText = "Enter your email...",
+  PlaceholderColor = SystemColors.GrayText
+};
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| PlaceholderText | string | The watermark text displayed when empty. |
+| PlaceholderColor | Color | The color of the placeholder text. |
+
+#### ToggleSwitch
+
+iOS/Android-style on/off switch control.
+
+```csharp
+var toggle = new ToggleSwitch {
+  Checked = true,
+  OnColor = Color.DodgerBlue,
+  OnText = "ON",
+  OffText = "OFF"
+};
+toggle.CheckedChanged += (s, e) => Console.WriteLine($"Checked: {toggle.Checked}");
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Checked | bool | Gets or sets whether the switch is on. |
+| OnColor | Color | The color when the switch is on. |
+| OffColor | Color | The color when the switch is off. |
+| ThumbColor | Color | The color of the sliding thumb. |
+| OnText | string | Text displayed when on. |
+| OffText | string | Text displayed when off. |
+| ShowText | bool | Whether to show on/off text. |
+| AnimateTransition | bool | Whether to animate the toggle. |
+
+#### RatingControl
+
+Star rating input/display control.
+
+```csharp
+var rating = new RatingControl {
+  MaxRating = 5,
+  Value = 3,
+  AllowHalfStars = true
+};
+rating.ValueChanged += (s, e) => Console.WriteLine($"Rating: {rating.Value}");
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Value | int | Current rating value. |
+| MaxRating | int | Maximum number of stars (default: 5). |
+| AllowHalfStars | bool | Enable half-star ratings. |
+| ReadOnly | bool | Prevent user input. |
+| FilledImage | Image | Custom filled star image. |
+| EmptyImage | Image | Custom empty star image. |
+| HalfImage | Image | Custom half-star image. |
+| ImageSize | int | Size of each star in pixels. |
+| Spacing | int | Space between stars. |
+
+#### RangeSlider
+
+Dual-thumb slider for selecting a range of values.
+
+```csharp
+var slider = new RangeSlider {
+  Minimum = 0,
+  Maximum = 100,
+  LowerValue = 25,
+  UpperValue = 75
+};
+slider.RangeChanged += (s, e) => Console.WriteLine($"Range: {slider.LowerValue}-{slider.UpperValue}");
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Minimum | double | Minimum value of the range. |
+| Maximum | double | Maximum value of the range. |
+| LowerValue | double | Current lower value. |
+| UpperValue | double | Current upper value. |
+| SmallChange | double | Increment for small adjustments. |
+| LargeChange | double | Increment for large adjustments. |
+| SnapToTicks | bool | Snap values to tick marks. |
+| TickFrequency | double | Interval between tick marks. |
+| Orientation | Orientation | Horizontal or Vertical. |
+
+#### SearchTextBox
+
+TextBox with search icon, clear button, and debounced search events.
+
+```csharp
+var search = new SearchTextBox {
+  PlaceholderText = "Search...",
+  SearchDelay = 300
+};
+search.SearchTriggered += (s, e) => PerformSearch(search.Text);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Text | string | The current search text. |
+| PlaceholderText | string | Watermark text when empty. |
+| SearchIcon | Image | Custom search icon. |
+| ShowClearButton | bool | Show the clear (X) button. |
+| SearchDelay | int | Milliseconds before SearchTriggered fires. |
+
+#### ColorPickerButton
+
+Button that opens a color picker dropdown.
+
+```csharp
+var picker = new ColorPickerButton {
+  SelectedColor = Color.Blue,
+  AllowCustomColor = true
+};
+picker.SelectedColorChanged += (s, e) => ApplyColor(picker.SelectedColor);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| SelectedColor | Color | The currently selected color. |
+| StandardColors | Color[] | Palette of available colors. |
+| RecentColors | Color[] | Recently selected colors (auto-tracked). |
+| MaxRecentColors | int | Maximum recent colors to track. |
+| AllowCustomColor | bool | Show "More Colors..." option. |
+| ShowColorName | bool | Display color name on button. |
+
+### Display Controls
+
+#### CircularProgressBar
+
+Ring/donut-style progress indicator.
+
+```csharp
+var progress = new CircularProgressBar {
+  Value = 75,
+  Thickness = 10,
+  ShowText = true,
+  TextFormat = "{0:0}%"
+};
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Value | double | Current progress value. |
+| Minimum | double | Minimum value (default: 0). |
+| Maximum | double | Maximum value (default: 100). |
+| Thickness | int | Width of the progress ring. |
+| ProgressColor | Color | Color of the progress arc. |
+| TrackColor | Color | Color of the background track. |
+| ShowText | bool | Display progress text in center. |
+| TextFormat | string | Format string for text (e.g., "{0:0}%"). |
+| IsIndeterminate | bool | Animate without specific progress. |
+
+#### BadgeLabel
+
+Label or icon with notification badge overlay.
+
+```csharp
+var badge = new BadgeLabel {
+  Icon = myIcon,
+  BadgeValue = 5,
+  BadgeColor = Color.Red
+};
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Icon | Image | The main icon to display. |
+| Text | string | Text to display (alternative to icon). |
+| BadgeValue | int | Number to show in badge. |
+| BadgeColor | Color | Background color of badge. |
+| BadgeTextColor | Color | Text color of badge. |
+| BadgePosition | ContentAlignment | Position of badge (default: TopRight). |
+| MaxBadgeValue | int | Shows "99+" above this value. |
+| HideWhenZero | bool | Hide badge when value is 0. |
+
+#### LoadingSpinner
+
+Animated loading indicator with multiple styles.
+
+```csharp
+var spinner = new LoadingSpinner {
+  Style = SpinnerStyle.Circle,
+  SpinnerColor = Color.DodgerBlue,
+  LoadingText = "Loading..."
+};
+spinner.Start();
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| IsSpinning | bool | Whether the spinner is active. |
+| Style | SpinnerStyle | Circle, Dots, or Bars. |
+| SpinnerColor | Color | Color of the spinner. |
+| Speed | int | Milliseconds per animation frame. |
+| LoadingText | string | Optional text below spinner. |
+
+#### Gauge
+
+Speedometer/dial gauge for displaying values.
+
+```csharp
+var gauge = new Gauge {
+  Minimum = 0,
+  Maximum = 100,
+  Value = 65,
+  Zones = new[] {
+    new GaugeZone { Start = 0, End = 50, Color = Color.Green },
+    new GaugeZone { Start = 50, End = 80, Color = Color.Yellow },
+    new GaugeZone { Start = 80, End = 100, Color = Color.Red }
+  }
+};
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Value | double | Current value displayed. |
+| Minimum | double | Minimum scale value. |
+| Maximum | double | Maximum scale value. |
+| StartAngle | double | Starting angle in degrees. |
+| SweepAngle | double | Arc sweep in degrees. |
+| Zones | GaugeZone[] | Colored zones on the dial. |
+| ShowTicks | bool | Display tick marks. |
+| MajorTickCount | int | Number of major ticks. |
+| MinorTickCount | int | Minor ticks between majors. |
+| ShowValue | bool | Display value text. |
+| ValueFormat | string | Format string for value. |
+| Unit | string | Unit label (e.g., "km/h"). |
+
+### Container Controls
+
+#### CardControl
+
+Material Design-style card container with shadow.
+
+```csharp
+var card = new CardControl {
+  Title = "User Profile",
+  ShowShadow = true,
+  CornerRadius = 8
+};
+card.ContentPanel.Controls.Add(new Label { Text = "Content here" });
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Title | string | Card title text. |
+| TitleIcon | Image | Icon next to title. |
+| ShowShadow | bool | Display drop shadow. |
+| ShadowDepth | int | Shadow offset in pixels. |
+| CornerRadius | int | Corner rounding radius. |
+| CardColor | Color | Background color of card. |
+| ContentPanel | Panel | Container for main content. |
+| ActionPanel | Panel | Container for action buttons. |
+
+#### ExpanderControl
+
+Collapsible panel with animated expand/collapse.
+
+```csharp
+var expander = new ExpanderControl {
+  HeaderText = "Advanced Options",
+  IsExpanded = false,
+  AnimateExpansion = true
+};
+expander.ContentPanel.Controls.Add(optionsPanel);
+expander.Expanded += (s, e) => Console.WriteLine("Expanded!");
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| HeaderText | string | Text in the header bar. |
+| HeaderIcon | Image | Icon in the header. |
+| IsExpanded | bool | Current expansion state. |
+| CollapsedHeight | int | Height when collapsed. |
+| ExpandedHeight | int | Height when expanded. |
+| AnimateExpansion | bool | Animate height changes. |
+| ContentPanel | Panel | Container for content. |
+
+| Event | Description |
+|-------|-------------|
+| Expanded | Fired after expanding. |
+| Collapsed | Fired after collapsing. |
+| Expanding | Fired before expanding (cancelable). |
+| Collapsing | Fired before collapsing (cancelable). |
+
+#### AccordionPanel
+
+Multiple collapsible sections (uses ExpanderControl internally).
+
+```csharp
+var accordion = new AccordionPanel {
+  AllowMultipleExpanded = false
+};
+var section1 = accordion.AddSection("General");
+section1.ContentPanel.Controls.Add(generalSettings);
+var section2 = accordion.AddSection("Advanced");
+section2.ContentPanel.Controls.Add(advancedSettings);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Sections | AccordionSection[] | All sections in the accordion. |
+| AllowMultipleExpanded | bool | Allow multiple open sections. |
+| AnimateExpansion | bool | Animate section transitions. |
+
+#### WizardControl
+
+Multi-step wizard with navigation and step indicator.
+
+```csharp
+var wizard = new WizardControl();
+var page1 = wizard.AddPage("Welcome", "Get started with setup");
+page1.ContentPanel.Controls.Add(welcomePanel);
+var page2 = wizard.AddPage("Configuration", "Configure your settings");
+page2.ContentPanel.Controls.Add(configPanel);
+wizard.Finished += (s, e) => CompleteSetup();
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Pages | WizardPage[] | All wizard pages. |
+| CurrentPageIndex | int | Index of current page. |
+| CurrentPage | WizardPage | Current page object. |
+| ShowStepIndicator | bool | Show step progress at top. |
+| ShowNavigationButtons | bool | Show Back/Next/Finish buttons. |
+| NextButtonText | string | Text for Next button. |
+| BackButtonText | string | Text for Back button. |
+| FinishButtonText | string | Text for Finish button. |
+
+### Navigation Controls
+
+#### BreadcrumbControl
+
+Navigation breadcrumb trail with clickable items.
+
+```csharp
+var breadcrumb = new BreadcrumbControl();
+breadcrumb.Push("Home");
+breadcrumb.Push("Documents");
+breadcrumb.Push("Reports");
+breadcrumb.ItemClicked += (s, e) => NavigateTo(e.Index);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Items | BreadcrumbItem[] | Current breadcrumb items. |
+| Separator | string | Text between items (default: " > "). |
+| ClickableItems | bool | Allow clicking to navigate. |
+| OverflowMode | BreadcrumbOverflowMode | Ellipsis, Scroll, or Wrap. |
+
+| Method | Description |
+|--------|-------------|
+| Push(text, tag) | Add item to the end. |
+| Pop() | Remove the last item. |
+| NavigateTo(index) | Remove items after index. |
+| Clear() | Remove all items. |
+
+#### ChipControl
+
+Tag/chip collection with add, remove, and selection support.
+
+```csharp
+var chips = new ChipControl {
+  AllowAdd = true,
+  AllowRemove = true,
+  SelectionMode = SelectionMode.MultiSimple
+};
+chips.AddChip("C#", Color.Purple);
+chips.AddChip("WinForms", Color.Blue);
+chips.ChipRemoved += (s, e) => Console.WriteLine($"Removed: {e.Chip.Text}");
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Chips | Chip[] | All chips in the control. |
+| AllowAdd | bool | Allow adding new chips. |
+| AllowRemove | bool | Allow removing chips. |
+| AllowSelection | bool | Enable chip selection. |
+| SelectionMode | SelectionMode | None, One, or MultiSimple. |
+| ChipSpacing | int | Space between chips. |
+
+| Method | Description |
+|--------|-------------|
+| AddChip(text, color) | Add a new chip. |
+| RemoveChip(chip) | Remove a specific chip. |
+| ClearChips() | Remove all chips. |
+| GetSelectedChips() | Get selected chips. |
+
+### Notification Controls
+
+#### ToastNotification
+
+Non-modal popup notifications with auto-dismiss.
+
+```csharp
+// Simple usage via ToastManager
+ToastManager.Show("File saved successfully!", ToastType.Success);
+ToastManager.Show("Connection lost", ToastType.Error, duration: 5000);
+
+// Advanced options
+ToastManager.Show(new ToastOptions {
+  Title = "Update Available",
+  Message = "Version 2.0 is ready to install",
+  Type = ToastType.Info,
+  Duration = 0,  // Persistent until clicked
+  Position = ToastPosition.TopRight
+});
+```
+
+| ToastManager Property | Type | Description |
+|----------------------|------|-------------|
+| DefaultPosition | ToastPosition | Default position for toasts. |
+| MaxVisible | int | Maximum simultaneous toasts. |
+
+| ToastType | Description |
+|-----------|-------------|
+| Info | Informational message (blue). |
+| Success | Success message (green). |
+| Warning | Warning message (yellow). |
+| Error | Error message (red). |
+
+| ToastPosition | Description |
+|---------------|-------------|
+| TopLeft | Top-left corner. |
+| TopRight | Top-right corner. |
+| TopCenter | Top center. |
+| BottomLeft | Bottom-left corner. |
+| BottomRight | Bottom-right corner (default). |
+| BottomCenter | Bottom center. |
+
+#### TimelineControl
+
+Vertical timeline for displaying events chronologically.
+
+```csharp
+var timeline = new TimelineControl {
+  Layout = TimelineLayout.Alternating,
+  NodeSize = 16
+};
+timeline.AddItem(DateTime.Now, "Project Started", "Initial commit");
+timeline.AddItem(DateTime.Now.AddDays(7), "First Release", "v1.0.0");
+timeline.ItemClicked += (s, e) => ShowDetails(e.Item);
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| Items | TimelineItem[] | All timeline items. |
+| Layout | TimelineLayout | Left, Right, or Alternating. |
+| LineColor | Color | Color of the vertical line. |
+| NodeSize | int | Size of timeline nodes. |
+
+| TimelineItem Property | Type | Description |
+|----------------------|------|-------------|
+| Date | DateTime | Event date/time. |
+| Title | string | Event title. |
+| Description | string | Event description. |
+| Icon | Image | Optional icon. |
+| NodeColor | Color | Color of this node. |
+| Tag | object | Custom data.

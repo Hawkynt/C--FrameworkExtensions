@@ -19,10 +19,26 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Guard;
 
 namespace System.Windows.Forms;
+
+/// <summary>
+/// Specifies how images and text are displayed in a ComboBox with extended attributes.
+/// </summary>
+public enum ComboBoxDisplayMode {
+  /// <summary>Text only, no image.</summary>
+  TextOnly,
+  /// <summary>Image only, no text.</summary>
+  ImageOnly,
+  /// <summary>Image before text (default).</summary>
+  ImageBeforeText,
+  /// <summary>Text before image.</summary>
+  TextBeforeImage
+}
 
 public static partial class ComboBoxExtensions {
 
@@ -50,12 +66,37 @@ public static partial class ComboBoxExtensions {
       ;
 
     var font = @this.Font;
-    @this.Width = items
-                    .Cast<object>()
-                    .Select(i => TextRenderer.MeasureText(@this.GetItemText(i), font).Width)
-                    .Max()
-                  + vertScrollBarWidth
-      ;
+    var displayMode = @this.GetDisplayMode();
+
+    // Calculate image width if images are used
+    var imageWidth = 0;
+    if (displayMode != ComboBoxDisplayMode.TextOnly && items.Count > 0) {
+      var firstItem = items[0];
+      if (firstItem != null) {
+        var type = firstItem.GetType();
+        var imageAttr = ListControlExtensions.GetImageAttribute(type);
+        if (imageAttr != null) {
+          // Check if any item has an image
+          foreach (var item in items.Cast<object>()) {
+            var image = imageAttr.GetImage(item);
+            if (image != null) {
+              imageWidth = image.Width + 6; // image width + padding
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    var textWidth = displayMode == ComboBoxDisplayMode.ImageOnly
+      ? 0
+      : items
+          .Cast<object>()
+          .Select(i => TextRenderer.MeasureText(@this.GetItemText(i), font).Width)
+          .DefaultIfEmpty(0)
+          .Max();
+
+    @this.Width = textWidth + imageWidth + vertScrollBarWidth + 4; // +4 for margins
   }
 
   /// <summary>
@@ -397,5 +438,314 @@ public static partial class ComboBoxExtensions {
   /// </example>
   public static TItem GetSelectedItem<TItem>(this ComboBox @this)
     => !TryGetSelectedItem(@this, out TItem item) ? default : item;
+
+  #region Suspended Update Token
+
+  /// <summary>
+  /// Token returned by <see cref="PauseUpdates"/> to restore updates when disposed.
+  /// </summary>
+  public interface ISuspendedUpdateToken : IDisposable { }
+
+  private sealed class SuspendedUpdateToken(ComboBox comboBox) : ISuspendedUpdateToken {
+    private bool _isDisposed;
+
+    public void Dispose() {
+      if (this._isDisposed)
+        return;
+
+      this._isDisposed = true;
+      comboBox.EndUpdate();
+    }
+  }
+
+  /// <summary>
+  /// Pauses updates to the ComboBox until the returned token is disposed.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  /// <returns>A token that restores updates when disposed.</returns>
+  /// <example>
+  /// <code>
+  /// using (comboBox.PauseUpdates()) {
+  ///   // Add many items without flickering
+  ///   foreach (var item in items)
+  ///     comboBox.Items.Add(item);
+  /// }
+  /// </code>
+  /// </example>
+  public static ISuspendedUpdateToken PauseUpdates(this ComboBox @this) {
+    Against.ThisIsNull(@this);
+    @this.BeginUpdate();
+    return new SuspendedUpdateToken(@this);
+  }
+
+  #endregion
+
+  #region EnableExtendedAttributes
+
+  private static readonly ConditionalWeakTable<ComboBox, object> _ExtendedAttributesEnabled = new();
+  private static readonly ConditionalWeakTable<ComboBox, DisplayModeHolder> _DisplayModes = new();
+  private static readonly ConditionalWeakTable<ComboBox, Form> _ComboBoxParentForms = new();
+
+  private sealed class DisplayModeHolder {
+    public ComboBoxDisplayMode Mode { get; set; } = ComboBoxDisplayMode.ImageBeforeText;
+  }
+
+  /// <summary>
+  /// Gets the display mode for this ComboBox.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  /// <returns>The current display mode.</returns>
+  public static ComboBoxDisplayMode GetDisplayMode(this ComboBox @this) {
+    Against.ThisIsNull(@this);
+    return _DisplayModes.TryGetValue(@this, out var holder) ? holder.Mode : ComboBoxDisplayMode.ImageBeforeText;
+  }
+
+  /// <summary>
+  /// Sets the display mode for this ComboBox.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  /// <param name="mode">The display mode to use.</param>
+  public static void SetDisplayMode(this ComboBox @this, ComboBoxDisplayMode mode) {
+    Against.ThisIsNull(@this);
+
+    if (!_DisplayModes.TryGetValue(@this, out var holder)) {
+      holder = new DisplayModeHolder();
+      _DisplayModes.Add(@this, holder);
+    }
+
+    holder.Mode = mode;
+    @this.Invalidate();
+  }
+
+  /// <summary>
+  /// Enables attribute-based rendering for this ComboBox.
+  /// This hooks owner-draw events to apply <see cref="ListItemStyleAttribute"/> and <see cref="ListItemImageAttribute"/>.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  /// <example>
+  /// <code>
+  /// comboBox.EnableExtendedAttributes();
+  /// comboBox.DataSource = myData;
+  /// </code>
+  /// </example>
+  public static void EnableExtendedAttributes(this ComboBox @this) {
+    Against.ThisIsNull(@this);
+
+    // Check if already enabled
+    if (_ExtendedAttributesEnabled.TryGetValue(@this, out _))
+      return;
+
+    _ExtendedAttributesEnabled.Add(@this, new object());
+
+    // Initialize display mode holder
+    if (!_DisplayModes.TryGetValue(@this, out _))
+      _DisplayModes.Add(@this, new DisplayModeHolder());
+
+    // Unsubscribe first to avoid duplicates
+    @this.DrawItem -= _ComboBox_DrawItem;
+    @this.HandleCreated -= _ComboBox_HandleCreated;
+
+    // Subscribe
+    @this.DrawItem += _ComboBox_DrawItem;
+    @this.HandleCreated += _ComboBox_HandleCreated;
+
+    // Enable owner draw for custom rendering
+    @this.DrawMode = DrawMode.OwnerDrawFixed;
+
+    // Hook parent form if already has handle
+    if (@this.IsHandleCreated)
+      _HookComboBoxParentForm(@this);
+  }
+
+  private static void _ComboBox_HandleCreated(object sender, EventArgs e) => _HookComboBoxParentForm((ComboBox)sender);
+
+  private static void _HookComboBoxParentForm(ComboBox comboBox) {
+    // Unhook old parent form if any
+    if (_ComboBoxParentForms.TryGetValue(comboBox, out var oldForm)) {
+      oldForm.Resize -= _ComboBox_ParentForm_Resize;
+      oldForm.Activated -= _ComboBox_ParentForm_Activated;
+      _ComboBoxParentForms.Remove(comboBox);
+    }
+
+    // Hook new parent form
+    var newForm = comboBox.FindForm();
+    if (newForm == null)
+      return;
+
+    _ComboBoxParentForms.Add(comboBox, newForm);
+    newForm.Resize += _ComboBox_ParentForm_Resize;
+    newForm.Activated += _ComboBox_ParentForm_Activated;
+  }
+
+  private static void _ComboBox_ParentForm_Resize(object sender, EventArgs e) {
+    var form = (Form)sender;
+    _RefreshComboBoxesInContainer(form);
+  }
+
+  private static void _ComboBox_ParentForm_Activated(object sender, EventArgs e) {
+    var form = (Form)sender;
+    _RefreshComboBoxesInContainer(form);
+  }
+
+  private static void _RefreshComboBoxesInContainer(Control container) {
+    foreach (Control control in container.Controls) {
+      if (control is ComboBox comboBox && _ExtendedAttributesEnabled.TryGetValue(comboBox, out _))
+        comboBox.Refresh();
+      else if (control.HasChildren)
+        _RefreshComboBoxesInContainer(control);
+    }
+  }
+
+  private static void _ComboBox_DrawItem(object sender, DrawItemEventArgs e) {
+    var comboBox = (ComboBox)sender;
+
+    if (e.Index < 0 || e.Index >= comboBox.Items.Count) {
+      e.DrawBackground();
+      return;
+    }
+
+    var data = comboBox.Items[e.Index];
+    if (data == null) {
+      e.DrawBackground();
+      return;
+    }
+
+    var type = data.GetType();
+    var displayMode = comboBox.GetDisplayMode();
+
+    // Determine colors
+    var foreColor = e.ForeColor;
+    var backColor = e.BackColor;
+
+    // Apply selection colors if selected
+    if ((e.State & DrawItemState.Selected) == DrawItemState.Selected) {
+      backColor = SystemColors.Highlight;
+      foreColor = SystemColors.HighlightText;
+    } else {
+      // Apply style attributes
+      var styleAttrs = ListControlExtensions.GetStyleAttributes(type);
+      foreach (var attr in styleAttrs)
+        if (attr.IsEnabled(data)) {
+          if (attr.GetForeColor(data) is { } fg)
+            foreColor = fg;
+          if (attr.GetBackColor(data) is { } bg)
+            backColor = bg;
+        }
+    }
+
+    // Draw background
+    using (var brush = new SolidBrush(backColor))
+      e.Graphics.FillRectangle(brush, e.Bounds);
+
+    // Get display text and image
+    var displayText = comboBox.GetItemText(data);
+    var imageAttr = ListControlExtensions.GetImageAttribute(type);
+    var image = imageAttr?.GetImage(data);
+
+    var textX = e.Bounds.X + 2;
+    var textY = e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2;
+
+    switch (displayMode) {
+      case ComboBoxDisplayMode.TextOnly:
+        // Draw text only
+        using (var brush = new SolidBrush(foreColor))
+          e.Graphics.DrawString(displayText, e.Font, brush, textX, textY);
+        break;
+
+      case ComboBoxDisplayMode.ImageOnly:
+        // Draw image only (centered)
+        if (image != null) {
+          var imageX = e.Bounds.X + (e.Bounds.Width - image.Width) / 2;
+          var imageY = e.Bounds.Y + (e.Bounds.Height - image.Height) / 2;
+          e.Graphics.DrawImage(image, imageX, imageY);
+        }
+        break;
+
+      case ComboBoxDisplayMode.ImageBeforeText:
+        // Draw image then text
+        if (image != null) {
+          var imageY = e.Bounds.Y + (e.Bounds.Height - image.Height) / 2;
+          e.Graphics.DrawImage(image, textX, imageY);
+          textX += image.Width + 4;
+        }
+        using (var brush = new SolidBrush(foreColor))
+          e.Graphics.DrawString(displayText, e.Font, brush, textX, textY);
+        break;
+
+      case ComboBoxDisplayMode.TextBeforeImage:
+        // Draw text then image
+        using (var brush = new SolidBrush(foreColor))
+          e.Graphics.DrawString(displayText, e.Font, brush, textX, textY);
+        if (image != null) {
+          var textSize = e.Graphics.MeasureString(displayText, e.Font);
+          var imageX = textX + (int)textSize.Width + 4;
+          var imageY = e.Bounds.Y + (e.Bounds.Height - image.Height) / 2;
+          e.Graphics.DrawImage(image, imageX, imageY);
+        }
+        break;
+    }
+
+    // Draw focus rectangle if focused
+    e.DrawFocusRectangle();
+  }
+
+  #endregion
+
+  #region Selection
+
+  /// <summary>
+  /// Deselects the current item.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  public static void SelectNone(this ComboBox @this) {
+    Against.ThisIsNull(@this);
+    @this.SelectedIndex = -1;
+  }
+
+  /// <summary>
+  /// Selects the first item matching a predicate.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  /// <param name="predicate">The predicate to match.</param>
+  public static void SelectWhere(this ComboBox @this, Predicate<object> predicate) {
+    Against.ThisIsNull(@this);
+    Against.ArgumentIsNull(predicate);
+
+    for (var i = 0; i < @this.Items.Count; ++i)
+      if (predicate(@this.Items[i])) {
+        @this.SelectedIndex = i;
+        return;
+      }
+
+    @this.SelectedIndex = -1;
+  }
+
+  #endregion
+
+  #region Utility
+
+  /// <summary>
+  /// Gets the bound data from all items.
+  /// </summary>
+  /// <typeparam name="T">The type of the data objects.</typeparam>
+  /// <param name="this">This ComboBox.</param>
+  /// <returns>The bound data objects.</returns>
+  public static IEnumerable<T> GetBoundData<T>(this ComboBox @this) where T : class {
+    Against.ThisIsNull(@this);
+    return @this.Items.Cast<object>().OfType<T>();
+  }
+
+  /// <summary>
+  /// Enables double buffering to reduce flickering.
+  /// </summary>
+  /// <param name="this">This ComboBox.</param>
+  public static void EnableDoubleBuffering(this ComboBox @this) {
+    Against.ThisIsNull(@this);
+    typeof(ComboBox)
+      .GetProperty("DoubleBuffered", Reflection.BindingFlags.Instance | Reflection.BindingFlags.NonPublic)
+      ?.SetValue(@this, true);
+  }
+
+  #endregion
 
 }
