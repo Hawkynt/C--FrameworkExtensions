@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -48,12 +49,12 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// </remarks>
 public static class QuantizerRegistry {
 
-  private static readonly Lazy<IReadOnlyList<QuantizerDescriptor>> _all = new(DiscoverQuantizers);
+  private static readonly Lazy<QuantizerDescriptor[]> _all = new(DiscoverQuantizers);
 
   /// <summary>
   /// Gets all registered quantizer types and presets.
   /// </summary>
-  public static IReadOnlyList<QuantizerDescriptor> All => _all.Value;
+  public static IEnumerable<QuantizerDescriptor> All => _all.Value;
 
   /// <summary>
   /// Finds a quantizer by name (case-insensitive).
@@ -79,7 +80,7 @@ public static class QuantizerRegistry {
   public static IEnumerable<QuantizerDescriptor> GetByType(QuantizationType type)
     => All.Where(q => q.Type == type);
 
-  private static List<QuantizerDescriptor> DiscoverQuantizers() {
+  private static QuantizerDescriptor[] DiscoverQuantizers() {
     var assembly = typeof(QuantizerRegistry).Assembly;
     var descriptors = new List<QuantizerDescriptor>();
 
@@ -131,7 +132,7 @@ public static class QuantizerRegistry {
       }
     }
 
-    return descriptors.OrderBy(q => q.Name).ToList();
+    return descriptors.OrderBy(q => q.Name).ToArray();
   }
 }
 

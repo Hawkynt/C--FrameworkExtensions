@@ -48,12 +48,12 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// </remarks>
 public static class DithererRegistry {
 
-  private static readonly Lazy<IReadOnlyList<DithererDescriptor>> _all = new(DiscoverDitherers);
+  private static readonly Lazy<DithererDescriptor[]> _all = new(DiscoverDitherers);
 
   /// <summary>
   /// Gets all registered ditherer presets and types.
   /// </summary>
-  public static IReadOnlyList<DithererDescriptor> All => _all.Value;
+  public static IEnumerable<DithererDescriptor> All => _all.Value;
 
   /// <summary>
   /// Finds a ditherer by name (case-insensitive).
@@ -79,7 +79,7 @@ public static class DithererRegistry {
   public static IEnumerable<DithererDescriptor> GetByType(DitheringType type)
     => All.Where(d => d.Type == type);
 
-  private static List<DithererDescriptor> DiscoverDitherers() {
+  private static DithererDescriptor[] DiscoverDitherers() {
     var assembly = typeof(DithererRegistry).Assembly;
     var descriptors = new List<DithererDescriptor>();
 
@@ -131,7 +131,7 @@ public static class DithererRegistry {
       }
     }
 
-    return descriptors.OrderBy(d => d.Name).ToList();
+    return descriptors.OrderBy(d => d.Name).ToArray();
   }
 }
 
