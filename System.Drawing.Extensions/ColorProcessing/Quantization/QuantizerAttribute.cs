@@ -36,7 +36,11 @@ public enum QuantizationType {
   /// <summary>Variance-based quantization.</summary>
   Variance,
   /// <summary>Neural network-based quantization (e.g., NeuQuant).</summary>
-  Neural
+  Neural,
+  /// <summary>Preprocessing wrapper that modifies input before passing to inner quantizer.</summary>
+  Preprocessing,
+  /// <summary>Postprocessing wrapper that refines output from inner quantizer.</summary>
+  Postprocessing
 }
 
 /// <summary>

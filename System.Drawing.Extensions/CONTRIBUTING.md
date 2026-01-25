@@ -470,3 +470,89 @@ Use `IDecode`/`IEncode` for conversions between formats.
 - [ ] Use `ColorConverter` for component access, never unsafe pointer casts
 - [ ] Add `ScalerInfo` attribute with author, year, description, category
 - [ ] Add static `SupportedScales` and `GetPossibleTargets` for discoverability
+- [ ] Document in README.md with required links (see Algorithm Documentation Requirements below)
+
+---
+
+## Algorithm Documentation Requirements
+
+Every algorithm (quantizer, ditherer, scaler, resampler) added to this library **MUST** be documented in `ReadMe.md` with:
+
+### Required Information
+
+1. **Algorithm Name** - Linked to primary paper/wiki/description
+2. **Author** - Original inventor(s) or significant contributors
+3. **Year** - Year of publication or creation
+4. **Brief Description** - What the algorithm does and its key characteristics
+
+### Required Links
+
+Each algorithm entry **MUST** include BOTH:
+
+1. **Paper/Wiki/Description Link** - A link to:
+   - The original academic paper (DOI link preferred)
+   - Wikipedia article describing the algorithm
+   - Author's official documentation/blog post
+   - Technical specification or patent
+
+2. **Reference Implementation Link** - A link to at least one working implementation in ANY programming language:
+   - GitHub/GitLab repository
+   - Official library implementation
+   - Well-documented open-source implementation
+   - Even implementations in C, Python, JavaScript, etc. are acceptable
+
+### Format Example
+
+```markdown
+| [`AlgorithmName`](https://link-to-paper-or-wiki) | Author Name | Year | Description | [Impl](https://link-to-reference-implementation) |
+```
+
+Or for algorithms with integrated links:
+
+```markdown
+| [`AlgorithmName`](https://link-to-paper-or-wiki) | Author Name | Year | Description |
+```
+
+With a reference implementation link in the description or as a separate column.
+
+### Why Both Links Are Required
+
+1. **Paper/Wiki Link**: Allows users to understand the theoretical foundation, trade-offs, and mathematical basis of the algorithm
+2. **Reference Implementation Link**: Provides:
+   - Verification that our implementation is correct
+   - Alternative implementation details when the paper is unclear
+   - Source for edge case handling that papers often omit
+   - Debugging reference when issues arise
+
+### Acceptable Reference Sources
+
+**For Papers/Wiki:**
+- DOI links (https://doi.org/...)
+- Wikipedia (https://en.wikipedia.org/wiki/...)
+- arXiv (https://arxiv.org/...)
+- Author blogs with technical details
+- Patent documents (for patented algorithms)
+
+**For Reference Implementations:**
+- GitHub/GitLab/Bitbucket repositories
+- Official library documentation with code
+- SourceForge projects
+- Archive.org preserved implementations
+- Language standard library implementations
+- Well-known open-source projects (FFmpeg, ImageMagick, libretro, etc.)
+
+### When No Published Paper Exists
+
+For algorithms that were developed empirically (like many pixel art scalers from the demoscene era):
+- Link to the original forum post or release announcement
+- Link to the author's website or project page
+- Link to a well-documented explanation (e.g., Wikipedia, technical blog)
+- The reference implementation may serve as the primary documentation
+
+### Checklist for New Algorithms
+
+- [ ] Added entry to appropriate table in README.md
+- [ ] Algorithm name links to paper/wiki/description
+- [ ] Reference implementation link provided
+- [ ] Author and year documented (if known)
+- [ ] Brief description included

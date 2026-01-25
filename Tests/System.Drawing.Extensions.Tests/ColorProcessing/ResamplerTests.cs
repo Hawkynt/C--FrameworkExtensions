@@ -326,6 +326,40 @@ public class ResamplerTests {
 
   [Test]
   [Category("HappyPath")]
+  public void BSpline4_ProducesValidOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
+    using var result = source.Resample<BSpline4>(16, 16);
+
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(16));
+    Assert.That(result.Height, Is.EqualTo(16));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  [Category("KnownAnswer")]
+  public void BSpline4_PreservesColor() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Purple);
+    using var result = source.Resample<BSpline4>(16, 16);
+
+    using var locker = result.Lock();
+    var centerColor = locker[8, 8];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Purple.R).Within(3));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Purple.G).Within(3));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Purple.B).Within(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BSpline4_HasPrefilter() {
+    var resampler = new BSpline4();
+    Assert.That(resampler.Prefilter, Is.Not.Null);
+    Assert.That(resampler.Radius, Is.EqualTo(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
   public void BSpline5_ProducesValidOutput() {
     using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
     using var result = source.Resample<BSpline5>(16, 16);
@@ -366,6 +400,112 @@ public class ResamplerTests {
     Assert.That(result, Is.Not.Null);
     Assert.That(result.Width, Is.EqualTo(16));
     Assert.That(result.Height, Is.EqualTo(16));
+  }
+
+  #endregion
+
+  #region Lagrange
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange3_ProducesValidOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
+    using var result = source.Resample<Lagrange3>(16, 16);
+
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(16));
+    Assert.That(result.Height, Is.EqualTo(16));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  [Category("KnownAnswer")]
+  public void Lagrange3_PreservesColor() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Cyan);
+    using var result = source.Resample<Lagrange3>(16, 16);
+
+    using var locker = result.Lock();
+    var centerColor = locker[8, 8];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Cyan.R).Within(3));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Cyan.G).Within(3));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Cyan.B).Within(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange3_HasNoPrefilter() {
+    var resampler = new Lagrange3();
+    Assert.That(resampler.Prefilter, Is.Null);
+    Assert.That(resampler.Radius, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange5_ProducesValidOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
+    using var result = source.Resample<Lagrange5>(16, 16);
+
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(16));
+    Assert.That(result.Height, Is.EqualTo(16));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  [Category("KnownAnswer")]
+  public void Lagrange5_PreservesColor() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Orange);
+    using var result = source.Resample<Lagrange5>(16, 16);
+
+    using var locker = result.Lock();
+    var centerColor = locker[8, 8];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Orange.R).Within(3));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Orange.G).Within(3));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Orange.B).Within(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange5_HasCorrectRadius() {
+    var resampler = new Lagrange5();
+    Assert.That(resampler.Prefilter, Is.Null);
+    Assert.That(resampler.Radius, Is.EqualTo(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange7_ProducesValidOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
+    using var result = source.Resample<Lagrange7>(16, 16);
+
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(16));
+    Assert.That(result.Height, Is.EqualTo(16));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  [Category("KnownAnswer")]
+  public void Lagrange7_PreservesColor() {
+    using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Magenta);
+    using var result = source.Resample<Lagrange7>(16, 16);
+
+    using var locker = result.Lock();
+    var centerColor = locker[8, 8];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Magenta.R).Within(3));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Magenta.G).Within(3));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Magenta.B).Within(3));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Lagrange7_HasCorrectRadius() {
+    var resampler = new Lagrange7();
+    Assert.That(resampler.Prefilter, Is.Null);
+    Assert.That(resampler.Radius, Is.EqualTo(4));
   }
 
   #endregion

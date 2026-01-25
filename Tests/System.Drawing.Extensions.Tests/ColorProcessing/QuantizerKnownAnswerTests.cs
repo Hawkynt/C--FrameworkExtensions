@@ -107,6 +107,7 @@ public class QuantizerKnownAnswerTests {
     yield return ("GaussianMixture", (s, c) => s.ReduceColors(new GaussianMixtureQuantizer { MaxIterations = 10, MaxSampleSize = 1000 }, NoDithering.Instance, c));
     yield return ("FuzzyCMeans", (s, c) => s.ReduceColors(new FuzzyCMeansQuantizer { MaxIterations = 10, MaxSampleSize = 1000 }, NoDithering.Instance, c));
     yield return ("ColorQuantizationNetwork", (s, c) => s.ReduceColors(new ColorQuantizationNetworkQuantizer { MaxSampleSize = 1000 }, NoDithering.Instance, c));
+    yield return ("PngQuant", (s, c) => s.ReduceColors(new PngQuantQuantizer { MedianCutIterations = 2, KMeansIterations = 5 }, NoDithering.Instance, c));
   }
 
   #endregion

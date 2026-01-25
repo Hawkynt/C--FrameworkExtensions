@@ -128,6 +128,7 @@ public class DithererKnownAnswerTests {
     yield return ("Smart", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new SmartDitherer(), c));
     yield return ("Dbs", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new DbsDitherer(), c));
     yield return ("Dizzy", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new DizzyDitherer(), c));
+    yield return ("AdaptiveMatrix", (s, c) => s.ReduceColors(new MedianCutQuantizer(), AdaptiveMatrixDitherer.Default, c));
   }
 
   #endregion
