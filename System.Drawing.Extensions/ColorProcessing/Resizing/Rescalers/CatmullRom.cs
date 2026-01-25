@@ -209,55 +209,81 @@ file static class CatmullRomHelpers {
     p[15] = window.P2P2.Work;
   }
 
+  /// <summary>
+  /// Performs Catmull-Rom interpolation using direct weighted accumulation.
+  /// </summary>
+  /// <remarks>
+  /// Catmull-Rom weights can be negative for outer samples, so we use direct float accumulation
+  /// instead of hierarchical lerping to avoid color artifacts from intermediate clamping.
+  /// This approach properly handles negative weights by accumulating in float space.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static unsafe TWork Interpolate<TWork, TLerp>(TWork* p, float[] wx, float[] wy, in TLerp lerp)
     where TWork : unmanaged, IColorSpace
     where TLerp : struct, ILerp<TWork> {
-    // First interpolate 4 rows horizontally
-    var row0 = InterpolateRow(p, 0, wx, lerp);
-    var row1 = InterpolateRow(p, 4, wx, lerp);
-    var row2 = InterpolateRow(p, 8, wx, lerp);
-    var row3 = InterpolateRow(p, 12, wx, lerp);
+    // Float accumulators for proper handling of negative weights
+    // Using float accumulation avoids byte overflow issues with negative Catmull-Rom weights
+    float c1 = 0f, c2 = 0f, c3 = 0f, a = 0f;
+    var totalWeight = 0f;
 
-    // Then interpolate vertically
-    return InterpolateVertical(row0, row1, row2, row3, wy, lerp);
-  }
+    var pixelBytes = (byte*)p;
+    var pixelSize = sizeof(TWork);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe TWork InterpolateRow<TWork, TLerp>(TWork* p, int offset, float[] wx, in TLerp lerp)
-    where TWork : unmanaged, IColorSpace
-    where TLerp : struct, ILerp<TWork> {
-    // Normalize weights
-    var sum = wx[0] + wx[1] + wx[2] + wx[3];
-    if (sum < 0.0001f)
-      return p[offset + 1];
+    for (var row = 0; row < 4; ++row) {
+      var offset = (row * 4) * pixelSize;
+      for (var col = 0; col < 4; ++col) {
+        var weight = wx[col] * wy[row];
+        if (weight == 0f)
+          continue;
 
-    var w0 = (int)(wx[0] / sum * 256);
-    var w1 = (int)(wx[1] / sum * 256);
-    var w2 = (int)(wx[2] / sum * 256);
-    var w3 = 256 - w0 - w1 - w2;
+        // Extract components from pixel bytes (BGRA format)
+        var pb = pixelBytes + offset + col * pixelSize;
+        if (pixelSize >= 4) {
+          c1 += pb[2] * weight; // R
+          c2 += pb[1] * weight; // G
+          c3 += pb[0] * weight; // B
+          a += pb[3] * weight;  // A
+        } else if (pixelSize >= 3) {
+          c1 += pb[2] * weight;
+          c2 += pb[1] * weight;
+          c3 += pb[0] * weight;
+          a += 255f * weight;
+        } else {
+          c1 += pb[0] * weight;
+          c2 += pb[0] * weight;
+          c3 += pb[0] * weight;
+          a += 255f * weight;
+        }
+        totalWeight += weight;
+      }
+    }
 
-    var ab = lerp.Lerp(p[offset], p[offset + 1], w0, w1);
-    var cd = lerp.Lerp(p[offset + 2], p[offset + 3], w2, w3);
-    return lerp.Lerp(ab, cd);
-  }
+    // Normalize and clamp results
+    if (totalWeight < 0.0001f)
+      return p[5]; // p[5] = P0P0 (center)
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static TWork InterpolateVertical<TWork, TLerp>(in TWork r0, in TWork r1, in TWork r2, in TWork r3, float[] wy, in TLerp lerp)
-    where TWork : unmanaged, IColorSpace
-    where TLerp : struct, ILerp<TWork> {
-    var sum = wy[0] + wy[1] + wy[2] + wy[3];
-    if (sum < 0.0001f)
-      return r1;
+    var inv = 1f / totalWeight;
+    var rb = (byte)Math.Clamp((int)(c1 * inv + 0.5f), 0, 255);
+    var gb = (byte)Math.Clamp((int)(c2 * inv + 0.5f), 0, 255);
+    var bb = (byte)Math.Clamp((int)(c3 * inv + 0.5f), 0, 255);
+    var ab = (byte)Math.Clamp((int)(a * inv + 0.5f), 0, 255);
 
-    var w0 = (int)(wy[0] / sum * 256);
-    var w1 = (int)(wy[1] / sum * 256);
-    var w2 = (int)(wy[2] / sum * 256);
-    var w3 = 256 - w0 - w1 - w2;
-
-    var ab = lerp.Lerp(r0, r1, w0, w1);
-    var cd = lerp.Lerp(r2, r3, w2, w3);
-    return lerp.Lerp(ab, cd);
+    // Construct result pixel
+    TWork result = default;
+    var resultBytes = (byte*)&result;
+    if (pixelSize >= 4) {
+      resultBytes[0] = bb; // B
+      resultBytes[1] = gb; // G
+      resultBytes[2] = rb; // R
+      resultBytes[3] = ab; // A
+    } else if (pixelSize >= 3) {
+      resultBytes[0] = bb;
+      resultBytes[1] = gb;
+      resultBytes[2] = rb;
+    } else {
+      resultBytes[0] = (byte)((rb + gb + bb) / 3);
+    }
+    return result;
   }
 }
 
