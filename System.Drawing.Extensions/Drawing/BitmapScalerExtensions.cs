@@ -50,6 +50,12 @@ public struct __ResamplerTag<T> where T : struct, IResampler;
 public struct __EdgeAwareResamplerTag<T> where T : struct, IEdgeAwareResampler;
 
 /// <summary>
+/// Marker type for disambiguating <see cref="IContentAwareResampler"/> overloads.
+/// </summary>
+/// <typeparam name="T">The content-aware resampler type (constraint enforced by compiler).</typeparam>
+public struct __ContentAwareResamplerTag<T> where T : struct, IContentAwareResampler;
+
+/// <summary>
 /// Provides extension methods for pixel-art scaling of Bitmaps.
 /// </summary>
 public static class BitmapScalerExtensions {
@@ -789,6 +795,163 @@ public static class BitmapScalerExtensions {
       Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
       TEquality, Bitmap>(
       callback, source.Width, source.Height, targetWidth, targetHeight, equality);
+  }
+
+  #endregion
+
+  #region Content-Aware Resampling
+
+  /// <summary>
+  /// Callback that receives a concrete content-aware kernel and executes the resize pipeline.
+  /// </summary>
+  private sealed class ContentAwareResampleCallback<TWork, TKey, TDecode, TProject, TEncode, TMetric, TLerp>(Bitmap source, int targetWidth, int targetHeight)
+    : IContentAwareKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, TMetric, TLerp, Bitmap>
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888>
+    where TMetric : struct, IColorMetric<TKey>
+    where TLerp : struct, ILerp<TWork> {
+
+    public Bitmap Invoke<TKernel>(TKernel kernel)
+      where TKernel : struct, IContentAwareKernel<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, TMetric, TLerp>
+      => ResampleContentAware<TWork, TKey, TDecode, TProject, TEncode, TMetric, TLerp, TKernel>(source, targetWidth, targetHeight, kernel);
+  }
+
+  /// <summary>
+  /// Internal content-aware resize implementation.
+  /// </summary>
+  internal static unsafe Bitmap ResampleContentAware<TWork, TKey, TDecode, TProject, TEncode, TMetric, TLerp, TKernel>(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    TKernel kernel)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888>
+    where TMetric : struct, IColorMetric<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TKernel : struct, IContentAwareKernel<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, TMetric, TLerp> {
+    var result = new Bitmap(targetWidth, targetHeight, PixelFormat.Format32bppArgb);
+
+    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
+    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
+
+    var srcFrame = srcLocker.AsFrame();
+    var dstFrame = dstLocker.AsFrame();
+
+    TDecode decoder = default;
+    TProject projector = default;
+    TEncode encoder = default;
+    TMetric metric = default;
+    TLerp lerp = default;
+
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
+    fixed (Bgra8888* dstPtr = dstFrame.Pixels)
+      kernel.Resize(srcPtr, srcFrame.Stride, dstPtr, dstFrame.Stride,
+        in decoder, in projector, in encoder, in metric, in lerp);
+
+    return result;
+  }
+
+  /// <summary>
+  /// Resamples a bitmap using content-aware algorithm with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The content-aware resampler type (e.g., SeamCarving).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap resampled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ContentAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IContentAwareResampler
+    => source.Resample(default(TResampler), targetWidth, targetHeight);
+
+  /// <summary>
+  /// Resamples a bitmap using content-aware algorithm with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The content-aware resampler type (e.g., SeamCarving).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap resampled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, Size targetSize, __ContentAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IContentAwareResampler
+    => source.Resample<TResampler>(targetSize.Width, targetSize.Height);
+
+  /// <summary>
+  /// Resamples a bitmap using a configured content-aware resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The content-aware resampler type (e.g., SeamCarving).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance with custom configuration.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap resampled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight, __ContentAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IContentAwareResampler {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var callback = new ContentAwareResampleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      Euclidean3F<OklabF>, Color4FLerp<LinearRgbaF>>(source, targetWidth, targetHeight);
+    return resampler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      Euclidean3F<OklabF>, Color4FLerp<LinearRgbaF>, Bitmap>(
+      callback, source.Width, source.Height, targetWidth, targetHeight);
+  }
+
+  /// <summary>
+  /// Resamples a bitmap using a configured content-aware resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The content-aware resampler type (e.g., SeamCarving).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance with custom configuration.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap resampled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, Size targetSize, __ContentAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IContentAwareResampler
+    => source.Resample(resampler, targetSize.Width, targetSize.Height);
+
+  /// <summary>
+  /// Resamples a bitmap using content-aware algorithm with a custom metric.
+  /// </summary>
+  /// <typeparam name="TResampler">The content-aware resampler type.</typeparam>
+  /// <typeparam name="TMetric">The color metric type for energy computation.</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap resampled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler, TMetric>(
+    this Bitmap source,
+    TResampler resampler,
+    int targetWidth,
+    int targetHeight,
+    __ContentAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IContentAwareResampler
+    where TMetric : struct, IColorMetric<OklabF> {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var callback = new ContentAwareResampleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      TMetric, Color4FLerp<LinearRgbaF>>(source, targetWidth, targetHeight);
+    return resampler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      TMetric, Color4FLerp<LinearRgbaF>, Bitmap>(
+      callback, source.Width, source.Height, targetWidth, targetHeight);
   }
 
   #endregion
