@@ -77,6 +77,7 @@ public interface IResampler : IScalerInfo {
   /// <param name="sourceHeight">Height of the source image.</param>
   /// <param name="targetWidth">Width of the target image.</param>
   /// <param name="targetHeight">Height of the target image.</param>
+  /// <param name="useCenteredGrid">If true, use centered grid sampling; otherwise top-left aligned.</param>
   /// <returns>The result from the callback.</returns>
   /// <remarks>
   /// <para>
@@ -84,13 +85,19 @@ public interface IResampler : IScalerInfo {
   /// to the callback, which can then use struct-constrained generic methods.
   /// Interface dispatch occurs once per call, not per pixel.
   /// </para>
+  /// <para>
+  /// When <paramref name="useCenteredGrid"/> is true (default), destination pixel centers
+  /// are mapped to source coordinates: srcX = (destX + 0.5) * scale - 0.5.
+  /// When false, top-left corners are mapped: srcX = destX * scale.
+  /// </para>
   /// </remarks>
   TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
     IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
