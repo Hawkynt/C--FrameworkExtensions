@@ -84,8 +84,6 @@ public static partial class ArrayExtensions {
 
   #endregion
 
-  // TODO: Clear for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
-  // TODO: Fill for byte[], ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
   // TODO: SequenceEquals for byte[], IntPtr, byte*, ushort[], short[], uint[], int[], ulong[], long[], float[], double[]
   // TODO: unchecked versions
 
@@ -303,237 +301,744 @@ public static partial class ArrayExtensions {
 
   #region Fill
 
+  #region byte[] Fill
+
+  /// <summary>
+  /// Fills the entire byte array with the specified value.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void Fill(this IntPtr @this, int count, byte value)
-    => Fill((byte*)@this, count, value)
-  ;
-
-  public static unsafe void Fill(byte* @this, int count, byte value) {
-    <#=EmitCountTooSmallCheck()#>
-
-    for(;;)
-      switch (count) {
-        case 0: return;
-<#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
-        case <#=i#>:
-          <#=string.Join("\n          ",EmitSetBytes(i, "value"))#>
-          return;
-<#    }#>
-        default: {
-          var blocks = count >> 3;
-          var block8 = 0x0101010101010101UL * value;
-
-#if !PLATFORM_X86
-          const int MAX_MANAGED_BLOCKS = 16;
-#else
-          const int MAX_MANAGED_BLOCKS = 50;
-#endif
-          if (blocks < MAX_MANAGED_BLOCKS) {
-            count &= 0b111;
-            for (;;)
-              switch (blocks) {
-<#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-                default: {
-                  do {
-                    *(ulong*) @this = block8;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                    ((ulong*) @this)[<#=i#>] = block8;
-<#    }#>
-                    @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-                    blocks -= <#=INDEX_LOOP_UNROLL#>;
-                  } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
-
-                  continue; // next blocks
-                }
-              }
-
-<#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-            blockCount<#=i#>: ((ulong*) @this)[<#=i#>] = block8;
-<#    }#>
-            @this += blocks << 3;
-            blockCount0:
-            continue; // copy single bytes left
-          } // medium-sized blocks
-
-          // large blocks
-          var start = @this;
-
-          *(ulong*)@this = block8;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-          ((ulong*)@this)[<#=i#>] = block8;
-<#    }#>
-          @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-          count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
-
-#if !PLATFORM_X86
-
-          var block64 = *(Block64*)start;
-<#    var lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{16, 8, 1}){#>
-<#      var bytesPerLoop = 64 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-            count -= <#=bytesPerLoop#>;
-            *(Block64*)@this = block64;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-            ((Block64*)@this)[<#=i#>] = block64;
-<#      }#>
-            @this += <#=bytesPerLoop#>;
-          }
-<#    }#>
-            
-          if (count != 0)
-            continue;
-
-#else
-
-          block8 = *(Block8*)start;
-<#    lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{8, 1}){#>
-<#      var bytesPerLoop = 8 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-            count -= <#=bytesPerLoop#>;
-            *(Block8*)@this = block8;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-            ((Block8*)@this)[<#=i#>] = block8;
-<#      }#>
-            @this += <#=bytesPerLoop#>;
-          }
-<#    }#>
-            
-          if (count != 0)
-            continue;
-            
-#endif
-
-          return;
-
-          } // single-byte default
-      } // single-byte switch
+  public static void Fill(this byte[] @this, byte value) {
+    Against.ThisIsNull(@this);
+    ((Span<byte>)@this).Fill(value);
   }
+
+  /// <summary>
+  /// Fills the byte array starting at offset with the specified value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, byte value, int offset) {
+    Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(offset, @this.Length);
+    @this.AsSpan(offset).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills a portion of the byte array with the specified value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, byte value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(offset, @this.Length);
+    Against.CountOutOfRange(count, offset + count, @this.Length);
+    @this.AsSpan(offset, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills the byte array with tiled ushort values.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, ushort value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, count << 1, @this.Length);
+    MemoryMarshal.Cast<byte, ushort>(@this.AsSpan(0, count << 1)).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills a portion of the byte array with tiled ushort values.
+  /// </summary>
+  /// <param name="this">The byte array to fill.</param>
+  /// <param name="value">The ushort value to tile.</param>
+  /// <param name="offset">The element offset (in ushorts).</param>
+  /// <param name="count">The number of ushorts to fill.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, ushort value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(offset, @this.Length);
+    Against.CountOutOfRange(count, (offset + count) << 1, @this.Length);
+    MemoryMarshal.Cast<byte, ushort>(@this.AsSpan(offset << 1, count << 1)).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills the byte array with tiled uint values.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, uint value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, count << 2, @this.Length);
+    MemoryMarshal.Cast<byte, uint>(@this.AsSpan(0, count << 2)).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills a portion of the byte array with tiled uint values.
+  /// </summary>
+  /// <param name="this">The byte array to fill.</param>
+  /// <param name="value">The uint value to tile.</param>
+  /// <param name="offset">The element offset (in uints).</param>
+  /// <param name="count">The number of uints to fill.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, uint value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(offset, @this.Length);
+    Against.CountOutOfRange(count, (offset + count) << 2, @this.Length);
+    MemoryMarshal.Cast<byte, uint>(@this.AsSpan(offset << 2, count << 2)).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills the byte array with tiled ulong values.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, ulong value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountOutOfRange(count, count << 3, @this.Length);
+    MemoryMarshal.Cast<byte, ulong>(@this.AsSpan(0, count << 3)).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills a portion of the byte array with tiled ulong values.
+  /// </summary>
+  /// <param name="this">The byte array to fill.</param>
+  /// <param name="value">The ulong value to tile.</param>
+  /// <param name="offset">The element offset (in ulongs).</param>
+  /// <param name="count">The number of ulongs to fill.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this byte[] @this, ulong value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.IndexOutOfRange(offset, @this.Length);
+    Against.CountOutOfRange(count, (offset + count) << 3, @this.Length);
+    MemoryMarshal.Cast<byte, ulong>(@this.AsSpan(offset << 3, count << 3)).Fill(value);
+  }
+
+  #endregion
+
+  #region IntPtr Fill
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified byte value.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, byte value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<byte>((byte*)@this, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified byte value starting at offset.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, byte value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<byte>((byte*)@this + offset, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified ushort value.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, ushort value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<ushort>((ushort*)@this, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified ushort value starting at offset.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, ushort value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<ushort>((ushort*)@this + offset, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified uint value.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, uint value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<uint>((uint*)@this, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified uint value starting at offset.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, uint value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<uint>((uint*)@this + offset, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified ulong value.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, ulong value, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<ulong>((ulong*)@this, count).Fill(value);
+  }
+
+  /// <summary>
+  /// Fills memory at IntPtr with the specified ulong value starting at offset.
+  /// </summary>
+  public static unsafe void Fill(this IntPtr @this, ulong value, int offset, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<ulong>((ulong*)@this + offset, count).Fill(value);
+  }
+
+  #endregion
 
   #endregion
 
   #region Clear
 
+  /// <summary>
+  /// Clears the byte array by setting all elements to zero.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void Clear(this IntPtr @this, int count)
-    => Clear((byte*)@this, count)
-  ;
-
-  public static unsafe void Clear(byte* @this, int count) {
-    <#=EmitCountTooSmallCheck()#>
-
-    for(;;)
-      switch (count) {
-        case 0: return;
-<#    for(var i = 1; i <= UNSAFE_SWITCH_COUNT; ++i) {#>
-        case <#=i#>:
-          <#=string.Join("\n          ",EmitSetBytes(i))#>
-          return;
-<#    }#>
-        default: {
-          var blocks = count >> 3;
-
-#if !PLATFORM_X86
-          const int MAX_MANAGED_BLOCKS = 16;
-#else
-          const int MAX_MANAGED_BLOCKS = 50;
-#endif
-          if (blocks < MAX_MANAGED_BLOCKS) {
-            count &= 0b111;
-            for (;;)
-              switch (blocks) {
-<#    for(var i = 0; i <= INDEX_LOOP_UNROLL; ++i) {#>
-                case <#=i#>: goto blockCount<#=i#>;
-<#    }#>
-                default: {
-                  do {
-                    *(ulong*) @this = 0;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-                    ((ulong*) @this)[<#=i#>] = 0;
-<#    }#>
-                    @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-                    blocks -= <#=INDEX_LOOP_UNROLL#>;
-                  } while (blocks >= <#=INDEX_LOOP_UNROLL#>);
-
-                  continue; // next blocks
-                }
-              }
-
-<#    for(var i = INDEX_LOOP_UNROLL; i > 0; --i) {#>
-            blockCount<#=i#>: *(ulong*) @this = 0;
-<#    }#>
-            @this += blocks << 3;
-            blockCount0:
-            continue; // copy single bytes left
-          } // medium-sized blocks
-
-          // large blocks
-          var start = @this;
-
-          *(ulong*)@this = 0;
-<#    for(var i = 1; i < INDEX_LOOP_UNROLL; ++i) {#>
-          ((ulong*)@this)[<#=i#>] = 0;
-<#    }#>
-          @this += <#=(INDEX_LOOP_UNROLL * 8)#>;
-          count -=<#=(INDEX_LOOP_UNROLL * 8)#>;
-
-#if !PLATFORM_X86
-
-          var block64 = *(Block64*)start;
-<#    lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{16, 8, 1}){#>
-<#      var bytesPerLoop = 64 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-            count -= <#=bytesPerLoop#>;
-            *(Block64*)@this = block64;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-            ((Block64*)@this)[<#=i#>] = block64;
-<#      }#>
-            @this += <#=bytesPerLoop#>;
-          }
-<#    }#>
-            
-          if (count != 0)
-            continue;
-
-#else
-
-          var block8 = *(Block8*)start;
-<#    lastBlockCount = int.MaxValue;#>
-<#    foreach(var blockCount in new[]{8, 1}){#>
-<#      var bytesPerLoop = 8 * blockCount;#>
-<#      var canHaveMoreThanOneIteration = blockCount < (lastBlockCount / 2);#>
-          <#=(canHaveMoreThanOneIteration ? "while" : "if")#> (count >= <#=bytesPerLoop#>) {
-<#      lastBlockCount = blockCount;#>
-            count -= <#=bytesPerLoop#>;
-            *(Block8*)@this = block8;
-<#      for(var i = 1; i < blockCount; ++i) {#>
-            ((Block8*)@this)[<#=i#>] = block8;
-<#      }#>
-            @this += <#=bytesPerLoop#>;
-          }
-<#    }#>
-            
-          if (count != 0)
-            continue;
-
-            
-#endif
-
-          return;
-
-          } // single-byte default
-      } // single-byte switch
+  public static void Clear(this byte[] @this) {
+    Against.ThisIsNull(@this);
+    ((Span<byte>)@this).Clear();
   }
+
+  /// <summary>
+  /// Clears the ushort array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this ushort[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the short array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this short[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the uint array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this uint[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the int array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this int[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the float array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this float[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the ulong array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this ulong[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the long array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this long[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears the double array by setting all elements to zero.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this double[] @this) {
+    Against.ThisIsNull(@this);
+    MemoryMarshal.AsBytes(@this.AsSpan()).Clear();
+  }
+
+  /// <summary>
+  /// Clears memory at IntPtr by setting all bytes to zero.
+  /// </summary>
+  public static unsafe void Clear(this IntPtr @this, int count) {
+    Against.ThisIsNull(@this);
+    Against.CountBelowOrEqualZero(count);
+    new Span<byte>((byte*)@this, count).Clear();
+  }
+
+  #endregion
+
+  #region Tiled Bitwise Operations (narrow operand tiled across wider array)
+
+  #region ushort[] with byte operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ushort[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ushort[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
+
+  #region uint[] with byte operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this uint[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this uint[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
+
+  #region uint[] with ushort operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this uint[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this uint[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
+
+  #region ulong[] with byte operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, byte operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, byte operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
+
+  #region ulong[] with ushort operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, ushort operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, ushort operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
+
+  #region ulong[] with uint operand
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void And(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).And(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Or(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Or(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Xor(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Xor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nand(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nand(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Nor(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Nor(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, uint operand, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(0, count).Equ(operand);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Equ(this ulong[] @this, uint operand, int offset, int count) {
+    Against.ThisIsNull(@this);
+    @this.AsSpan(offset, count).Equ(operand);
+  }
+
+  #endregion
 
   #endregion
 

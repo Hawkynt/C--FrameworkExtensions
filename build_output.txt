@@ -1,6 +1,0 @@
-MSBUILD : error MSB1008: Es darf nur ein Projekt angegeben werden.
-    Vollständige Befehlszeile: „X:\Coding\Interpreters\.NET SDK v10.0.101\sdk\10.0.101\MSBuild.dll -maxcpucount --verbosity:m -tlp:default=auto --property:EnableDefaultCompileItems=false --property:EnableDefaultEmbeddedResourceItems=false --property:EnableDefaultNoneItems=false --property:NuGetInteractive=false --target:Restore -tlp:verbosity=quiet Backports/Backports.csproj p:TreatWarningsAsErrors=false -nologo -distributedlogger:Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildLogger,X:\Coding\Interpreters\.NET SDK v10.0.101\sdk\10.0.101\dotnet.dll*Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildForwardingLogger,X:\Coding\Interpreters\.NET SDK v10.0.101\sdk\10.0.101\dotnet.dll -distributedlogger:Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildLogger,X:\Coding\Interpreters\.NET SDK v10.0.101\sdk\10.0.101\dotnet.dll*Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildForwardingLogger,X:\Coding\Interpreters\.NET SDK v10.0.101\sdk\10.0.101\dotnet.dll -tlp:DISABLENODEDISPLAY“
-  Switches, die von Antwortdateien angefügt werden:
-Schalter: p:TreatWarningsAsErrors=false
-
-Informationen zur Schaltersyntax erhalten Sie, wenn Sie "MSBuild -help" eingeben.

@@ -6,6 +6,7 @@
 <#@ import namespace="System.Runtime.InteropServices" #>
 <#@ output extension=".cs" #>
 <#
+  // Binary operations with two operands
   var ops = new[] {
     ("And",  "*s & *o"),
     ("Or",   "*s | *o"),
@@ -15,15 +16,25 @@
     ("Equ",  "~(*s ^ *o)")
   };
 
-  var convertibleTypes =  new[] {
-    "sbyte",
-    "ushort",
-    "short",
-    "uint",
-    "int",
-    "ulong",
-    "long",
-    "bool"
+  // Scalar operations (span with scalar value)
+  var scalarOps = new[] {
+    ("And",  "*s & o"),
+    ("Or",   "*s | o"),
+    ("Xor",  "*s ^ o"),
+    ("Nand", "~(*s & o)"),
+    ("Nor",  "~(*s | o)"),
+    ("Equ",  "~(*s ^ o)")
+  };
+
+  var convertibleTypes = new[] {
+    ("sbyte",  1),
+    ("ushort", 2),
+    ("short",  2),
+    ("uint",   4),
+    ("int",    4),
+    ("ulong",  8),
+    ("long",   8),
+    ("bool",   1)
   };
 
   const int MAX_REGISTER_USAGE = 8;
@@ -34,16 +45,16 @@
 #region (c)2010-2042 Hawkynt
 
 // This file is part of Hawkynt's .NET Framework extensions.
-// 
+//
 // Hawkynt's .NET Framework extensions are free software:
 // you can redistribute and/or modify it under the terms
 // given in the LICENSE file.
-// 
+//
 // Hawkynt's .NET Framework extensions is distributed in the hope that
 // it will be useful, but WITHOUT ANY WARRANTY without even the implied
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // See the LICENSE file for more details.
-// 
+//
 // You should have received a copy of the License along with Hawkynt's
 // .NET Framework extensions. If not, see
 // <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
@@ -69,7 +80,641 @@ namespace System;
 
 public static partial class SpanExtensions {
 
+#region Clear and Fill Operations
+
+  /// <summary>
+  /// Clears all bytes in the span by setting them to zero.
+  /// </summary>
+  /// <param name="this">The span to clear.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this Span<byte> @this) => @this.Fill(0);
+
+  /// <summary>
+  /// Fills all bytes in the span with the specified value.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The value to fill with.</param>
+  public static unsafe void Fill(this Span<byte> @this, byte value) {
+    if (@this.IsEmpty)
+      return;
+
+    fixed (byte* targetPin = @this)
+      _UnmanagedFill(targetPin, value, (uint)@this.Length);
+  }
+
+  private static unsafe void _UnmanagedFill(byte* targetPointer, byte value, uint count) {
+    // Handle bulk vector operations with unrolled fallthrough blocks
+    if (Vector512.IsHardwareAccelerated && count >= 64) {
+      var vector = Vector512.Create(value);
+      _UnmanagedFillBulk512(ref targetPointer, vector, ref count);
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 32) {
+      var vector = Vector256.Create(value);
+      _UnmanagedFillBulk256(ref targetPointer, vector, ref count);
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 16) {
+      var vector = Vector128.Create(value);
+      _UnmanagedFillBulk128(ref targetPointer, vector, ref count);
+    }
+
+    _UnmanagedFillScalar(targetPointer, value, count);
+  }
+
+  private static unsafe void _UnmanagedFillBulk512(ref byte* targetPointer, Vector512<byte> vector, ref uint count) {
+    const int RegisterSize = 64;
+    var iterationsLeft = (count / RegisterSize) % <#=MAX_REGISTER_USAGE#>;
+    var bytesProcessedDuringIteration = iterationsLeft * RegisterSize;
+    switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+      case <#=i#>: goto Do<#=i#>_512;
+<# } #>
+    }
+
+    Do<#=MAX_REGISTER_USAGE#>_512:
+    var blockCount = count / <#=MAX_REGISTER_USAGE * 64#>;
+    count %= <#=MAX_REGISTER_USAGE * 64#>;
+    do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+      *(Vector512<byte>*)(targetPointer + <#=i * 64#>) = vector;
+<# } #>
+      targetPointer += <#=MAX_REGISTER_USAGE * 64#>;
+    } while (--blockCount > 0);
+    return;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+    Do<#=i#>_512: *(Vector512<byte>*)(targetPointer + <#=(i - 1) * 64#>) = vector;
+<# } #>
+    targetPointer += bytesProcessedDuringIteration;
+    count -= bytesProcessedDuringIteration;
+    if (count >= <#=MAX_REGISTER_USAGE * 64#>)
+      goto Do<#=MAX_REGISTER_USAGE#>_512;
+  }
+
+  private static unsafe void _UnmanagedFillBulk256(ref byte* targetPointer, Vector256<byte> vector, ref uint count) {
+    const int RegisterSize = 32;
+    var iterationsLeft = (count / RegisterSize) % <#=MAX_REGISTER_USAGE#>;
+    var bytesProcessedDuringIteration = iterationsLeft * RegisterSize;
+    switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+      case <#=i#>: goto Do<#=i#>_256;
+<# } #>
+    }
+
+    Do<#=MAX_REGISTER_USAGE#>_256:
+    var blockCount = count / <#=MAX_REGISTER_USAGE * 32#>;
+    count %= <#=MAX_REGISTER_USAGE * 32#>;
+    do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+      *(Vector256<byte>*)(targetPointer + <#=i * 32#>) = vector;
+<# } #>
+      targetPointer += <#=MAX_REGISTER_USAGE * 32#>;
+    } while (--blockCount > 0);
+    return;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+    Do<#=i#>_256: *(Vector256<byte>*)(targetPointer + <#=(i - 1) * 32#>) = vector;
+<# } #>
+    targetPointer += bytesProcessedDuringIteration;
+    count -= bytesProcessedDuringIteration;
+    if (count >= <#=MAX_REGISTER_USAGE * 32#>)
+      goto Do<#=MAX_REGISTER_USAGE#>_256;
+  }
+
+  private static unsafe void _UnmanagedFillBulk128(ref byte* targetPointer, Vector128<byte> vector, ref uint count) {
+    const int RegisterSize = 16;
+    var iterationsLeft = (count / RegisterSize) % <#=MAX_REGISTER_USAGE#>;
+    var bytesProcessedDuringIteration = iterationsLeft * RegisterSize;
+    switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+      case <#=i#>: goto Do<#=i#>_128;
+<# } #>
+    }
+
+    Do<#=MAX_REGISTER_USAGE#>_128:
+    var blockCount = count / <#=MAX_REGISTER_USAGE * 16#>;
+    count %= <#=MAX_REGISTER_USAGE * 16#>;
+    do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+      *(Vector128<byte>*)(targetPointer + <#=i * 16#>) = vector;
+<# } #>
+      targetPointer += <#=MAX_REGISTER_USAGE * 16#>;
+    } while (--blockCount > 0);
+    return;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+    Do<#=i#>_128: *(Vector128<byte>*)(targetPointer + <#=(i - 1) * 16#>) = vector;
+<# } #>
+    targetPointer += bytesProcessedDuringIteration;
+    count -= bytesProcessedDuringIteration;
+    if (count >= <#=MAX_REGISTER_USAGE * 16#>)
+      goto Do<#=MAX_REGISTER_USAGE#>_128;
+  }
+
+#if PLATFORM_X86
+
+  private static unsafe void _UnmanagedFillScalar(byte* targetPointer, byte value, uint count) {
+    // Create wider values using multiplication (faster than shift/OR combo)
+    var value16 = (ushort)(value * 0x0101);
+    var value32 = value * 0x01010101u;
+
+<# MAX_BYTES_PER_LOOP = 4 * MAX_REGISTER_USAGE; #>
+    for (;;)
+      switch (count) {
+        case 0: goto Exit;
+<#
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
+     GenerateFillCase(i, true, "value", "value16", "value32", null);
+#>
+        default:
+          _UnmanagedFillScalarBulk(ref targetPointer, value32, ref count);
+          continue;
+      }
+    Exit:
+      return;
+  }
+
+  private static unsafe void _UnmanagedFillScalarBulk(ref byte* targetPointer, uint value32, ref uint count) {
+    var iterationsLeft = (count / 4) % <#=MAX_REGISTER_USAGE#>;
+    var bytesProcessedDuringIteration = iterationsLeft * 4;
+    switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+      case <#=i#>: goto Do<#=i#>_32Bit;
+<# } #>
+    }
+
+    Do<#=MAX_REGISTER_USAGE#>_32Bit:
+    var blockCount = count / <#=MAX_REGISTER_USAGE * 4#>;
+    count %= <#=MAX_REGISTER_USAGE * 4#>;
+    do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+      *(uint*)(targetPointer + <#=i * 4#>) = value32;
+<# } #>
+      targetPointer += <#=MAX_REGISTER_USAGE * 4#>;
+    } while (--blockCount > 0);
+    return;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+    Do<#=i#>_32Bit: *(uint*)(targetPointer + <#=(i - 1) * 4#>) = value32;
+<# } #>
+    targetPointer += bytesProcessedDuringIteration;
+    count -= bytesProcessedDuringIteration;
+    if (count >= <#=MAX_REGISTER_USAGE * 4#>)
+      goto Do<#=MAX_REGISTER_USAGE#>_32Bit;
+  }
+
+#else
+
+  private static unsafe void _UnmanagedFillScalar(byte* targetPointer, byte value, uint count) {
+    // Create wider values using multiplication (faster than shift/OR combo)
+    var value16 = (ushort)(value * 0x0101);
+    var value32 = value * 0x01010101u;
+    var value64 = value * 0x0101010101010101ul;
+
+<# MAX_BYTES_PER_LOOP = 8 * MAX_REGISTER_USAGE; #>
+    for (;;)
+      switch (count) {
+        case 0: goto Exit;
+<#
+   for (var i = MAX_BYTES_PER_LOOP; i > 0; --i)
+     GenerateFillCase(i, false, "value", "value16", "value32", "value64");
+#>
+        default:
+          _UnmanagedFillScalarBulk(ref targetPointer, value64, ref count);
+          continue;
+      }
+    Exit:
+      return;
+  }
+
+  private static unsafe void _UnmanagedFillScalarBulk(ref byte* targetPointer, ulong value64, ref uint count) {
+    var iterationsLeft = (count / 8) % <#=MAX_REGISTER_USAGE#>;
+    var bytesProcessedDuringIteration = iterationsLeft * 8;
+    switch (iterationsLeft) {
+<# for (var i = 1; i < MAX_REGISTER_USAGE; ++i) { #>
+      case <#=i#>: goto Do<#=i#>_64Bit;
+<# } #>
+    }
+
+    Do<#=MAX_REGISTER_USAGE#>_64Bit:
+    var blockCount = count / <#=MAX_REGISTER_USAGE * 8#>;
+    count %= <#=MAX_REGISTER_USAGE * 8#>;
+    do {
+<# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
+      *(ulong*)(targetPointer + <#=i * 8#>) = value64;
+<# } #>
+      targetPointer += <#=MAX_REGISTER_USAGE * 8#>;
+    } while (--blockCount > 0);
+    return;
+
+<# for (var i = MAX_REGISTER_USAGE - 1; i > 0; --i) { #>
+    Do<#=i#>_64Bit: *(ulong*)(targetPointer + <#=(i - 1) * 8#>) = value64;
+<# } #>
+    targetPointer += bytesProcessedDuringIteration;
+    count -= bytesProcessedDuringIteration;
+    if (count >= <#=MAX_REGISTER_USAGE * 8#>)
+      goto Do<#=MAX_REGISTER_USAGE#>_64Bit;
+  }
+
+#endif
+
+<# foreach(var (typeName, typeSize) in convertibleTypes) { #>
+  /// <summary>
+  /// Clears all elements in the span by setting them to their default value.
+  /// </summary>
+  /// <param name="this">The span to clear.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Clear(this Span<<#=typeName#>> @this) => MemoryMarshal.AsBytes(@this).Clear();
+
+<# } #>
+
+  /// <summary>
+  /// Fills all elements in the span with the specified sbyte value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void Fill(this Span<sbyte> @this, sbyte value)
+    => MemoryMarshal.AsBytes(@this).Fill(*(byte*)&value);
+
+  /// <summary>
+  /// Fills all elements in the span with the specified bool value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void Fill(this Span<bool> @this, bool value)
+    => MemoryMarshal.AsBytes(@this).Fill(*(byte*)&value);
+
+  /// <summary>
+  /// Fills all elements in the span with the specified ushort value.
+  /// </summary>
+  public static unsafe void Fill(this Span<ushort> @this, ushort value) {
+    if (@this.IsEmpty)
+      return;
+
+    // Check if both bytes are the same (can use fast byte fill)
+    if ((value & 0xFF) == (value >> 8)) {
+      MemoryMarshal.AsBytes(@this).Fill((byte)value);
+      return;
+    }
+
+    fixed (ushort* targetPin = @this)
+      _UnmanagedFillUInt16(targetPin, value, (uint)@this.Length);
+  }
+
+  /// <summary>
+  /// Fills all elements in the span with the specified short value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void Fill(this Span<short> @this, short value)
+    => MemoryMarshal.Cast<short, ushort>(@this).Fill(*(ushort*)&value);
+
+  /// <summary>
+  /// Fills all elements in the span with the specified uint value.
+  /// </summary>
+  public static unsafe void Fill(this Span<uint> @this, uint value) {
+    if (@this.IsEmpty)
+      return;
+
+    // Check if all bytes are the same (can use fast byte fill)
+    var low = (ushort)value;
+    var high = (ushort)(value >> 16);
+    if (low == high && (low & 0xFF) == (low >> 8)) {
+      MemoryMarshal.AsBytes(@this).Fill((byte)value);
+      return;
+    }
+
+    // Check if both ushorts are the same (can use ushort fill)
+    if (low == high) {
+      MemoryMarshal.Cast<uint, ushort>(@this).Fill(low);
+      return;
+    }
+
+    fixed (uint* targetPin = @this)
+      _UnmanagedFillUInt32(targetPin, value, (uint)@this.Length);
+  }
+
+  /// <summary>
+  /// Fills all elements in the span with the specified int value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void Fill(this Span<int> @this, int value)
+    => MemoryMarshal.Cast<int, uint>(@this).Fill(*(uint*)&value);
+
+  /// <summary>
+  /// Fills all elements in the span with the specified ulong value.
+  /// </summary>
+  public static unsafe void Fill(this Span<ulong> @this, ulong value) {
+    if (@this.IsEmpty)
+      return;
+
+    // Check if all bytes are the same (can use fast byte fill)
+    var low = (uint)value;
+    var high = (uint)(value >> 32);
+    if (low == high) {
+      var lowLow = (ushort)low;
+      var lowHigh = (ushort)(low >> 16);
+      if (lowLow == lowHigh && (lowLow & 0xFF) == (lowLow >> 8)) {
+        MemoryMarshal.AsBytes(@this).Fill((byte)value);
+        return;
+      }
+
+      // Check if both ushorts are the same (can use ushort fill)
+      if (lowLow == lowHigh) {
+        MemoryMarshal.Cast<ulong, ushort>(@this).Fill(lowLow);
+        return;
+      }
+
+      // Both uints are the same, use uint fill
+      MemoryMarshal.Cast<ulong, uint>(@this).Fill(low);
+      return;
+    }
+
+    fixed (ulong* targetPin = @this)
+      _UnmanagedFillUInt64(targetPin, value, (uint)@this.Length);
+  }
+
+  /// <summary>
+  /// Fills all elements in the span with the specified long value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void Fill(this Span<long> @this, long value)
+    => MemoryMarshal.Cast<long, ulong>(@this).Fill(*(ulong*)&value);
+
+  private static unsafe void _UnmanagedFillUInt16(ushort* targetPointer, ushort value, uint count) {
+    // Widen to larger types using multiplication
+    var value32 = value * 0x00010001u;
+    var value64 = value * 0x0001000100010001ul;
+
+    if (Vector512.IsHardwareAccelerated && count >= 32) {
+      var vector = Vector512.Create(value);
+      while (count >= 32) {
+        *(Vector512<ushort>*)targetPointer = vector;
+        targetPointer += 32;
+        count -= 32;
+      }
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 16) {
+      var vector = Vector256.Create(value);
+      while (count >= 16) {
+        *(Vector256<ushort>*)targetPointer = vector;
+        targetPointer += 16;
+        count -= 16;
+      }
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 8) {
+      var vector = Vector128.Create(value);
+      while (count >= 8) {
+        *(Vector128<ushort>*)targetPointer = vector;
+        targetPointer += 8;
+        count -= 8;
+      }
+    }
+
+    // Scalar tail using widened values
+    if (Utilities.Runtime.Is64BitArchitecture)
+      while (count >= 4) {
+        *(ulong*)targetPointer = value64;
+        targetPointer += 4;
+        count -= 4;
+      }
+
+    while (count >= 2) {
+      *(uint*)targetPointer = value32;
+      targetPointer += 2;
+      count -= 2;
+    }
+
+    if (count > 0)
+      *targetPointer = value;
+  }
+
+  private static unsafe void _UnmanagedFillUInt32(uint* targetPointer, uint value, uint count) {
+    // Widen to 64-bit using multiplication
+    var value64 = value * 0x0000000100000001ul;
+
+    if (Vector512.IsHardwareAccelerated && count >= 16) {
+      var vector = Vector512.Create(value);
+      while (count >= 16) {
+        *(Vector512<uint>*)targetPointer = vector;
+        targetPointer += 16;
+        count -= 16;
+      }
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 8) {
+      var vector = Vector256.Create(value);
+      while (count >= 8) {
+        *(Vector256<uint>*)targetPointer = vector;
+        targetPointer += 8;
+        count -= 8;
+      }
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 4) {
+      var vector = Vector128.Create(value);
+      while (count >= 4) {
+        *(Vector128<uint>*)targetPointer = vector;
+        targetPointer += 4;
+        count -= 4;
+      }
+    }
+
+    // Scalar tail using widened value
+    if (Utilities.Runtime.Is64BitArchitecture)
+      while (count >= 2) {
+        *(ulong*)targetPointer = value64;
+        targetPointer += 2;
+        count -= 2;
+      }
+
+    if (count > 0)
+      *targetPointer = value;
+  }
+
+  private static unsafe void _UnmanagedFillUInt64(ulong* targetPointer, ulong value, uint count) {
+    if (Vector512.IsHardwareAccelerated && count >= 8) {
+      var vector = Vector512.Create(value);
+      while (count >= 8) {
+        *(Vector512<ulong>*)targetPointer = vector;
+        targetPointer += 8;
+        count -= 8;
+      }
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 4) {
+      var vector = Vector256.Create(value);
+      while (count >= 4) {
+        *(Vector256<ulong>*)targetPointer = vector;
+        targetPointer += 4;
+        count -= 4;
+      }
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 2) {
+      var vector = Vector128.Create(value);
+      while (count >= 2) {
+        *(Vector128<ulong>*)targetPointer = vector;
+        targetPointer += 2;
+        count -= 2;
+      }
+    }
+
+    // Scalar tail
+    if (count > 0)
+      *targetPointer = value;
+  }
+
+
+  #region Tiled Fill Operations
+
+  /// <summary>
+  /// Fills a ushort span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<ushort> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a short span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<short> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a uint span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<uint> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a uint span by tiling a ushort value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The ushort value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<uint> @this, ushort value)
+    => MemoryMarshal.Cast<uint, ushort>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills an int span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<int> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills an int span by tiling a ushort value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The ushort value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<int> @this, ushort value)
+    => MemoryMarshal.Cast<int, ushort>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills an int span by tiling a short value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The short value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<int> @this, short value)
+    => MemoryMarshal.Cast<int, short>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a ulong span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<ulong> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a ulong span by tiling a ushort value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The ushort value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<ulong> @this, ushort value)
+    => MemoryMarshal.Cast<ulong, ushort>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a ulong span by tiling a uint value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The uint value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<ulong> @this, uint value)
+    => MemoryMarshal.Cast<ulong, uint>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a long span by tiling a byte value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The byte value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<long> @this, byte value)
+    => MemoryMarshal.AsBytes(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a long span by tiling a ushort value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The ushort value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<long> @this, ushort value)
+    => MemoryMarshal.Cast<long, ushort>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a long span by tiling a short value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The short value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<long> @this, short value)
+    => MemoryMarshal.Cast<long, short>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a long span by tiling a uint value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The uint value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<long> @this, uint value)
+    => MemoryMarshal.Cast<long, uint>(@this).Fill(value);
+
+  /// <summary>
+  /// Fills a long span by tiling an int value across each element.
+  /// </summary>
+  /// <param name="this">The span to fill.</param>
+  /// <param name="value">The int value to tile.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void Fill(this Span<long> @this, int value)
+    => MemoryMarshal.Cast<long, int>(@this).Fill(value);
+
+  #endregion
+
+#endregion
+
+#region Span-to-Span Binary Operations
+
 <# foreach(var (name, math) in ops) { #>
+  /// <summary>
+  /// Performs an in-place bitwise <#=name.ToUpperInvariant()#> operation between this span and the operand.
+  /// </summary>
+  /// <param name="this">The target span (modified in place).</param>
+  /// <param name="operand">The operand span.</param>
   public static unsafe void <#=name#>(this Span<byte> @this, ReadOnlySpan<byte> operand) {
     Against.False(@this.Length == operand.Length);
 
@@ -81,6 +726,12 @@ public static partial class SpanExtensions {
       _Unmanaged<#=name#>(targetPin, operandPin, (uint)@this.Length);
   }
 
+  /// <summary>
+  /// Performs a bitwise <#=name.ToUpperInvariant()#> operation between source and operand, storing the result in target.
+  /// </summary>
+  /// <param name="this">The source span.</param>
+  /// <param name="operand">The operand span.</param>
+  /// <param name="target">The target span to store results.</param>
   public static unsafe void <#=name#>(this ReadOnlySpan<byte> @this, ReadOnlySpan<byte> operand, Span<byte> target) {
     Against.False(@this.Length == operand.Length);
     Against.False(@this.Length == target.Length);
@@ -93,98 +744,81 @@ public static partial class SpanExtensions {
     fixed (byte* operandPin = operand)
       _Unmanaged<#=name#>(targetPin, sourcePin, operandPin, (uint)@this.Length);
   }
-  
-  // TODO:
-  // Optimize scalar tail and bulk vector copy logic using unrolled fall-through blocks and hardware acceleration:
-  //
-  // 1. **Scalar Tail Handling (≤ MAX_REGISTER_USAGE * sizeof(uint[for 32-bit compiles]/ulong))**
-  //    Generate a switch with `goto`-based fall-through labels to handle small `count` values without vector usage:
-  //      switch (count) {
-  //          case 0: goto End;
-  //          ...
-  //          case 15: goto Do15Bytes;
-  //          ...
-  //      }
-  //      Do17Bytes: *(target + 16) = *(target + 16) <op> *(operand + 16);
-  //      Do16Bytes: {
-  //        var r0 = *(ulong*)target;
-  //        var r1 = *(ulong*)(target + 8);
-  //        r0 = r0 <op> *(ulong*)operand;
-  //        r1 = r1 <op> *(ulong*)(operand + 8);
-  //        *(ulong*)target = r0;
-  //        *(ulong*)(target + 8) = r1;
-  //        goto End;
-  //      }
-  //      Do15Bytes: *(target + 14) = *(target + 14) <op> *(operand + 14);
-  //      Do14Bytes: *(ushort*)(target + 12) = ...
-  //      Do12Bytes: {
-  //        var r0 = *(ulong*)target;
-  //        var e0 = *(uint*)(target + 8);
-  //        r0 = r0 <op> *(ulong*)operand;
-  //        e0 = e0 <op> *(uint*)(operand + 8);
-  //        *(ulong*)target = r0;
-  //        *(uint*)(target + 8) = e0;
-  //        goto End;
-  //      }
-  //      Do11Bytes: *(target + 10) = *(target + 10) <op> *(operand + 10);
-  //      Do10Bytes: {
-  //        var r0 = *(ulong*)target;
-  //        var d0 = *(ushort*)(target + 8);
-  //        r0 = r0 <op> *(ulong*)operand;
-  //        d0 = (ushort)(d0 <op> *(ushort*)(operand + 8));
-  //        *(ulong*)target = r0;
-  //        *(ushort*)(target + 8) = d0;
-  //        goto End;
-  //      }
-  //      ...
-  //      Do1Bytes:  *(byte*)target = ...
-  //      goto End;
-  //
-  //    - Avoid chained jumps (`goto DoX`) — use flat fall-through layout for straight-line execution.
-  //    - Do not use vector types in this section to avoid `vzeroupper`, alignment code, or register spills.
-  //    - Optimize register usage
-  //    - Generate with T4 using `MAX_REGISTER_USAGE` to control unroll depth and widening access patterns.
-  //
-  // 2. **Vectorized Bulk Copy with Unrolled Fallthrough Blocks**
-  //    For count > MAX_REGISTER_USAGE * RegisterSize, emit a separate method for bulk processing using `VectorXXX<T>`.
-  //
-  //    - Use `Vector512.IsHardwareAccelerated`, `Vector256.IsHardwareAccelerated`, etc. as static feature checks.
-  //    - For each width (512, 256, 128), do:
-  //        a) Calculate: `int n = count / RegisterSize`
-  //        b) Dispatch into unrolled copy block using: `switch (n % MAX_REGISTER_USAGE)`
-  //            case 7: goto Do7_Vector512; ...
-  //            case 0: goto Do8_Vector512_Or0;
-  //
-  //        c) Emit unrolled labels:
-  //            Do8_Vector512_Or0:
-  //              Copy block 0
-  //            Do7_Vector512:
-  //              Copy block 1
-  //            ...
-  //            Do1_Vector512:
-  //              Copy block 7
-  //              if (count >= RegisterSize) goto Do8_Vector512_Or0;
-  //
-  //        d) Each label does:
-  //            - Vector load from `sourcePointer + offset`
-  //            - Operation (e.g., `OnesComplement`)
-  //            - Vector store to `targetPointer + offset`
-  //            - Advance pointers and reduce count by RegisterSize
-  //
-  //    - Repeat same structure for 256-bit and 128-bit widths.
-  //    - After this, fall back to scalar tail handling for the remainder.
-  //
-  // 3. **T4 Codegen Notes**
-  //    - Use `MAX_REGISTER_USAGE` to control how many fallthrough labels to emit for both scalar and vector paths.
-  //    - Generate fall-through labels in reverse (e.g. Do8 down to Do1) to keep structure flat.
-  //    - The shared fallthrough blocks handle both:
-  //        a) partial vector blocks (`n % MAX_REGISTER_USAGE`)
-  //        b) repeated blocks (loop via `goto Do8_...`)
 
+  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* operandPointer, uint count) {
+    if (Vector512.IsHardwareAccelerated)
+      while (count >= 64) {
+        var s = *(Vector512<byte>*)targetPointer;
+        var o = *(Vector512<byte>*)operandPointer;
+        *(Vector512<byte>*)targetPointer = <#=GetVectorOp512(name)#>;
+        targetPointer += 64;
+        operandPointer += 64;
+        count -= 64;
+      }
+
+    if (Vector256.IsHardwareAccelerated)
+      while (count >= 32) {
+        var s = *(Vector256<byte>*)targetPointer;
+        var o = *(Vector256<byte>*)operandPointer;
+        *(Vector256<byte>*)targetPointer = <#=GetVectorOp256(name)#>;
+        targetPointer += 32;
+        operandPointer += 32;
+        count -= 32;
+      }
+
+    if (Vector128.IsHardwareAccelerated)
+      while (count >= 16) {
+        var s = *(Vector128<byte>*)targetPointer;
+        var o = *(Vector128<byte>*)operandPointer;
+        *(Vector128<byte>*)targetPointer = <#=GetVectorOp128(name)#>;
+        targetPointer += 16;
+        operandPointer += 16;
+        count -= 16;
+      }
+
+    _Unmanaged<#=name#>Scalar(targetPointer, operandPointer, count);
+  }
+
+  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* sourcePointer, byte* operandPointer, uint count) {
+    if (Vector512.IsHardwareAccelerated)
+      while (count >= 64) {
+        var s = *(Vector512<byte>*)sourcePointer;
+        var o = *(Vector512<byte>*)operandPointer;
+        *(Vector512<byte>*)targetPointer = <#=GetVectorOp512(name)#>;
+        sourcePointer += 64;
+        operandPointer += 64;
+        targetPointer += 64;
+        count -= 64;
+      }
+
+    if (Vector256.IsHardwareAccelerated)
+      while (count >= 32) {
+        var s = *(Vector256<byte>*)sourcePointer;
+        var o = *(Vector256<byte>*)operandPointer;
+        *(Vector256<byte>*)targetPointer = <#=GetVectorOp256(name)#>;
+        sourcePointer += 32;
+        operandPointer += 32;
+        targetPointer += 32;
+        count -= 32;
+      }
+
+    if (Vector128.IsHardwareAccelerated)
+      while (count >= 16) {
+        var s = *(Vector128<byte>*)sourcePointer;
+        var o = *(Vector128<byte>*)operandPointer;
+        *(Vector128<byte>*)targetPointer = <#=GetVectorOp128(name)#>;
+        sourcePointer += 16;
+        operandPointer += 16;
+        targetPointer += 16;
+        count -= 16;
+      }
+
+    _Unmanaged<#=name#>Scalar(targetPointer, sourcePointer, operandPointer, count);
+  }
 
 #if PLATFORM_X86
 
-  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* operandPointer, uint count) {
+  private static unsafe void _Unmanaged<#=name#>Scalar(byte* targetPointer, byte* operandPointer, uint count) {
 <# MAX_BYTES_PER_LOOP = 4 * MAX_REGISTER_USAGE; #>
     for (;;)
       switch (count) {
@@ -202,7 +836,7 @@ public static partial class SpanExtensions {
       return;
   }
 
-  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* sourcePointer, byte* operandPointer, uint count) {
+  private static unsafe void _Unmanaged<#=name#>Scalar(byte* targetPointer, byte* sourcePointer, byte* operandPointer, uint count) {
     for (;;)
       switch (count) {
         case 0: goto Exit;
@@ -221,7 +855,7 @@ public static partial class SpanExtensions {
 
 #else
 
-  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* operandPointer, uint count) {
+  private static unsafe void _Unmanaged<#=name#>Scalar(byte* targetPointer, byte* operandPointer, uint count) {
 <# MAX_BYTES_PER_LOOP = 8 * MAX_REGISTER_USAGE; #>
     for (;;)
       switch (count) {
@@ -239,7 +873,7 @@ public static partial class SpanExtensions {
       return;
   }
 
-  private static unsafe void _Unmanaged<#=name#>(byte* targetPointer, byte* sourcePointer, byte* operandPointer, uint count) {
+  private static unsafe void _Unmanaged<#=name#>Scalar(byte* targetPointer, byte* sourcePointer, byte* operandPointer, uint count) {
     for (;;)
       switch (count) {
         case 0: goto Exit;
@@ -281,7 +915,7 @@ public static partial class SpanExtensions {
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
 <# } #>
-        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>;
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
 <# } #>
@@ -297,10 +931,10 @@ public static partial class SpanExtensions {
       count -= bytesProcessedDuringIteration;
       if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
         break;
-      
+
       goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
     }
-    
+
 <# CURRENT_REGISTER_TYPE = RegisterType.DWord; #>
 <# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
     while (count >= <#=CURRENT_REGISTER_SIZE#>) {
@@ -323,7 +957,7 @@ public static partial class SpanExtensions {
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
 <# } #>
-        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>;
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
 <# } #>
@@ -339,10 +973,10 @@ public static partial class SpanExtensions {
       count -= bytesProcessedDuringIteration;
       if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
         break;
-      
+
       goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
     }
-        
+
     End:
       return;
   }
@@ -371,7 +1005,7 @@ public static partial class SpanExtensions {
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
 <# } #>
-        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>;
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
 <# } #>
@@ -388,10 +1022,10 @@ public static partial class SpanExtensions {
       count -= bytesProcessedDuringIteration;
       if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
         break;
-      
+
       goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
     }
-    
+
 <# CURRENT_REGISTER_TYPE = RegisterType.DWord; #>
 <# CURRENT_REGISTER_SIZE = GetRegisterSizeInBytes(CURRENT_REGISTER_TYPE); #>
     while (count >= <#=CURRENT_REGISTER_SIZE#>) {
@@ -411,11 +1045,11 @@ public static partial class SpanExtensions {
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         var <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=ReadMemory(CURRENT_REGISTER_TYPE, "sourcePointer", (i * CURRENT_REGISTER_SIZE))#>;
 <# } #>
-        sourcePointer += <#=MAX_BYTES_PER_LOOP#>; 
+        sourcePointer += <#=MAX_BYTES_PER_LOOP#>;
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#> = <#=math.Replace("*s", $"{GetRegisterPrefix(CURRENT_REGISTER_TYPE)}{i}").Replace("*o", ReadMemory(CURRENT_REGISTER_TYPE, "operandPointer", (i * CURRENT_REGISTER_SIZE)))#>;
 <# } #>
-        operandPointer += <#=MAX_BYTES_PER_LOOP#>; 
+        operandPointer += <#=MAX_BYTES_PER_LOOP#>;
 <# for (var i = 0; i < MAX_REGISTER_USAGE; ++i) { #>
         <#=ReadMemory(CURRENT_REGISTER_TYPE, "targetPointer", (i * CURRENT_REGISTER_SIZE))#> = <#=GetRegisterPrefix(CURRENT_REGISTER_TYPE)#><#=i#>;
 <# } #>
@@ -432,26 +1066,223 @@ public static partial class SpanExtensions {
       count -= bytesProcessedDuringIteration;
       if (count < <#=(MAX_REGISTER_USAGE * CURRENT_REGISTER_SIZE)#>)
         break;
-      
+
       goto Do<#=MAX_REGISTER_USAGE#>_<#=(CURRENT_REGISTER_SIZE * 8)#>Bit;
     }
-        
+
     End:
       return;
   }
 
 <# } #>
 
-<# foreach(var type in convertibleTypes) { #>
+#endregion
+
+#region Scalar Binary Operations (Span with Value)
+
+<# foreach(var (name, math) in scalarOps) { #>
+  /// <summary>
+  /// Performs an in-place bitwise <#=name.ToUpperInvariant()#> operation between each element of the span and a scalar value.
+  /// </summary>
+  /// <param name="this">The target span (modified in place).</param>
+  /// <param name="operand">The scalar operand value.</param>
+  public static unsafe void <#=name#>(this Span<byte> @this, byte operand) {
+    if (@this.IsEmpty)
+      return;
+
+    fixed (byte* targetPin = @this)
+      _UnmanagedScalar<#=name#>(targetPin, operand, (uint)@this.Length);
+  }
+
+  /// <summary>
+  /// Performs a bitwise <#=name.ToUpperInvariant()#> operation between each element of the source span and a scalar value, storing the result in target.
+  /// </summary>
+  /// <param name="this">The source span.</param>
+  /// <param name="operand">The scalar operand value.</param>
+  /// <param name="target">The target span to store results.</param>
+  public static unsafe void <#=name#>(this ReadOnlySpan<byte> @this, byte operand, Span<byte> target) {
+    Against.False(@this.Length == target.Length);
+
+    if (@this.IsEmpty)
+      return;
+
+    fixed (byte* sourcePin = @this)
+    fixed (byte* targetPin = target)
+      _UnmanagedScalar<#=name#>(targetPin, sourcePin, operand, (uint)@this.Length);
+  }
+
+  private static unsafe void _UnmanagedScalar<#=name#>(byte* targetPointer, byte o, uint count) {
+    if (Vector512.IsHardwareAccelerated && count >= 64) {
+      var operandVector = Vector512.Create(o);
+      while (count >= 64) {
+        var s = *(Vector512<byte>*)targetPointer;
+        *(Vector512<byte>*)targetPointer = <#=GetVectorScalarOp512(name)#>;
+        targetPointer += 64;
+        count -= 64;
+      }
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 32) {
+      var operandVector = Vector256.Create(o);
+      while (count >= 32) {
+        var s = *(Vector256<byte>*)targetPointer;
+        *(Vector256<byte>*)targetPointer = <#=GetVectorScalarOp256(name)#>;
+        targetPointer += 32;
+        count -= 32;
+      }
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 16) {
+      var operandVector = Vector128.Create(o);
+      while (count >= 16) {
+        var s = *(Vector128<byte>*)targetPointer;
+        *(Vector128<byte>*)targetPointer = <#=GetVectorScalarOp128(name)#>;
+        targetPointer += 16;
+        count -= 16;
+      }
+    }
+
+    _UnmanagedScalar<#=name#>Tail(targetPointer, o, count);
+  }
+
+  private static unsafe void _UnmanagedScalar<#=name#>(byte* targetPointer, byte* sourcePointer, byte o, uint count) {
+    if (Vector512.IsHardwareAccelerated && count >= 64) {
+      var operandVector = Vector512.Create(o);
+      while (count >= 64) {
+        var s = *(Vector512<byte>*)sourcePointer;
+        *(Vector512<byte>*)targetPointer = <#=GetVectorScalarOp512(name)#>;
+        sourcePointer += 64;
+        targetPointer += 64;
+        count -= 64;
+      }
+    }
+
+    if (Vector256.IsHardwareAccelerated && count >= 32) {
+      var operandVector = Vector256.Create(o);
+      while (count >= 32) {
+        var s = *(Vector256<byte>*)sourcePointer;
+        *(Vector256<byte>*)targetPointer = <#=GetVectorScalarOp256(name)#>;
+        sourcePointer += 32;
+        targetPointer += 32;
+        count -= 32;
+      }
+    }
+
+    if (Vector128.IsHardwareAccelerated && count >= 16) {
+      var operandVector = Vector128.Create(o);
+      while (count >= 16) {
+        var s = *(Vector128<byte>*)sourcePointer;
+        *(Vector128<byte>*)targetPointer = <#=GetVectorScalarOp128(name)#>;
+        sourcePointer += 16;
+        targetPointer += 16;
+        count -= 16;
+      }
+    }
+
+    _UnmanagedScalar<#=name#>Tail(targetPointer, sourcePointer, o, count);
+  }
+
+  private static unsafe void _UnmanagedScalar<#=name#>Tail(byte* targetPointer, byte o, uint count) {
+    // Create wider operand values using multiplication (faster than shift/OR combo)
+    var o16 = (ushort)(o * 0x0101);
+    var o32 = o * 0x01010101u;
+    var o64 = o * 0x0101010101010101ul;
+
+    // Process using 64-bit operations on 64-bit platforms
+    if (Utilities.Runtime.Is64BitArchitecture)
+      while (count >= 8) {
+        var s = *(ulong*)targetPointer;
+        *(ulong*)targetPointer = <#=math.Replace("*s", "s").Replace("o", "o64")#>;
+        targetPointer += 8;
+        count -= 8;
+      }
+
+    // Process using 32-bit operations
+    while (count >= 4) {
+      var s = *(uint*)targetPointer;
+      *(uint*)targetPointer = <#=math.Replace("*s", "s").Replace("o", "o32")#>;
+      targetPointer += 4;
+      count -= 4;
+    }
+
+    // Process using 16-bit operations
+    while (count >= 2) {
+      var s = *(ushort*)targetPointer;
+      *(ushort*)targetPointer = (ushort)(<#=math.Replace("*s", "s").Replace("o", "o16")#>);
+      targetPointer += 2;
+      count -= 2;
+    }
+
+    // Process remaining byte
+    if (count > 0) {
+      var s = *targetPointer;
+      *targetPointer = (byte)(<#=math.Replace("*s", "s")#>);
+    }
+  }
+
+  private static unsafe void _UnmanagedScalar<#=name#>Tail(byte* targetPointer, byte* sourcePointer, byte o, uint count) {
+    // Create wider operand values using multiplication (faster than shift/OR combo)
+    var o16 = (ushort)(o * 0x0101);
+    var o32 = o * 0x01010101u;
+    var o64 = o * 0x0101010101010101ul;
+
+    // Process using 64-bit operations on 64-bit platforms
+    if (Utilities.Runtime.Is64BitArchitecture)
+      while (count >= 8) {
+        var s = *(ulong*)sourcePointer;
+        *(ulong*)targetPointer = <#=math.Replace("*s", "s").Replace("o", "o64")#>;
+        sourcePointer += 8;
+        targetPointer += 8;
+        count -= 8;
+      }
+
+    // Process using 32-bit operations
+    while (count >= 4) {
+      var s = *(uint*)sourcePointer;
+      *(uint*)targetPointer = <#=math.Replace("*s", "s").Replace("o", "o32")#>;
+      sourcePointer += 4;
+      targetPointer += 4;
+      count -= 4;
+    }
+
+    // Process using 16-bit operations
+    while (count >= 2) {
+      var s = *(ushort*)sourcePointer;
+      *(ushort*)targetPointer = (ushort)(<#=math.Replace("*s", "s").Replace("o", "o16")#>);
+      sourcePointer += 2;
+      targetPointer += 2;
+      count -= 2;
+    }
+
+    // Process remaining byte
+    if (count > 0) {
+      var s = *sourcePointer;
+      *targetPointer = (byte)(<#=math.Replace("*s", "s")#>);
+    }
+  }
+
+<# } #>
+
+#endregion
+
+#region Typed Span Operations
+
+<# foreach(var (typeName, typeSize) in convertibleTypes) { #>
 <#   foreach(var (name, math) in ops) { #>
+  /// <summary>
+  /// Performs an in-place bitwise <#=name.ToUpperInvariant()#> operation on <#=typeName#> spans.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void <#=name#>(this Span<<#=type#>> @this, ReadOnlySpan<<#=type#>> operand) => <#=name#>(
+  public static void <#=name#>(this Span<<#=typeName#>> @this, ReadOnlySpan<<#=typeName#>> operand) => <#=name#>(
     MemoryMarshal.AsBytes(@this),
     MemoryMarshal.AsBytes(operand)
   );
 
+  /// <summary>
+  /// Performs a bitwise <#=name.ToUpperInvariant()#> operation on <#=typeName#> spans, storing result in target.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void <#=name#>(this ReadOnlySpan<<#=type#>> @this, ReadOnlySpan<<#=type#>> operand, Span<<#=type#>> target) => <#=name#>(
+  public static void <#=name#>(this ReadOnlySpan<<#=typeName#>> @this, ReadOnlySpan<<#=typeName#>> operand, Span<<#=typeName#>> target) => <#=name#>(
     MemoryMarshal.AsBytes(@this),
     MemoryMarshal.AsBytes(operand),
     MemoryMarshal.AsBytes(target)
@@ -459,17 +1290,128 @@ public static partial class SpanExtensions {
 
 <#   } #>
 <# } #>
-<# foreach(var type in convertibleTypes) { #>
+<# foreach(var (typeName, typeSize) in convertibleTypes) { #>
+  /// <summary>
+  /// Performs an in-place bitwise NOT operation on <#=typeName#> span.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Not(this Span<<#=type#>> @this) => Not(MemoryMarshal.AsBytes(@this));
+  public static void Not(this Span<<#=typeName#>> @this) => Not(MemoryMarshal.AsBytes(@this));
 
+  /// <summary>
+  /// Performs a bitwise NOT operation on <#=typeName#> span, storing result in target.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void Not(this ReadOnlySpan<<#=type#>> @this, Span<<#=type#>> target) => Not(
+  public static void Not(this ReadOnlySpan<<#=typeName#>> @this, Span<<#=typeName#>> target) => Not(
     MemoryMarshal.AsBytes(@this),
     MemoryMarshal.AsBytes(target)
   );
 
 <# } #>
+
+#endregion
+
+#region Typed Scalar Operations
+
+<# foreach(var (typeName, typeSize) in convertibleTypes) {
+     if (typeName == "bool") continue; // Skip bool for scalar operations as it doesn't make semantic sense
+#>
+<#   foreach(var (name, math) in scalarOps) { #>
+  /// <summary>
+  /// Performs an in-place bitwise <#=name.ToUpperInvariant()#> operation between each element and a scalar value.
+  /// </summary>
+  /// <param name="this">The target span (modified in place).</param>
+  /// <param name="operand">The scalar operand value.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void <#=name#>(this Span<<#=typeName#>> @this, <#=typeName#> operand) {
+    if (@this.IsEmpty)
+      return;
+
+<# if (typeSize == 1) { #>
+    MemoryMarshal.AsBytes(@this).<#=name#>(*(byte*)&operand);
+<# } else { #>
+    // For multi-byte types, create a span filled with the operand and use span-to-span operation
+    Span<<#=typeName#>> operandSpan = stackalloc <#=typeName#>[@this.Length];
+    operandSpan.Fill(operand);
+    @this.<#=name#>((ReadOnlySpan<<#=typeName#>>)operandSpan);
+<# } #>
+  }
+
+  /// <summary>
+  /// Performs a bitwise <#=name.ToUpperInvariant()#> operation between each element and a scalar value, storing result in target.
+  /// </summary>
+  /// <param name="this">The source span.</param>
+  /// <param name="operand">The scalar operand value.</param>
+  /// <param name="target">The target span to store results.</param>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void <#=name#>(this ReadOnlySpan<<#=typeName#>> @this, <#=typeName#> operand, Span<<#=typeName#>> target) {
+    Against.False(@this.Length == target.Length);
+
+    if (@this.IsEmpty)
+      return;
+
+<# if (typeSize == 1) { #>
+    MemoryMarshal.AsBytes(@this).<#=name#>(*(byte*)&operand, MemoryMarshal.AsBytes(target));
+<# } else { #>
+    // For multi-byte types, create a span filled with the operand and use span-to-span operation
+    Span<<#=typeName#>> operandSpan = stackalloc <#=typeName#>[@this.Length];
+    operandSpan.Fill(operand);
+    @this.<#=name#>((ReadOnlySpan<<#=typeName#>>)operandSpan, target);
+<# } #>
+  }
+
+<#   } #>
+<# } #>
+
+#endregion
+
+#region Tiled Scalar Operations (narrow operand tiled across wider span)
+
+<# foreach(var (name, math) in scalarOps) { #>
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a byte operand repeated across each ushort element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<ushort> @this, byte operand)
+    => @this.<#=name#>((ushort)(operand * 0x0101));
+
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a byte operand repeated across each uint element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<uint> @this, byte operand)
+    => @this.<#=name#>(operand * 0x01010101u);
+
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a ushort operand repeated across each uint element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<uint> @this, ushort operand)
+    => @this.<#=name#>(operand * 0x00010001u);
+
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a byte operand repeated across each ulong element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<ulong> @this, byte operand)
+    => @this.<#=name#>(operand * 0x0101010101010101uL);
+
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a ushort operand repeated across each ulong element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<ulong> @this, ushort operand)
+    => @this.<#=name#>(operand * 0x0001000100010001uL);
+
+  /// <summary>
+  /// Performs a tiled bitwise <#=name.ToUpperInvariant()#> operation using a uint operand repeated across each ulong element.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static void <#=name#>(this Span<ulong> @this, uint operand)
+    => @this.<#=name#>(operand * 0x0000000100000001uL);
+
+<# } #>
+
+#endregion
 
 }
 
@@ -534,6 +1476,69 @@ public static partial class SpanExtensions {
     return $"{ReadMemory(type, tName, offset)} = {(needsCast ? $"({GetTypeByRegister(type)})(" : string.Empty)}{operation.Replace("*s", ReadMemory(type, sName, offset)).Replace("*o",ReadMemory(type, oName, offset))}{(needsCast ? ")" : string.Empty)};";
   }
 
+  // Vector operation generators for span-to-span operations
+  // Using method-based operations for compatibility with .NET Core 3.1, 5, 6
+  string GetVectorOp512(string opName) => opName switch {
+    "And" => "Vector512.BitwiseAnd(s, o)",
+    "Or" => "Vector512.BitwiseOr(s, o)",
+    "Xor" => "Vector512.Xor(s, o)",
+    "Nand" => "Vector512.OnesComplement(Vector512.BitwiseAnd(s, o))",
+    "Nor" => "Vector512.OnesComplement(Vector512.BitwiseOr(s, o))",
+    "Equ" => "Vector512.OnesComplement(Vector512.Xor(s, o))",
+    _ => throw new NotSupportedException()
+  };
+
+  string GetVectorOp256(string opName) => opName switch {
+    "And" => "Vector256.BitwiseAnd(s, o)",
+    "Or" => "Vector256.BitwiseOr(s, o)",
+    "Xor" => "Vector256.Xor(s, o)",
+    "Nand" => "Vector256.OnesComplement(Vector256.BitwiseAnd(s, o))",
+    "Nor" => "Vector256.OnesComplement(Vector256.BitwiseOr(s, o))",
+    "Equ" => "Vector256.OnesComplement(Vector256.Xor(s, o))",
+    _ => throw new NotSupportedException()
+  };
+
+  string GetVectorOp128(string opName) => opName switch {
+    "And" => "Vector128.BitwiseAnd(s, o)",
+    "Or" => "Vector128.BitwiseOr(s, o)",
+    "Xor" => "Vector128.Xor(s, o)",
+    "Nand" => "Vector128.OnesComplement(Vector128.BitwiseAnd(s, o))",
+    "Nor" => "Vector128.OnesComplement(Vector128.BitwiseOr(s, o))",
+    "Equ" => "Vector128.OnesComplement(Vector128.Xor(s, o))",
+    _ => throw new NotSupportedException()
+  };
+
+  // Vector operation generators for scalar operations (span with single value)
+  string GetVectorScalarOp512(string opName) => opName switch {
+    "And" => "Vector512.BitwiseAnd(s, operandVector)",
+    "Or" => "Vector512.BitwiseOr(s, operandVector)",
+    "Xor" => "Vector512.Xor(s, operandVector)",
+    "Nand" => "Vector512.OnesComplement(Vector512.BitwiseAnd(s, operandVector))",
+    "Nor" => "Vector512.OnesComplement(Vector512.BitwiseOr(s, operandVector))",
+    "Equ" => "Vector512.OnesComplement(Vector512.Xor(s, operandVector))",
+    _ => throw new NotSupportedException()
+  };
+
+  string GetVectorScalarOp256(string opName) => opName switch {
+    "And" => "Vector256.BitwiseAnd(s, operandVector)",
+    "Or" => "Vector256.BitwiseOr(s, operandVector)",
+    "Xor" => "Vector256.Xor(s, operandVector)",
+    "Nand" => "Vector256.OnesComplement(Vector256.BitwiseAnd(s, operandVector))",
+    "Nor" => "Vector256.OnesComplement(Vector256.BitwiseOr(s, operandVector))",
+    "Equ" => "Vector256.OnesComplement(Vector256.Xor(s, operandVector))",
+    _ => throw new NotSupportedException()
+  };
+
+  string GetVectorScalarOp128(string opName) => opName switch {
+    "And" => "Vector128.BitwiseAnd(s, operandVector)",
+    "Or" => "Vector128.BitwiseOr(s, operandVector)",
+    "Xor" => "Vector128.Xor(s, operandVector)",
+    "Nand" => "Vector128.OnesComplement(Vector128.BitwiseAnd(s, operandVector))",
+    "Nor" => "Vector128.OnesComplement(Vector128.BitwiseOr(s, operandVector))",
+    "Equ" => "Vector128.OnesComplement(Vector128.Xor(s, operandVector))",
+    _ => throw new NotSupportedException()
+  };
+
   void GenerateCase(int numberOfBytes, string operation, bool force32Bit, string sName, string oName, string tName = null) {
 
     if ((numberOfBytes & 1) == 1 && numberOfBytes != 1) {
@@ -549,7 +1554,7 @@ public static partial class SpanExtensions {
 #>
         case <#=numberOfBytes#>:
 <#+
-    if (!force32Bit) 
+    if (!force32Bit)
       while(numberOfBytes >= 8) {
 #>
           <#=EmitOperation(RegisterType.QWord, operation, sName, oName, tName, offset)#>
@@ -573,13 +1578,81 @@ public static partial class SpanExtensions {
       offset += 2;
       numberOfBytes -= 2;
     }
-    
+
     for(; numberOfBytes > 0; ++offset, --numberOfBytes) {
 #>
           <#=EmitOperation(RegisterType.Byte, operation, sName, oName, tName, offset, true)#>
 <#+
     }
-   
+
+#>
+          goto Exit;
+<#+
+  }
+
+  void GenerateFillCase(int numberOfBytes, bool force32Bit, string value8, string value16, string value32, string value64) {
+    if ((numberOfBytes & 1) == 1 && numberOfBytes != 1) {
+#>
+        case <#=numberOfBytes#>:
+          targetPointer[<#=numberOfBytes - 1#>] = <#=value8#>;
+          goto case <#=numberOfBytes - 1#>;
+<#+
+      return;
+    }
+
+    int offset = 0;
+#>
+        case <#=numberOfBytes#>:
+<#+
+    if (!force32Bit && value64 != null)
+      while(numberOfBytes >= 8) {
+        if (offset == 0) {
+#>
+          *(ulong*)targetPointer = <#=value64#>;
+<#+
+        } else {
+#>
+          *(ulong*)(targetPointer + <#=offset#>) = <#=value64#>;
+<#+
+        }
+        offset += 8;
+        numberOfBytes -= 8;
+      }
+
+    while(numberOfBytes >= 4) {
+      if (offset == 0) {
+#>
+          *(uint*)targetPointer = <#=value32#>;
+<#+
+      } else {
+#>
+          *(uint*)(targetPointer + <#=offset#>) = <#=value32#>;
+<#+
+      }
+      offset += 4;
+      numberOfBytes -= 4;
+    }
+
+    while(numberOfBytes >= 2) {
+      if (offset == 0) {
+#>
+          *(ushort*)targetPointer = <#=value16#>;
+<#+
+      } else {
+#>
+          *(ushort*)(targetPointer + <#=offset#>) = <#=value16#>;
+<#+
+      }
+      offset += 2;
+      numberOfBytes -= 2;
+    }
+
+    for(; numberOfBytes > 0; ++offset, --numberOfBytes) {
+#>
+          targetPointer[<#=offset#>] = <#=value8#>;
+<#+
+    }
+
 #>
           goto Exit;
 <#+

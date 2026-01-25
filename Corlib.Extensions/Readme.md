@@ -115,6 +115,84 @@ Array operations with performance optimizations
 
 ---
 
+### Span Extensions (`Span<T>`, `ReadOnlySpan<T>`)
+
+High-performance span operations with SIMD vectorization for bitwise operations.
+
+#### Core Operations
+
+- **`IsNotEmpty<T>()`** - Check if span is not empty
+
+#### Clear & Fill Operations
+
+Fast memory operations with SIMD acceleration (Vector512/256/128):
+
+- **`Clear()`** - Set all bytes to zero (SIMD-accelerated)
+- **`Fill(value)`** - Fill all bytes with a value (SIMD-accelerated)
+
+**Typed Span Support:** Clear and Fill work on typed spans (`Span<sbyte>`, `Span<ushort>`, `Span<short>`, `Span<uint>`, `Span<int>`, `Span<ulong>`, `Span<long>`, `Span<bool>`) with automatic optimization when all bytes in the value are the same.
+
+#### Bitwise Operations (Span-to-Span)
+
+Binary operations between two spans with SIMD vectorization:
+
+- **`And(operand)`** - Bitwise AND (in-place)
+- **`Or(operand)`** - Bitwise OR (in-place)
+- **`Xor(operand)`** - Bitwise XOR (in-place)
+- **`Nand(operand)`** - Bitwise NAND (in-place)
+- **`Nor(operand)`** - Bitwise NOR (in-place)
+- **`Equ(operand)`** - Bitwise equivalence/XNOR (in-place)
+- **`Not()`** - Bitwise NOT/complement (in-place)
+
+Each operation also has a `source.Op(operand, target)` variant that writes results to a separate target span.
+
+#### Scalar Bitwise Operations
+
+Operations between a span and a scalar value:
+
+- **`And(scalarValue)`** - AND each byte with scalar
+- **`Or(scalarValue)`** - OR each byte with scalar
+- **`Xor(scalarValue)`** - XOR each byte with scalar
+- **`Nand(scalarValue)`** - NAND each byte with scalar
+- **`Nor(scalarValue)`** - NOR each byte with scalar
+- **`Equ(scalarValue)`** - EQU each byte with scalar
+
+#### Performance Features
+
+- **SIMD Vectorization** - Uses Vector512, Vector256, Vector128 when hardware-accelerated
+- **Duff's Device Unrolling** - 8x loop unrolling for maximum throughput
+- **Multi-Width Operations** - Falls back through 64-bit, 32-bit, 16-bit, 8-bit operations
+- **Typed Span Support** - All operations work on `Span<sbyte>`, `Span<ushort>`, `Span<short>`, `Span<uint>`, `Span<int>`, `Span<ulong>`, `Span<long>`, `Span<bool>`
+
+```csharp
+// Clear and Fill
+Span<byte> data = stackalloc byte[256];
+data.Fill(0xFF);            // Fill with ones
+data.Clear();               // Clear to zeros
+
+// Span-to-span operations
+Span<byte> key = stackalloc byte[256];
+data.Xor(key);              // XOR encryption/decryption
+data.And(key);              // Mask bits
+
+// Scalar operations
+data.And(0x0F);             // Mask to lower nibble
+data.Xor(0xFF);             // Flip all bits (same as Not)
+data.Or(0x80);              // Set high bit on all bytes
+
+// Typed spans
+Span<int> ints = stackalloc int[100];
+ints.Fill(42);              // Fill with value
+ints.And(0x0F0F0F0F);       // Mask pattern
+
+// Result in separate target
+ReadOnlySpan<byte> source = GetData();
+Span<byte> result = stackalloc byte[source.Length];
+source.Xor(key, result);    // XOR without modifying source
+```
+
+---
+
 ### String Extensions (`string`)
 
 String manipulation methods covering parsing, formatting, and text analysis
