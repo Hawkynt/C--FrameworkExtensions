@@ -48,39 +48,62 @@ public struct UniformQuantizer : IQuantizer {
           return [histogram.FirstOrDefault().color];
       }
 
-      return _GenerateUniformPalette(colorCount).ToArray();
+      return _GenerateUniformPalette(colorCount);
     }
 
-    private static List<TWork> _GenerateUniformPalette(int colorCount) {
+    private static TWork[] _GenerateUniformPalette(int colorCount) {
       // Special case: 2 colors should be black and white for grayscale compatibility
-      if (colorCount == 2) {
+      if (colorCount == 2)
         return [
           ColorFactory.FromNormalized_4<TWork>(UNorm32.Zero, UNorm32.Zero, UNorm32.Zero, UNorm32.One),
           ColorFactory.FromNormalized_4<TWork>(UNorm32.One, UNorm32.One, UNorm32.One, UNorm32.One)
         ];
+
+      // Calculate optimal levels per channel to get close to colorCount colors
+      // Try to find r×g×b that is as close to colorCount as possible without exceeding it
+      var baseLevels = (int)Math.Floor(Math.Pow(colorCount, 1.0 / 3.0));
+      baseLevels = Math.Max(2, Math.Min(baseLevels, 8));
+
+      // Find the best combination of levels that gives us <= colorCount colors
+      int rLevels = baseLevels, gLevels = baseLevels, bLevels = baseLevels;
+      var product = rLevels * gLevels * bLevels;
+
+      // Try to increase levels one at a time to get closer to colorCount
+      while (true) {
+        var tryR = (rLevels + 1) * gLevels * bLevels;
+        var tryG = rLevels * (gLevels + 1) * bLevels;
+        var tryB = rLevels * gLevels * (bLevels + 1);
+
+        if (tryR <= colorCount && rLevels < 8 && tryR > product) {
+          ++rLevels;
+          product = tryR;
+        } else if (tryG <= colorCount && gLevels < 8 && tryG > product) {
+          ++gLevels;
+          product = tryG;
+        } else if (tryB <= colorCount && bLevels < 8 && tryB > product) {
+          ++bLevels;
+          product = tryB;
+        } else
+          break;
       }
 
-      var levelsPerChannel = (int)Math.Ceiling(Math.Pow(colorCount, 1.0 / 3.0));
-      levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 8));
+      // Generate the cube with calculated levels
+      var result = new List<TWork>(product);
+      var rStep = rLevels > 1 ? 1.0f / (rLevels - 1) : 0f;
+      var gStep = gLevels > 1 ? 1.0f / (gLevels - 1) : 0f;
+      var bStep = bLevels > 1 ? 1.0f / (bLevels - 1) : 0f;
 
-      var step = 1.0f / (levelsPerChannel - 1);
-      var result = new List<TWork>(levelsPerChannel * levelsPerChannel * levelsPerChannel);
-
-      for (var c1 = 0; c1 < levelsPerChannel; ++c1)
-      for (var c2 = 0; c2 < levelsPerChannel; ++c2)
-      for (var c3 = 0; c3 < levelsPerChannel; ++c3) {
+      for (var r = 0; r < rLevels; ++r)
+      for (var g = 0; g < gLevels; ++g)
+      for (var b = 0; b < bLevels; ++b)
         result.Add(ColorFactory.FromNormalized_4<TWork>(
-          UNorm32.FromFloatClamped(c1 * step),
-          UNorm32.FromFloatClamped(c2 * step),
-          UNorm32.FromFloatClamped(c3 * step),
+          UNorm32.FromFloatClamped(r * rStep),
+          UNorm32.FromFloatClamped(g * gStep),
+          UNorm32.FromFloatClamped(b * bStep),
           UNorm32.One
         ));
 
-        if (result.Count >= colorCount)
-          return result;
-      }
-
-      return result;
+      return result.ToArray();
     }
 
   }
