@@ -38,6 +38,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.Drawing;
 
 /// <summary>
+/// Marker type for disambiguating <see cref="IResampler"/> overloads from <see cref="IEdgeAwareResampler"/> overloads.
+/// </summary>
+/// <typeparam name="T">The resampler type (constraint enforced by compiler).</typeparam>
+public struct __ResamplerTag<T> where T : struct, IResampler;
+
+/// <summary>
+/// Marker type for disambiguating <see cref="IEdgeAwareResampler"/> overloads from <see cref="IResampler"/> overloads.
+/// </summary>
+/// <typeparam name="T">The edge-aware resampler type (constraint enforced by compiler).</typeparam>
+public struct __EdgeAwareResamplerTag<T> where T : struct, IEdgeAwareResampler;
+
+/// <summary>
 /// Provides extension methods for pixel-art scaling of Bitmaps.
 /// </summary>
 public static class BitmapScalerExtensions {
@@ -569,7 +581,7 @@ public static class BitmapScalerExtensions {
   /// <param name="targetHeight">Target height.</param>
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight)
+  public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler
     => source.Resample(default(TResampler), targetWidth, targetHeight);
 
@@ -581,7 +593,7 @@ public static class BitmapScalerExtensions {
   /// <param name="targetSize">Target dimensions.</param>
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Bitmap Resample<TResampler>(this Bitmap source, Size targetSize)
+  public static Bitmap Resample<TResampler>(this Bitmap source, Size targetSize, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler
     => source.Resample<TResampler>(targetSize.Width, targetSize.Height);
 
@@ -595,7 +607,7 @@ public static class BitmapScalerExtensions {
   /// <param name="targetHeight">Target height.</param>
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight)
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
@@ -618,8 +630,167 @@ public static class BitmapScalerExtensions {
   /// <param name="targetSize">Target dimensions.</param>
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, Size targetSize)
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, Size targetSize, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler
     => source.Resample(resampler, targetSize.Width, targetSize.Height);
+
+  #region Edge-Aware Resampling
+
+  /// <summary>
+  /// Callback that receives a concrete edge-aware kernel type and executes the resample pipeline.
+  /// </summary>
+  private sealed class EdgeAwareResampleCallback<TWork, TKey, TDecode, TProject, TEncode, TEquality>(Bitmap source, int targetWidth, int targetHeight)
+    : IEdgeAwareResampleKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, TEquality, Bitmap>
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888>
+    where TEquality : struct, IColorEquality<TKey> {
+
+    public Bitmap Invoke<TKernel>(TKernel kernel)
+      where TKernel : struct, IEdgeAwareResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode, TEquality>
+      => Resample<TWork, TKey, TDecode, TProject, TEncode, TEquality, TKernel>(source, targetWidth, targetHeight, kernel);
+  }
+
+  /// <summary>
+  /// Internal edge-aware resampling method that applies a kernel to a bitmap.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  internal static unsafe Bitmap Resample<TWork, TKey, TDecode, TProject, TEncode, TEquality, TKernel>(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    TKernel kernel)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888>
+    where TEquality : struct, IColorEquality<TKey>
+    where TKernel : struct, IEdgeAwareResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode, TEquality> {
+    var result = new Bitmap(targetWidth, targetHeight, PixelFormat.Format32bppArgb);
+
+    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
+    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
+
+    var srcFrame = srcLocker.AsFrame();
+    var dstFrame = dstLocker.AsFrame();
+
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
+    fixed (Bgra8888* dstPtr = dstFrame.Pixels)
+      ScalerPipeline.ExecuteEdgeAwareResampleParallel<
+        Bgra8888, TWork, TKey,
+        TDecode, TProject, TEncode,
+        TEquality, TKernel
+      >(
+        srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride,
+        dstPtr, targetWidth, targetHeight, dstFrame.Stride,
+        kernel
+      );
+
+    return result;
+  }
+
+  /// <summary>
+  /// Resamples a bitmap using an edge-aware algorithm with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The edge-aware resampler type (e.g., KopfLischinski).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __EdgeAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IEdgeAwareResampler
+    => source.Resample(default(TResampler), targetWidth, targetHeight);
+
+  /// <summary>
+  /// Resamples a bitmap using an edge-aware algorithm with default configuration.
+  /// </summary>
+  /// <typeparam name="TResampler">The edge-aware resampler type (e.g., KopfLischinski).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, Size targetSize, __EdgeAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IEdgeAwareResampler
+    => source.Resample<TResampler>(targetSize.Width, targetSize.Height);
+
+  /// <summary>
+  /// Resamples a bitmap using a configured edge-aware resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The edge-aware resampler type (e.g., KopfLischinski).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The edge-aware resampler instance.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight, __EdgeAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IEdgeAwareResampler {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var callback = new EdgeAwareResampleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      ThresholdEquality3<OklabF>>(source, targetWidth, targetHeight);
+    return resampler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      ThresholdEquality3<OklabF>, Bitmap>(
+      callback, source.Width, source.Height, targetWidth, targetHeight, new(0.02f, 0.04f, 0.04f));
+  }
+
+  /// <summary>
+  /// Resamples a bitmap using a configured edge-aware resampler instance.
+  /// </summary>
+  /// <typeparam name="TResampler">The edge-aware resampler type (e.g., KopfLischinski).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The edge-aware resampler instance.</param>
+  /// <param name="targetSize">Target dimensions.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, Size targetSize, __EdgeAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IEdgeAwareResampler
+    => source.Resample(resampler, targetSize.Width, targetSize.Height);
+
+  /// <summary>
+  /// Resamples a bitmap using an edge-aware algorithm with custom equality threshold.
+  /// </summary>
+  /// <typeparam name="TResampler">The edge-aware resampler type.</typeparam>
+  /// <typeparam name="TEquality">The color equality comparer type.</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The edge-aware resampler instance.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <param name="equality">The equality comparer for similarity detection.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler, TEquality>(
+    this Bitmap source,
+    TResampler resampler,
+    int targetWidth,
+    int targetHeight,
+    TEquality equality,
+    __EdgeAwareResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IEdgeAwareResampler
+    where TEquality : struct, IColorEquality<OklabF> {
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var callback = new EdgeAwareResampleCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      TEquality>(source, targetWidth, targetHeight);
+    return resampler.InvokeKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+      TEquality, Bitmap>(
+      callback, source.Width, source.Height, targetWidth, targetHeight, equality);
+  }
+
+  #endregion
 
 }

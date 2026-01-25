@@ -23,6 +23,7 @@ using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Codecs;
+using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing;
@@ -404,6 +405,117 @@ public static class ScalerPipeline {
         var endRow = range.Item2;
 
         // Each partition creates its own frame for thread-safe random access
+        using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
+          sourcePtr,
+          sourceWidth,
+          sourceHeight,
+          sourceStride,
+          decoder,
+          projector,
+          horizontalMode,
+          verticalMode,
+          startY: 0
+        );
+
+        for (var destY = startRow; destY < endRow; ++destY)
+        for (var destX = 0; destX < destWidth; ++destX)
+          kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
+      }
+    );
+  }
+
+  /// <summary>
+  /// Executes an edge-aware resampling kernel that uses color equality for similarity detection.
+  /// Uses parallel processing for large images.
+  /// </summary>
+  /// <typeparam name="TPixel">The storage pixel type.</typeparam>
+  /// <typeparam name="TWork">The working color type (for interpolation).</typeparam>
+  /// <typeparam name="TKey">The key color type (for similarity detection).</typeparam>
+  /// <typeparam name="TDecode">The decoder type (TPixel → TWork).</typeparam>
+  /// <typeparam name="TProject">The projector type (TWork → TKey).</typeparam>
+  /// <typeparam name="TEncode">The encoder type (TWork → TPixel).</typeparam>
+  /// <typeparam name="TEquality">The color equality type for similarity detection.</typeparam>
+  /// <typeparam name="TKernel">The edge-aware resampling kernel type.</typeparam>
+  /// <param name="sourcePtr">Pointer to source pixel data.</param>
+  /// <param name="sourceWidth">Width of source image.</param>
+  /// <param name="sourceHeight">Height of source image.</param>
+  /// <param name="sourceStride">Stride of source image in pixels.</param>
+  /// <param name="destPtr">Pointer to destination pixel data.</param>
+  /// <param name="destWidth">Width of destination image.</param>
+  /// <param name="destHeight">Height of destination image.</param>
+  /// <param name="destStride">Stride of destination image in pixels.</param>
+  /// <param name="kernel">The edge-aware resampling kernel instance.</param>
+  /// <param name="decoder">The decoder instance.</param>
+  /// <param name="projector">The projector instance.</param>
+  /// <param name="encoder">The encoder instance.</param>
+  /// <param name="horizontalMode">How to handle horizontal out-of-bounds access.</param>
+  /// <param name="verticalMode">How to handle vertical out-of-bounds access.</param>
+  /// <remarks>
+  /// <para>
+  /// Edge-aware resamplers like Kopf-Lischinski build similarity graphs to preserve
+  /// edges during resampling. The kernel may lazily initialize these structures
+  /// on first pixel access.
+  /// </para>
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe void ExecuteEdgeAwareResampleParallel<TPixel, TWork, TKey, TDecode, TProject, TEncode, TEquality, TKernel>(
+    TPixel* sourcePtr,
+    int sourceWidth,
+    int sourceHeight,
+    int sourceStride,
+    TPixel* destPtr,
+    int destWidth,
+    int destHeight,
+    int destStride,
+    TKernel kernel,
+    TDecode decoder = default,
+    TProject projector = default,
+    TEncode encoder = default,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
+  )
+    where TPixel : unmanaged, IStorageSpace
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    where TEquality : struct, IColorEquality<TKey>
+    where TKernel : struct, IEdgeAwareResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode, TEquality> {
+    var totalPixels = (long)destWidth * destHeight;
+    var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
+
+    // Fall back to sequential if image is too small for parallel overhead
+    if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
+      using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
+        sourcePtr,
+        sourceWidth,
+        sourceHeight,
+        sourceStride,
+        decoder,
+        projector,
+        horizontalMode,
+        verticalMode,
+        startY: 0
+      );
+
+      for (var destY = 0; destY < destHeight; ++destY)
+      for (var destX = 0; destX < destWidth; ++destX)
+        kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
+
+      return;
+    }
+
+    // Batch destination rows for better cache locality
+    var rowsPerBatch = Math.Max(8, destHeight / (Environment.ProcessorCount * 4));
+    var partitioner = Partitioner.Create(0, destHeight, rowsPerBatch);
+
+    Parallel.ForEach(
+      partitioner,
+      range => {
+        var startRow = range.Item1;
+        var endRow = range.Item2;
+
         using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
           sourcePtr,
           sourceWidth,
