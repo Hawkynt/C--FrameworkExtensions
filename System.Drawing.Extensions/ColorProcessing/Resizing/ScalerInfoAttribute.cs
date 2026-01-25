@@ -39,7 +39,12 @@ public enum ScalerCategory {
   /// <summary>
   /// Neural network or AI-based upscaling algorithms.
   /// </summary>
-  Neural
+  Neural,
+
+  /// <summary>
+  /// Content-aware scaling algorithms that analyze image content.
+  /// </summary>
+  ContentAware
 }
 
 /// <summary>

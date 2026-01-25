@@ -18,6 +18,9 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
+using System.Drawing;
+using System.Linq;
 using System.Reflection;
 
 namespace Hawkynt.ColorProcessing.Resizing;
@@ -193,4 +196,144 @@ public sealed class ScalerDescriptor {
 
   /// <inheritdoc />
   public override string ToString() => $"{this.Name} ({this.Category})";
+
+  #region Scaling Methods
+
+  // Cached generic method definitions for performance
+  private static readonly ConcurrentDictionary<Type, MethodInfo> _upscaleMethodCache = new();
+  private static readonly ConcurrentDictionary<Type, MethodInfo> _resampleMethodCache = new();
+  private static MethodInfo? _upscaleGenericDef;
+  private static MethodInfo? _resampleGenericDef;
+
+  private static MethodInfo GetUpscaleMethod(Type scalerType) {
+    return _upscaleMethodCache.GetOrAdd(scalerType, type => {
+      _upscaleGenericDef ??= AppDomain.CurrentDomain
+        .GetAssemblies()
+        .SelectMany(a => {
+          try { return a.GetTypes(); }
+          catch { return []; }
+        })
+        .FirstOrDefault(t => t.FullName == "Hawkynt.Drawing.BitmapScalerExtensions")
+        ?.GetMethods(BindingFlags.Public | BindingFlags.Static)
+        .First(m => m.Name == "Upscale" && m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType.IsGenericParameter);
+      return _upscaleGenericDef!.MakeGenericMethod(type);
+    });
+  }
+
+  private static MethodInfo GetResampleMethod(Type resamplerType) {
+    return _resampleMethodCache.GetOrAdd(resamplerType, type => {
+      _resampleGenericDef ??= AppDomain.CurrentDomain
+        .GetAssemblies()
+        .SelectMany(a => {
+          try { return a.GetTypes(); }
+          catch { return []; }
+        })
+        .FirstOrDefault(t => t.FullName == "Hawkynt.Drawing.BitmapScalerExtensions")
+        ?.GetMethods(BindingFlags.Public | BindingFlags.Static)
+        .First(m => m.Name == "Resample" && m.GetParameters().Length == 4 && m.IsGenericMethod);
+      return _resampleGenericDef!.MakeGenericMethod(type);
+    });
+  }
+
+  /// <summary>
+  /// Scales a bitmap using this scaler with default configuration.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <returns>A new scaled bitmap.</returns>
+  /// <remarks>
+  /// <para>For pixel scalers, applies the scaler's native scale factor.</para>
+  /// <para>For resamplers, scales to 2x the original dimensions.</para>
+  /// </remarks>
+  public Bitmap Scale(Bitmap source) {
+    if (this.IsPixelScaler)
+      return this.Upscale(source);
+
+    return this.Resample(source, source.Width * 2, source.Height * 2);
+  }
+
+  /// <summary>
+  /// Scales a bitmap to the specified dimensions.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new scaled bitmap.</returns>
+  /// <exception cref="InvalidOperationException">
+  /// Thrown if attempting to resample with a pixel scaler or vice versa when dimensions don't match.
+  /// </exception>
+  public Bitmap Scale(Bitmap source, int targetWidth, int targetHeight) {
+    if (this.IsResampler)
+      return this.Resample(source, targetWidth, targetHeight);
+
+    // For pixel scalers, use the native scale and let the caller handle any mismatch
+    return this.Upscale(source);
+  }
+
+  /// <summary>
+  /// Upscales a bitmap using this pixel scaler.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <param name="quality">The quality mode for scaling.</param>
+  /// <returns>A new upscaled bitmap.</returns>
+  /// <exception cref="InvalidOperationException">Thrown if this is not a pixel scaler.</exception>
+  public Bitmap Upscale(Bitmap source, ScalerQuality quality = ScalerQuality.Fast) {
+    if (!this.IsPixelScaler)
+      throw new InvalidOperationException($"{this.Name} is not a pixel scaler. Use Resample() instead.");
+
+    var scaler = this.CreateDefault();
+    var method = GetUpscaleMethod(this.Type);
+    return (Bitmap)method.Invoke(null, [source, scaler, quality])!;
+  }
+
+  /// <summary>
+  /// Upscales a bitmap using a pre-created scaler instance.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <param name="scaler">The scaler instance (must match this descriptor's type).</param>
+  /// <param name="quality">The quality mode for scaling.</param>
+  /// <returns>A new upscaled bitmap.</returns>
+  /// <exception cref="InvalidOperationException">Thrown if this is not a pixel scaler.</exception>
+  public Bitmap Upscale(Bitmap source, object scaler, ScalerQuality quality = ScalerQuality.Fast) {
+    if (!this.IsPixelScaler)
+      throw new InvalidOperationException($"{this.Name} is not a pixel scaler. Use Resample() instead.");
+
+    var method = GetUpscaleMethod(this.Type);
+    return (Bitmap)method.Invoke(null, [source, scaler, quality])!;
+  }
+
+  /// <summary>
+  /// Resamples a bitmap to the specified dimensions.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new resampled bitmap.</returns>
+  /// <exception cref="InvalidOperationException">Thrown if this is not a resampler.</exception>
+  public Bitmap Resample(Bitmap source, int targetWidth, int targetHeight) {
+    if (!this.IsResampler)
+      throw new InvalidOperationException($"{this.Name} is not a resampler. Use Upscale() instead.");
+
+    var resampler = this.CreateDefault();
+    var method = GetResampleMethod(this.Type);
+    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight])!;
+  }
+
+  /// <summary>
+  /// Resamples a bitmap using a pre-created resampler instance.
+  /// </summary>
+  /// <param name="source">The source bitmap.</param>
+  /// <param name="resampler">The resampler instance (must match this descriptor's type).</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <returns>A new resampled bitmap.</returns>
+  /// <exception cref="InvalidOperationException">Thrown if this is not a resampler.</exception>
+  public Bitmap Resample(Bitmap source, object resampler, int targetWidth, int targetHeight) {
+    if (!this.IsResampler)
+      throw new InvalidOperationException($"{this.Name} is not a resampler. Use Upscale() instead.");
+
+    var method = GetResampleMethod(this.Type);
+    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight])!;
+  }
+
+  #endregion
 }
