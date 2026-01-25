@@ -476,6 +476,60 @@ public static partial class InterlockedEx {
     }
 <#}#>
 <#}#>
+<#if(isIntegerType){#>
+
+    /// <summary>Adds two values with saturation and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The saturated sum is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to add to the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> SaturatingAdd(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.SaturatingAdd(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Subtracts a value with saturation and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The saturated difference is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to subtract from the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> SaturatingSubtract(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.SaturatingSubtract(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Multiplies two values with saturation and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the first value. The saturated product is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The value to multiply with the variable at <paramref name="source"/>.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> SaturatingMultiply(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.SaturatingMultiply(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+
+    /// <summary>Divides a value with saturation and replaces the first value with the result, as an atomic operation.</summary>
+    /// <param name="source">A variable containing the dividend. The saturated quotient is stored in <paramref name="source"/>.</param>
+    /// <param name="value">The divisor.</param>
+    /// <returns>The new value stored at <paramref name="source"/>.</returns>
+    public static <#=type#> SaturatingDivide(ref <#=type#> source, <#=type#> value) {
+      for (;;) {
+        var current = Read(ref source);
+        var next = current.SaturatingDivide(value);
+        if (CompareExchange(ref source, next, current) == current)
+          return next;
+      }
+    }
+<#}#>
 
     #endregion
 <#}#>

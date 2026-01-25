@@ -397,4 +397,200 @@ internal class InterlockedExTests {
     Interlocked.RotateRight(ref ulongVal, 1);
     Assert.AreEqual(0x8000000000000000ul, ulongVal);
   }
+
+  #region Saturating Operations
+
+  [Test]
+  public void SaturatingAdd_Int32_Normal_ReturnsSum() {
+    var value = 10;
+    var result = Interlocked.SaturatingAdd(ref value, 5);
+    Assert.AreEqual(15, result);
+    Assert.AreEqual(15, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_Int32_Overflow_ReturnsMaxValue() {
+    var value = int.MaxValue - 5;
+    var result = Interlocked.SaturatingAdd(ref value, 10);
+    Assert.AreEqual(int.MaxValue, result);
+    Assert.AreEqual(int.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_Int32_Underflow_ReturnsMinValue() {
+    var value = int.MinValue + 5;
+    var result = Interlocked.SaturatingAdd(ref value, -10);
+    Assert.AreEqual(int.MinValue, result);
+    Assert.AreEqual(int.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_Int32_Overflow_ReturnsMaxValue() {
+    var value = int.MaxValue - 5;
+    var result = Interlocked.SaturatingSubtract(ref value, -10);
+    Assert.AreEqual(int.MaxValue, result);
+    Assert.AreEqual(int.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_Int32_Underflow_ReturnsMinValue() {
+    var value = int.MinValue + 5;
+    var result = Interlocked.SaturatingSubtract(ref value, 10);
+    Assert.AreEqual(int.MinValue, result);
+    Assert.AreEqual(int.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_Int32_Overflow_ReturnsMaxValue() {
+    var value = int.MaxValue / 2;
+    var result = Interlocked.SaturatingMultiply(ref value, 3);
+    Assert.AreEqual(int.MaxValue, result);
+    Assert.AreEqual(int.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_Int32_Underflow_ReturnsMinValue() {
+    var value = int.MaxValue / 2;
+    var result = Interlocked.SaturatingMultiply(ref value, -3);
+    Assert.AreEqual(int.MinValue, result);
+    Assert.AreEqual(int.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingDivide_Int32_MinValueDividedByMinusOne_ReturnsMaxValue() {
+    var value = int.MinValue;
+    var result = Interlocked.SaturatingDivide(ref value, -1);
+    Assert.AreEqual(int.MaxValue, result);
+    Assert.AreEqual(int.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_UInt32_Normal_ReturnsSum() {
+    var value = 10u;
+    var result = Interlocked.SaturatingAdd(ref value, 5u);
+    Assert.AreEqual(15u, result);
+    Assert.AreEqual(15u, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_UInt32_Overflow_ReturnsMaxValue() {
+    var value = uint.MaxValue - 5u;
+    var result = Interlocked.SaturatingAdd(ref value, 10u);
+    Assert.AreEqual(uint.MaxValue, result);
+    Assert.AreEqual(uint.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_UInt32_Underflow_ReturnsMinValue() {
+    var value = 5u;
+    var result = Interlocked.SaturatingSubtract(ref value, 10u);
+    Assert.AreEqual(0u, result);
+    Assert.AreEqual(0u, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_UInt32_Overflow_ReturnsMaxValue() {
+    var value = uint.MaxValue / 2u;
+    var result = Interlocked.SaturatingMultiply(ref value, 3u);
+    Assert.AreEqual(uint.MaxValue, result);
+    Assert.AreEqual(uint.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_Int64_Normal_ReturnsSum() {
+    var value = 10L;
+    var result = Interlocked.SaturatingAdd(ref value, 5L);
+    Assert.AreEqual(15L, result);
+    Assert.AreEqual(15L, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_Int64_Overflow_ReturnsMaxValue() {
+    var value = long.MaxValue - 5L;
+    var result = Interlocked.SaturatingAdd(ref value, 10L);
+    Assert.AreEqual(long.MaxValue, result);
+    Assert.AreEqual(long.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_Int64_Underflow_ReturnsMinValue() {
+    var value = long.MinValue + 5L;
+    var result = Interlocked.SaturatingAdd(ref value, -10L);
+    Assert.AreEqual(long.MinValue, result);
+    Assert.AreEqual(long.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_Int64_Overflow_ReturnsMaxValue() {
+    var value = long.MaxValue - 5L;
+    var result = Interlocked.SaturatingSubtract(ref value, -10L);
+    Assert.AreEqual(long.MaxValue, result);
+    Assert.AreEqual(long.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_Int64_Underflow_ReturnsMinValue() {
+    var value = long.MinValue + 5L;
+    var result = Interlocked.SaturatingSubtract(ref value, 10L);
+    Assert.AreEqual(long.MinValue, result);
+    Assert.AreEqual(long.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_Int64_Overflow_ReturnsMaxValue() {
+    var value = long.MaxValue / 2L;
+    var result = Interlocked.SaturatingMultiply(ref value, 3L);
+    Assert.AreEqual(long.MaxValue, result);
+    Assert.AreEqual(long.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_Int64_Underflow_ReturnsMinValue() {
+    var value = long.MaxValue / 2L;
+    var result = Interlocked.SaturatingMultiply(ref value, -3L);
+    Assert.AreEqual(long.MinValue, result);
+    Assert.AreEqual(long.MinValue, value);
+  }
+
+  [Test]
+  public void SaturatingDivide_Int64_MinValueDividedByMinusOne_ReturnsMaxValue() {
+    var value = long.MinValue;
+    var result = Interlocked.SaturatingDivide(ref value, -1L);
+    Assert.AreEqual(long.MaxValue, result);
+    Assert.AreEqual(long.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_UInt64_Normal_ReturnsSum() {
+    var value = 10ul;
+    var result = Interlocked.SaturatingAdd(ref value, 5ul);
+    Assert.AreEqual(15ul, result);
+    Assert.AreEqual(15ul, value);
+  }
+
+  [Test]
+  public void SaturatingAdd_UInt64_Overflow_ReturnsMaxValue() {
+    var value = ulong.MaxValue - 5ul;
+    var result = Interlocked.SaturatingAdd(ref value, 10ul);
+    Assert.AreEqual(ulong.MaxValue, result);
+    Assert.AreEqual(ulong.MaxValue, value);
+  }
+
+  [Test]
+  public void SaturatingSubtract_UInt64_Underflow_ReturnsMinValue() {
+    var value = 5ul;
+    var result = Interlocked.SaturatingSubtract(ref value, 10ul);
+    Assert.AreEqual(0ul, result);
+    Assert.AreEqual(0ul, value);
+  }
+
+  [Test]
+  public void SaturatingMultiply_UInt64_Overflow_ReturnsMaxValue() {
+    var value = ulong.MaxValue / 2ul;
+    var result = Interlocked.SaturatingMultiply(ref value, 3ul);
+    Assert.AreEqual(ulong.MaxValue, result);
+    Assert.AreEqual(ulong.MaxValue, value);
+  }
+
+  #endregion
 }

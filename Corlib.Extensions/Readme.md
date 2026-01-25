@@ -562,6 +562,16 @@ Operations for numeric types: byte, sbyte, short, ushort, int, uint, long, ulong
 - **`ArithmeticShiftLeft()` / `ArithmeticShiftRight()`** - Sign-preserving bit shifts
 - **`LogicalShiftLeft()` / `LogicalShiftRight()`** - Zero-fill bit shifts
 
+**Saturating Arithmetic:**
+
+Operations for all integer types (byte, sbyte, short, ushort, int, uint, long, ulong, UInt96, Int96, UInt128, Int128) that clamp results to type bounds instead of overflowing:
+
+- **`SaturatingAdd(value)`** - Add with saturation (overflow → MaxValue, underflow → MinValue)
+- **`SaturatingSubtract(value)`** - Subtract with saturation (overflow → MaxValue, underflow → MinValue)
+- **`SaturatingMultiply(value)`** - Multiply with saturation (clamps on overflow/underflow)
+- **`SaturatingDivide(value)`** - Divide with saturation (signed types: `MinValue / -1` → `MaxValue`)
+- **`SaturatingNegate()`** - Negate with saturation (signed types only; `MinValue` → `MaxValue`)
+
 #### Comparison & Range Operations
 
 Comparison operations for numeric types
@@ -697,6 +707,11 @@ Atomic operations with enum support and flag manipulation
   - Enum arithmetic (add, subtract, increment, decrement)
   - Conditional updates (CompareExchange with strong typing)
   - Read operations (atomic reads with memory barriers)
+- **Saturating Atomic Operations** - Atomic operations with saturation semantics (int, uint, long, ulong):
+  - `SaturatingAdd(ref source, value)` - Atomic saturating add
+  - `SaturatingSubtract(ref source, value)` - Atomic saturating subtract
+  - `SaturatingMultiply(ref source, value)` - Atomic saturating multiply
+  - `SaturatingDivide(ref source, value)` - Atomic saturating divide
 
 #### Synchronization Primitives
 
