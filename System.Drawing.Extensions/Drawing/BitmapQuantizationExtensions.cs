@@ -65,11 +65,35 @@ public static class BitmapQuantizationExtensions {
     )
       where TDitherer : struct, IDitherer
       where TQuantizer : struct, IQuantizer
+      => @this.ReduceColors(quantizer, ditherer, colorCount, isHighQuality, true);
+
+    /// <summary>
+    /// Reduces colors in a bitmap with control over palette filling behavior.
+    /// </summary>
+    /// <param name="quantizer">The quantizer to generate the palette.</param>
+    /// <param name="ditherer">The ditherer for error diffusion.</param>
+    /// <param name="colorCount">The target number of colors (1-256).</param>
+    /// <param name="isHighQuality">Whether to use Linear RGB with floats or BGRA with int-only calculations.</param>
+    /// <param name="allowFillingColors">When true, fills unused palette entries with generated colors if the quantizer produces fewer colors than requested.</param>
+    /// <returns>
+    /// A new indexed bitmap with pixel format based on color count:
+    /// 2 colors → 1bpp, ≤16 colors → 4bpp, ≤256 colors → 8bpp.
+    /// </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap ReduceColors<TQuantizer, TDitherer>(
+      TQuantizer quantizer,
+      TDitherer ditherer,
+      int colorCount,
+      bool isHighQuality,
+      bool allowFillingColors
+    )
+      where TDitherer : struct, IDitherer
+      where TQuantizer : struct, IQuantizer
       => isHighQuality
         ? QuantizationPipeline.Quantize<LinearRgbaF, Srgb32ToLinearRgbaF, LinearRgbaFToSrgb32, Euclidean4F<LinearRgbaF>>(
-          @this, quantizer.CreateKernel<LinearRgbaF>(), ditherer, colorCount)
+          @this, quantizer.CreateKernel<LinearRgbaF>(), ditherer, colorCount, allowFillingColors)
         : QuantizationPipeline.Quantize<Bgra8888, IdentityDecode<Bgra8888>, IdentityEncode<Bgra8888>, EuclideanSquared4B<Bgra8888>>(
-          @this, quantizer.CreateKernel<Bgra8888>(), ditherer, colorCount);
+          @this, quantizer.CreateKernel<Bgra8888>(), ditherer, colorCount, allowFillingColors);
     
     /// <summary>
     /// Reduces colors in a bitmap using default quantizer and ditherer instances.
