@@ -58,7 +58,8 @@ public readonly struct Lagrange3 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -66,7 +67,7 @@ public readonly struct Lagrange3 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange3));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange3, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -106,7 +107,8 @@ public readonly struct Lagrange5 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -114,7 +116,7 @@ public readonly struct Lagrange5 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange5));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange5, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -154,7 +156,8 @@ public readonly struct Lagrange7 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -162,7 +165,7 @@ public readonly struct Lagrange7 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange7));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, LagrangeType.Lagrange7, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -177,7 +180,7 @@ file enum LagrangeType {
 }
 
 file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, LagrangeType type)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, LagrangeType type, bool useCenteredGrid)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -198,8 +201,11 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -208,9 +214,9 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center back to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer coordinates
     var srcXi = (int)MathF.Floor(srcXf);
@@ -251,134 +257,143 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
   /// Lagrange 4-point (cubic) basis polynomial weights.
   /// </summary>
   /// <remarks>
-  /// Sample points at -1, 0, 1, 2. For fractional position t in [0, 1]:
+  /// Sample points at -1, 0, 1, 2 relative to floor(srcX).
+  /// For fractional position t in [0, 1]:
   /// L_{-1}(t) = -t(t-1)(t-2)/6
   /// L_0(t) = (t+1)(t-1)(t-2)/2
   /// L_1(t) = -(t+1)t(t-2)/2
   /// L_2(t) = (t+1)t(t-1)/6
+  ///
+  /// The weight function receives x = fx - kx (offset from interpolation point to sample).
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float Lagrange3Weight(float x) {
-    // x is distance from sample point, so we compute based on that
-    var absX = MathF.Abs(x);
-    if (absX >= 2f)
+    if (x >= 2f || x < -2f)
       return 0f;
 
-    // Lagrange basis for 4-point interpolation centered at x=0
-    // with sample points at -1, 0, 1, 2
-    var t = x;
-    return t switch {
-      >= -1f and < 0f => -(t + 1f) * t * (t - 1f) * (t - 2f) / 6f * -1f, // Adjusted
-      >= 0f and < 1f => (t + 1f) * t * (t - 1f) * (t - 2f) / -2f * -1f,
-      _ => ComputeLagrange3Basis(x)
-    };
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float ComputeLagrange3Basis(float x) {
-    // For sample point at offset i, the basis polynomial at position t is:
-    // L_i(t) = ∏_{j≠i} (t - j) / (i - j)
-    // Our sample points: -1, 0, 1, 2
-    // We want the weight for a sample that is 'x' away from interpolation point
-
-    var absX = MathF.Abs(x);
-    if (absX >= 2f)
-      return 0f;
-
-    // Centered cubic Lagrange using symmetric formulation
-    // For |x| <= 2, with sample points at -1, 0, 1, 2
-    if (absX <= 1f) {
-      var x2 = x * x;
-      // Central cubic: passes through (0,1), approaches 0 at ±2
-      return 1f - x2 * (2.5f - 1.5f * absX);
+    if (x >= 1f) {
+      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
+      var t = x - 1f;
+      return -t * (t - 1f) * (t - 2f) / 6f;
     }
 
-    // |x| in (1, 2)
-    var t = 2f - absX;
-    return t * (t - 1f) * (t + 1f) * (x > 0 ? -1f : 1f) / 6f;
+    if (x >= 0f) {
+      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
+      return (x + 1f) * (x - 1f) * (x - 2f) / 2f;
+    }
+
+    if (x >= -1f) {
+      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
+      var t = x + 1f;
+      return -(t + 1f) * t * (t - 2f) / 2f;
+    }
+
+    // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
+    var u = x + 2f;
+    return (u + 1f) * u * (u - 1f) / 6f;
   }
 
   /// <summary>
   /// Lagrange 6-point (quintic) basis polynomial weights.
   /// </summary>
+  /// <remarks>
+  /// Sample points at -2, -1, 0, 1, 2, 3 relative to floor(srcX).
+  /// The weight function receives x = fx - kx (offset from interpolation point to sample).
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float Lagrange5Weight(float x) {
-    var absX = MathF.Abs(x);
-    if (absX >= 3f)
+    if (x >= 3f || x < -3f)
       return 0f;
 
-    // 6-point Lagrange with samples at -2, -1, 0, 1, 2, 3
-    // Using the general Lagrange basis formula
-    var x2 = x * x;
-    if (absX <= 1f) {
-      // Central region: highest weight
-      var x4 = x2 * x2;
-      return 1f + x2 * (-2.95833333333333f + x2 * (2.29166666666667f - absX * 0.625f));
+    if (x >= 2f) {
+      // x ∈ [2, 3): sample at index -2, L_{-2}(fx) where fx = x - 2
+      var t = x - 2f;
+      return -(t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 120f;
     }
 
-    if (absX <= 2f) {
-      // Intermediate region
-      var t = absX - 1.5f;
-      var t2 = t * t;
-      return 0.125f * (absX - 3f) * (absX + 2f) * t * (t2 - 0.25f) / (x > 0 ? -1f : 1f);
+    if (x >= 1f) {
+      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
+      var t = x - 1f;
+      return -(t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 24f;
     }
 
-    // Outer region |x| in (2, 3)
-    var u = 3f - absX;
-    var u2 = u * u;
-    return u * u2 * (u - 1f) * (u - 2f) * (x > 0 ? 1f : -1f) / 120f;
+    if (x >= 0f) {
+      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
+      return (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) / 12f;
+    }
+
+    if (x >= -1f) {
+      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
+      var t = x + 1f;
+      return -(t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) / 12f;
+    }
+
+    if (x >= -2f) {
+      // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
+      var t = x + 2f;
+      return -(t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) / 24f;
+    }
+
+    // x ∈ [-3, -2): sample at index 3, L_3(fx) where fx = x + 3
+    var u = x + 3f;
+    return (u + 2f) * (u + 1f) * u * (u - 1f) * (u - 2f) / 120f;
   }
 
   /// <summary>
   /// Lagrange 8-point (septic) basis polynomial weights.
   /// </summary>
+  /// <remarks>
+  /// Sample points at -3, -2, -1, 0, 1, 2, 3, 4 relative to floor(srcX).
+  /// The weight function receives x = fx - kx (offset from interpolation point to sample).
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float Lagrange7Weight(float x) {
-    var absX = MathF.Abs(x);
-    if (absX >= 4f)
+    if (x >= 4f || x < -4f)
       return 0f;
 
-    // 8-point Lagrange with samples at -3, -2, -1, 0, 1, 2, 3, 4
-    var x2 = x * x;
-    if (absX <= 1f) {
-      // Central region
-      var x4 = x2 * x2;
-      var x6 = x4 * x2;
-      return 1f + x2 * (-3.63888888888889f + x2 * (4.33333333333333f + x2 * (-1.97222222222222f + absX * 0.2708333333333f)));
+    if (x >= 3f) {
+      // x ∈ [3, 4): sample at index -3, L_{-3}(fx) where fx = x - 3
+      var t = x - 3f;
+      return -(t + 2f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 5040f;
     }
 
-    if (absX <= 2f) {
-      // Inner-intermediate region
-      var t = absX - 1f;
-      return ComputeLagrange7Intermediate1(t, x > 0);
+    if (x >= 2f) {
+      // x ∈ [2, 3): sample at index -2, L_{-2}(fx) where fx = x - 2
+      var t = x - 2f;
+      return (t + 3f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 720f;
     }
 
-    if (absX <= 3f) {
-      // Outer-intermediate region
-      var t = absX - 2f;
-      return ComputeLagrange7Intermediate2(t, x > 0);
+    if (x >= 1f) {
+      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
+      var t = x - 1f;
+      return -(t + 3f) * (t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 240f;
     }
 
-    // Outer region |x| in (3, 4)
-    var u = 4f - absX;
-    var sign = x > 0 ? -1f : 1f;
-    return sign * u * (u - 1f) * (u - 2f) * (u - 3f) * (u + 1f) * (u + 2f) * (u + 3f) / 5040f;
-  }
+    if (x >= 0f) {
+      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
+      return (x + 3f) * (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) * (x - 4f) / 144f;
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float ComputeLagrange7Intermediate1(float t, bool positive) {
-    // t = |x| - 1, so t in [0, 1)
-    var t2 = t * t;
-    var t3 = t2 * t;
-    var sign = positive ? -1f : 1f;
-    return sign * t * (t - 1f) * (t2 - 4f) * (t2 - 9f) / 36f;
-  }
+    if (x >= -1f) {
+      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
+      var t = x + 1f;
+      return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) * (t - 4f) / 144f;
+    }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float ComputeLagrange7Intermediate2(float t, bool positive) {
-    // t = |x| - 2, so t in [0, 1)
-    var t2 = t * t;
-    var sign = positive ? 1f : -1f;
-    return sign * t * (t - 1f) * (t + 1f) * (t2 - 4f) * (t - 2f) / 240f;
+    if (x >= -2f) {
+      // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
+      var t = x + 2f;
+      return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) * (t - 4f) / 240f;
+    }
+
+    if (x >= -3f) {
+      // x ∈ [-3, -2): sample at index 3, L_3(fx) where fx = x + 3
+      var t = x + 3f;
+      return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 4f) / 720f;
+    }
+
+    // x ∈ [-4, -3): sample at index 4, L_4(fx) where fx = x + 4
+    var u = x + 4f;
+    return (u + 3f) * (u + 2f) * (u + 1f) * u * (u - 1f) * (u - 2f) * (u - 3f) / 5040f;
   }
 }

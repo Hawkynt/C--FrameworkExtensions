@@ -69,7 +69,8 @@ public readonly struct MitchellNetravali : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -77,7 +78,7 @@ public readonly struct MitchellNetravali : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this._b, this._c));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this._b, this._c, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -111,7 +112,8 @@ public readonly struct CatmullRom : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -119,7 +121,7 @@ public readonly struct CatmullRom : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, 0f, 0.5f));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, 0f, 0.5f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -157,7 +159,8 @@ public readonly struct BSpline : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -165,7 +168,7 @@ public readonly struct BSpline : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, 1f, 0f));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, 1f, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -205,7 +208,8 @@ public readonly struct Robidoux : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -213,7 +217,7 @@ public readonly struct Robidoux : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -253,7 +257,8 @@ public readonly struct RobidouxSharp : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -261,7 +266,7 @@ public readonly struct RobidouxSharp : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -301,7 +306,8 @@ public readonly struct RobidouxSoft : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -309,7 +315,7 @@ public readonly struct RobidouxSoft : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, B, C, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -318,7 +324,7 @@ public readonly struct RobidouxSoft : IResampler {
 }
 
 file readonly struct MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float b, float c)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float b, float c, bool useCenteredGrid)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -333,9 +339,11 @@ file readonly struct MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProj
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
-  // Precomputed scale factors
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -344,9 +352,9 @@ file readonly struct MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProj
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center back to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer coordinates of top-left source pixel
     var x0 = (int)MathF.Floor(srcXf);

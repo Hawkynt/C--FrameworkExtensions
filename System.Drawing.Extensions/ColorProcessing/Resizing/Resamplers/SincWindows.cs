@@ -70,7 +70,8 @@ public readonly struct Blackman : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -78,7 +79,7 @@ public readonly struct Blackman : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Blackman));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Blackman, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -132,7 +133,8 @@ public readonly struct Hann : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -140,7 +142,7 @@ public readonly struct Hann : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hann));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hann, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -194,7 +196,8 @@ public readonly struct Hamming : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -202,7 +205,7 @@ public readonly struct Hamming : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hamming));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hamming, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -277,7 +280,8 @@ public readonly struct Kaiser : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -285,7 +289,7 @@ public readonly struct Kaiser : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Kaiser, this.Beta));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Kaiser, this.Beta, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -339,7 +343,8 @@ public readonly struct Welch : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -347,7 +352,7 @@ public readonly struct Welch : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Welch));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Welch, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -401,7 +406,8 @@ public readonly struct Bartlett : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -409,7 +415,7 @@ public readonly struct Bartlett : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bartlett));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bartlett, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -463,7 +469,8 @@ public readonly struct Nuttal : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -471,7 +478,7 @@ public readonly struct Nuttal : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Nuttal));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Nuttal, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -525,7 +532,8 @@ public readonly struct BlackmanNuttal : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -533,7 +541,7 @@ public readonly struct BlackmanNuttal : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanNuttal));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanNuttal, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -587,7 +595,8 @@ public readonly struct BlackmanHarris : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -595,7 +604,7 @@ public readonly struct BlackmanHarris : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanHarris));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanHarris, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -650,7 +659,8 @@ public readonly struct FlatTop : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -658,7 +668,7 @@ public readonly struct FlatTop : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.FlatTop));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.FlatTop, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -712,7 +722,8 @@ public readonly struct Cosine : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -720,7 +731,7 @@ public readonly struct Cosine : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cosine));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cosine, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -794,7 +805,8 @@ public readonly struct PowerOfCosine : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -802,7 +814,7 @@ public readonly struct PowerOfCosine : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.PowerOfCosine, this.Alpha));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.PowerOfCosine, this.Alpha, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -877,7 +889,8 @@ public readonly struct Tukey : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -885,7 +898,7 @@ public readonly struct Tukey : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Tukey, this.Alpha));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Tukey, this.Alpha, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -959,7 +972,8 @@ public readonly struct Poisson : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -967,7 +981,7 @@ public readonly struct Poisson : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Poisson, this.Decay));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Poisson, this.Decay, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1021,7 +1035,8 @@ public readonly struct BartlettHann : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -1029,7 +1044,7 @@ public readonly struct BartlettHann : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BartlettHann));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BartlettHann, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1103,7 +1118,8 @@ public readonly struct HanningPoisson : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -1111,7 +1127,7 @@ public readonly struct HanningPoisson : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.HanningPoisson, this.Alpha));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.HanningPoisson, this.Alpha, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1165,7 +1181,8 @@ public readonly struct Bohman : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -1173,7 +1190,7 @@ public readonly struct Bohman : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bohman));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bohman, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1247,7 +1264,8 @@ public readonly struct Cauchy : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -1255,7 +1273,7 @@ public readonly struct Cauchy : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cauchy, this.Alpha));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cauchy, this.Alpha, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1310,7 +1328,8 @@ public readonly struct Rectangular : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -1318,7 +1337,7 @@ public readonly struct Rectangular : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Rectangular));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Rectangular, 0f, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -1353,7 +1372,7 @@ file enum WindowType {
 }
 
 file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, int radius, WindowType windowType, float param = 0f)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, int radius, WindowType windowType, float param = 0f, bool useCenteredGrid = true)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -1368,8 +1387,11 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -1378,9 +1400,9 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center back to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer coordinates
     var srcXi = (int)MathF.Floor(srcXf);

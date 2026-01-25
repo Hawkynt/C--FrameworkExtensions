@@ -51,7 +51,8 @@ public readonly struct NearestNeighbor : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -59,7 +60,7 @@ public readonly struct NearestNeighbor : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -68,7 +69,7 @@ public readonly struct NearestNeighbor : IResampler {
 }
 
 file readonly struct NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -83,9 +84,11 @@ file readonly struct NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProjec
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
-  // Precomputed scale factors
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -94,9 +97,9 @@ file readonly struct NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProjec
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center back to source coordinates
-    var srcX = (int)((destX + 0.5f) * this._scaleX);
-    var srcY = (int)((destY + 0.5f) * this._scaleY);
+    // Map destination pixel back to source coordinates
+    var srcX = (int)(destX * this._scaleX + this._offsetX);
+    var srcY = (int)(destY * this._scaleY + this._offsetY);
 
     // Clamp to source bounds
     srcX = Math.Clamp(srcX, 0, sourceWidth - 1);

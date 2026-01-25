@@ -52,7 +52,8 @@ public readonly struct CosineInterpolation : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -60,7 +61,7 @@ public readonly struct CosineInterpolation : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new CosineInterpolationKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -69,7 +70,7 @@ public readonly struct CosineInterpolation : IResampler {
 }
 
 file readonly struct CosineInterpolationKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -84,8 +85,11 @@ file readonly struct CosineInterpolationKernel<TPixel, TWork, TKey, TDecode, TPr
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -94,9 +98,9 @@ file readonly struct CosineInterpolationKernel<TPixel, TWork, TKey, TDecode, TPr
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer base coordinates
     var x0 = (int)MathF.Floor(srcXf);

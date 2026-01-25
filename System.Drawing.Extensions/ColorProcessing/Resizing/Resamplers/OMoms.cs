@@ -64,7 +64,8 @@ public readonly struct OMoms3 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -72,7 +73,7 @@ public readonly struct OMoms3 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms3));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms3, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -116,7 +117,8 @@ public readonly struct OMoms5 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -124,7 +126,7 @@ public readonly struct OMoms5 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms5));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms5, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -168,7 +170,8 @@ public readonly struct OMoms7 : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -176,7 +179,7 @@ public readonly struct OMoms7 : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms7));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, OMomsType.OMoms7, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -195,7 +198,7 @@ file enum OMomsType {
 }
 
 file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, OMomsType type)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, OMomsType type, bool useCenteredGrid = true)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -216,8 +219,11 @@ file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
   public int TargetWidth => targetWidth;
   public int TargetHeight => targetHeight;
 
+  // Precomputed scale factors and offsets for zero-cost grid centering
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -226,9 +232,9 @@ file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center back to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer coordinates
     var srcXi = (int)MathF.Floor(srcXf);

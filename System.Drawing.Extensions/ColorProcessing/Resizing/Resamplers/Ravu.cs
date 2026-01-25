@@ -72,7 +72,8 @@ public readonly struct Ravu : IResampler {
     int sourceWidth,
     int sourceHeight,
     int targetWidth,
-    int targetHeight)
+    int targetHeight,
+    bool useCenteredGrid = true)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TPixel : unmanaged, IStorageSpace
@@ -80,7 +81,7 @@ public readonly struct Ravu : IResampler {
     where TProject : struct, IProject<TWork, TKey>
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new RavuKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-      sourceWidth, sourceHeight, targetWidth, targetHeight, this._sharpness, this._antiRinging));
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this._sharpness, this._antiRinging, useCenteredGrid));
 
   /// <summary>
   /// Gets the default configuration.
@@ -99,7 +100,7 @@ public readonly struct Ravu : IResampler {
 }
 
 file readonly struct RavuKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
-  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float sharpness, float antiRinging)
+  int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float sharpness, float antiRinging, bool useCenteredGrid = true)
   : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
@@ -116,6 +117,8 @@ file readonly struct RavuKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
 
   private readonly float _scaleX = (float)sourceWidth / targetWidth;
   private readonly float _scaleY = (float)sourceHeight / targetHeight;
+  private readonly float _offsetX = useCenteredGrid ? 0.5f * sourceWidth / targetWidth - 0.5f : 0f;
+  private readonly float _offsetY = useCenteredGrid ? 0.5f * sourceHeight / targetHeight - 0.5f : 0f;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
@@ -124,9 +127,9 @@ file readonly struct RavuKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     TPixel* dest,
     int destStride,
     in TEncode encoder) {
-    // Map destination pixel center to source coordinates
-    var srcXf = (destX + 0.5f) * this._scaleX - 0.5f;
-    var srcYf = (destY + 0.5f) * this._scaleY - 0.5f;
+    // Map destination pixel back to source coordinates
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
 
     // Integer base coordinates
     var x0 = (int)MathF.Floor(srcXf);
