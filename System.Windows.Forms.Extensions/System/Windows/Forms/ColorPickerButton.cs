@@ -256,7 +256,7 @@ public class ColorPickerButton : Control {
     this.Invalidate();
 
     using var dropDown = new ColorPickerDropDown(this);
-    dropDown.ColorSelected += (s, color) => this.SelectedColor = color;
+    dropDown.ColorSelected += (_, e) => this.SelectedColor = e.Color;
 
     var screenPos = this.PointToScreen(new Point(0, this.Height));
     dropDown.Location = screenPos;
@@ -264,6 +264,10 @@ public class ColorPickerButton : Control {
 
     this._isDropDownOpen = false;
     this.Invalidate();
+  }
+
+  private sealed class ColorSelectedEventArgs(Color color) : EventArgs {
+    public Color Color { get; } = color;
   }
 
   private sealed class ColorPickerDropDown : Form {
@@ -274,7 +278,7 @@ public class ColorPickerButton : Control {
     private const int Columns = 5;
     private Rectangle _moreColorsRect;
 
-    public event EventHandler<Color> ColorSelected;
+    public event EventHandler<ColorSelectedEventArgs> ColorSelected;
 
     public ColorPickerDropDown(ColorPickerButton owner) {
       this._owner = owner;
@@ -382,7 +386,7 @@ public class ColorPickerButton : Control {
       if (this._owner._allowCustomColor && this._moreColorsRect.Contains(e.Location)) {
         using var dialog = new ColorDialog { Color = this._owner._selectedColor, FullOpen = true };
         if (dialog.ShowDialog(this) == DialogResult.OK) {
-          this.ColorSelected?.Invoke(this, dialog.Color);
+          this.ColorSelected?.Invoke(this, new ColorSelectedEventArgs(dialog.Color));
         }
 
         this.DialogResult = DialogResult.OK;
@@ -393,7 +397,7 @@ public class ColorPickerButton : Control {
       if (!color.HasValue)
         return;
 
-      this.ColorSelected?.Invoke(this, color.Value);
+      this.ColorSelected?.Invoke(this, new ColorSelectedEventArgs(color.Value));
       this.DialogResult = DialogResult.OK;
     }
 
