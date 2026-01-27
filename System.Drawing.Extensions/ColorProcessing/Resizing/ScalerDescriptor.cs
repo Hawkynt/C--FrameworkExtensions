@@ -22,6 +22,8 @@ using System.Collections.Concurrent;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using Hawkynt.ColorProcessing.Resizing.Rescalers;
+using Hawkynt.Drawing;
 
 namespace Hawkynt.ColorProcessing.Resizing;
 
@@ -142,7 +144,7 @@ public sealed class ScalerDescriptor {
 
     // Try to get SupportedScales static property
     var supportedScales = Array.Empty<ScaleFactor>();
-    var supportedScalesProp = type.GetProperty("SupportedScales", BindingFlags.Public | BindingFlags.Static);
+    var supportedScalesProp = type.GetProperty(nameof(HawkyntTv.SupportedScales), BindingFlags.Public | BindingFlags.Static);
     if (supportedScalesProp?.GetValue(null!) is ScaleFactor[] scales)
       supportedScales = scales;
 
@@ -205,35 +207,21 @@ public sealed class ScalerDescriptor {
   private static MethodInfo? _upscaleGenericDef;
   private static MethodInfo? _resampleGenericDef;
 
-  private static MethodInfo GetUpscaleMethod(Type scalerType) {
-    return _upscaleMethodCache.GetOrAdd(scalerType, type => {
-      _upscaleGenericDef ??= AppDomain.CurrentDomain
-        .GetAssemblies()
-        .SelectMany(a => {
-          try { return a.GetTypes(); }
-          catch { return []; }
-        })
-        .FirstOrDefault(t => t.FullName == "Hawkynt.Drawing.BitmapScalerExtensions")
-        ?.GetMethods(BindingFlags.Public | BindingFlags.Static)
-        .First(m => m.Name == "Upscale" && m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType.IsGenericParameter);
-      return _upscaleGenericDef!.MakeGenericMethod(type);
-    });
-  }
+  private static MethodInfo GetUpscaleMethod(Type scalerType) => _upscaleMethodCache.GetOrAdd(scalerType, type => {
+    _upscaleGenericDef ??= typeof(BitmapScalerExtensions)
+      .GetMethods(BindingFlags.Public | BindingFlags.Static)
+      .First(m => m.Name == nameof(BitmapScalerExtensions.Upscale) && m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType.IsGenericParameter)
+      ;
+    return _upscaleGenericDef!.MakeGenericMethod(type);
+  });
 
-  private static MethodInfo GetResampleMethod(Type resamplerType) {
-    return _resampleMethodCache.GetOrAdd(resamplerType, type => {
-      _resampleGenericDef ??= AppDomain.CurrentDomain
-        .GetAssemblies()
-        .SelectMany(a => {
-          try { return a.GetTypes(); }
-          catch { return []; }
-        })
-        .FirstOrDefault(t => t.FullName == "Hawkynt.Drawing.BitmapScalerExtensions")
-        ?.GetMethods(BindingFlags.Public | BindingFlags.Static)
-        .First(m => m.Name == "Resample" && m.GetParameters().Length == 4 && m.IsGenericMethod);
-      return _resampleGenericDef!.MakeGenericMethod(type);
-    });
-  }
+  private static MethodInfo GetResampleMethod(Type resamplerType) => _resampleMethodCache.GetOrAdd(resamplerType, type => {
+    _resampleGenericDef ??= typeof(BitmapScalerExtensions)
+      .GetMethods(BindingFlags.Public | BindingFlags.Static)
+      .First(m => m.Name == nameof(BitmapScalerExtensions.Resample) && m.GetParameters().Length == 5 && m.IsGenericMethod && m.GetParameters()[1].ParameterType.IsGenericParameter)
+      ;
+    return _resampleGenericDef!.MakeGenericMethod(type);
+  });
 
   /// <summary>
   /// Scales a bitmap using this scaler with default configuration.
@@ -244,12 +232,10 @@ public sealed class ScalerDescriptor {
   /// <para>For pixel scalers, applies the scaler's native scale factor.</para>
   /// <para>For resamplers, scales to 2x the original dimensions.</para>
   /// </remarks>
-  public Bitmap Scale(Bitmap source) {
-    if (this.IsPixelScaler)
-      return this.Upscale(source);
-
-    return this.Resample(source, source.Width * 2, source.Height * 2);
-  }
+  public Bitmap Scale(Bitmap source) => this.IsPixelScaler 
+    ? this.Upscale(source) 
+    : this.Resample(source, source.Width * 2, source.Height * 2)
+    ;
 
   /// <summary>
   /// Scales a bitmap to the specified dimensions.
@@ -261,14 +247,12 @@ public sealed class ScalerDescriptor {
   /// <exception cref="InvalidOperationException">
   /// Thrown if attempting to resample with a pixel scaler or vice versa when dimensions don't match.
   /// </exception>
-  public Bitmap Scale(Bitmap source, int targetWidth, int targetHeight) {
-    if (this.IsResampler)
-      return this.Resample(source, targetWidth, targetHeight);
-
+  public Bitmap Scale(Bitmap source, int targetWidth, int targetHeight) => this.IsResampler 
+    ? this.Resample(source, targetWidth, targetHeight)
     // For pixel scalers, use the native scale and let the caller handle any mismatch
-    return this.Upscale(source);
-  }
-
+    : this.Upscale(source)
+    ;
+  
   /// <summary>
   /// Upscales a bitmap using this pixel scaler.
   /// </summary>
@@ -315,7 +299,8 @@ public sealed class ScalerDescriptor {
 
     var resampler = this.CreateDefault();
     var method = GetResampleMethod(this.Type);
-    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight])!;
+    var tag = _CreateResamplerTag(this.Type);
+    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight, tag])!;
   }
 
   /// <summary>
@@ -332,8 +317,17 @@ public sealed class ScalerDescriptor {
       throw new InvalidOperationException($"{this.Name} is not a resampler. Use Upscale() instead.");
 
     var method = GetResampleMethod(this.Type);
-    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight])!;
+    var tag = _CreateResamplerTag(this.Type);
+    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight, tag])!;
   }
+
+  private static readonly ConcurrentDictionary<Type, object> _resamplerTagCache = new();
+
+  private static object _CreateResamplerTag(Type resamplerType) => _resamplerTagCache.GetOrAdd(resamplerType, type => {
+    var tagTypeDef = typeof(__ResamplerTag<>);
+    var tagType = tagTypeDef.MakeGenericType(type);
+    return Activator.CreateInstance(tagType)!;
+  });
 
   #endregion
 }

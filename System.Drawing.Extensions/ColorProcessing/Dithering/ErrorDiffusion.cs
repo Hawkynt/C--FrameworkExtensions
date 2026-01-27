@@ -253,6 +253,14 @@ public readonly struct ErrorDiffusionSerpentine : IDitherer {
 
   #region constructors
 
+  /// <summary>
+  /// Creates a serpentine error diffusion ditherer with Floyd-Steinberg matrix (default).
+  /// </summary>
+  /// <remarks>
+  /// Use <c>ErrorDiffusion.FloydSteinberg.Serpentine</c> for explicit matrix selection.
+  /// </remarks>
+  public ErrorDiffusionSerpentine() => this._data = ErrorDiffusionData.FloydSteinberg;
+
   internal ErrorDiffusionSerpentine(ErrorDiffusionData data) => this._data = data;
 
   #endregion

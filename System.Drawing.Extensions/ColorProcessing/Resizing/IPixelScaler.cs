@@ -77,4 +77,9 @@ public interface IPixelScaler : IScalerInfo {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>;
+
+#if SUPPORTS_STATIC_IN_INTERFACES
+  static ScaleFactor[] SupportedScales => default!;
+#endif
+
 }

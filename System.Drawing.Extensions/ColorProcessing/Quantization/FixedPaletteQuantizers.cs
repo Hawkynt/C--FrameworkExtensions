@@ -409,22 +409,22 @@ public readonly struct Cga4Quantizer : IQuantizer {
   #region Static Presets
 
   /// <summary>Gets CGA Palette 0 Low: Black, Green, Red, Brown.</summary>
-  public static Cga4Quantizer Palette0Low => new(CgaPaletteMode.Palette0Low);
+  public static Cga4Quantizer CGAPalette0Low => new(CgaPaletteMode.Palette0Low);
 
   /// <summary>Gets CGA Palette 0 High: Black, Light Green, Light Red, Yellow.</summary>
-  public static Cga4Quantizer Palette0High => new(CgaPaletteMode.Palette0High);
+  public static Cga4Quantizer CGAPalette0High => new(CgaPaletteMode.Palette0High);
 
   /// <summary>Gets CGA Palette 1 Low: Black, Cyan, Magenta, Light Gray.</summary>
-  public static Cga4Quantizer Palette1Low => new(CgaPaletteMode.Palette1Low);
+  public static Cga4Quantizer CGAPalette1Low => new(CgaPaletteMode.Palette1Low);
 
   /// <summary>Gets CGA Palette 1 High: Black, Light Cyan, Light Magenta, White (default).</summary>
-  public static Cga4Quantizer Palette1High => new(CgaPaletteMode.Palette1High);
+  public static Cga4Quantizer CGAPalette1High => new(CgaPaletteMode.Palette1High);
 
   /// <summary>Gets CGA Palette 2 Low (Mode 5): Black, Cyan, Red, Light Gray.</summary>
-  public static Cga4Quantizer Palette2Low => new(CgaPaletteMode.Palette2Low);
+  public static Cga4Quantizer CGAPalette2Low => new(CgaPaletteMode.Palette2Low);
 
   /// <summary>Gets CGA Palette 2 High (Mode 5): Black, Light Cyan, Light Red, White.</summary>
-  public static Cga4Quantizer Palette2High => new(CgaPaletteMode.Palette2High);
+  public static Cga4Quantizer CGAPalette2High => new(CgaPaletteMode.Palette2High);
 
   #endregion
 
@@ -510,7 +510,7 @@ public readonly struct CgaComposite16Quantizer : IQuantizer {
   IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>();
 
   /// <summary>Gets the CGA Composite 16 palette.</summary>
-  public static CgaComposite16Quantizer Default => new();
+  public static CgaComposite16Quantizer CGAComposite => new();
 
   internal sealed class Kernel<TWork> : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {

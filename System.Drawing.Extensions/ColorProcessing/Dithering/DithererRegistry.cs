@@ -105,7 +105,7 @@ public static class DithererRegistry {
         // Capture prop for closure - don't evaluate until CreateDefault is called
         var capturedProp = prop;
         descriptors.Add(new(type, name, author, description, ditheringType, year,
-          () => (IDitherer)capturedProp.GetValue(null)!));
+          () => (IDitherer)capturedProp.GetValue(null!)!));
       }
 
       // Also add default instance if parameterless constructor exists

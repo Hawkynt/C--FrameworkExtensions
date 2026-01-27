@@ -106,7 +106,7 @@ public static class QuantizerRegistry {
         // Capture prop for closure - don't evaluate until CreateDefault is called
         var capturedProp = prop;
         descriptors.Add(new(type, name, author, quantizationType, year, qualityRating,
-          () => (IQuantizer)capturedProp.GetValue(null)!));
+          () => (IQuantizer)capturedProp.GetValue(null!)!));
       }
 
       // Also add default instance if parameterless constructor exists

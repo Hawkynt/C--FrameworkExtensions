@@ -44,7 +44,11 @@ public class PlaceholderTextBox : TextBox {
   [Category("Appearance")]
   [Description("The placeholder text to display when the TextBox is empty.")]
   [DefaultValue("")]
+#if NET6_0_OR_GREATER
   public new string PlaceholderText {
+#else
+  public string PlaceholderText {
+#endif
     get => this._placeholderText;
     set {
       if (this._placeholderText == value)
