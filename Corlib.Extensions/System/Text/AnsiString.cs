@@ -61,7 +61,7 @@ public readonly struct AnsiString : IEquatable<AnsiString>, IComparable<AnsiStri
   /// Characters that cannot be represented in Windows-1252 are replaced with '?' (0x3F).
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public AnsiString(string? value) => this.Bytes = string.IsNullOrEmpty(value) ? _emptyBytes : Windows1252Encoding.GetBytes(value);
+  public AnsiString(string? value) => this.Bytes = string.IsNullOrEmpty(value) ? _emptyBytes : Windows1252Encoding.GetBytes(value!);
 
   /// <summary>
   /// Initializes a new instance of the <see cref="AnsiString"/> struct from a character span.

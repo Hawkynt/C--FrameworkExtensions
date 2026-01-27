@@ -82,7 +82,7 @@ public readonly struct FixedAscii : IEquatable<FixedAscii>, IComparable<FixedAsc
       if (string.IsNullOrEmpty(value))
         this._length = 0;
       else
-        this._length = _ProcessString(value.AsSpan(), this._packedBytes, capacity, behavior);
+        this._length = _ProcessString(value!.AsSpan(), this._packedBytes, capacity, behavior);
     }
   }
 

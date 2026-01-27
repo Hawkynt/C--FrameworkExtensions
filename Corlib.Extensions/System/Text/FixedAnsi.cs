@@ -65,7 +65,7 @@ public readonly struct FixedAnsi : IEquatable<FixedAnsi>, IComparable<FixedAnsi>
     if (string.IsNullOrEmpty(value)) {
       this._length = 0;
     } else {
-      var encoded = Windows1252Encoding.GetBytes(value.AsSpan());
+      var encoded = Windows1252Encoding.GetBytes(value!.AsSpan());
       this._length = encoded.Length > capacity ? capacity : encoded.Length;
       Array.Copy(encoded, this._bytes, this._length);
     }

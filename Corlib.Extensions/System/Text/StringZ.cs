@@ -67,7 +67,7 @@ public readonly struct StringZ : IEquatable<StringZ>, IComparable<StringZ>, ICom
     if (string.IsNullOrEmpty(value))
       return string.Empty;
 
-    var nullIndex = value.IndexOf('\0');
+    var nullIndex = value!.IndexOf('\0');
     return nullIndex < 0 ? value : value.Substring(0, nullIndex);
   }
 

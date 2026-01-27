@@ -63,7 +63,7 @@ public readonly struct AnsiZ : IEquatable<AnsiZ>, IComparable<AnsiZ>, IComparabl
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public AnsiZ(string? value)
-    => this.Bytes = string.IsNullOrEmpty(value) ? _emptyBytes : _ProcessString(value.AsSpan());
+    => this.Bytes = string.IsNullOrEmpty(value) ? _emptyBytes : _ProcessString(value!.AsSpan());
 
   /// <summary>
   /// Initializes a new instance of the <see cref="AnsiZ"/> struct from a character span.

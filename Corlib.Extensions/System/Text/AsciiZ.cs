@@ -136,7 +136,7 @@ public readonly struct AsciiZ : IEquatable<AsciiZ>, IComparable<AsciiZ>, ICompar
       this._packedBytes = _emptyBytes;
       this._length = 0;
     } else {
-      var unpacked = _ProcessString(value.AsSpan(), behavior);
+      var unpacked = _ProcessString(value!.AsSpan(), behavior);
       this._length = unpacked.Length;
       this._packedBytes = this._length == 0 ? _emptyBytes : Ascii7BitPacking.Pack(unpacked);
     }

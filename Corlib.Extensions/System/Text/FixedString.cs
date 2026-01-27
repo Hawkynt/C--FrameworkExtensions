@@ -64,7 +64,7 @@ public readonly struct FixedString : IEquatable<FixedString>, IComparable<FixedS
     if (string.IsNullOrEmpty(value)) {
       this._length = 0;
     } else {
-      this._length = value.Length > capacity ? capacity : value.Length;
+      this._length = value!.Length > capacity ? capacity : value.Length;
       value.CopyTo(0, this._chars, 0, this._length);
     }
   }
