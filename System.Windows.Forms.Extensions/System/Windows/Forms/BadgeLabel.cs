@@ -205,6 +205,9 @@ public class BadgeLabel : Control {
     var contentX = (bounds.Width - contentWidth) / 2;
     var contentY = (bounds.Height - contentHeight) / 2;
 
+    // Content bounds for badge positioning
+    var contentBounds = new Rectangle(contentX, contentY, contentWidth, contentHeight);
+
     // Draw icon
     if (this._icon != null) {
       var iconY = contentY + (contentHeight - iconSize.Height) / 2;
@@ -218,9 +221,9 @@ public class BadgeLabel : Control {
       TextRenderer.DrawText(g, this.Text, this.Font, new Point(contentX, textY), this.ForeColor);
     }
 
-    // Draw badge
+    // Draw badge relative to content area
     if (this._badgeValue > 0 || !this._hideWhenZero)
-      this._DrawBadge(g, bounds);
+      this._DrawBadge(g, contentBounds);
   }
 
   private void _DrawBadge(Graphics g, Rectangle bounds) {
@@ -251,45 +254,48 @@ public class BadgeLabel : Control {
 
   private RectangleF _GetBadgeRectangle(Rectangle bounds, int width, int height) {
     float x, y;
-    var halfBadge = height / 2f;
+
+    // Offset to make badge overlap content corner (typical badge behavior)
+    var overlapX = width / 3f;
+    var overlapY = height / 3f;
 
     switch (this._badgePosition) {
       case ContentAlignment.TopLeft:
-        x = 0;
-        y = 0;
+        x = bounds.X - overlapX;
+        y = bounds.Y - overlapY;
         break;
       case ContentAlignment.TopCenter:
-        x = (bounds.Width - width) / 2f;
-        y = 0;
+        x = bounds.X + (bounds.Width - width) / 2f;
+        y = bounds.Y - overlapY;
         break;
       case ContentAlignment.TopRight:
-        x = bounds.Width - width;
-        y = 0;
+        x = bounds.X + bounds.Width - width + overlapX;
+        y = bounds.Y - overlapY;
         break;
       case ContentAlignment.MiddleLeft:
-        x = 0;
-        y = (bounds.Height - height) / 2f;
+        x = bounds.X - overlapX;
+        y = bounds.Y + (bounds.Height - height) / 2f;
         break;
       case ContentAlignment.MiddleCenter:
-        x = (bounds.Width - width) / 2f;
-        y = (bounds.Height - height) / 2f;
+        x = bounds.X + (bounds.Width - width) / 2f;
+        y = bounds.Y + (bounds.Height - height) / 2f;
         break;
       case ContentAlignment.MiddleRight:
-        x = bounds.Width - width;
-        y = (bounds.Height - height) / 2f;
+        x = bounds.X + bounds.Width - width + overlapX;
+        y = bounds.Y + (bounds.Height - height) / 2f;
         break;
       case ContentAlignment.BottomLeft:
-        x = 0;
-        y = bounds.Height - height;
+        x = bounds.X - overlapX;
+        y = bounds.Y + bounds.Height - height + overlapY;
         break;
       case ContentAlignment.BottomCenter:
-        x = (bounds.Width - width) / 2f;
-        y = bounds.Height - height;
+        x = bounds.X + (bounds.Width - width) / 2f;
+        y = bounds.Y + bounds.Height - height + overlapY;
         break;
       case ContentAlignment.BottomRight:
       default:
-        x = bounds.Width - width;
-        y = bounds.Height - height;
+        x = bounds.X + bounds.Width - width + overlapX;
+        y = bounds.Y + bounds.Height - height + overlapY;
         break;
     }
 
