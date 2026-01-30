@@ -72,7 +72,14 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void IncrementOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) += amount;
+#else
+    if (@this.TryGetValue(key, out var value))
+      @this[key] = (<#= type #>)(value + amount);
+    else
+      @this.Add(key, amount);
+#endif
   }
 
   /// <summary>
@@ -97,7 +104,14 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void DecrementOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) -= amount;
+#else
+    if (@this.TryGetValue(key, out var value))
+      @this[key] = (<#= type #>)(value - amount);
+    else
+      @this.Add(key, (<#= type #>)(default(<#= type #>) - amount));
+#endif
   }
 
   /// <summary>
@@ -113,10 +127,16 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static <#= type #> ExchangeOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     var oldValue = slot;
     slot = value;
     return oldValue;
+#else
+    @this.TryGetValue(key, out var oldValue);
+    @this[key] = value;
+    return oldValue;
+#endif
   }
 
   /// <summary>
@@ -133,11 +153,22 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static <#= type #> CompareExchangeOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value, <#= type #> comparand) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     var oldValue = slot;
     if (oldValue == comparand)
       slot = value;
     return oldValue;
+#else
+    if (@this.TryGetValue(key, out var oldValue)) {
+      if (oldValue == comparand)
+        @this[key] = value;
+      return oldValue;
+    }
+    // Key doesn't exist - add with default or value depending on comparand
+    @this.Add(key, default(<#= type #>) == comparand ? value : default);
+    return default;
+#endif
   }
 
   /// <summary>
@@ -151,8 +182,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void MultiplyOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> factor) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? (<#= type #>)(slot * factor) : factor;
+#else
+    if (@this.TryGetValue(key, out var value))
+      @this[key] = (<#= type #>)(value * factor);
+    else
+      @this.Add(key, factor);
+#endif
   }
 
   /// <summary>
@@ -167,9 +205,17 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void MaxOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     if (!exists || value > slot)
       slot = value;
+#else
+    if (@this.TryGetValue(key, out var existing)) {
+      if (value > existing)
+        @this[key] = value;
+    } else
+      @this.Add(key, value);
+#endif
   }
 
   /// <summary>
@@ -184,9 +230,17 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void MinOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     if (!exists || value < slot)
       slot = value;
+#else
+    if (@this.TryGetValue(key, out var existing)) {
+      if (value < existing)
+        @this[key] = value;
+    } else
+      @this.Add(key, value);
+#endif
   }
 
   /// <summary>
@@ -200,8 +254,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void DivideOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> divisor) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? (<#= type #>)(slot / divisor) : divisor;
+#else
+    if (@this.TryGetValue(key, out var value))
+      @this[key] = (<#= type #>)(value / divisor);
+    else
+      @this.Add(key, divisor);
+#endif
   }
 
   /// <summary>
@@ -215,8 +276,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void ModuloOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> divisor) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? (<#= type #>)(slot % divisor) : divisor;
+#else
+    if (@this.TryGetValue(key, out var value))
+      @this[key] = (<#= type #>)(value % divisor);
+    else
+      @this.Add(key, divisor);
+#endif
   }
 <# if (isInteger) { #>
 
@@ -232,7 +300,14 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void OrOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) |= value;
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing | value);
+    else
+      @this.Add(key, value);
+#endif
   }
 
   /// <summary>
@@ -247,7 +322,14 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void AndOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) &= value;
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing & value);
+    else
+      @this.Add(key, default);
+#endif
   }
 
   /// <summary>
@@ -262,7 +344,14 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void XorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _) ^= value;
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing ^ value);
+    else
+      @this.Add(key, value);
+#endif
   }
 
   /// <summary>
@@ -277,8 +366,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void NandOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? slot.Nand(value) : value.Not();
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.Nand(value);
+    else
+      @this.Add(key, value.Not());
+#endif
   }
 
   /// <summary>
@@ -293,8 +389,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void NorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? slot.Nor(value) : value.Not();
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.Nor(value);
+    else
+      @this.Add(key, value.Not());
+#endif
   }
 
   /// <summary>
@@ -309,8 +412,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void XnorOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, <#= type #> value) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? slot.Equ(value) : value.Not();
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.Equ(value);
+    else
+      @this.Add(key, value.Not());
+#endif
   }
 
   /// <summary>
@@ -324,8 +434,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void NotOrSet<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
     slot = exists ? slot.Not() : default(<#= type #>).Not();
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.Not();
+    else
+      @this.Add(key, default(<#= type #>).Not());
+#endif
   }
 
   /// <summary>
@@ -340,8 +457,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void LeftShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     slot = (<#= type #>)(slot << amount);
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing << amount);
+    else
+      @this.Add(key, default);
+#endif
   }
 
   /// <summary>
@@ -356,8 +480,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void RightShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     slot = (<#= type #>)(slot >> amount);
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing >> amount);
+    else
+      @this.Add(key, default);
+#endif
   }
 
   /// <summary>
@@ -372,8 +503,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void UnsignedRightShiftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     slot = (<#= type #>)(slot >>> amount);
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = (<#= type #>)(existing >>> amount);
+    else
+      @this.Add(key, default);
+#endif
   }
 
 <# if (isUnsigned) { #>
@@ -390,8 +528,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void RotateLeftOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     slot = slot.RotateLeft((byte)amount);
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.RotateLeft((byte)amount);
+    else
+      @this.Add(key, default);
+#endif
   }
 
   /// <summary>
@@ -406,8 +551,15 @@ foreach(var type in numericTypes) {
   [DebuggerStepThrough]
   public static void RotateRightOrAdd<TKey>(this Dictionary<TKey, <#= type #>> @this, TKey key, int amount) {
     Against.ThisIsNull(@this);
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out _);
     slot = slot.RotateRight((byte)amount);
+#else
+    if (@this.TryGetValue(key, out var existing))
+      @this[key] = existing.RotateRight((byte)amount);
+    else
+      @this.Add(key, default);
+#endif
   }
 <# } #>
 <# } #>

@@ -255,6 +255,7 @@ public static partial class DictionaryExtensions {
     public TValue GetOrAdd(TKey key, TValue defaultValue) {
       Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       if (@this is Dictionary<TKey, TValue> dict) {
         ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
         if (!existed)
@@ -262,6 +263,7 @@ public static partial class DictionaryExtensions {
 
         return ptrResult;
       }
+#endif
 
       if (!@this.TryGetValue(key, out var result))
         @this.Add(key, result = defaultValue);
@@ -284,6 +286,7 @@ public static partial class DictionaryExtensions {
       Against.ThisIsNull(@this);
       Against.ArgumentIsNull(defaultValueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       if (@this is Dictionary<TKey, TValue> dict) {
         ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
         if (!existed)
@@ -291,6 +294,7 @@ public static partial class DictionaryExtensions {
 
         return ptrResult;
       }
+#endif
 
       if (!@this.TryGetValue(key, out var result))
         @this.Add(key, result = defaultValueFactory(key));
@@ -313,6 +317,7 @@ public static partial class DictionaryExtensions {
       Against.ThisIsNull(@this);
       Against.ArgumentIsNull(defaultValueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       if (@this is Dictionary<TKey, TValue> dict) {
         ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
         if (!existed)
@@ -320,6 +325,7 @@ public static partial class DictionaryExtensions {
 
         return ptrResult;
       }
+#endif
 
       if (!@this.TryGetValue(key, out var result))
         @this.Add(key, result = defaultValueFactory());
@@ -339,10 +345,12 @@ public static partial class DictionaryExtensions {
     public TValue GetOrAddDefault(TKey key) {
       Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       if (@this is Dictionary<TKey, TValue> dict) {
         ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
         return ptrResult;
       }
+#endif
 
       if (!@this.TryGetValue(key, out var result))
         @this.Add(key, result = default);
@@ -483,6 +491,7 @@ public static partial class DictionaryExtensions {
     public bool TryAdd(TKey key, TValue value) {
       Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       if (@this is Dictionary<TKey, TValue> dict) {
         ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
         if (existed)
@@ -491,6 +500,7 @@ public static partial class DictionaryExtensions {
         ptrResult = value;
         return true;
       }
+#endif
 
       if (@this.ContainsKey(key))
         return false;
@@ -605,9 +615,19 @@ public static partial class DictionaryExtensions {
       Against.ThisIsNull(@this);
       Against.ArgumentIsNull(updateValueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
       value = exists ? updateValueFactory(key, value) : addValue;
       return value;
+#else
+      if (@this.TryGetValue(key, out var existing)) {
+        var newValue = updateValueFactory(key, existing);
+        @this[key] = newValue;
+        return newValue;
+      }
+      @this.Add(key, addValue);
+      return addValue;
+#endif
     }
 
     /// <summary>
@@ -624,9 +644,20 @@ public static partial class DictionaryExtensions {
       Against.ArgumentIsNull(addValueFactory);
       Against.ArgumentIsNull(updateValueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
       value = exists ? updateValueFactory(key, value) : addValueFactory(key);
       return value;
+#else
+      if (@this.TryGetValue(key, out var existing)) {
+        var newValue = updateValueFactory(key, existing);
+        @this[key] = newValue;
+        return newValue;
+      }
+      var addedValue = addValueFactory(key);
+      @this.Add(key, addedValue);
+      return addedValue;
+#endif
     }
 
     /// <summary>
@@ -640,11 +671,18 @@ public static partial class DictionaryExtensions {
     public TValue GetOrAdd(TKey key, TValue defaultValue) {
       Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
       if (!exists)
         value = defaultValue;
 
       return value;
+#else
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = defaultValue);
+
+      return result;
+#endif
     }
 
     /// <summary>
@@ -659,11 +697,18 @@ public static partial class DictionaryExtensions {
       Against.ThisIsNull(@this);
       Against.ArgumentIsNull(valueFactory);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
       ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(@this, key, out var exists);
       if (!exists)
         value = valueFactory(key);
 
       return value;
+#else
+      if (!@this.TryGetValue(key, out var result))
+        @this.Add(key, result = valueFactory(key));
+
+      return result;
+#endif
     }
 
     /// <summary>
@@ -866,6 +911,7 @@ public static partial class DictionaryExtensions {
   public static TKey GetOrAdd<TKey>(this IDictionary<TKey, TKey> @this, TKey key) {
     Against.ThisIsNull(@this);
 
+#if SUPPORTS_COLLECTIONSMARSHAL_GETVALUEREFORADDDEFAULT
     if (@this is Dictionary<TKey, TKey> dict) {
       ref var ptrResult = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var existed);
       if (!existed)
@@ -873,6 +919,7 @@ public static partial class DictionaryExtensions {
 
       return ptrResult;
     }
+#endif
 
     if (!@this.TryGetValue(key, out var result))
       @this.Add(key, result = key);

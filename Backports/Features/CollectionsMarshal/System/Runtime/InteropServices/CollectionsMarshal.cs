@@ -137,148 +137,197 @@ public static partial class CollectionsMarshalPolyfills {
 
   /// <summary>
   /// Dictionary handler for .NET Framework dictionaries (net20-net48).
-  /// Field names: entries, hashCode, key, value (no underscore prefix).
-  /// hashCode is int, negative values indicate unused entries.
+  /// Uses Dictionary's internal FindEntry method for O(1) lookup without recomputing hash codes.
+  /// Uses a combined FindValuePtr delegate to minimize delegate call overhead.
   /// </summary>
   private readonly struct DictionaryHandler<TKey, TValue> {
     // ReSharper disable StaticMemberInGenericType
-    private static readonly FieldInfo _entriesField;
-    private static readonly Type _entryType;
-    private static readonly FieldInfo _entryHashCodeField;
-    private static readonly FieldInfo _entryKeyField;
-    private static readonly FieldInfo _entryValueField;
-    private static readonly GetValuePtrDelegate _getValuePtr;
+    private static readonly GetEntriesDelegate _getEntries;
+    private static readonly FindValuePtrDelegate _findValuePtr;
     // ReSharper restore StaticMemberInGenericType
 
-    private delegate IntPtr GetValuePtrDelegate(Array entries, int index);
+    private delegate Array GetEntriesDelegate(Dictionary<TKey, TValue> dictionary);
+    // Combined delegate: FindEntry + GetValuePtr in one call, returns IntPtr.Zero if not found
+    private delegate IntPtr FindValuePtrDelegate(Dictionary<TKey, TValue> dictionary, TKey key);
 
     static DictionaryHandler() {
       var dictType = typeof(Dictionary<TKey, TValue>);
       const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
       const BindingFlags entryFlags = flags | BindingFlags.Public;
 
-      _entriesField = dictType.GetField("entries", flags) ?? throw new InvalidOperationException("Cannot find 'entries' field in Dictionary.");
-      _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
-      _entryHashCodeField = _entryType.GetField("hashCode", entryFlags) ?? throw new InvalidOperationException("Cannot find 'hashCode' field in Entry.");
-      _entryKeyField = _entryType.GetField("key", entryFlags) ?? throw new InvalidOperationException("Cannot find 'key' field in Entry.");
-      _entryValueField = _entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
-      _getValuePtr = CreateGetValuePtrDelegate();
+      var entriesField = dictType.GetField("entries", flags) ?? throw new InvalidOperationException("Cannot find 'entries' field in Dictionary.");
+      var entryType = entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
+      var entryValueField = entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
+
+      // Get the private FindEntry method - this does the hash lookup internally
+      var findEntryMethod = dictType.GetMethod("FindEntry", flags) ?? throw new InvalidOperationException("Cannot find 'FindEntry' method in Dictionary.");
+
+      _getEntries = CreateGetEntriesDelegate(entriesField);
+      _findValuePtr = CreateFindValuePtrDelegate(entriesField, entryType, entryValueField, findEntryMethod);
     }
 
-    private static GetValuePtrDelegate CreateGetValuePtrDelegate() {
-      var entriesArrayType = _entriesField.FieldType;
-      var method = new DynamicMethod(
-        "GetValuePtr",
-        typeof(IntPtr),
-        [typeof(Array), typeof(int)],
-        typeof(DictionaryHandler<TKey, TValue>),
-        skipVisibility: true
-      );
-
+    private static GetEntriesDelegate CreateGetEntriesDelegate(FieldInfo entriesField) {
+      var method = new DynamicMethod("GetEntries", typeof(Array), [typeof(Dictionary<TKey, TValue>)], typeof(DictionaryHandler<TKey, TValue>), skipVisibility: true);
       var il = method.GetILGenerator();
       il.Emit(OpCodes.Ldarg_0);
-      il.Emit(OpCodes.Castclass, entriesArrayType);
+      il.Emit(OpCodes.Ldfld, entriesField);
+      il.Emit(OpCodes.Ret);
+      return (GetEntriesDelegate)method.CreateDelegate(typeof(GetEntriesDelegate));
+    }
+
+    /// <summary>
+    /// Creates a combined delegate that calls FindEntry and returns pointer to value field.
+    /// IL equivalent:
+    ///   int index = dictionary.FindEntry(key);
+    ///   if (index &lt; 0) return IntPtr.Zero;
+    ///   return (IntPtr)(&amp;dictionary.entries[index].value);
+    /// </summary>
+    private static FindValuePtrDelegate CreateFindValuePtrDelegate(FieldInfo entriesField, Type entryType, FieldInfo valueField, MethodInfo findEntryMethod) {
+      var entriesArrayType = entriesField.FieldType;
+      var method = new DynamicMethod("FindValuePtr", typeof(IntPtr), [typeof(Dictionary<TKey, TValue>), typeof(TKey)], typeof(DictionaryHandler<TKey, TValue>), skipVisibility: true);
+      var il = method.GetILGenerator();
+
+      var indexLocal = il.DeclareLocal(typeof(int));
+      var notFoundLabel = il.DefineLabel();
+
+      // int index = dictionary.FindEntry(key);
+      il.Emit(OpCodes.Ldarg_0);
       il.Emit(OpCodes.Ldarg_1);
-      il.Emit(OpCodes.Ldelema, _entryType);
-      il.Emit(OpCodes.Ldflda, _entryValueField);
+      il.Emit(OpCodes.Call, findEntryMethod);
+      il.Emit(OpCodes.Stloc, indexLocal);
+
+      // if (index < 0) return IntPtr.Zero;
+      il.Emit(OpCodes.Ldloc, indexLocal);
+      il.Emit(OpCodes.Ldc_I4_0);
+      il.Emit(OpCodes.Blt, notFoundLabel);
+
+      // return (IntPtr)(&dictionary.entries[index].value);
+      il.Emit(OpCodes.Ldarg_0);
+      il.Emit(OpCodes.Ldfld, entriesField);
+      il.Emit(OpCodes.Ldloc, indexLocal);
+      il.Emit(OpCodes.Ldelema, entryType);
+      il.Emit(OpCodes.Ldflda, valueField);
       il.Emit(OpCodes.Conv_I);
       il.Emit(OpCodes.Ret);
 
-      return (GetValuePtrDelegate)method.CreateDelegate(typeof(GetValuePtrDelegate));
+      // notFoundLabel: return IntPtr.Zero;
+      il.MarkLabel(notFoundLabel);
+      il.Emit(OpCodes.Ldc_I4_0);
+      il.Emit(OpCodes.Conv_I);
+      il.Emit(OpCodes.Ret);
+
+      return (FindValuePtrDelegate)method.CreateDelegate(typeof(FindValuePtrDelegate));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Array GetEntries(Dictionary<TKey, TValue> dictionary)
-      => (Array)_entriesField.GetValue(dictionary);
+      => _getEntries(dictionary);
 
+    /// <summary>
+    /// Finds the value pointer for a key in one delegate call.
+    /// Returns IntPtr.Zero if key not found, otherwise pointer to value field.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsEntryInUse(object entry) {
-      // .NET Framework: hashCode < 0 means unused (-1 sentinel)
-      var hashCode = (int)_entryHashCodeField.GetValue(entry);
-      return hashCode >= 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TKey GetEntryKey(object entry)
-      => (TKey)_entryKeyField.GetValue(entry);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IntPtr GetValuePtr(Array entries, int index)
-      => _getValuePtr(entries, index);
+    public IntPtr FindValuePtr(Dictionary<TKey, TValue> dictionary, TKey key)
+      => _findValuePtr(dictionary, key);
   }
 
 #else
 
   /// <summary>
   /// Dictionary handler for .NET Core dictionaries (netcoreapp3.1, net5.0).
-  /// Field names: _entries, next, key, value (with underscore prefix on dictionary fields).
-  /// Free entries have next &lt; -1 (encodes free list).
+  /// Uses Dictionary's internal FindEntry method for O(1) lookup without recomputing hash codes.
+  /// Uses a combined FindValuePtr delegate to minimize delegate call overhead.
   /// </summary>
   private readonly struct DictionaryHandler<TKey, TValue> {
     // ReSharper disable StaticMemberInGenericType
-    private static readonly FieldInfo _entriesField;
-    private static readonly Type _entryType;
-    private static readonly FieldInfo _entryNextField;
-    private static readonly FieldInfo _entryKeyField;
-    private static readonly FieldInfo _entryValueField;
-    private static readonly GetValuePtrDelegate _getValuePtr;
+    private static readonly GetEntriesDelegate _getEntries;
+    private static readonly FindValuePtrDelegate _findValuePtr;
     // ReSharper restore StaticMemberInGenericType
 
-    private delegate IntPtr GetValuePtrDelegate(Array entries, int index);
+    private delegate Array GetEntriesDelegate(Dictionary<TKey, TValue> dictionary);
+    // Combined delegate: FindEntry + GetValuePtr in one call, returns IntPtr.Zero if not found
+    private delegate IntPtr FindValuePtrDelegate(Dictionary<TKey, TValue> dictionary, TKey key);
 
     static DictionaryHandler() {
       var dictType = typeof(Dictionary<TKey, TValue>);
       const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
       const BindingFlags entryFlags = flags | BindingFlags.Public;
 
-      _entriesField = dictType.GetField("_entries", flags) ?? throw new InvalidOperationException("Cannot find '_entries' field in Dictionary.");
-      _entryType = _entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
-      _entryNextField = _entryType.GetField("next", entryFlags) ?? throw new InvalidOperationException("Cannot find 'next' field in Entry.");
-      _entryKeyField = _entryType.GetField("key", entryFlags) ?? throw new InvalidOperationException("Cannot find 'key' field in Entry.");
-      _entryValueField = _entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
-      _getValuePtr = CreateGetValuePtrDelegate();
+      var entriesField = dictType.GetField("_entries", flags) ?? throw new InvalidOperationException("Cannot find '_entries' field in Dictionary.");
+      var entryType = entriesField.FieldType.GetElementType() ?? throw new InvalidOperationException("Cannot get Entry element type.");
+      var entryValueField = entryType.GetField("value", entryFlags) ?? throw new InvalidOperationException("Cannot find 'value' field in Entry.");
+
+      // Get the private FindEntry method - this does the hash lookup internally
+      var findEntryMethod = dictType.GetMethod("FindEntry", flags) ?? throw new InvalidOperationException("Cannot find 'FindEntry' method in Dictionary.");
+
+      _getEntries = CreateGetEntriesDelegate(entriesField);
+      _findValuePtr = CreateFindValuePtrDelegate(entriesField, entryType, entryValueField, findEntryMethod);
     }
 
-    private static GetValuePtrDelegate CreateGetValuePtrDelegate() {
-      var entriesArrayType = _entriesField.FieldType;
-      var method = new DynamicMethod(
-        "GetValuePtr",
-        typeof(IntPtr),
-        [typeof(Array), typeof(int)],
-        typeof(DictionaryHandler<TKey, TValue>),
-        skipVisibility: true
-      );
-
+    private static GetEntriesDelegate CreateGetEntriesDelegate(FieldInfo entriesField) {
+      var method = new DynamicMethod("GetEntries", typeof(Array), [typeof(Dictionary<TKey, TValue>)], typeof(DictionaryHandler<TKey, TValue>), skipVisibility: true);
       var il = method.GetILGenerator();
       il.Emit(OpCodes.Ldarg_0);
-      il.Emit(OpCodes.Castclass, entriesArrayType);
+      il.Emit(OpCodes.Ldfld, entriesField);
+      il.Emit(OpCodes.Ret);
+      return (GetEntriesDelegate)method.CreateDelegate(typeof(GetEntriesDelegate));
+    }
+
+    /// <summary>
+    /// Creates a combined delegate that calls FindEntry and returns pointer to value field.
+    /// IL equivalent:
+    ///   int index = dictionary.FindEntry(key);
+    ///   if (index &lt; 0) return IntPtr.Zero;
+    ///   return (IntPtr)(&amp;dictionary._entries[index].value);
+    /// </summary>
+    private static FindValuePtrDelegate CreateFindValuePtrDelegate(FieldInfo entriesField, Type entryType, FieldInfo valueField, MethodInfo findEntryMethod) {
+      var method = new DynamicMethod("FindValuePtr", typeof(IntPtr), [typeof(Dictionary<TKey, TValue>), typeof(TKey)], typeof(DictionaryHandler<TKey, TValue>), skipVisibility: true);
+      var il = method.GetILGenerator();
+
+      var indexLocal = il.DeclareLocal(typeof(int));
+      var notFoundLabel = il.DefineLabel();
+
+      // int index = dictionary.FindEntry(key);
+      il.Emit(OpCodes.Ldarg_0);
       il.Emit(OpCodes.Ldarg_1);
-      il.Emit(OpCodes.Ldelema, _entryType);
-      il.Emit(OpCodes.Ldflda, _entryValueField);
+      il.Emit(OpCodes.Call, findEntryMethod);
+      il.Emit(OpCodes.Stloc, indexLocal);
+
+      // if (index < 0) return IntPtr.Zero;
+      il.Emit(OpCodes.Ldloc, indexLocal);
+      il.Emit(OpCodes.Ldc_I4_0);
+      il.Emit(OpCodes.Blt, notFoundLabel);
+
+      // return (IntPtr)(&dictionary._entries[index].value);
+      il.Emit(OpCodes.Ldarg_0);
+      il.Emit(OpCodes.Ldfld, entriesField);
+      il.Emit(OpCodes.Ldloc, indexLocal);
+      il.Emit(OpCodes.Ldelema, entryType);
+      il.Emit(OpCodes.Ldflda, valueField);
       il.Emit(OpCodes.Conv_I);
       il.Emit(OpCodes.Ret);
 
-      return (GetValuePtrDelegate)method.CreateDelegate(typeof(GetValuePtrDelegate));
+      // notFoundLabel: return IntPtr.Zero;
+      il.MarkLabel(notFoundLabel);
+      il.Emit(OpCodes.Ldc_I4_0);
+      il.Emit(OpCodes.Conv_I);
+      il.Emit(OpCodes.Ret);
+
+      return (FindValuePtrDelegate)method.CreateDelegate(typeof(FindValuePtrDelegate));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Array GetEntries(Dictionary<TKey, TValue> dictionary)
-      => (Array)_entriesField.GetValue(dictionary);
+      => _getEntries(dictionary);
 
+    /// <summary>
+    /// Finds the value pointer for a key in one delegate call.
+    /// Returns IntPtr.Zero if key not found, otherwise pointer to value field.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsEntryInUse(object entry) {
-      // .NET Core: free entries have next field value < -1 (e.g., -2, -3 encode free list)
-      var next = (int)_entryNextField.GetValue(entry);
-      return next >= -1;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TKey GetEntryKey(object entry)
-      => (TKey)_entryKeyField.GetValue(entry);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IntPtr GetValuePtr(Array entries, int index)
-      => _getValuePtr(entries, index);
+    public IntPtr FindValuePtr(Dictionary<TKey, TValue> dictionary, TKey key)
+      => _findValuePtr(dictionary, key);
   }
 
 #endif
@@ -286,37 +335,37 @@ public static partial class CollectionsMarshalPolyfills {
   /// <summary>
   /// Provides access to Dictionary internals using reflection and IL emit.
   /// Handler is selected at compile time based on target framework.
+  /// Uses a combined FindValuePtr delegate for single-call lookup (1 hash, 1 delegate call).
   /// </summary>
   private static class DictionaryAccessor<TKey, TValue> {
     // ReSharper disable StaticMemberInGenericType
     private static readonly DictionaryHandler<TKey, TValue> _handler;
-    private static readonly IEqualityComparer<TKey> _comparer;
     // ReSharper restore StaticMemberInGenericType
 
     static DictionaryAccessor() {
       _handler = new();
-      _comparer = EqualityComparer<TKey>.Default;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref TValue GetValueRefOrAddDefault(Dictionary<TKey, TValue> dictionary, TKey key, out bool exists) {
-      // Ensure key exists in dictionary
-      exists = dictionary.ContainsKey(key);
-      if (!exists)
-        dictionary[key] = default;
+      // Single delegate call: FindEntry + get value pointer combined
+      var ptr = _handler.FindValuePtr(dictionary, key);
+      if (ptr != IntPtr.Zero) {
+        // Key exists - return ref directly (1 hash lookup, 1 delegate call)
+        exists = true;
+        unsafe {
+          return ref *(TValue*)ptr.ToPointer();
+        }
+      }
 
-      // Get the entries array
-      var entries = _handler.GetEntries(dictionary);
+      // Key not found - add it with default value
+      exists = false;
+      dictionary[key] = default;
 
-      // Find the entry index
-      var index = FindEntryIndex(key, entries);
-      if (index < 0)
+      // Now get the ref to the newly added value (1 more hash lookup)
+      ptr = _handler.FindValuePtr(dictionary, key);
+      if (ptr == IntPtr.Zero)
         throw new InvalidOperationException("Entry not found after adding to dictionary.");
-
-      // Get pointer to value field and convert to ref
-      // Note: The returned ref must be used before any dictionary modification
-      // that could cause a resize (which reallocates the entries array)
-      var ptr = _handler.GetValuePtr(entries, index);
 
       unsafe {
         return ref *(TValue*)ptr.ToPointer();
@@ -325,42 +374,18 @@ public static partial class CollectionsMarshalPolyfills {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref TValue GetValueRefOrNullRef(Dictionary<TKey, TValue> dictionary, TKey key) {
-      // Get the entries array
-      var entries = _handler.GetEntries(dictionary);
-
-      // Find the entry index
-      var index = FindEntryIndex(key, entries);
-      if (index < 0) {
+      // Single delegate call: FindEntry + get value pointer combined
+      var ptr = _handler.FindValuePtr(dictionary, key);
+      if (ptr == IntPtr.Zero) {
         // Return null ref - works on all frameworks
         unsafe {
           return ref Unsafe.AsRef<TValue>(null);
         }
       }
 
-      // Get pointer to value field and convert to ref
-      var ptr = _handler.GetValuePtr(entries, index);
-
       unsafe {
         return ref *(TValue*)ptr.ToPointer();
       }
-    }
-
-    private static int FindEntryIndex(TKey key, Array entries) {
-      // Linear search through all entries to find the key
-      for (var i = 0; i < entries.Length; ++i) {
-        var entry = entries.GetValue(i);
-
-        // Use the handler to check if entry is in use
-        if (!_handler.IsEntryInUse(entry))
-          continue;
-
-        // Compare keys
-        var entryKey = _handler.GetEntryKey(entry);
-        if (_comparer.Equals(entryKey, key))
-          return i;
-      }
-
-      return -1;
     }
   }
 }
