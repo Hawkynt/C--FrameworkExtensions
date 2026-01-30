@@ -96,8 +96,14 @@ public static class QuantizerRegistry {
         .Where(p => typeof(IQuantizer).IsAssignableFrom(p.PropertyType) && p.CanRead)
         .ToList();
 
+      // Get clean type name (strip "Quantizer" suffix if present)
+      var typeName = type.Name.EndsWith("Quantizer", StringComparison.Ordinal)
+        ? type.Name[..^9]
+        : type.Name;
+
       foreach (var prop in staticProps) {
-        var name = prop.Name;
+        // Format name as "TypeName_PresetName" for clarity
+        var name = $"{typeName}_{prop.Name}";
         var quantizationType = attr?.QuantizationType ?? QuantizationType.Tree;
         var author = attr?.Author;
         var year = attr?.Year ?? 0;

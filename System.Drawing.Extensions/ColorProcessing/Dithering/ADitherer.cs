@@ -26,38 +26,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
-/// Arithmetic dithering algorithms using mathematical operations on pixel coordinates.
-/// </summary>
-/// <remarks>
-/// <para>Generates dither patterns using XOR, addition, and multiplication on x/y coordinates.</para>
-/// <para>No error diffusion - pure pattern-based dithering.</para>
-/// <para>Multiple strategies: XOR Y×149, XY Arithmetic, Uniform, and per-channel variants.</para>
-/// </remarks>
-public static class ADitherer {
-
-  /// <summary>Pre-configured XOR Y×149 ditherer.</summary>
-  public static XorY149Ditherer XorY149 { get; } = new(false);
-
-  /// <summary>Pre-configured XOR Y×149 ditherer with per-channel variation.</summary>
-  public static XorY149Ditherer XorY149WithChannel { get; } = new(true);
-
-  /// <summary>Pre-configured XY Arithmetic ditherer.</summary>
-  public static XYArithmeticDitherer XYArithmetic { get; } = new(false);
-
-  /// <summary>Pre-configured XY Arithmetic ditherer with per-channel variation.</summary>
-  public static XYArithmeticDitherer XYArithmeticWithChannel { get; } = new(true);
-
-  /// <summary>Pre-configured Uniform ditherer (threshold at 0.5).</summary>
-  public static UniformDitherer Uniform { get; } = new();
-}
-
-/// <summary>
 /// XOR-based arithmetic dithering using Y×149 multiplier pattern.
 /// </summary>
 [Ditherer("XOR Y×149", Description = "Arithmetic XOR dithering with Y×149 multiplier", Type = DitheringType.Ordered)]
 public readonly struct XorY149Ditherer : IDitherer {
 
   private readonly bool _useChannels;
+
+  /// <summary>Pre-configured XOR Y×149 ditherer.</summary>
+  public static XorY149Ditherer Default { get; } = new(false);
+
+  /// <summary>Pre-configured XOR Y×149 ditherer with per-channel variation.</summary>
+  public static XorY149Ditherer WithChannel { get; } = new(true);
 
   /// <summary>
   /// Creates an XOR Y×149 ditherer.
@@ -144,6 +124,12 @@ public readonly struct XYArithmeticDitherer : IDitherer {
 
   private readonly bool _useChannels;
 
+  /// <summary>Pre-configured XY Arithmetic ditherer.</summary>
+  public static XYArithmeticDitherer Default { get; } = new(false);
+
+  /// <summary>Pre-configured XY Arithmetic ditherer with per-channel variation.</summary>
+  public static XYArithmeticDitherer WithChannel { get; } = new(true);
+
   /// <summary>
   /// Creates an XY Arithmetic ditherer.
   /// </summary>
@@ -226,6 +212,9 @@ public readonly struct XYArithmeticDitherer : IDitherer {
 /// </summary>
 [Ditherer("Uniform", Description = "Simple threshold dithering at 0.5", Type = DitheringType.None)]
 public readonly struct UniformDitherer : IDitherer {
+
+  /// <summary>Pre-configured Uniform ditherer (threshold at 0.5).</summary>
+  public static UniformDitherer Default { get; } = new();
 
   /// <inheritdoc />
   public bool RequiresSequentialProcessing => false;

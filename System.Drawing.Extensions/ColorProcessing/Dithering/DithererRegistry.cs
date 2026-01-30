@@ -95,8 +95,14 @@ public static class DithererRegistry {
         .Where(p => typeof(IDitherer).IsAssignableFrom(p.PropertyType) && p.CanRead)
         .ToList();
 
+      // Get clean type name (strip "Ditherer" suffix if present)
+      var typeName = type.Name.EndsWith("Ditherer", StringComparison.Ordinal)
+        ? type.Name[..^8]
+        : type.Name;
+
       foreach (var prop in staticProps) {
-        var name = prop.Name;
+        // Format name as "TypeName_PresetName" for clarity
+        var name = $"{typeName}_{prop.Name}";
         var ditheringType = attr?.Type ?? DitheringType.Custom;
         var author = attr?.Author;
         var year = attr?.Year ?? 0;
