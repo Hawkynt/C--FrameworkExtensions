@@ -122,8 +122,8 @@ public class DithererKnownAnswerTests {
     yield return ("Barycentric", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new BarycentricDitherer(), c));
     yield return ("Tin", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new TinDitherer(), c));
     yield return ("NConvex", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new NConvexDitherer(), c));
-    yield return ("ADithererXorY149", (s, c) => s.ReduceColors(new MedianCutQuantizer(), ADitherer.XorY149, c));
-    yield return ("ADithererXYArithmetic", (s, c) => s.ReduceColors(new MedianCutQuantizer(), ADitherer.XYArithmetic, c));
+    yield return ("ADithererXorY149", (s, c) => s.ReduceColors(new MedianCutQuantizer(), XorY149Ditherer.Default, c));
+    yield return ("ADithererXYArithmetic", (s, c) => s.ReduceColors(new MedianCutQuantizer(), XYArithmeticDitherer.Default, c));
     yield return ("Adaptive", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new AdaptiveDitherer(), c));
     yield return ("Smart", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new SmartDitherer(), c));
     yield return ("Dbs", (s, c) => s.ReduceColors(new MedianCutQuantizer(), new DbsDitherer(), c));
