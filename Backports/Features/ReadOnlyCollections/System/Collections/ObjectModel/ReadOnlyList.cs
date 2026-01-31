@@ -18,6 +18,8 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace System.Collections.ObjectModel;
 
@@ -38,50 +40,72 @@ public sealed class ReadOnlyList<T> : IReadOnlyList<T>, IList<T> {
   /// </summary>
   /// <param name="list">The list to wrap.</param>
   /// <exception cref="ArgumentNullException"><paramref name="list"/> is <see langword="null"/>.</exception>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public ReadOnlyList(IList<T> list) => this._list = list ?? throw new ArgumentNullException(nameof(list));
 
   /// <inheritdoc/>
-  public T this[int index] => this._list[index];
-
-  /// <inheritdoc/>
-  T IList<T>.this[int index] {
+  public T this[int index] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get => this._list[index];
-    set => throw new NotSupportedException("Collection is read-only.");
   }
 
   /// <inheritdoc/>
-  public int Count => this._list.Count;
+  T IList<T>.this[int index] {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._list[index];
+    set => ThrowReadOnly();
+  }
 
   /// <inheritdoc/>
-  public bool IsReadOnly => true;
+  public int Count {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._list.Count;
+  }
 
   /// <inheritdoc/>
+  public bool IsReadOnly {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => true;
+  }
+
+  /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public IEnumerator<T> GetEnumerator() => this._list.GetEnumerator();
 
   /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
   /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public bool Contains(T item) => this._list.Contains(item);
 
   /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void CopyTo(T[] array, int arrayIndex) => this._list.CopyTo(array, arrayIndex);
 
   /// <inheritdoc/>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public int IndexOf(T item) => this._list.IndexOf(item);
 
   /// <inheritdoc/>
-  void IList<T>.Insert(int index, T item) => throw new NotSupportedException("Collection is read-only.");
+  void IList<T>.Insert(int index, T item) => ThrowReadOnly();
 
   /// <inheritdoc/>
-  void IList<T>.RemoveAt(int index) => throw new NotSupportedException("Collection is read-only.");
+  void IList<T>.RemoveAt(int index) => ThrowReadOnly();
 
   /// <inheritdoc/>
-  void ICollection<T>.Add(T item) => throw new NotSupportedException("Collection is read-only.");
+  void ICollection<T>.Add(T item) => ThrowReadOnly();
 
   /// <inheritdoc/>
-  void ICollection<T>.Clear() => throw new NotSupportedException("Collection is read-only.");
+  void ICollection<T>.Clear() => ThrowReadOnly();
 
   /// <inheritdoc/>
-  bool ICollection<T>.Remove(T item) => throw new NotSupportedException("Collection is read-only.");
+  bool ICollection<T>.Remove(T item) => ThrowReadOnly<bool>();
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void ThrowReadOnly() => ThrowReadOnly<bool>();
+
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  private static TResult ThrowReadOnly<TResult>() => throw new NotSupportedException("Collection is read-only.");
 }
