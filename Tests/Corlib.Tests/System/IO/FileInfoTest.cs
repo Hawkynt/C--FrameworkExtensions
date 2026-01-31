@@ -380,6 +380,35 @@ internal class FileInfoTest {
     [TestCase("ab\nc\x009Bdef", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "ab\nc\x9B")]
     [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
     [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
+    // Mixed line endings with LineBreakMode.All - exotic test cases
+    // Both CRLF (\r\n) and LFCR (\n\r) are treated as SINGLE line endings (greedy 2-char match)
+    // Individual \r and \n are also single line endings when not part of a 2-char sequence
+    [TestCase("abc\r\ndef\nghi\rjkl", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n", TestName = "KeepFirstLines_MixedCrLfLfCr_Keep1_ReturnsCrLfTerminated")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r\ndef\n", TestName = "KeepFirstLines_MixedCrLfLfCr_Keep2_ReturnsTwoLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 3, TestEncoding.ASCII, LineBreakMode.All, "abc\r\ndef\nghi\r", TestName = "KeepFirstLines_MixedCrLfLfCr_Keep3_ReturnsThreeLines")]
+    // LFCR (\n\r) is ONE line break (greedy match) - same as CRLF
+    // Input "abc\n\rdef" has 2 lines: "abc" and "def"
+    [TestCase("abc\n\rdef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\n\r", TestName = "KeepFirstLines_LfCrAsOneBreak_Keep1_IncludesLfCrEnding")]
+    [TestCase("abc\n\rdef", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\n\rdef", TestName = "KeepFirstLines_LfCrAsOneBreak_Keep2_ReturnsAll")]
+    // CRLF followed by LF - two line breaks
+    [TestCase("abc\r\n\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n", TestName = "KeepFirstLines_CrLfThenLf_Keep1")]
+    [TestCase("abc\r\n\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n\n", TestName = "KeepFirstLines_CrLfThenLf_Keep2_IncludesEmptyLine")]
+    // Multiple consecutive different line endings: \r\n (CRLF) then \n\r (LFCR) = 2 line breaks, 3 lines
+    // Lines: "", "", "abc"
+    [TestCase("\r\n\n\rabc", 1, TestEncoding.ASCII, LineBreakMode.All, "\r\n", TestName = "KeepFirstLines_StartsWithMixedEndings_Keep1")]
+    [TestCase("\r\n\n\rabc", 2, TestEncoding.ASCII, LineBreakMode.All, "\r\n\n\r", TestName = "KeepFirstLines_StartsWithMixedEndings_Keep2_LfCrAsOne")]
+    [TestCase("\r\n\n\rabc", 3, TestEncoding.ASCII, LineBreakMode.All, "\r\n\n\rabc", TestName = "KeepFirstLines_StartsWithMixedEndings_Keep3_All")]
+    // Edge case: consecutive CR and LF that don't form CRLF (because they're reversed: \r\r\n)
+    // \r is consumed alone, then \r\n is CRLF
+    [TestCase("abc\r\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r", TestName = "KeepFirstLines_CrCrLf_Keep1_SplitsOnFirstCr")]
+    [TestCase("abc\r\r\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r\r\n", TestName = "KeepFirstLines_CrCrLf_Keep2_CrLfAsSecond")]
+    // CR alone followed by CRLF
+    [TestCase("abc\rdef\r\nghi", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r", TestName = "KeepFirstLines_CrThenCrLf_Keep1")]
+    [TestCase("abc\rdef\r\nghi", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\rdef\r\n", TestName = "KeepFirstLines_CrThenCrLf_Keep2")]
+    // File ending with various combinations
+    [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n", TestName = "KeepFirstLines_EndsWithCrLf_Keep1")]
+    // File ending with LFCR - it's a single line ending, so there's only 1 line
+    [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\n\r", TestName = "KeepFirstLines_EndsWithLfCr_Keep1_LfCrAsOneBreak")]
     public void KeepFirstLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
       => this._ExecuteTest(
         (f, c, e, l, o, a) => {
@@ -423,6 +452,41 @@ internal class FileInfoTest {
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\n")]
     [TestCase("abc\ndef\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\ndef\n")]
     [TestCase("abc\ndef\nghi\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 1, "abc\nghi\n")]
+    // Mixed line endings with LineBreakMode.All - exotic test cases
+    // Both CRLF (\r\n) and LFCR (\n\r) are treated as SINGLE line endings (greedy 2-char match)
+    [TestCase("abc\r\ndef\nghi\rjkl", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "jkl", TestName = "KeepLastLines_MixedCrLfLfCr_Keep1_ReturnsLastLine")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "ghi\rjkl", TestName = "KeepLastLines_MixedCrLfLfCr_Keep2_ReturnsTwoLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "def\nghi\rjkl", TestName = "KeepLastLines_MixedCrLfLfCr_Keep3_ReturnsThreeLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 4, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\r\ndef\nghi\rjkl", TestName = "KeepLastLines_MixedCrLfLfCr_Keep4_ReturnsAll")]
+    // LFCR (\n\r) is ONE line break - "abc\n\rdef" has 2 lines: "abc", "def"
+    [TestCase("abc\n\rdef", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "def", TestName = "KeepLastLines_LfCrAsOneBreak_Keep1_ReturnsLastLine")]
+    [TestCase("abc\n\rdef", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\n\rdef", TestName = "KeepLastLines_LfCrAsOneBreak_Keep2_ReturnsAll")]
+    // CRLF followed by LF - two line breaks
+    [TestCase("abc\r\n\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "def", TestName = "KeepLastLines_CrLfThenLf_Keep1")]
+    [TestCase("abc\r\n\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\ndef", TestName = "KeepLastLines_CrLfThenLf_Keep2_IncludesEmptyLine")]
+    [TestCase("abc\r\n\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\r\n\ndef", TestName = "KeepLastLines_CrLfThenLf_Keep3_ReturnsAll")]
+    // "\r\n\n\rabc": CRLF + LFCR = 2 line breaks, 3 lines: "", "", "abc"
+    [TestCase("\r\n\n\rabc", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "abc", TestName = "KeepLastLines_StartsWithMixedEndings_Keep1")]
+    [TestCase("\r\n\n\rabc", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\n\rabc", TestName = "KeepLastLines_StartsWithMixedEndings_Keep2_LfCrAsOne")]
+    [TestCase("\r\n\n\rabc", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "\r\n\n\rabc", TestName = "KeepLastLines_StartsWithMixedEndings_Keep3_All")]
+    // Edge case: "\r\r\n" = CR + CRLF = 2 line breaks, 3 lines
+    [TestCase("abc\r\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "def", TestName = "KeepLastLines_CrCrLf_Keep1_ReturnsLastLine")]
+    [TestCase("abc\r\r\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\r\ndef", TestName = "KeepLastLines_CrCrLf_Keep2_CrLfAsSecond")]
+    [TestCase("abc\r\r\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\r\r\ndef", TestName = "KeepLastLines_CrCrLf_Keep3_All")]
+    // CR alone followed by CRLF
+    [TestCase("abc\rdef\r\nghi", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "ghi", TestName = "KeepLastLines_CrThenCrLf_Keep1")]
+    [TestCase("abc\rdef\r\nghi", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "def\r\nghi", TestName = "KeepLastLines_CrThenCrLf_Keep2")]
+    [TestCase("abc\rdef\r\nghi", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\rdef\r\nghi", TestName = "KeepLastLines_CrThenCrLf_Keep3_All")]
+    // File ending with various combinations
+    [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\r\n", TestName = "KeepLastLines_EndsWithCrLf_Keep1")]
+    // "abc\n\r" - LFCR is one ending, so 1 line: "abc"
+    [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\n\r", TestName = "KeepLastLines_EndsWithLfCr_Keep1_LfCrAsOneBreak")]
+    // "a\r\n\n\r\nb": CRLF + LFCR + LF... wait let me recalculate
+    // Position 0: 'a', 1-2: '\r\n' (CRLF), 3-4: '\n\r' (LFCR), 5: '\n' (LF), 6: 'b'
+    // Lines: "a", "", "", "b" = 4 lines
+    [TestCase("a\r\n\n\r\nb", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "b", TestName = "KeepLastLines_TripleEmptyMixed_Keep1")]
+    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\nb", TestName = "KeepLastLines_TripleEmptyMixed_Keep2_LfEnding")]
+    [TestCase("a\r\n\n\r\nb", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "\n\r\nb", TestName = "KeepLastLines_TripleEmptyMixed_Keep3")]
     public void KeepLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, int offset, string expected, Type? exception = null)
       => this._ExecuteTest(
         (f, c, e, l, o, a) => {
@@ -469,6 +533,40 @@ internal class FileInfoTest {
     [TestCase("abc\x009Bde\nf", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "de\nf")]
     [TestCase("abc\x0076de\nf", 1, TestEncoding.Utf8, LineBreakMode.Zx, "de\nf")]
     [TestCase("abc\0de\nf", 1, TestEncoding.Utf8, LineBreakMode.Null, "de\nf")]
+    // Mixed line endings with LineBreakMode.All - exotic test cases
+    // Both CRLF (\r\n) and LFCR (\n\r) are treated as SINGLE line endings (greedy 2-char match)
+    [TestCase("abc\r\ndef\nghi\rjkl", 1, TestEncoding.ASCII, LineBreakMode.All, "def\nghi\rjkl", TestName = "RemoveFirstLines_MixedCrLfLfCr_Remove1_RemovesFirstLine")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 2, TestEncoding.ASCII, LineBreakMode.All, "ghi\rjkl", TestName = "RemoveFirstLines_MixedCrLfLfCr_Remove2_RemovesTwoLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 3, TestEncoding.ASCII, LineBreakMode.All, "jkl", TestName = "RemoveFirstLines_MixedCrLfLfCr_Remove3_RemovesThreeLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 4, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_MixedCrLfLfCr_Remove4_RemovesAll")]
+    // LFCR (\n\r) is ONE line break - "abc\n\rdef" has 2 lines: "abc", "def"
+    [TestCase("abc\n\rdef", 1, TestEncoding.ASCII, LineBreakMode.All, "def", TestName = "RemoveFirstLines_LfCrAsOneBreak_Remove1_LeavesLastLine")]
+    [TestCase("abc\n\rdef", 2, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_LfCrAsOneBreak_Remove2_RemovesAll")]
+    // CRLF followed by LF - two line breaks
+    [TestCase("abc\r\n\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "\ndef", TestName = "RemoveFirstLines_CrLfThenLf_Remove1")]
+    [TestCase("abc\r\n\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "def", TestName = "RemoveFirstLines_CrLfThenLf_Remove2_RemovesEmptyLine")]
+    [TestCase("abc\r\n\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_CrLfThenLf_Remove3_RemovesAll")]
+    // "\r\n\n\rabc": CRLF + LFCR = 2 line breaks, 3 lines: "", "", "abc"
+    [TestCase("\r\n\n\rabc", 1, TestEncoding.ASCII, LineBreakMode.All, "\n\rabc", TestName = "RemoveFirstLines_StartsWithMixedEndings_Remove1")]
+    [TestCase("\r\n\n\rabc", 2, TestEncoding.ASCII, LineBreakMode.All, "abc", TestName = "RemoveFirstLines_StartsWithMixedEndings_Remove2_LfCrAsOne")]
+    [TestCase("\r\n\n\rabc", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_StartsWithMixedEndings_Remove3_All")]
+    // Edge case: "\r\r\n" = CR + CRLF = 2 line breaks, 3 lines
+    [TestCase("abc\r\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "\r\ndef", TestName = "RemoveFirstLines_CrCrLf_Remove1_SplitsOnFirstCr")]
+    [TestCase("abc\r\r\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "def", TestName = "RemoveFirstLines_CrCrLf_Remove2_CrLfAsSecond")]
+    [TestCase("abc\r\r\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_CrCrLf_Remove3_All")]
+    // CR alone followed by CRLF
+    [TestCase("abc\rdef\r\nghi", 1, TestEncoding.ASCII, LineBreakMode.All, "def\r\nghi", TestName = "RemoveFirstLines_CrThenCrLf_Remove1")]
+    [TestCase("abc\rdef\r\nghi", 2, TestEncoding.ASCII, LineBreakMode.All, "ghi", TestName = "RemoveFirstLines_CrThenCrLf_Remove2")]
+    [TestCase("abc\rdef\r\nghi", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_CrThenCrLf_Remove3_All")]
+    // File ending with various combinations
+    [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_EndsWithCrLf_Remove1")]
+    // "abc\n\r" - LFCR is one ending, so 1 line: "abc"
+    [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_EndsWithLfCr_Remove1_LfCrAsOneBreak")]
+    // "a\r\n\n\r\nb": CRLF + LFCR + LF = 3 line breaks, 4 lines: "a", "", "", "b"
+    [TestCase("a\r\n\n\r\nb", 1, TestEncoding.ASCII, LineBreakMode.All, "\n\r\nb", TestName = "RemoveFirstLines_TripleEmptyMixed_Remove1")]
+    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, "\nb", TestName = "RemoveFirstLines_TripleEmptyMixed_Remove2_LfCrAsOne")]
+    [TestCase("a\r\n\n\r\nb", 3, TestEncoding.ASCII, LineBreakMode.All, "b", TestName = "RemoveFirstLines_TripleEmptyMixed_Remove3")]
+    [TestCase("a\r\n\n\r\nb", 4, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveFirstLines_TripleEmptyMixed_Remove4_All")]
     public void RemoveFirstLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
       => this._ExecuteTest(
         (f, c, e, l, o, a) => {
@@ -508,6 +606,40 @@ internal class FileInfoTest {
     [TestCase("ab\nc\x009Bdef", 1, TestEncoding.Utf8, LineBreakMode.EndOfLine, "ab\nc\x9B")]
     [TestCase("ab\nc\x0076def", 1, TestEncoding.Utf8, LineBreakMode.Zx, "ab\nc\x76")]
     [TestCase("ab\nc\0def", 1, TestEncoding.Utf8, LineBreakMode.Null, "ab\nc\0")]
+    // Mixed line endings with LineBreakMode.All - exotic test cases
+    // Both CRLF (\r\n) and LFCR (\n\r) are treated as SINGLE line endings (greedy 2-char match)
+    [TestCase("abc\r\ndef\nghi\rjkl", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\ndef\nghi\r", TestName = "RemoveLastLines_MixedCrLfLfCr_Remove1_RemovesLastLine")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r\ndef\n", TestName = "RemoveLastLines_MixedCrLfLfCr_Remove2_RemovesTwoLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 3, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n", TestName = "RemoveLastLines_MixedCrLfLfCr_Remove3_RemovesThreeLines")]
+    [TestCase("abc\r\ndef\nghi\rjkl", 4, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_MixedCrLfLfCr_Remove4_RemovesAll")]
+    // LFCR (\n\r) is ONE line break - "abc\n\rdef" has 2 lines: "abc", "def"
+    [TestCase("abc\n\rdef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\n\r", TestName = "RemoveLastLines_LfCrAsOneBreak_Remove1_LeavesFirstLine")]
+    [TestCase("abc\n\rdef", 2, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_LfCrAsOneBreak_Remove2_RemovesAll")]
+    // CRLF followed by LF - two line breaks
+    [TestCase("abc\r\n\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n\n", TestName = "RemoveLastLines_CrLfThenLf_Remove1")]
+    [TestCase("abc\r\n\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r\n", TestName = "RemoveLastLines_CrLfThenLf_Remove2_RemovesEmptyLine")]
+    [TestCase("abc\r\n\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_CrLfThenLf_Remove3_RemovesAll")]
+    // "\r\n\n\rabc": CRLF + LFCR = 2 line breaks, 3 lines: "", "", "abc"
+    [TestCase("\r\n\n\rabc", 1, TestEncoding.ASCII, LineBreakMode.All, "\r\n\n\r", TestName = "RemoveLastLines_StartsWithMixedEndings_Remove1")]
+    [TestCase("\r\n\n\rabc", 2, TestEncoding.ASCII, LineBreakMode.All, "\r\n", TestName = "RemoveLastLines_StartsWithMixedEndings_Remove2_LfCrAsOne")]
+    [TestCase("\r\n\n\rabc", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_StartsWithMixedEndings_Remove3_All")]
+    // Edge case: "\r\r\n" = CR + CRLF = 2 line breaks, 3 lines
+    [TestCase("abc\r\r\ndef", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\r\r\n", TestName = "RemoveLastLines_CrCrLf_Remove1_RemovesLastLine")]
+    [TestCase("abc\r\r\ndef", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r", TestName = "RemoveLastLines_CrCrLf_Remove2_CrLfAsSecond")]
+    [TestCase("abc\r\r\ndef", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_CrCrLf_Remove3_All")]
+    // CR alone followed by CRLF
+    [TestCase("abc\rdef\r\nghi", 1, TestEncoding.ASCII, LineBreakMode.All, "abc\rdef\r\n", TestName = "RemoveLastLines_CrThenCrLf_Remove1")]
+    [TestCase("abc\rdef\r\nghi", 2, TestEncoding.ASCII, LineBreakMode.All, "abc\r", TestName = "RemoveLastLines_CrThenCrLf_Remove2")]
+    [TestCase("abc\rdef\r\nghi", 3, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_CrThenCrLf_Remove3_All")]
+    // File ending with various combinations
+    [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_EndsWithCrLf_Remove1")]
+    // "abc\n\r" - LFCR is one ending, so 1 line: "abc"
+    [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_EndsWithLfCr_Remove1_LfCrAsOneBreak")]
+    // "a\r\n\n\r\nb": CRLF + LFCR + LF = 3 line breaks, 4 lines: "a", "", "", "b"
+    [TestCase("a\r\n\n\r\nb", 1, TestEncoding.ASCII, LineBreakMode.All, "a\r\n\n\r\n", TestName = "RemoveLastLines_TripleEmptyMixed_Remove1")]
+    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, "a\r\n\n\r", TestName = "RemoveLastLines_TripleEmptyMixed_Remove2_LfCrAsOne")]
+    [TestCase("a\r\n\n\r\nb", 3, TestEncoding.ASCII, LineBreakMode.All, "a\r\n", TestName = "RemoveLastLines_TripleEmptyMixed_Remove3")]
+    [TestCase("a\r\n\n\r\nb", 4, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_TripleEmptyMixed_Remove4_All")]
     public void RemoveLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
       => this._ExecuteTest(
         (f, c, e, l, o, a) => {

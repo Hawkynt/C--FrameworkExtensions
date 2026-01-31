@@ -2037,6 +2037,15 @@ public static partial class FileInfoExtensions {
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
 
+    // Try fast byte-scanning path for ASCII-compatible encodings
+    if (_TryFastKeepFirstLines(@this, count, encoding, newLine))
+      return;
+
+    // Fall back to character-by-character scanning
+    _KeepFirstLinesSlow(@this, count, encoding, newLine);
+  }
+
+  private static void _KeepFirstLinesSlow(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     using CustomTextReader.Initialized reader =
         encoding == null
@@ -2054,6 +2063,96 @@ public static partial class FileInfoExtensions {
       return;
 
     stream.SetLength(reader.Position);
+  }
+
+  private static bool _TryFastKeepFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    // Check if encoding is ASCII-compatible
+    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
+      return false;
+
+    // For explicit modes, verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+      return false;
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var fileLength = stream.Length;
+
+    // Detect preamble size and check for unsupported encodings
+    var preambleSize = 0L;
+    var bom = new byte[4];
+    var bomRead = stream.Read(bom, 0, 4);
+
+    if (encoding == null) {
+      if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+        preambleSize = 3; // UTF-8 BOM
+      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
+        return false; // UTF-16 BOM - can't use fast path
+    } else {
+      var preamble = encoding.GetPreamble();
+      if (preamble.Length > 0 && bomRead >= preamble.Length) {
+        var matches = true;
+        for (var i = 0; i < preamble.Length && matches; ++i)
+          matches = bom[i] == preamble[i];
+        if (matches)
+          preambleSize = preamble.Length;
+      }
+    }
+
+    // Resolve AutoDetect by scanning file content for line endings
+    var actualMode = newLine;
+    if (actualMode == LineBreakMode.AutoDetect) {
+      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+        return false; // Can't use fast path
+    }
+
+    // Only support simple line endings
+    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+      return false;
+
+    // Scan forward to find the position after N lines
+    var truncatePosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
+    if (truncatePosition < 0)
+      return true; // File has fewer lines than requested, nothing to do
+
+    stream.SetLength(truncatePosition);
+    return true;
+  }
+
+  /// <summary>
+  ///   Scans forward from the start of file to find the position after N lines.
+  /// </summary>
+  /// <returns>Position after the Nth line ending, or -1 if file has fewer lines than requested.</returns>
+  private static long _ScanForwardForLineEnd(Stream stream, long fileLength, long preambleSize, byte[] lineEnding, int count) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var position = preambleSize;
+    var linesFound = 0;
+
+    while (position < fileLength && linesFound < count) {
+      stream.Position = position;
+      var bytesToRead = (int)Math.Min(bufferSize, fileLength - position);
+      var bytesRead = stream.Read(buffer, 0, bytesToRead);
+      if (bytesRead <= 0)
+        break;
+
+      // Scan the buffer for line endings
+      for (var i = 0; i <= bytesRead - lineEnding.Length && linesFound < count; ++i) {
+        if (_IsLineEndingAt(buffer, i, bytesRead, lineEnding)) {
+          ++linesFound;
+          if (linesFound >= count)
+            return position + i + lineEnding.Length;
+
+          // Skip past the line ending
+          i += lineEnding.Length - 1;
+        }
+      }
+
+      position += bytesRead;
+    }
+
+    // File has fewer lines than requested
+    return -1;
   }
 
   /// <summary>
@@ -2218,6 +2317,15 @@ public static partial class FileInfoExtensions {
     Against.UnknownEnumValues(newLine);
     Against.NegativeValues(offsetInLines);
 
+    // Try fast reverse scan for simple cases (no offset, simple line endings)
+    if (offsetInLines == 0 && _TryFastKeepLastLines(@this, count, encoding, newLine))
+      return;
+
+    // Fall back to forward scanning
+    _KeepLastLinesForward(@this, count, encoding, newLine, offsetInLines);
+  }
+
+  private static void _KeepLastLinesForward(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine, int offsetInLines) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var linePositions = new long[count];
     var index = 0;
@@ -2264,6 +2372,215 @@ public static partial class FileInfoExtensions {
     }
 
     stream.SetLength(writePosition);
+  }
+
+  /// <summary>
+  ///   Attempts to keep the last N lines using fast reverse byte scanning.
+  ///   Only works for simple line endings (CrLf, Lf, Cr) with ASCII-compatible encodings.
+  /// </summary>
+  /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
+  private static bool _TryFastKeepLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    // Check if encoding is ASCII-compatible (most single-byte and UTF-8 encodings are)
+    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
+      return false;
+
+    // For explicit modes, verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+      return false;
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var fileLength = stream.Length;
+
+    // Detect preamble size and check for unsupported encodings
+    var preambleSize = 0L;
+    var bom = new byte[4];
+    var bomRead = stream.Read(bom, 0, 4);
+
+    if (encoding == null) {
+      if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+        preambleSize = 3; // UTF-8 BOM
+      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
+        return false; // UTF-16 BOM - can't use fast path
+    } else {
+      var preamble = encoding.GetPreamble();
+      if (preamble.Length > 0 && bomRead >= preamble.Length) {
+        var matches = true;
+        for (var i = 0; i < preamble.Length && matches; ++i)
+          matches = bom[i] == preamble[i];
+        if (matches)
+          preambleSize = preamble.Length;
+      }
+    }
+
+    // Resolve AutoDetect by scanning file content for line endings
+    var actualMode = newLine;
+    if (actualMode == LineBreakMode.AutoDetect) {
+      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+        return false; // Can't use fast path
+    }
+
+    // Only support simple single-byte or two-byte line endings
+    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+      return false;
+
+    // Scan backwards to find line positions
+    var lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
+    if (lineStartPositions == null)
+      return false; // File has fewer lines than requested, nothing to do
+
+    var readPosition = lineStartPositions[0];
+    var writePosition = preambleSize;
+
+    // Copy data from readPosition to writePosition
+    const int bufferSize = 256 * 1024; // Larger buffer for better performance
+    var buffer = new byte[bufferSize];
+
+    while (readPosition < fileLength) {
+      stream.Position = readPosition;
+      var bytesRead = stream.Read(buffer, 0, bufferSize);
+      if (bytesRead <= 0)
+        break;
+
+      stream.Position = writePosition;
+      stream.Write(buffer, 0, bytesRead);
+
+      readPosition += bytesRead;
+      writePosition += bytesRead;
+    }
+
+    stream.SetLength(writePosition);
+    return true;
+  }
+
+  /// <summary>
+  ///   Detects line break mode by scanning the stream for CR/LF bytes.
+  /// </summary>
+  private static LineBreakMode _DetectLineBreakModeFromStream(Stream stream, long startPosition) {
+    const int scanBufferSize = 64 * 1024;
+    var buffer = new byte[scanBufferSize];
+
+    stream.Position = startPosition;
+    var bytesRead = stream.Read(buffer, 0, scanBufferSize);
+    if (bytesRead <= 0)
+      return LineBreakMode.None;
+
+    const byte CR = (byte)'\r';
+    const byte LF = (byte)'\n';
+
+    for (var i = 0; i < bytesRead; ++i) {
+      var b = buffer[i];
+      if (b == CR) {
+        if (i + 1 < bytesRead && buffer[i + 1] == LF)
+          return LineBreakMode.CrLf;
+        return LineBreakMode.CarriageReturn;
+      }
+
+      if (b == LF) {
+        if (i + 1 < bytesRead && buffer[i + 1] == CR)
+          return LineBreakMode.LfCr;
+        return LineBreakMode.LineFeed;
+      }
+    }
+
+    return LineBreakMode.None;
+  }
+
+  /// <summary>
+  ///   Scans backwards from end of file to find the starting positions of the last N lines.
+  /// </summary>
+  /// <returns>Array of line start positions (sorted ascending), or null if file has fewer lines than requested.</returns>
+  private static long[] _ScanBackwardsForLineStarts(Stream stream, long fileLength, long preambleSize, byte[] lineEnding, int count) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var lineStarts = new List<long>(count + 1);
+
+    var position = fileLength;
+    var linesFound = 0;
+
+    while (position > preambleSize && linesFound < count) {
+      var readStart = Math.Max(preambleSize, position - bufferSize);
+      var readLength = (int)(position - readStart);
+
+      stream.Position = readStart;
+      var bytesRead = stream.Read(buffer, 0, readLength);
+      if (bytesRead <= 0)
+        break;
+
+      // Scan the buffer backwards
+      for (var i = bytesRead - 1; i >= 0 && linesFound < count; --i) {
+        if (_IsLineEndingAt(buffer, i, bytesRead, lineEnding)) {
+          // Position after the line ending is the start of the next line
+          var lineStartPos = readStart + i + lineEnding.Length;
+          // Only count if there's content after this line ending (skip trailing newlines)
+          if (lineStartPos < fileLength) {
+            lineStarts.Add(lineStartPos);
+            ++linesFound;
+          }
+
+          // Skip past the line ending bytes we just found
+          i -= lineEnding.Length - 1;
+        }
+      }
+
+      position = readStart;
+    }
+
+    // If we're at the beginning of file content, that's also a line start
+    if (linesFound < count && position <= preambleSize) {
+      lineStarts.Add(preambleSize);
+      ++linesFound;
+    }
+
+    // If we didn't find enough lines, file has fewer lines than requested
+    if (linesFound < count)
+      return null;
+
+    // Return positions sorted ascending
+    lineStarts.Reverse();
+    return lineStarts.ToArray();
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static bool _IsLineEndingAt(byte[] buffer, int index, int bufferLength, byte[] lineEnding) {
+    if (index + lineEnding.Length > bufferLength)
+      return false;
+
+    for (var j = 0; j < lineEnding.Length; ++j)
+      if (buffer[index + j] != lineEnding[j])
+        return false;
+
+    return true;
+  }
+
+  private static bool _TryGetLineEndingBytes(LineBreakMode mode, out byte[] bytes) {
+    switch (mode) {
+      case LineBreakMode.CrLf:
+        bytes = [(byte)'\r', (byte)'\n'];
+        return true;
+      case LineBreakMode.LineFeed:
+        bytes = [(byte)'\n'];
+        return true;
+      case LineBreakMode.CarriageReturn:
+        bytes = [(byte)'\r'];
+        return true;
+      case LineBreakMode.LfCr:
+        bytes = [(byte)'\n', (byte)'\r'];
+        return true;
+      default:
+        bytes = null;
+        return false;
+    }
+  }
+
+  private static bool _IsAsciiCompatibleEncoding(Encoding encoding) {
+    // UTF-8 and most single-byte encodings are ASCII-compatible for bytes < 128
+    var name = encoding.WebName.ToLowerInvariant();
+    return name.StartsWith("utf-8")
+           || name.StartsWith("iso-8859")
+           || name.StartsWith("windows-")
+           || name == "us-ascii"
+           || name == "ascii";
   }
 
   /// <summary>
@@ -2345,6 +2662,15 @@ public static partial class FileInfoExtensions {
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
 
+    // Try fast byte-scanning path for ASCII-compatible encodings
+    if (_TryFastRemoveFirstLines(@this, count, encoding, newLine))
+      return;
+
+    // Fall back to character-by-character scanning
+    _RemoveFirstLinesSlow(@this, count, encoding, newLine);
+  }
+
+  private static void _RemoveFirstLinesSlow(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
     var readPosition = 0L;
@@ -2396,6 +2722,81 @@ public static partial class FileInfoExtensions {
     }
 
     stream.SetLength(writePosition);
+  }
+
+  private static bool _TryFastRemoveFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    // Check if encoding is ASCII-compatible
+    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
+      return false;
+
+    // For explicit modes, verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+      return false;
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var fileLength = stream.Length;
+
+    // Detect preamble size and check for unsupported encodings
+    var preambleSize = 0L;
+    var bom = new byte[4];
+    var bomRead = stream.Read(bom, 0, 4);
+
+    if (encoding == null) {
+      if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+        preambleSize = 3; // UTF-8 BOM
+      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
+        return false; // UTF-16 BOM - can't use fast path
+    } else {
+      var preamble = encoding.GetPreamble();
+      if (preamble.Length > 0 && bomRead >= preamble.Length) {
+        var matches = true;
+        for (var i = 0; i < preamble.Length && matches; ++i)
+          matches = bom[i] == preamble[i];
+        if (matches)
+          preambleSize = preamble.Length;
+      }
+    }
+
+    // Resolve AutoDetect by scanning file content for line endings
+    var actualMode = newLine;
+    if (actualMode == LineBreakMode.AutoDetect) {
+      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+        return false; // Can't use fast path
+    }
+
+    // Only support simple line endings
+    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+      return false;
+
+    // Scan forward to find the position after N lines
+    var readPosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
+    if (readPosition < 0) {
+      // File has fewer lines than requested, truncate to just the preamble
+      stream.SetLength(preambleSize);
+      return true;
+    }
+
+    // Copy remaining data from readPosition to preambleSize
+    var writePosition = preambleSize;
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+
+    while (readPosition < fileLength) {
+      stream.Position = readPosition;
+      var bytesRead = stream.Read(buffer, 0, bufferSize);
+      if (bytesRead <= 0)
+        break;
+
+      stream.Position = writePosition;
+      stream.Write(buffer, 0, bytesRead);
+
+      readPosition += bytesRead;
+      writePosition += bytesRead;
+    }
+
+    stream.SetLength(writePosition);
+    return true;
   }
 
   /// <summary>
@@ -2487,6 +2888,15 @@ public static partial class FileInfoExtensions {
     Against.CountBelowOrEqualZero(count);
     Against.UnknownEnumValues(newLine);
 
+    // Try fast reverse scan for simple cases
+    if (_TryFastRemoveLastLines(@this, count, encoding, newLine))
+      return;
+
+    // Fall back to forward scanning
+    _RemoveLastLinesForward(@this, count, encoding, newLine);
+  }
+
+  private static void _RemoveLastLinesForward(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var linePositions = new long[count];
     var index = 0;
@@ -2507,6 +2917,70 @@ public static partial class FileInfoExtensions {
 
     var truncate = Math.Max(reader.PreambleSize, linePositions[index] - 1);
     stream.SetLength(truncate);
+  }
+
+  /// <summary>
+  ///   Attempts to remove the last N lines using fast reverse byte scanning.
+  ///   Only works for simple line endings (CrLf, Lf, Cr) with ASCII-compatible encodings.
+  /// </summary>
+  /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
+  private static bool _TryFastRemoveLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
+    // Check if encoding is ASCII-compatible (most single-byte and UTF-8 encodings are)
+    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
+      return false;
+
+    // For explicit modes, verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+      return false;
+
+    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var fileLength = stream.Length;
+
+    // Detect preamble size and check for unsupported encodings
+    var preambleSize = 0L;
+    var bom = new byte[4];
+    var bomRead = stream.Read(bom, 0, 4);
+
+    if (encoding == null) {
+      if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+        preambleSize = 3; // UTF-8 BOM
+      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
+        return false; // UTF-16 BOM - can't use fast path
+    } else {
+      var preamble = encoding.GetPreamble();
+      if (preamble.Length > 0 && bomRead >= preamble.Length) {
+        var matches = true;
+        for (var i = 0; i < preamble.Length && matches; ++i)
+          matches = bom[i] == preamble[i];
+        if (matches)
+          preambleSize = preamble.Length;
+      }
+    }
+
+    // Resolve AutoDetect by scanning file content for line endings
+    var actualMode = newLine;
+    if (actualMode == LineBreakMode.AutoDetect) {
+      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+        return false; // Can't use fast path
+    }
+
+    // Only support simple single-byte or two-byte line endings
+    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+      return false;
+
+    // Scan backwards to find the start of the lines to remove
+    // This uses the same algorithm as KeepLastLines - find the start positions of the last N lines
+    var lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
+    if (lineStartPositions == null) {
+      // File has fewer lines than requested - truncate to just preamble
+      stream.SetLength(preambleSize);
+      return true;
+    }
+
+    // Truncate at the start of the first line we want to remove
+    stream.SetLength(lineStartPositions[0]);
+    return true;
   }
 
   #endregion
