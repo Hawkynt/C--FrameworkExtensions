@@ -28,6 +28,8 @@ namespace System.IO;
 
 public static partial class FileInfoExtensions {
   private class CustomTextReader {
+    private const int CUSTOM_TEXT_READER_BUFFER_SIZE = 128 * 1024; // 128KB for better I/O performance
+
     private readonly bool _detectEncodingFromByteOrderMark;
     private readonly Encoding _encoding;
     private readonly StringExtensions.LineBreakMode _lineBreakMode;
@@ -40,7 +42,11 @@ public static partial class FileInfoExtensions {
 
     public sealed class Initialized : CustomTextReader, IDisposable {
       private sealed class LineEndingNode {
-        private Dictionary<char, LineEndingNode> _children;
+        private const int ASCII_FAST_PATH_SIZE = 128; // Fast path for ASCII characters (0-127)
+
+        private LineEndingNode[] _asciiChildren; // Array-indexed lookup for ASCII (O(1))
+        private Dictionary<char, LineEndingNode> _unicodeChildren; // Fallback for non-ASCII
+
         private LineEndingNode(int pathLength) => this.PathLength = pathLength;
 
         public bool IsTerminal { get; private set; }
@@ -48,21 +54,46 @@ public static partial class FileInfoExtensions {
 
         public int Depth {
           get {
-            if (this._children == null)
-              return 0;
+            var maxDepth = 0;
+            if (this._asciiChildren != null)
+              for (var i = 0; i < ASCII_FAST_PATH_SIZE; ++i)
+                if (this._asciiChildren[i] != null)
+                  maxDepth = Math.Max(maxDepth, this._asciiChildren[i].Depth + 1);
 
-            return this._children.Values.Select(n => n.Depth).Max() + 1;
+            if (this._unicodeChildren != null)
+              foreach (var child in this._unicodeChildren.Values)
+                maxDepth = Math.Max(maxDepth, child.Depth + 1);
+
+            return maxDepth;
           }
         }
 
-        public LineEndingNode GetNodeOrNull(char current) => this._children?.TryGetValue(current, out var result) ?? false ? result : null;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public LineEndingNode GetNodeOrNull(char current) {
+          // Fast path for ASCII characters (covers all common line endings: \r, \n, etc.)
+          if (current < ASCII_FAST_PATH_SIZE)
+            return this._asciiChildren?[current];
+
+          // Fallback for Unicode characters
+          return this._unicodeChildren?.TryGetValue(current, out var result) ?? false ? result : null;
+        }
 
         private static void _UpdateTree(LineEndingNode root, string lineEnding) {
           var current = root;
           foreach (var character in lineEnding) {
-            current._children ??= new();
             var parentNode = current;
-            current = current._children.GetOrAdd(character, () => new(parentNode.PathLength + 1));
+            LineEndingNode child;
+
+            if (character < ASCII_FAST_PATH_SIZE) {
+              // ASCII fast path - use array indexing
+              current._asciiChildren ??= new LineEndingNode[ASCII_FAST_PATH_SIZE];
+              child = current._asciiChildren[character] ??= new(parentNode.PathLength + 1);
+            } else {
+              // Unicode fallback - use dictionary
+              current._unicodeChildren ??= new();
+              child = current._unicodeChildren.GetOrAdd(character, () => new(parentNode.PathLength + 1));
+            }
+            current = child;
           }
 
           current.IsTerminal = true;
@@ -91,7 +122,7 @@ public static partial class FileInfoExtensions {
       public long Position => this._position;
 
       private Initialized(Stream ustream, bool detectEncodingFromByteOrderMark, Encoding encoding, StringExtensions.LineBreakMode lineBreakMode) : base(detectEncodingFromByteOrderMark, encoding, lineBreakMode) {
-        this._stream = new(ustream, dontDisposeUnderlyingStream: true);
+        this._stream = new(ustream, CUSTOM_TEXT_READER_BUFFER_SIZE, dontDisposeUnderlyingStream: true);
         this._position = ustream.Position;
 
         var startPosition = this._position;

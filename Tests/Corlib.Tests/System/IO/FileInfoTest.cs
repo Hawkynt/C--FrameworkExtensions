@@ -359,10 +359,42 @@ internal class FileInfoTest {
     }
 
     [Test]
+    // === Exception cases ===
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
+    // Negative count - should throw ArgumentOutOfRangeException
+    [TestCase("abc\ndef", -1, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "KeepFirstLines_NegativeCount_ThrowsArgumentOutOfRange")]
+    [TestCase("abc\ndef", -100, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "KeepFirstLines_LargeNegativeCount_ThrowsArgumentOutOfRange")]
+    // === Empty file edge cases ===
+    [TestCase("", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "KeepFirstLines_EmptyFile_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8, LineBreakMode.CrLf, "", TestName = "KeepFirstLines_EmptyFileUtf8_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8NoBOM, LineBreakMode.All, "", TestName = "KeepFirstLines_EmptyFileUtf8NoBom_ReturnsEmpty")]
+    // === Files with only line breaks (no content) ===
+    [TestCase("\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n", TestName = "KeepFirstLines_OnlyLf_Keep1")]
+    [TestCase("\n\n\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n", TestName = "KeepFirstLines_ThreeLfs_Keep1")]
+    [TestCase("\n\n\n", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n\n", TestName = "KeepFirstLines_ThreeLfs_Keep2")]
+    [TestCase("\n\n\n", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n\n\n", TestName = "KeepFirstLines_ThreeLfs_Keep3_All")]
+    [TestCase("\r\n\r\n\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n", TestName = "KeepFirstLines_ThreeCrLfs_Keep1")]
+    [TestCase("\r\n\r\n\r\n", 2, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n\r\n", TestName = "KeepFirstLines_ThreeCrLfs_Keep2")]
+    [TestCase("\r\r\r", 2, TestEncoding.ASCII, LineBreakMode.CarriageReturn, "\r\r", TestName = "KeepFirstLines_ThreeCrs_Keep2")]
+    // === Count boundary cases ===
+    // Count == total lines (exact match)
+    [TestCase("a\nb\nc", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "a\nb\nc", TestName = "KeepFirstLines_CountEqualsLines_ReturnsAll")]
+    [TestCase("a\r\nb\r\nc\r\n", 3, TestEncoding.ASCII, LineBreakMode.CrLf, "a\r\nb\r\nc\r\n", TestName = "KeepFirstLines_CountEqualsLinesWithTrailing_ReturnsAll")]
+    // Count > total lines (should return all)
+    [TestCase("a\nb", 5, TestEncoding.ASCII, LineBreakMode.LineFeed, "a\nb", TestName = "KeepFirstLines_CountGreaterThanLines_ReturnsAll")]
+    [TestCase("a\nb", 100, TestEncoding.ASCII, LineBreakMode.LineFeed, "a\nb", TestName = "KeepFirstLines_CountMuchGreater_ReturnsAll")]
+    [TestCase("single", 10, TestEncoding.ASCII, LineBreakMode.LineFeed, "single", TestName = "KeepFirstLines_SingleLineCountGreater_ReturnsAll")]
+    // === All encodings with same content ===
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_ASCII_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.Utf8, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf8WithBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.Utf8NoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf8NoBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf16LeNoBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf16BeWithBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_AutoDetectUtf32_Keep2")]
+    // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "abc")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
@@ -427,10 +459,46 @@ internal class FileInfoTest {
       );
 
     [Test]
+    // === Exception cases ===
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, 0, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, 0, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, 0, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, 0, "", typeof(ArgumentException))]
+    // Negative count - should throw ArgumentOutOfRangeException
+    [TestCase("abc\ndef", -1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, null, typeof(ArgumentOutOfRangeException), TestName = "KeepLastLines_NegativeCount_ThrowsArgumentOutOfRange")]
+    [TestCase("abc\ndef", -100, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, null, typeof(ArgumentOutOfRangeException), TestName = "KeepLastLines_LargeNegativeCount_ThrowsArgumentOutOfRange")]
+    // === Empty file edge cases ===
+    [TestCase("", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "", TestName = "KeepLastLines_EmptyFile_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8, LineBreakMode.CrLf, 0, "", TestName = "KeepLastLines_EmptyFileUtf8_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8NoBOM, LineBreakMode.All, 0, "", TestName = "KeepLastLines_EmptyFileUtf8NoBom_ReturnsEmpty")]
+    // === Files with only line breaks (no content) ===
+    [TestCase("\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "\n", TestName = "KeepLastLines_OnlyLf_Keep1")]
+    [TestCase("\n\n\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "\n", TestName = "KeepLastLines_ThreeLfs_Keep1")]
+    [TestCase("\n\n\n", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "\n\n", TestName = "KeepLastLines_ThreeLfs_Keep2")]
+    [TestCase("\n\n\n", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "\n\n\n", TestName = "KeepLastLines_ThreeLfs_Keep3_All")]
+    [TestCase("\r\n\r\n\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, 0, "\r\n", TestName = "KeepLastLines_ThreeCrLfs_Keep1")]
+    [TestCase("\r\n\r\n\r\n", 2, TestEncoding.ASCII, LineBreakMode.CrLf, 0, "\r\n\r\n", TestName = "KeepLastLines_ThreeCrLfs_Keep2")]
+    [TestCase("\r\r\r", 2, TestEncoding.ASCII, LineBreakMode.CarriageReturn, 0, "\r\r", TestName = "KeepLastLines_ThreeCrs_Keep2")]
+    // === Count boundary cases ===
+    // Count == total lines (exact match)
+    [TestCase("a\nb\nc", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "a\nb\nc", TestName = "KeepLastLines_CountEqualsLines_ReturnsAll")]
+    [TestCase("a\r\nb\r\nc\r\n", 3, TestEncoding.ASCII, LineBreakMode.CrLf, 0, "a\r\nb\r\nc\r\n", TestName = "KeepLastLines_CountEqualsLinesWithTrailing_ReturnsAll")]
+    // Count > total lines (should return all)
+    [TestCase("a\nb", 5, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "a\nb", TestName = "KeepLastLines_CountGreaterThanLines_ReturnsAll")]
+    [TestCase("a\nb", 100, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "a\nb", TestName = "KeepLastLines_CountMuchGreater_ReturnsAll")]
+    [TestCase("single", 10, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "single", TestName = "KeepLastLines_SingleLineCountGreater_ReturnsAll")]
+    // === All encodings with same content ===
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_ASCII_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.Utf8, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf8WithBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.Utf8NoBOM, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf8NoBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf16LeNoBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf16BeWithBom_Keep2")]
+    [TestCase("line1\nline2\nline3", 2, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_AutoDetectUtf32_Keep2")]
+    // === Offset edge cases (offsetInLines = number of lines to keep at START of file) ===
+    [TestCase("a\nb\nc\nd\ne", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, 2, "a\nb\nd\ne", TestName = "KeepLastLines_Offset2_KeepsFirst2AndLast2")]
+    [TestCase("a\nb\nc\nd\ne", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 3, "a\nb\nc\ne", TestName = "KeepLastLines_Offset3Keep1_KeepsFirst3AndLast1")]
+    [TestCase("a\nb\nc", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 10, "a\nb\nc", TestName = "KeepLastLines_OffsetGreaterThanLines_KeepsAll")]
+    // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, 0, "abc")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "abc\n")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 0, "def")]
@@ -512,10 +580,42 @@ internal class FileInfoTest {
       );
 
     [Test]
+    // === Exception cases ===
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
+    // Negative count - should throw ArgumentOutOfRangeException
+    [TestCase("abc\ndef", -1, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "RemoveFirstLines_NegativeCount_ThrowsArgumentOutOfRange")]
+    [TestCase("abc\ndef", -100, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "RemoveFirstLines_LargeNegativeCount_ThrowsArgumentOutOfRange")]
+    // === Empty file edge cases ===
+    [TestCase("", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_EmptyFile_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8, LineBreakMode.CrLf, "", TestName = "RemoveFirstLines_EmptyFileUtf8_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8NoBOM, LineBreakMode.All, "", TestName = "RemoveFirstLines_EmptyFileUtf8NoBom_ReturnsEmpty")]
+    // === Files with only line breaks (no content) ===
+    [TestCase("\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_OnlyLf_Remove1")]
+    [TestCase("\n\n\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n\n", TestName = "RemoveFirstLines_ThreeLfs_Remove1")]
+    [TestCase("\n\n\n", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n", TestName = "RemoveFirstLines_ThreeLfs_Remove2")]
+    [TestCase("\n\n\n", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_ThreeLfs_Remove3_All")]
+    [TestCase("\r\n\r\n\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n\r\n", TestName = "RemoveFirstLines_ThreeCrLfs_Remove1")]
+    [TestCase("\r\n\r\n\r\n", 2, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n", TestName = "RemoveFirstLines_ThreeCrLfs_Remove2")]
+    [TestCase("\r\r\r", 2, TestEncoding.ASCII, LineBreakMode.CarriageReturn, "\r", TestName = "RemoveFirstLines_ThreeCrs_Remove2")]
+    // === Count boundary cases ===
+    // Count == total lines (exact match - removes all)
+    [TestCase("a\nb\nc", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_CountEqualsLines_RemovesAll")]
+    [TestCase("a\r\nb\r\nc\r\n", 3, TestEncoding.ASCII, LineBreakMode.CrLf, "", TestName = "RemoveFirstLines_CountEqualsLinesWithTrailing_RemovesAll")]
+    // Count > total lines (should remove all)
+    [TestCase("a\nb", 5, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_CountGreaterThanLines_RemovesAll")]
+    [TestCase("a\nb", 100, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_CountMuchGreater_RemovesAll")]
+    [TestCase("single", 10, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveFirstLines_SingleLineCountGreater_RemovesAll")]
+    // === All encodings with same content ===
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_ASCII_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.Utf8, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf8WithBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf8NoBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf16LeNoBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf16BeWithBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_AutoDetectUtf32_Remove1")]
+    // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "def")]
@@ -585,10 +685,42 @@ internal class FileInfoTest {
       );
 
     [Test]
+    // === Exception cases ===
     [TestCase(null, 1, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(NullReferenceException))]
     [TestCase("", 0, TestEncoding.Utf8, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException))]
     [TestCase("", 1, TestEncoding.Null, LineBreakMode.LineFeed, null, typeof(ArgumentNullException))]
     [TestCase("abc", 1, TestEncoding.ASCII, (LineBreakMode)short.MinValue, "", typeof(ArgumentException))]
+    // Negative count - should throw ArgumentOutOfRangeException
+    [TestCase("abc\ndef", -1, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "RemoveLastLines_NegativeCount_ThrowsArgumentOutOfRange")]
+    [TestCase("abc\ndef", -100, TestEncoding.ASCII, LineBreakMode.LineFeed, null, typeof(ArgumentOutOfRangeException), TestName = "RemoveLastLines_LargeNegativeCount_ThrowsArgumentOutOfRange")]
+    // === Empty file edge cases ===
+    [TestCase("", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_EmptyFile_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8, LineBreakMode.CrLf, "", TestName = "RemoveLastLines_EmptyFileUtf8_ReturnsEmpty")]
+    [TestCase("", 1, TestEncoding.Utf8NoBOM, LineBreakMode.All, "", TestName = "RemoveLastLines_EmptyFileUtf8NoBom_ReturnsEmpty")]
+    // === Files with only line breaks (no content) ===
+    [TestCase("\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_OnlyLf_Remove1")]
+    [TestCase("\n\n\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n\n", TestName = "RemoveLastLines_ThreeLfs_Remove1")]
+    [TestCase("\n\n\n", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, "\n", TestName = "RemoveLastLines_ThreeLfs_Remove2")]
+    [TestCase("\n\n\n", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_ThreeLfs_Remove3_All")]
+    [TestCase("\r\n\r\n\r\n", 1, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n\r\n", TestName = "RemoveLastLines_ThreeCrLfs_Remove1")]
+    [TestCase("\r\n\r\n\r\n", 2, TestEncoding.ASCII, LineBreakMode.CrLf, "\r\n", TestName = "RemoveLastLines_ThreeCrLfs_Remove2")]
+    [TestCase("\r\r\r", 2, TestEncoding.ASCII, LineBreakMode.CarriageReturn, "\r", TestName = "RemoveLastLines_ThreeCrs_Remove2")]
+    // === Count boundary cases ===
+    // Count == total lines (exact match - removes all)
+    [TestCase("a\nb\nc", 3, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_CountEqualsLines_RemovesAll")]
+    [TestCase("a\r\nb\r\nc\r\n", 3, TestEncoding.ASCII, LineBreakMode.CrLf, "", TestName = "RemoveLastLines_CountEqualsLinesWithTrailing_RemovesAll")]
+    // Count > total lines (should remove all)
+    [TestCase("a\nb", 5, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_CountGreaterThanLines_RemovesAll")]
+    [TestCase("a\nb", 100, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_CountMuchGreater_RemovesAll")]
+    [TestCase("single", 10, TestEncoding.ASCII, LineBreakMode.LineFeed, "", TestName = "RemoveLastLines_SingleLineCountGreater_RemovesAll")]
+    // === All encodings with same content ===
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_ASCII_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.Utf8, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf8WithBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.Utf8NoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf8NoBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf16LeNoBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf16BeWithBom_Remove1")]
+    [TestCase("line1\nline2\nline3", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_AutoDetectUtf32_Remove1")]
+    // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
     [TestCase("abc\ndef", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
