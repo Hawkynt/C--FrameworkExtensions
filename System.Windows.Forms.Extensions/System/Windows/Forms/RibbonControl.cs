@@ -103,7 +103,7 @@ public class RibbonControl : ContainerControl {
   /// </summary>
   [Browsable(false)]
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-  public IReadOnlyList<RibbonTab> Tabs => this._tabs;
+  public IReadOnlyList<RibbonTab> Tabs => this._tabs.AsIReadOnlyList();
 
   /// <summary>
   /// Gets or sets the selected tab.
@@ -771,7 +771,7 @@ public class RibbonTab {
   /// <summary>
   /// Gets the groups in this tab.
   /// </summary>
-  public IReadOnlyList<RibbonGroup> Groups => this._groups;
+  public IReadOnlyList<RibbonGroup> Groups => this._groups.AsIReadOnlyList();
 
   internal Rectangle Bounds { get; set; }
 
@@ -818,7 +818,7 @@ public class RibbonGroup {
   /// <summary>
   /// Gets the items in this group.
   /// </summary>
-  public IReadOnlyList<RibbonItem> Items => this._items;
+  public IReadOnlyList<RibbonItem> Items => this._items.AsIReadOnlyList();
 
   internal Rectangle Bounds { get; set; }
 
@@ -1011,7 +1011,7 @@ public class RibbonQuickAccessToolbar {
   /// <summary>
   /// Gets the items in the quick access toolbar.
   /// </summary>
-  public IReadOnlyList<RibbonItem> Items => this._items;
+  public IReadOnlyList<RibbonItem> Items => this._items.AsIReadOnlyList();
 
   /// <summary>
   /// Adds a button to the quick access toolbar.

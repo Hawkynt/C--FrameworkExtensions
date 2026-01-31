@@ -137,7 +137,7 @@ public class MonthCalendarEx : Control {
   /// Gets the selected dates when multi-select is enabled.
   /// </summary>
   [Browsable(false)]
-  public IReadOnlyList<DateTime> SelectedDates => this._selectedDates;
+  public IReadOnlyList<DateTime> SelectedDates => this._selectedDates.AsIReadOnlyList();
 
   /// <summary>
   /// Gets or sets the displayed month.

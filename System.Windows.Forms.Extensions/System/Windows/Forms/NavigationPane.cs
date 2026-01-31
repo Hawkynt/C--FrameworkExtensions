@@ -103,7 +103,7 @@ public class NavigationPane : ContainerControl {
   /// </summary>
   [Browsable(false)]
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-  public IReadOnlyList<NavigationGroup> Groups => this._groups;
+  public IReadOnlyList<NavigationGroup> Groups => this._groups.AsIReadOnlyList();
 
   /// <summary>
   /// Gets or sets the display mode.
@@ -702,7 +702,7 @@ public class NavigationGroup {
   /// <summary>
   /// Gets the items in this group.
   /// </summary>
-  public IReadOnlyList<NavigationItem> Items => this._items;
+  public IReadOnlyList<NavigationItem> Items => this._items.AsIReadOnlyList();
 
   /// <summary>
   /// Adds an item to this group.
@@ -766,7 +766,7 @@ public class NavigationItem {
   /// <summary>
   /// Gets the sub-items for nested navigation.
   /// </summary>
-  public IReadOnlyList<NavigationItem> SubItems => this._subItems;
+  public IReadOnlyList<NavigationItem> SubItems => this._subItems.AsIReadOnlyList();
 
   /// <summary>
   /// Adds a sub-item to this item.
