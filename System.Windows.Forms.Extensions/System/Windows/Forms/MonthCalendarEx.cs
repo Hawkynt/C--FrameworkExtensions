@@ -18,6 +18,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;

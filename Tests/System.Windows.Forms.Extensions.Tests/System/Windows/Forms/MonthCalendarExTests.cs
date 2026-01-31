@@ -254,20 +254,11 @@ public class MonthCalendarExTests {
 
   [Test]
   [Category("HappyPath")]
-  public void DateSelected_IsRaisedOnSelection() {
-    var eventRaised = false;
-    DateTime? selectedDate = null;
-
-    this._calendar.DateSelected += (s, e) => {
-      eventRaised = true;
-      selectedDate = e.Date;
-    };
-
+  public void SelectedDate_PropertySetter_Works() {
     var targetDate = new DateTime(2024, 6, 15);
     this._calendar.SelectedDate = targetDate;
 
-    // Note: DateSelected is raised on mouse click, not property change
-    // This test just ensures the property itself works
+    // Note: DateSelected event is raised on mouse click, not property change
     Assert.That(this._calendar.SelectedDate, Is.EqualTo(targetDate));
   }
 }
