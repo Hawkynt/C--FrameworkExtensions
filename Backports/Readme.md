@@ -463,6 +463,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - bool [TryParse](https://learn.microsoft.com/dotnet/api/system.guid.tryparse#system-guid-tryparse%28system-readonlyspan%28%28system-char%29%29-system-guid%40%29)(ReadOnlySpan&lt;char&gt; input, out Guid result)
   - Guid [Parse](https://learn.microsoft.com/dotnet/api/system.guid.parse#system-guid-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
 
+- System.IO.File
+  - IEnumerable&lt;string&gt; [ReadLines](https://learn.microsoft.com/dotnet/api/system.io.file.readlines#system-io-file-readlines%28system-string%29)(string path)
+  - IEnumerable&lt;string&gt; [ReadLines](https://learn.microsoft.com/dotnet/api/system.io.file.readlines#system-io-file-readlines%28system-string-system-text-encoding%29)(string path, Encoding encoding)
+
 - System.IO.Path
   - string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string%29)(string path1, string path2)
   - string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string-system-string%29)(string path1, string path2, string path3)
