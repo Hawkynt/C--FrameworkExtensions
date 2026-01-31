@@ -2066,28 +2066,37 @@ public static partial class FileInfoExtensions {
   }
 
   private static bool _TryFastKeepFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
-    // Check if encoding is ASCII-compatible
-    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
-      return false;
-
-    // For explicit modes, verify we support them before opening the file
-    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var fileLength = stream.Length;
 
-    // Detect preamble size and check for unsupported encodings
+    // Detect preamble size and encoding type from BOM
     var preambleSize = 0L;
+    Utf16Endianness? utf16Endianness = null;
     var bom = new byte[4];
     var bomRead = stream.Read(bom, 0, 4);
 
     if (encoding == null) {
       if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
         preambleSize = 3; // UTF-8 BOM
-      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
-        return false; // UTF-16 BOM - can't use fast path
+      else if (bomRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE) {
+        preambleSize = 2; // UTF-16 LE BOM
+        utf16Endianness = Utf16Endianness.LittleEndian;
+      } else if (bomRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF) {
+        preambleSize = 2; // UTF-16 BE BOM
+        utf16Endianness = Utf16Endianness.BigEndian;
+      }
     } else {
+      // Check if explicit encoding is UTF-16
+      var encodingName = encoding.WebName.ToLowerInvariant();
+      if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
+        utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
+      else if (!_IsAsciiCompatibleEncoding(encoding))
+        return false; // Unsupported encoding
+
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
         var matches = true;
@@ -2098,12 +2107,31 @@ public static partial class FileInfoExtensions {
       }
     }
 
+    // Handle LineBreakMode.All with multi-pattern byte scanning
+    if (newLine == LineBreakMode.All) {
+      long truncatePosition;
+      if (utf16Endianness.HasValue)
+        truncatePosition = _ScanForwardForLineEndAllPatternsUtf16(stream, fileLength, preambleSize, count, utf16Endianness.Value);
+      else
+        truncatePosition = _ScanForwardForLineEndAllPatterns(stream, fileLength, preambleSize, count);
+
+      if (truncatePosition < 0)
+        return true; // File has fewer lines than requested, nothing to do
+
+      stream.SetLength(truncatePosition);
+      return true;
+    }
+
+    // UTF-16 with non-All mode falls back to slow path (need character-level scanning for specific line endings)
+    if (utf16Endianness.HasValue)
+      return false;
+
     // Resolve AutoDetect by scanning file content for line endings
     var actualMode = newLine;
     if (actualMode == LineBreakMode.AutoDetect) {
       actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
       if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-        return false; // Can't use fast path
+        return false; // Can't use fast path for mixed line endings
     }
 
     // Only support simple line endings
@@ -2111,11 +2139,11 @@ public static partial class FileInfoExtensions {
       return false;
 
     // Scan forward to find the position after N lines
-    var truncatePosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
-    if (truncatePosition < 0)
+    var truncatePosition2 = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
+    if (truncatePosition2 < 0)
       return true; // File has fewer lines than requested, nothing to do
 
-    stream.SetLength(truncatePosition);
+    stream.SetLength(truncatePosition2);
     return true;
   }
 
@@ -2376,32 +2404,41 @@ public static partial class FileInfoExtensions {
 
   /// <summary>
   ///   Attempts to keep the last N lines using fast reverse byte scanning.
-  ///   Only works for simple line endings (CrLf, Lf, Cr) with ASCII-compatible encodings.
+  ///   Works for simple line endings (CrLf, Lf, Cr) and LineBreakMode.All with ASCII-compatible and UTF-16 encodings.
   /// </summary>
   /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
   private static bool _TryFastKeepLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
-    // Check if encoding is ASCII-compatible (most single-byte and UTF-8 encodings are)
-    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
-      return false;
-
-    // For explicit modes, verify we support them before opening the file
-    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var fileLength = stream.Length;
 
-    // Detect preamble size and check for unsupported encodings
+    // Detect preamble size and encoding type from BOM
     var preambleSize = 0L;
+    Utf16Endianness? utf16Endianness = null;
     var bom = new byte[4];
     var bomRead = stream.Read(bom, 0, 4);
 
     if (encoding == null) {
       if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
         preambleSize = 3; // UTF-8 BOM
-      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
-        return false; // UTF-16 BOM - can't use fast path
+      else if (bomRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE) {
+        preambleSize = 2; // UTF-16 LE BOM
+        utf16Endianness = Utf16Endianness.LittleEndian;
+      } else if (bomRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF) {
+        preambleSize = 2; // UTF-16 BE BOM
+        utf16Endianness = Utf16Endianness.BigEndian;
+      }
     } else {
+      // Check if explicit encoding is UTF-16
+      var encodingName = encoding.WebName.ToLowerInvariant();
+      if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
+        utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
+      else if (!_IsAsciiCompatibleEncoding(encoding))
+        return false; // Unsupported encoding
+
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
         var matches = true;
@@ -2412,22 +2449,38 @@ public static partial class FileInfoExtensions {
       }
     }
 
-    // Resolve AutoDetect by scanning file content for line endings
-    var actualMode = newLine;
-    if (actualMode == LineBreakMode.AutoDetect) {
-      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
-      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-        return false; // Can't use fast path
+    long[] lineStartPositions;
+
+    // Handle LineBreakMode.All with multi-pattern byte scanning
+    if (newLine == LineBreakMode.All) {
+      if (utf16Endianness.HasValue)
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatternsUtf16(stream, fileLength, preambleSize, count, utf16Endianness.Value);
+      else
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatterns(stream, fileLength, preambleSize, count);
+
+      if (lineStartPositions == null || lineStartPositions.Length == 0)
+        return true; // File has fewer lines than requested, nothing to do
+    } else {
+      // UTF-16 with non-All mode falls back to slow path (need character-level scanning for specific line endings)
+      if (utf16Endianness.HasValue)
+        return false;
+      // Resolve AutoDetect by scanning file content for line endings
+      var actualMode = newLine;
+      if (actualMode == LineBreakMode.AutoDetect) {
+        actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+        if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+          return false; // Can't use fast path for mixed line endings
+      }
+
+      // Only support simple single-byte or two-byte line endings
+      if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+        return false;
+
+      // Scan backwards to find line positions
+      lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
+      if (lineStartPositions == null)
+        return false; // File has fewer lines than requested, nothing to do
     }
-
-    // Only support simple single-byte or two-byte line endings
-    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
-      return false;
-
-    // Scan backwards to find line positions
-    var lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
-    if (lineStartPositions == null)
-      return false; // File has fewer lines than requested, nothing to do
 
     var readPosition = lineStartPositions[0];
     var writePosition = preambleSize;
@@ -2583,6 +2636,593 @@ public static partial class FileInfoExtensions {
            || name == "ascii";
   }
 
+  // Line ending byte patterns for ASCII-compatible encodings (UTF-8, ISO-8859-*, etc.)
+  // Ordered by length descending for greedy matching (longer patterns first)
+  private static readonly byte[][] _AllLineEndingPatternsAscii = [
+    [0xE2, 0x80, 0xA9], // Paragraph Separator (U+2029) - UTF-8
+    [0xE2, 0x80, 0xA8], // Line Separator (U+2028) - UTF-8
+    [0xC2, 0x85],       // Next Line (NEL, U+0085) - UTF-8
+    [0x0D, 0x0A],       // CRLF
+    [0x0A, 0x0D],       // LFCR (rare)
+    [0x0A],             // LF
+    [0x0D],             // CR
+    [0x0C],             // Form Feed
+    [0x0B],             // Vertical Tab
+    [0x1E],             // Record Separator
+    [0x15],             // Negative Acknowledge (EBCDIC newline)
+    [0x00],             // NUL
+  ];
+
+  // Quick lookup: bytes that could start a line ending pattern
+  private static readonly bool[] _LineEndingStartBytesAscii = _BuildStartByteLookup();
+
+  // Quick lookup: bytes that could end a line ending pattern (for backward scanning)
+  private static readonly bool[] _LineEndingEndBytesAscii = _BuildEndByteLookup();
+
+  private static bool[] _BuildStartByteLookup() {
+    var lookup = new bool[256];
+    foreach (var pattern in _AllLineEndingPatternsAscii)
+      lookup[pattern[0]] = true;
+    return lookup;
+  }
+
+  private static bool[] _BuildEndByteLookup() {
+    var lookup = new bool[256];
+    foreach (var pattern in _AllLineEndingPatternsAscii)
+      lookup[pattern[^1]] = true;
+    return lookup;
+  }
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+
+  // Byte arrays for SIMD-optimized IndexOfAny lookups (ASCII/UTF-8)
+  private static readonly byte[] _LineEndingStartBytesForIndexOfAnyAscii = _BuildBytesForIndexOfAny(_AllLineEndingPatternsAscii, p => p[0]);
+  private static readonly byte[] _LineEndingEndBytesForIndexOfAnyAscii = _BuildBytesForIndexOfAny(_AllLineEndingPatternsAscii, p => p[^1]);
+
+  private static byte[] _BuildBytesForIndexOfAny(byte[][] patterns, Func<byte[], byte> selector) {
+    var uniqueBytes = new HashSet<byte>();
+    foreach (var pattern in patterns)
+      uniqueBytes.Add(selector(pattern));
+    var result = new byte[uniqueBytes.Count];
+    uniqueBytes.CopyTo(result);
+    return result;
+  }
+
+#endif
+
+  // UTF-16 encoding types for byte-level scanning
+  private enum Utf16Endianness {
+    LittleEndian, // BOM: FF FE
+    BigEndian     // BOM: FE FF
+  }
+
+  // Line ending byte patterns for UTF-16 Little Endian (each character is 2 bytes, low byte first)
+  // Ordered by length descending for greedy matching
+  private static readonly byte[][] _AllLineEndingPatternsUtf16LE = [
+    [0x29, 0x20], // Paragraph Separator (U+2029) - UTF-16 LE
+    [0x28, 0x20], // Line Separator (U+2028) - UTF-16 LE
+    [0x85, 0x00], // Next Line (NEL, U+0085) - UTF-16 LE
+    [0x0D, 0x00, 0x0A, 0x00], // CRLF - UTF-16 LE
+    [0x0A, 0x00, 0x0D, 0x00], // LFCR - UTF-16 LE
+    [0x0A, 0x00], // LF - UTF-16 LE
+    [0x0D, 0x00], // CR - UTF-16 LE
+    [0x0C, 0x00], // Form Feed - UTF-16 LE
+    [0x0B, 0x00], // Vertical Tab - UTF-16 LE
+    [0x1E, 0x00], // Record Separator - UTF-16 LE
+    [0x15, 0x00], // Negative Acknowledge - UTF-16 LE
+    [0x00, 0x00], // NUL - UTF-16 LE
+  ];
+
+  // Line ending byte patterns for UTF-16 Big Endian (each character is 2 bytes, high byte first)
+  // Ordered by length descending for greedy matching
+  private static readonly byte[][] _AllLineEndingPatternsUtf16BE = [
+    [0x20, 0x29], // Paragraph Separator (U+2029) - UTF-16 BE
+    [0x20, 0x28], // Line Separator (U+2028) - UTF-16 BE
+    [0x00, 0x85], // Next Line (NEL, U+0085) - UTF-16 BE
+    [0x00, 0x0D, 0x00, 0x0A], // CRLF - UTF-16 BE
+    [0x00, 0x0A, 0x00, 0x0D], // LFCR - UTF-16 BE
+    [0x00, 0x0A], // LF - UTF-16 BE
+    [0x00, 0x0D], // CR - UTF-16 BE
+    [0x00, 0x0C], // Form Feed - UTF-16 BE
+    [0x00, 0x0B], // Vertical Tab - UTF-16 BE
+    [0x00, 0x1E], // Record Separator - UTF-16 BE
+    [0x00, 0x15], // Negative Acknowledge - UTF-16 BE
+    [0x00, 0x00], // NUL - UTF-16 BE
+  ];
+
+  // Quick lookups for UTF-16 LE pattern start/end bytes
+  private static readonly bool[] _LineEndingStartBytesUtf16LE = _BuildLookupForPatterns(_AllLineEndingPatternsUtf16LE, p => p[0]);
+  private static readonly bool[] _LineEndingEndBytesUtf16LE = _BuildLookupForPatterns(_AllLineEndingPatternsUtf16LE, p => p[^1]);
+
+  // Quick lookups for UTF-16 BE pattern start/end bytes
+  private static readonly bool[] _LineEndingStartBytesUtf16BE = _BuildLookupForPatterns(_AllLineEndingPatternsUtf16BE, p => p[0]);
+  private static readonly bool[] _LineEndingEndBytesUtf16BE = _BuildLookupForPatterns(_AllLineEndingPatternsUtf16BE, p => p[^1]);
+
+  private static bool[] _BuildLookupForPatterns(byte[][] patterns, Func<byte[], byte> selector) {
+    var lookup = new bool[256];
+    foreach (var pattern in patterns)
+      lookup[selector(pattern)] = true;
+    return lookup;
+  }
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+
+  // Byte arrays for SIMD-optimized IndexOfAny lookups (UTF-16 LE)
+  private static readonly byte[] _LineEndingStartBytesForIndexOfAnyUtf16LE = _BuildBytesForIndexOfAny(_AllLineEndingPatternsUtf16LE, p => p[0]);
+  private static readonly byte[] _LineEndingEndBytesForIndexOfAnyUtf16LE = _BuildBytesForIndexOfAny(_AllLineEndingPatternsUtf16LE, p => p[^1]);
+
+  // Byte arrays for SIMD-optimized IndexOfAny lookups (UTF-16 BE)
+  private static readonly byte[] _LineEndingStartBytesForIndexOfAnyUtf16BE = _BuildBytesForIndexOfAny(_AllLineEndingPatternsUtf16BE, p => p[0]);
+  private static readonly byte[] _LineEndingEndBytesForIndexOfAnyUtf16BE = _BuildBytesForIndexOfAny(_AllLineEndingPatternsUtf16BE, p => p[^1]);
+
+#endif
+
+  /// <summary>
+  /// Tries to match any UTF-16 line ending pattern at the given position in the buffer.
+  /// Returns the length of the matched pattern, or 0 if no match.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _TryMatchAnyLineEndingUtf16(byte[] buffer, int index, int bufferLength, Utf16Endianness endianness) {
+    var patterns = endianness == Utf16Endianness.LittleEndian ? _AllLineEndingPatternsUtf16LE : _AllLineEndingPatternsUtf16BE;
+    var startLookup = endianness == Utf16Endianness.LittleEndian ? _LineEndingStartBytesUtf16LE : _LineEndingStartBytesUtf16BE;
+
+    var firstByte = buffer[index];
+
+    // Quick reject: not a potential line ending start byte
+    if (!startLookup[firstByte])
+      return 0;
+
+    // Try patterns in order (longest first for greedy matching)
+    foreach (var pattern in patterns) {
+      if (pattern[0] != firstByte)
+        continue;
+
+      if (index + pattern.Length > bufferLength)
+        continue;
+
+      var match = true;
+      for (var j = 1; j < pattern.Length; ++j)
+        if (buffer[index + j] != pattern[j]) {
+          match = false;
+          break;
+        }
+
+      if (match)
+        return pattern.Length;
+    }
+
+    return 0;
+  }
+
+  /// <summary>
+  /// Tries to match any UTF-16 line ending pattern that ENDS at the given position in the buffer.
+  /// Used for backward scanning.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _TryMatchAnyLineEndingEndingAtUtf16(byte[] buffer, int endIndex, Utf16Endianness endianness) {
+    var patterns = endianness == Utf16Endianness.LittleEndian ? _AllLineEndingPatternsUtf16LE : _AllLineEndingPatternsUtf16BE;
+    var endLookup = endianness == Utf16Endianness.LittleEndian ? _LineEndingEndBytesUtf16LE : _LineEndingEndBytesUtf16BE;
+
+    var lastByte = buffer[endIndex];
+
+    // Quick reject: not a potential line ending end byte
+    if (!endLookup[lastByte])
+      return 0;
+
+    // Try patterns in order (longest first for greedy matching)
+    foreach (var pattern in patterns) {
+      if (pattern[^1] != lastByte)
+        continue;
+
+      var startIndex = endIndex - pattern.Length + 1;
+      if (startIndex < 0)
+        continue;
+
+      var match = true;
+      for (var j = 0; j < pattern.Length - 1; ++j)
+        if (buffer[startIndex + j] != pattern[j]) {
+          match = false;
+          break;
+        }
+
+      if (match)
+        return pattern.Length;
+    }
+
+    return 0;
+  }
+
+  /// <summary>
+  /// Scans forward for line endings in UTF-16 encoded files.
+  /// Uses SIMD-optimized IndexOfAny on .NET Core 2.1+ / .NET Standard 2.1+ for better performance.
+  /// </summary>
+  private static long _ScanForwardForLineEndAllPatternsUtf16(Stream stream, long fileLength, long preambleSize, int count, Utf16Endianness endianness) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var position = preambleSize;
+    var linesFound = 0;
+
+    while (position < fileLength && linesFound < count) {
+      stream.Position = position;
+      var bytesToRead = (int)Math.Min(bufferSize, fileLength - position);
+      var bytesRead = stream.Read(buffer, 0, bytesToRead);
+      if (bytesRead <= 0)
+        break;
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+      // SIMD-optimized path: use IndexOfAny to find candidate positions
+      var span = buffer.AsSpan(0, bytesRead);
+      var searchBytes = endianness == Utf16Endianness.LittleEndian
+        ? _LineEndingStartBytesForIndexOfAnyUtf16LE.AsSpan()
+        : _LineEndingStartBytesForIndexOfAnyUtf16BE.AsSpan();
+      var offset = 0;
+
+      while (offset < bytesRead - 1 && linesFound < count) {
+        var remaining = span.Slice(offset);
+        var candidateIndex = remaining.IndexOfAny(searchBytes);
+        if (candidateIndex < 0)
+          break; // No more candidates in this buffer
+
+        var i = offset + candidateIndex;
+        // Ensure 2-byte alignment (UTF-16 characters start at even positions)
+        if (i % 2 != 0) {
+          offset = i + 1;
+          continue;
+        }
+
+        var matchLength = _TryMatchAnyLineEndingUtf16(buffer, i, bytesRead, endianness);
+        if (matchLength > 0) {
+          ++linesFound;
+          if (linesFound >= count)
+            return position + i + matchLength;
+
+          offset = i + matchLength;
+        } else
+          offset = i + 2; // Move to next aligned position
+      }
+#else
+      // Scan the buffer for any line ending (must be 2-byte aligned for UTF-16)
+      for (var i = 0; i < bytesRead - 1 && linesFound < count; i += 2) {
+        var matchLength = _TryMatchAnyLineEndingUtf16(buffer, i, bytesRead, endianness);
+        if (matchLength > 0) {
+          ++linesFound;
+          if (linesFound >= count)
+            return position + i + matchLength;
+
+          // Skip past the line ending (matchLength is already multiple of 2)
+          i += matchLength - 2;
+        }
+      }
+#endif
+
+      position += bytesRead;
+    }
+
+    return -1; // File has fewer lines than requested
+  }
+
+  /// <summary>
+  /// Scans backward for line starts in UTF-16 encoded files.
+  /// Uses SIMD-optimized LastIndexOfAny on .NET Core 2.1+ / .NET Standard 2.1+ for better performance.
+  /// </summary>
+  private static long[] _ScanBackwardsForLineStartsAllPatternsUtf16(Stream stream, long fileLength, long preambleSize, int count, Utf16Endianness endianness) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var lineStarts = new List<long>(count + 1);
+    var position = fileLength;
+    var linesFound = 0;
+
+    while (position > preambleSize && linesFound < count) {
+      var readStart = Math.Max(preambleSize, position - bufferSize);
+      var bytesToRead = (int)(position - readStart);
+
+      stream.Position = readStart;
+      var bytesRead = stream.Read(buffer, 0, bytesToRead);
+      if (bytesRead <= 0)
+        break;
+
+      // Calculate alignment offset from preamble
+      var offsetFromPreamble = (int)((readStart - preambleSize) % 2);
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+      // SIMD-optimized path: use LastIndexOfAny to find candidate positions
+      var span = buffer.AsSpan(0, bytesRead);
+      var searchBytes = endianness == Utf16Endianness.LittleEndian
+        ? _LineEndingEndBytesForIndexOfAnyUtf16LE.AsSpan()
+        : _LineEndingEndBytesForIndexOfAnyUtf16BE.AsSpan();
+      var searchEnd = bytesRead;
+
+      while (searchEnd > 1 && linesFound < count) {
+        var searchSpan = span.Slice(0, searchEnd);
+        var candidateIndex = searchSpan.LastIndexOfAny(searchBytes);
+        if (candidateIndex < 1)
+          break; // No more candidates in this buffer (need at least index 1 for UTF-16)
+
+        // Ensure proper alignment (last byte of UTF-16 char is at odd position relative to preamble)
+        if ((candidateIndex + offsetFromPreamble) % 2 == 0) {
+          searchEnd = candidateIndex;
+          continue;
+        }
+
+        // Check if any line ending pattern ENDS at this position
+        var matchLength = _TryMatchAnyLineEndingEndingAtUtf16(buffer, candidateIndex, endianness);
+        if (matchLength > 0) {
+          // Line ending ends at position candidateIndex, so next line starts at candidateIndex + 1
+          var lineStartPos = readStart + candidateIndex + 1;
+          // Only count if there's content after this line ending
+          if (lineStartPos < fileLength) {
+            lineStarts.Add(lineStartPos);
+            ++linesFound;
+          }
+
+          // Move search end to before the start of this pattern
+          searchEnd = candidateIndex - matchLength + 1;
+        } else
+          searchEnd = candidateIndex; // False positive, move past this byte
+      }
+#else
+      // Scan backwards through buffer, looking for bytes that could END a line ending
+      // Must maintain 2-byte alignment for UTF-16
+      var startIdx = bytesRead - 1;
+      // Ensure we start on an odd index (last byte of a 2-byte char) relative to preamble
+      if ((startIdx + offsetFromPreamble) % 2 == 0)
+        --startIdx;
+
+      for (var i = startIdx; i >= 1 && linesFound < count; i -= 2) {
+        // Check if any line ending pattern ENDS at this position
+        var matchLength = _TryMatchAnyLineEndingEndingAtUtf16(buffer, i, endianness);
+        if (matchLength > 0) {
+          // Line ending ends at position i, so next line starts at i + 1
+          var lineStartPos = readStart + i + 1;
+          // Only count if there's content after this line ending
+          if (lineStartPos < fileLength) {
+            lineStarts.Add(lineStartPos);
+            ++linesFound;
+          }
+
+          // Skip past the rest of the multi-byte pattern when scanning backwards
+          i -= matchLength - 2;
+        }
+      }
+#endif
+
+      position = readStart;
+    }
+
+    // If we're at the beginning of file content, that's also a line start
+    if (linesFound < count && position <= preambleSize) {
+      lineStarts.Add(preambleSize);
+      ++linesFound;
+    }
+
+    // If we didn't find enough lines, return null
+    if (linesFound < count)
+      return null;
+
+    // Return positions sorted ascending
+    lineStarts.Reverse();
+    return lineStarts.ToArray();
+  }
+
+  /// <summary>
+  /// Tries to match any line ending pattern at the given position in the buffer.
+  /// Returns the length of the matched pattern, or 0 if no match.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _TryMatchAnyLineEnding(byte[] buffer, int index, int bufferLength) {
+    var firstByte = buffer[index];
+
+    // Quick reject: not a potential line ending start byte
+    if (!_LineEndingStartBytesAscii[firstByte])
+      return 0;
+
+    // Try patterns in order (longest first for greedy matching)
+    foreach (var pattern in _AllLineEndingPatternsAscii) {
+      if (pattern[0] != firstByte)
+        continue;
+
+      if (index + pattern.Length > bufferLength)
+        continue;
+
+      var match = true;
+      for (var j = 1; j < pattern.Length; ++j)
+        if (buffer[index + j] != pattern[j]) {
+          match = false;
+          break;
+        }
+
+      if (match)
+        return pattern.Length;
+    }
+
+    return 0;
+  }
+
+  /// <summary>
+  /// Tries to match any line ending pattern that ENDS at the given position in the buffer.
+  /// Returns the length of the matched pattern, or 0 if no match.
+  /// Used for backward scanning where we encounter the last byte of a pattern first.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _TryMatchAnyLineEndingEndingAt(byte[] buffer, int endIndex) {
+    var lastByte = buffer[endIndex];
+
+    // Quick reject: not a potential line ending end byte
+    if (!_LineEndingEndBytesAscii[lastByte])
+      return 0;
+
+    // Try patterns in order (longest first for greedy matching)
+    foreach (var pattern in _AllLineEndingPatternsAscii) {
+      if (pattern[^1] != lastByte)
+        continue;
+
+      var startIndex = endIndex - pattern.Length + 1;
+      if (startIndex < 0)
+        continue;
+
+      var match = true;
+      for (var j = 0; j < pattern.Length - 1; ++j)
+        if (buffer[startIndex + j] != pattern[j]) {
+          match = false;
+          break;
+        }
+
+      if (match)
+        return pattern.Length;
+    }
+
+    return 0;
+  }
+
+  /// <summary>
+  /// Scans forward from the start of file to find the position after N lines, supporting all line ending types.
+  /// Uses SIMD-optimized IndexOfAny on .NET Core 2.1+ / .NET Standard 2.1+ for better performance.
+  /// </summary>
+  private static long _ScanForwardForLineEndAllPatterns(Stream stream, long fileLength, long preambleSize, int count) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var position = preambleSize;
+    var linesFound = 0;
+
+    while (position < fileLength && linesFound < count) {
+      stream.Position = position;
+      var bytesToRead = (int)Math.Min(bufferSize, fileLength - position);
+      var bytesRead = stream.Read(buffer, 0, bytesToRead);
+      if (bytesRead <= 0)
+        break;
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+      // SIMD-optimized path: use IndexOfAny to find candidate positions
+      var span = buffer.AsSpan(0, bytesRead);
+      var searchBytes = _LineEndingStartBytesForIndexOfAnyAscii.AsSpan();
+      var offset = 0;
+
+      while (offset < bytesRead && linesFound < count) {
+        var remaining = span.Slice(offset);
+        var candidateIndex = remaining.IndexOfAny(searchBytes);
+        if (candidateIndex < 0)
+          break; // No more candidates in this buffer
+
+        var i = offset + candidateIndex;
+        var matchLength = _TryMatchAnyLineEnding(buffer, i, bytesRead);
+        if (matchLength > 0) {
+          ++linesFound;
+          if (linesFound >= count)
+            return position + i + matchLength;
+
+          offset = i + matchLength;
+        } else
+          ++offset; // False positive, move past this byte
+      }
+#else
+      // Traditional byte-by-byte scanning
+      for (var i = 0; i < bytesRead && linesFound < count; ++i) {
+        var matchLength = _TryMatchAnyLineEnding(buffer, i, bytesRead);
+        if (matchLength > 0) {
+          ++linesFound;
+          if (linesFound >= count)
+            return position + i + matchLength;
+
+          // Skip past the line ending
+          i += matchLength - 1;
+        }
+      }
+#endif
+
+      position += bytesRead;
+    }
+
+    return -1; // File has fewer lines than requested
+  }
+
+  /// <summary>
+  /// Scans backward from end of file to find line start positions, supporting all line ending types.
+  /// Uses SIMD-optimized LastIndexOfAny on .NET Core 2.1+ / .NET Standard 2.1+ for better performance.
+  /// Note: Backward scanning may give different line boundaries than forward scanning for overlapping
+  /// patterns like CRLF/LFCR, but this is acceptable for backward operations.
+  /// </summary>
+  private static long[] _ScanBackwardsForLineStartsAllPatterns(Stream stream, long fileLength, long preambleSize, int count) {
+    const int bufferSize = 256 * 1024;
+    var buffer = new byte[bufferSize];
+    var lineStarts = new List<long>(count + 1);
+    var position = fileLength;
+    var linesFound = 0;
+
+    while (position > preambleSize && linesFound < count) {
+      var readStart = Math.Max(preambleSize, position - bufferSize);
+      var bytesToRead = (int)(position - readStart);
+
+      stream.Position = readStart;
+      var bytesRead = stream.Read(buffer, 0, bytesToRead);
+      if (bytesRead <= 0)
+        break;
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+      // SIMD-optimized path: use LastIndexOfAny to find candidate positions
+      var span = buffer.AsSpan(0, bytesRead);
+      var searchBytes = _LineEndingEndBytesForIndexOfAnyAscii.AsSpan();
+      var searchEnd = bytesRead;
+
+      while (searchEnd > 0 && linesFound < count) {
+        var searchSpan = span.Slice(0, searchEnd);
+        var candidateIndex = searchSpan.LastIndexOfAny(searchBytes);
+        if (candidateIndex < 0)
+          break; // No more candidates in this buffer
+
+        // Check if any line ending pattern ENDS at this position
+        var matchLength = _TryMatchAnyLineEndingEndingAt(buffer, candidateIndex);
+        if (matchLength > 0) {
+          // Line ending ends at position candidateIndex, so next line starts at candidateIndex + 1
+          var lineStartPos = readStart + candidateIndex + 1;
+          // Only count if there's content after this line ending
+          if (lineStartPos < fileLength) {
+            lineStarts.Add(lineStartPos);
+            ++linesFound;
+          }
+
+          // Move search end to before the start of this pattern
+          searchEnd = candidateIndex - matchLength + 1;
+        } else
+          searchEnd = candidateIndex; // False positive, move past this byte
+      }
+#else
+      // Scan backwards through buffer, looking for bytes that could END a line ending
+      for (var i = bytesRead - 1; i >= 0 && linesFound < count; --i) {
+        // Check if any line ending pattern ENDS at this position
+        var matchLength = _TryMatchAnyLineEndingEndingAt(buffer, i);
+        if (matchLength > 0) {
+          // Line ending ends at position i, so next line starts at i + 1
+          var lineStartPos = readStart + i + 1;
+          // Only count if there's content after this line ending
+          if (lineStartPos < fileLength) {
+            lineStarts.Add(lineStartPos);
+            ++linesFound;
+          }
+
+          // Skip past the rest of the multi-byte pattern when scanning backwards
+          i -= matchLength - 1;
+        }
+      }
+#endif
+
+      position = readStart;
+    }
+
+    // If we're at the beginning of file content, that's also a line start
+    if (linesFound < count && position <= preambleSize) {
+      lineStarts.Add(preambleSize);
+      ++linesFound;
+    }
+
+    // If we didn't find enough lines, return null
+    if (linesFound < count)
+      return null;
+
+    // Return positions sorted ascending
+    lineStarts.Reverse();
+    return lineStarts.ToArray();
+  }
+
   /// <summary>
   ///   Removes a specified number of lines from the beginning of the file.
   /// </summary>
@@ -2725,28 +3365,37 @@ public static partial class FileInfoExtensions {
   }
 
   private static bool _TryFastRemoveFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
-    // Check if encoding is ASCII-compatible
-    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
-      return false;
-
-    // For explicit modes, verify we support them before opening the file
-    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var fileLength = stream.Length;
 
-    // Detect preamble size and check for unsupported encodings
+    // Detect preamble size and encoding type from BOM
     var preambleSize = 0L;
+    Utf16Endianness? utf16Endianness = null;
     var bom = new byte[4];
     var bomRead = stream.Read(bom, 0, 4);
 
     if (encoding == null) {
       if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
         preambleSize = 3; // UTF-8 BOM
-      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
-        return false; // UTF-16 BOM - can't use fast path
+      else if (bomRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE) {
+        preambleSize = 2; // UTF-16 LE BOM
+        utf16Endianness = Utf16Endianness.LittleEndian;
+      } else if (bomRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF) {
+        preambleSize = 2; // UTF-16 BE BOM
+        utf16Endianness = Utf16Endianness.BigEndian;
+      }
     } else {
+      // Check if explicit encoding is UTF-16
+      var encodingName = encoding.WebName.ToLowerInvariant();
+      if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
+        utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
+      else if (!_IsAsciiCompatibleEncoding(encoding))
+        return false; // Unsupported encoding
+
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
         var matches = true;
@@ -2757,20 +3406,33 @@ public static partial class FileInfoExtensions {
       }
     }
 
-    // Resolve AutoDetect by scanning file content for line endings
-    var actualMode = newLine;
-    if (actualMode == LineBreakMode.AutoDetect) {
-      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
-      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-        return false; // Can't use fast path
+    long readPosition;
+
+    // Handle LineBreakMode.All with multi-pattern byte scanning
+    if (newLine == LineBreakMode.All) {
+      if (utf16Endianness.HasValue)
+        readPosition = _ScanForwardForLineEndAllPatternsUtf16(stream, fileLength, preambleSize, count, utf16Endianness.Value);
+      else
+        readPosition = _ScanForwardForLineEndAllPatterns(stream, fileLength, preambleSize, count);
+    } else {
+      // UTF-16 with non-All mode falls back to slow path
+      if (utf16Endianness.HasValue)
+        return false;
+      // Resolve AutoDetect by scanning file content for line endings
+      var actualMode = newLine;
+      if (actualMode == LineBreakMode.AutoDetect) {
+        actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+        if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+          return false; // Can't use fast path for mixed line endings
+      }
+
+      // Only support simple line endings
+      if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+        return false;
+
+      // Scan forward to find the position after N lines
+      readPosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
     }
-
-    // Only support simple line endings
-    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
-      return false;
-
-    // Scan forward to find the position after N lines
-    var readPosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
     if (readPosition < 0) {
       // File has fewer lines than requested, truncate to just the preamble
       stream.SetLength(preambleSize);
@@ -2921,32 +3583,41 @@ public static partial class FileInfoExtensions {
 
   /// <summary>
   ///   Attempts to remove the last N lines using fast reverse byte scanning.
-  ///   Only works for simple line endings (CrLf, Lf, Cr) with ASCII-compatible encodings.
+  ///   Works for simple line endings (CrLf, Lf, Cr) and LineBreakMode.All with ASCII-compatible and UTF-16 encodings.
   /// </summary>
   /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
   private static bool _TryFastRemoveLastLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
-    // Check if encoding is ASCII-compatible (most single-byte and UTF-8 encodings are)
-    if (encoding != null && !_IsAsciiCompatibleEncoding(encoding))
-      return false;
-
-    // For explicit modes, verify we support them before opening the file
-    if (newLine != LineBreakMode.AutoDetect && !_TryGetLineEndingBytes(newLine, out _))
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
     var fileLength = stream.Length;
 
-    // Detect preamble size and check for unsupported encodings
+    // Detect preamble size and encoding type from BOM
     var preambleSize = 0L;
+    Utf16Endianness? utf16Endianness = null;
     var bom = new byte[4];
     var bomRead = stream.Read(bom, 0, 4);
 
     if (encoding == null) {
       if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
         preambleSize = 3; // UTF-8 BOM
-      else if (bomRead >= 2 && ((bom[0] == 0xFF && bom[1] == 0xFE) || (bom[0] == 0xFE && bom[1] == 0xFF)))
-        return false; // UTF-16 BOM - can't use fast path
+      else if (bomRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE) {
+        preambleSize = 2; // UTF-16 LE BOM
+        utf16Endianness = Utf16Endianness.LittleEndian;
+      } else if (bomRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF) {
+        preambleSize = 2; // UTF-16 BE BOM
+        utf16Endianness = Utf16Endianness.BigEndian;
+      }
     } else {
+      // Check if explicit encoding is UTF-16
+      var encodingName = encoding.WebName.ToLowerInvariant();
+      if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
+        utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
+      else if (!_IsAsciiCompatibleEncoding(encoding))
+        return false; // Unsupported encoding
+
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
         var matches = true;
@@ -2957,25 +3628,43 @@ public static partial class FileInfoExtensions {
       }
     }
 
-    // Resolve AutoDetect by scanning file content for line endings
-    var actualMode = newLine;
-    if (actualMode == LineBreakMode.AutoDetect) {
-      actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
-      if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-        return false; // Can't use fast path
-    }
+    long[] lineStartPositions;
 
-    // Only support simple single-byte or two-byte line endings
-    if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
-      return false;
+    // Handle LineBreakMode.All with multi-pattern byte scanning
+    if (newLine == LineBreakMode.All) {
+      if (utf16Endianness.HasValue)
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatternsUtf16(stream, fileLength, preambleSize, count, utf16Endianness.Value);
+      else
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatterns(stream, fileLength, preambleSize, count);
 
-    // Scan backwards to find the start of the lines to remove
-    // This uses the same algorithm as KeepLastLines - find the start positions of the last N lines
-    var lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
-    if (lineStartPositions == null) {
-      // File has fewer lines than requested - truncate to just preamble
-      stream.SetLength(preambleSize);
-      return true;
+      if (lineStartPositions == null || lineStartPositions.Length == 0) {
+        // File has fewer lines than requested - truncate to just preamble
+        stream.SetLength(preambleSize);
+        return true;
+      }
+    } else {
+      // UTF-16 with non-All mode falls back to slow path
+      if (utf16Endianness.HasValue)
+        return false;
+      // Resolve AutoDetect by scanning file content for line endings
+      var actualMode = newLine;
+      if (actualMode == LineBreakMode.AutoDetect) {
+        actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+        if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+          return false; // Can't use fast path for mixed line endings
+      }
+
+      // Only support simple single-byte or two-byte line endings
+      if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+        return false;
+
+      // Scan backwards to find the start of the lines to remove
+      lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
+      if (lineStartPositions == null) {
+        // File has fewer lines than requested - truncate to just preamble
+        stream.SetLength(preambleSize);
+        return true;
+      }
     }
 
     // Truncate at the start of the first line we want to remove

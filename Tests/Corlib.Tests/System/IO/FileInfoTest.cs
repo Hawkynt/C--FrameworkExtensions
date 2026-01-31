@@ -394,6 +394,11 @@ internal class FileInfoTest {
     [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf16LeNoBom_Keep2")]
     [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_Utf16BeWithBom_Keep2")]
     [TestCase("line1\nline2\nline3", 2, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "KeepFirstLines_AutoDetectUtf32_Keep2")]
+    // UTF-16 with LineBreakMode.All (fast path for two-byte encodings)
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "abc\r\n", TestName = "KeepFirstLines_Utf16Be_All_Keep1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "abc\r\ndef\n", TestName = "KeepFirstLines_Utf16Be_All_Keep2")]
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "abc\r\n", TestName = "KeepFirstLines_Utf16Le_All_Keep1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "abc\r\ndef\n", TestName = "KeepFirstLines_Utf16Le_All_Keep2")]
     // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "abc")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "abc\n")]
@@ -494,6 +499,11 @@ internal class FileInfoTest {
     [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf16LeNoBom_Keep2")]
     [TestCase("line1\nline2\nline3", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_Utf16BeWithBom_Keep2")]
     [TestCase("line1\nline2\nline3", 2, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, 0, "line2\nline3", TestName = "KeepLastLines_AutoDetectUtf32_Keep2")]
+    // UTF-16 with LineBreakMode.All (fast path for two-byte encodings)
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.All, 0, "ghi", TestName = "KeepLastLines_Utf16Be_All_Keep1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.All, 0, "def\nghi", TestName = "KeepLastLines_Utf16Be_All_Keep2")]
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, 0, "ghi", TestName = "KeepLastLines_Utf16Le_All_Keep1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, 0, "def\nghi", TestName = "KeepLastLines_Utf16Le_All_Keep2")]
     // === Offset edge cases (offsetInLines = number of lines to keep at START of file) ===
     [TestCase("a\nb\nc\nd\ne", 2, TestEncoding.ASCII, LineBreakMode.LineFeed, 2, "a\nb\nd\ne", TestName = "KeepLastLines_Offset2_KeepsFirst2AndLast2")]
     [TestCase("a\nb\nc\nd\ne", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, 3, "a\nb\nc\ne", TestName = "KeepLastLines_Offset3Keep1_KeepsFirst3AndLast1")]
@@ -549,11 +559,10 @@ internal class FileInfoTest {
     [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\r\n", TestName = "KeepLastLines_EndsWithCrLf_Keep1")]
     // "abc\n\r" - LFCR is one ending, so 1 line: "abc"
     [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "abc\n\r", TestName = "KeepLastLines_EndsWithLfCr_Keep1_LfCrAsOneBreak")]
-    // "a\r\n\n\r\nb": CRLF + LFCR + LF... wait let me recalculate
-    // Position 0: 'a', 1-2: '\r\n' (CRLF), 3-4: '\n\r' (LFCR), 5: '\n' (LF), 6: 'b'
-    // Lines: "a", "", "", "b" = 4 lines
+    // "a\r\n\n\r\nb": Backward scanning finds CRLF(4-5), LF(3), CRLF(1-2)
+    // Lines (backward): starts at [0, 3, 4, 6] → "a", "", "", "b" = 4 lines
     [TestCase("a\r\n\n\r\nb", 1, TestEncoding.ASCII, LineBreakMode.All, 0, "b", TestName = "KeepLastLines_TripleEmptyMixed_Keep1")]
-    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\nb", TestName = "KeepLastLines_TripleEmptyMixed_Keep2_LfEnding")]
+    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, 0, "\r\nb", TestName = "KeepLastLines_TripleEmptyMixed_Keep2")]
     [TestCase("a\r\n\n\r\nb", 3, TestEncoding.ASCII, LineBreakMode.All, 0, "\n\r\nb", TestName = "KeepLastLines_TripleEmptyMixed_Keep3")]
     public void KeepLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, int offset, string expected, Type? exception = null)
       => this._ExecuteTest(
@@ -615,6 +624,11 @@ internal class FileInfoTest {
     [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf16LeNoBom_Remove1")]
     [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_Utf16BeWithBom_Remove1")]
     [TestCase("line1\nline2\nline3", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line2\nline3", TestName = "RemoveFirstLines_AutoDetectUtf32_Remove1")]
+    // UTF-16 with LineBreakMode.All (fast path for two-byte encodings)
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "def\nghi", TestName = "RemoveFirstLines_Utf16Be_All_Remove1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "ghi", TestName = "RemoveFirstLines_Utf16Be_All_Remove2")]
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "def\nghi", TestName = "RemoveFirstLines_Utf16Le_All_Remove1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "ghi", TestName = "RemoveFirstLines_Utf16Le_All_Remove2")]
     // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
@@ -720,6 +734,11 @@ internal class FileInfoTest {
     [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf16LeNoBom_Remove1")]
     [TestCase("line1\nline2\nline3", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_Utf16BeWithBom_Remove1")]
     [TestCase("line1\nline2\nline3", 1, TestEncoding.AutoDetectFromBom, LineBreakMode.LineFeed, "line1\nline2\n", TestName = "RemoveLastLines_AutoDetectUtf32_Remove1")]
+    // UTF-16 with LineBreakMode.All (fast path for two-byte encodings)
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "abc\r\ndef\n", TestName = "RemoveLastLines_Utf16Be_All_Remove1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeBigEndian, LineBreakMode.All, "abc\r\n", TestName = "RemoveLastLines_Utf16Be_All_Remove2")]
+    [TestCase("abc\r\ndef\nghi", 1, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "abc\r\ndef\n", TestName = "RemoveLastLines_Utf16Le_All_Remove1")]
+    [TestCase("abc\r\ndef\nghi", 2, TestEncoding.UnicodeLittleEndianNoBOM, LineBreakMode.All, "abc\r\n", TestName = "RemoveLastLines_Utf16Le_All_Remove2")]
     // === Basic cases ===
     [TestCase("abc", 1, TestEncoding.ASCII, LineBreakMode.None, "")]
     [TestCase("abc\n", 1, TestEncoding.ASCII, LineBreakMode.LineFeed, "")]
@@ -767,9 +786,10 @@ internal class FileInfoTest {
     [TestCase("abc\r\n", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_EndsWithCrLf_Remove1")]
     // "abc\n\r" - LFCR is one ending, so 1 line: "abc"
     [TestCase("abc\n\r", 1, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_EndsWithLfCr_Remove1_LfCrAsOneBreak")]
-    // "a\r\n\n\r\nb": CRLF + LFCR + LF = 3 line breaks, 4 lines: "a", "", "", "b"
+    // "a\r\n\n\r\nb": Backward scanning finds CRLF(4-5), LF(3), CRLF(1-2)
+    // Lines (backward): starts at [0, 3, 4, 6] → "a", "", "", "b" = 4 lines
     [TestCase("a\r\n\n\r\nb", 1, TestEncoding.ASCII, LineBreakMode.All, "a\r\n\n\r\n", TestName = "RemoveLastLines_TripleEmptyMixed_Remove1")]
-    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, "a\r\n\n\r", TestName = "RemoveLastLines_TripleEmptyMixed_Remove2_LfCrAsOne")]
+    [TestCase("a\r\n\n\r\nb", 2, TestEncoding.ASCII, LineBreakMode.All, "a\r\n\n", TestName = "RemoveLastLines_TripleEmptyMixed_Remove2")]
     [TestCase("a\r\n\n\r\nb", 3, TestEncoding.ASCII, LineBreakMode.All, "a\r\n", TestName = "RemoveLastLines_TripleEmptyMixed_Remove3")]
     [TestCase("a\r\n\n\r\nb", 4, TestEncoding.ASCII, LineBreakMode.All, "", TestName = "RemoveLastLines_TripleEmptyMixed_Remove4_All")]
     public void RemoveLastLines(string? input, int count, TestEncoding testEncoding, LineBreakMode newLine, string expected, Type? exception = null)
