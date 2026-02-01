@@ -37,6 +37,11 @@ static partial class FileInfoExtensions {
     /// </summary>
     bool CancelChanges { get; set; }
 
+    /// <summary>
+    ///   Gets the conflict resolution mode used for this work-in-progress operation.
+    /// </summary>
+    ConflictResolutionMode ConflictMode { get; }
+
     void CopyFrom(FileInfo source);
     Encoding GetEncoding();
     string ReadAllText();
@@ -63,5 +68,7 @@ static partial class FileInfoExtensions {
     void KeepLastLines(int count, Encoding encoding);
     void RemoveFirstLines(int count, Encoding encoding);
     void RemoveFirstLines(int count);
+    void RemoveLastLines(int count);
+    void RemoveLastLines(int count, Encoding encoding);
   }
 }

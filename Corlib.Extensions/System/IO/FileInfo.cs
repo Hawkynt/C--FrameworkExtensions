@@ -2668,7 +2668,7 @@ public static partial class FileInfoExtensions {
   /// {
   ///     // Perform operations on the work-in-progress file
   ///     workInProgress.WriteAllText("New content");
-  ///     
+  ///
   ///     // Optionally cancel changes
   ///     // workInProgress.CancelChanges = true;
   /// }
@@ -2677,14 +2677,42 @@ public static partial class FileInfoExtensions {
   ///   This example demonstrates starting a work-in-progress operation on a file,
   ///   modifying its content, and optionally canceling the changes.
   /// </example>
-  public IFileInProgress StartWorkInProgress(bool copyContents = false) {
+  public IFileInProgress StartWorkInProgress(bool copyContents = false)
+    => @this.StartWorkInProgress(copyContents, ConflictResolutionMode.None);
+
+  /// <summary>
+  ///   Initiates a work-in-progress operation on a file with conflict resolution, optionally copying its contents to a temporary working file.
+  /// </summary>
+  /// <param name="this">The source file to start the operation on.</param>
+  /// <param name="copyContents">Specifies whether the contents of the source file should be copied to the temporary file.</param>
+  /// <param name="conflictMode">
+  ///   Specifies how concurrent modifications to the original file should be handled.
+  ///   Use <see cref="ConflictResolutionMode.None" /> for legacy behavior (last-write-wins).
+  /// </param>
+  /// <returns>An <see cref="IFileInProgress" /> instance for managing the work-in-progress file.</returns>
+  /// <exception cref="IOException">
+  ///   Thrown when <paramref name="conflictMode" /> is a lock mode and the file cannot be locked.
+  /// </exception>
+  /// <exception cref="FileConflictException">
+  ///   Thrown during disposal when <paramref name="conflictMode" /> is a "throw" mode and the file was modified externally.
+  /// </exception>
+  /// <example>
+  ///   <code>
+  /// FileInfo originalFile = new FileInfo("path/to/file.txt");
+  /// using (var workInProgress = originalFile.StartWorkInProgress(
+  ///     copyContents: true,
+  ///     conflictMode: ConflictResolutionMode.CheckLastWriteTimeAndThrow))
+  /// {
+  ///     workInProgress.WriteAllText("New content");
+  /// }
+  /// // If the file was modified externally, a FileConflictException is thrown.
+  /// </code>
+  ///   This example demonstrates starting a work-in-progress operation with conflict detection.
+  /// </example>
+  public IFileInProgress StartWorkInProgress(bool copyContents, ConflictResolutionMode conflictMode) {
     Against.ThisIsNull(@this);
 
-    var result = new FileInProgress(@this);
-    if (copyContents)
-      result.CopyFrom(@this);
-
-    return result;
+    return new FileInProgress(@this, conflictMode, copyContents);
   }
 
   /// <summary>
@@ -2769,6 +2797,23 @@ public static partial class FileInfoExtensions {
 
   #endregion
 
+  // Return values for fast path Core methods
+  /// <summary>Fast path cannot handle this case, fall back to slow character-by-character scanning.</summary>
+  private const long _FAST_PATH_FALLBACK = long.MinValue;
+  /// <summary>Fast path succeeded but no truncation is needed (e.g., file has fewer lines than requested for Keep* operations).</summary>
+  private const long _FAST_PATH_SUCCESS_NO_CHANGE = long.MinValue + 1;
+
+  /// <summary>
+  ///   Truncates a file by closing the given stream and reopening it. This avoids ERROR_USER_MAPPED_FILE
+  ///   on Windows when the stream has internal buffer regions that prevent SetLength from working.
+  /// </summary>
+  private static void _TruncateFileWithReopen(FileInfo file, Stream currentStream, long newLength) {
+    currentStream.Flush();
+    currentStream.Dispose();
+    using var truncStream = file.Open(FileMode.Open, FileAccess.Write, FileShare.None);
+    truncStream.SetLength(newLength);
+  }
+
   // Private helpers for KeepFirstLines
   private static void _KeepFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     Against.ThisIsNull(@this);
@@ -2785,22 +2830,38 @@ public static partial class FileInfoExtensions {
 
   private static void _KeepFirstLinesSlow(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-    using CustomTextReader.Initialized reader =
-        encoding == null
-          ? new(stream, true, newLine)
-          : new(stream, encoding, newLine)
-      ;
+    _KeepFirstLinesOnStream(stream, count, encoding, newLine);
+  }
 
-    var lineCounter = 0;
-    do
-      if (reader.ReadLine() == null)
-        break;
-    while (++lineCounter < count);
+  /// <summary>
+  ///   Keeps only the first N lines in an already-open stream using character-by-character scanning.
+  ///   The stream must support reading, writing, and seeking.
+  /// </summary>
+  internal static void _KeepFirstLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
+    long truncatePosition;
 
-    if (lineCounter < count)
-      return;
+    using (CustomTextReader.Initialized reader = encoding == null
+            ? new(stream, true, newLine)
+            : new(stream, encoding, newLine)) {
 
-    stream.SetLength(reader.Position);
+      var lineCounter = 0;
+      do
+        if (reader.ReadLine() == null)
+          break;
+      while (++lineCounter < count);
+
+      if (lineCounter < count)
+        return;
+
+      truncatePosition = reader.Position;
+    }
+
+    // SetLength must be called after disposing the reader to release buffer regions
+    // Seek to start, flush, then seek to truncate position to release internal buffers
+    stream.Position = 0;
+    stream.Flush();
+    stream.Position = truncatePosition;
+    stream.SetLength(truncatePosition);
   }
 
   private static bool _TryFastKeepFirstLines(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
@@ -2856,7 +2917,7 @@ public static partial class FileInfoExtensions {
       if (truncatePosition < 0)
         return true; // File has fewer lines than requested, nothing to do
 
-      stream.SetLength(truncatePosition);
+      _TruncateFileWithReopen(@this, stream, truncatePosition);
       return true;
     }
 
@@ -2881,7 +2942,7 @@ public static partial class FileInfoExtensions {
     if (truncatePosition2 < 0)
       return true; // File has fewer lines than requested, nothing to do
 
-    stream.SetLength(truncatePosition2);
+    _TruncateFileWithReopen(@this, stream, truncatePosition2);
     return true;
   }
 
@@ -2938,33 +2999,46 @@ public static partial class FileInfoExtensions {
 
   private static void _KeepLastLinesForward(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine, int offsetInLines) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    _KeepLastLinesOnStream(stream, count, encoding, newLine, offsetInLines);
+  }
+
+  /// <summary>
+  ///   Keeps only the last N lines in an already-open stream using forward scanning.
+  ///   The stream must support reading, writing, and seeking.
+  /// </summary>
+  internal static void _KeepLastLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine, int offsetInLines) {
     var linePositions = new long[count];
     var index = 0;
+    long writePosition;
+    long readPosition;
 
-    CustomTextReader.Initialized reader =
-        encoding == null
-          ? new(stream, true, newLine)
-          : new(stream, encoding, newLine)
-      ;
+    using (CustomTextReader.Initialized reader = encoding == null
+             ? new(stream, true, newLine)
+             : new(stream, encoding, newLine)) {
 
-    var writePosition = reader.PreambleSize;
-    while (offsetInLines-- > 0 && reader.ReadLine() != null)
-      writePosition = reader.Position;
+      writePosition = reader.PreambleSize;
+      while (offsetInLines-- > 0 && reader.ReadLine() != null)
+        writePosition = reader.Position;
 
-    for (;;) {
-      var startOfLine = reader.Position;
-      if (reader.ReadLine() == null)
-        break;
+      for (;;) {
+        var startOfLine = reader.Position;
+        if (reader.ReadLine() == null)
+          break;
 
-      linePositions[index] = ++startOfLine;
-      index = ++index % linePositions.Length;
+        linePositions[index] = ++startOfLine;
+        index = ++index % linePositions.Length;
+      }
+
+      readPosition = linePositions[index];
+      if (readPosition <= 1)
+        return;
+
+      --readPosition;
     }
 
-    var readPosition = linePositions[index];
-    if (readPosition <= 1)
-      return;
-
-    --readPosition;
+    // SetLength must be called after disposing the reader to release buffer regions
+    // Flush is required before SetLength on Windows when the stream has been read from
+    stream.Flush();
 
     const int bufferSize = 64 * 1024;
     var buffer = new byte[bufferSize];
@@ -2982,6 +3056,10 @@ public static partial class FileInfoExtensions {
       writePosition += bytesRead;
     }
 
+    // Seek to start, flush, then seek to write position to release internal buffers
+    stream.Position = 0;
+    stream.Flush();
+    stream.Position = writePosition;
     stream.SetLength(writePosition);
   }
 
@@ -2995,7 +3073,137 @@ public static partial class FileInfoExtensions {
     if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
-    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var truncatePosition = _TryFastKeepLastLinesCore(stream, count, encoding, newLine);
+    if (truncatePosition == _FAST_PATH_FALLBACK) {
+      stream.Dispose();
+      return false;
+    }
+    if (truncatePosition == _FAST_PATH_SUCCESS_NO_CHANGE) {
+      stream.Dispose();
+      return true;
+    }
+
+    _TruncateFileWithReopen(@this, stream, truncatePosition);
+    return true;
+  }
+
+  /// <summary>
+  ///   Core implementation for fast keep-last-lines. Returns the truncate position or a sentinel value.
+  /// </summary>
+  /// <returns>
+  ///   <see cref="_FAST_PATH_SUCCESS_NO_CHANGE"/> if file has fewer lines than requested (success, no truncation needed);
+  ///   <see cref="_FAST_PATH_FALLBACK"/> if should fall back to slow path;
+  ///   >= 0 as the truncate position to apply.
+  /// </returns>
+  private static long _TryFastKeepLastLinesCore(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
+      return _FAST_PATH_FALLBACK;
+
+    var fileLength = stream.Length;
+
+    // Detect preamble size and encoding type from BOM
+    var preambleSize = 0L;
+    Utf16Endianness? utf16Endianness = null;
+    var bom = new byte[4];
+    var bomRead = stream.Read(bom, 0, 4);
+
+    if (encoding == null) {
+      if (bomRead >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+        preambleSize = 3; // UTF-8 BOM
+      else if (bomRead >= 2 && bom[0] == 0xFF && bom[1] == 0xFE) {
+        preambleSize = 2; // UTF-16 LE BOM
+        utf16Endianness = Utf16Endianness.LittleEndian;
+      } else if (bomRead >= 2 && bom[0] == 0xFE && bom[1] == 0xFF) {
+        preambleSize = 2; // UTF-16 BE BOM
+        utf16Endianness = Utf16Endianness.BigEndian;
+      }
+    } else {
+      // Check if explicit encoding is UTF-16
+      var encodingName = encoding.WebName.ToLowerInvariant();
+      if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
+        utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
+      else if (!_IsAsciiCompatibleEncoding(encoding))
+        return _FAST_PATH_FALLBACK;
+
+      var preamble = encoding.GetPreamble();
+      if (preamble.Length > 0 && bomRead >= preamble.Length) {
+        var matches = true;
+        for (var i = 0; i < preamble.Length && matches; ++i)
+          matches = bom[i] == preamble[i];
+        if (matches)
+          preambleSize = preamble.Length;
+      }
+    }
+
+    long[] lineStartPositions;
+
+    // Handle LineBreakMode.All with multi-pattern byte scanning
+    if (newLine == LineBreakMode.All) {
+      if (utf16Endianness.HasValue)
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatternsUtf16(stream, fileLength, preambleSize, count, utf16Endianness.Value);
+      else
+        lineStartPositions = _ScanBackwardsForLineStartsAllPatterns(stream, fileLength, preambleSize, count);
+
+      if (lineStartPositions == null || lineStartPositions.Length == 0)
+        return _FAST_PATH_SUCCESS_NO_CHANGE;
+    } else {
+      // UTF-16 with non-All mode falls back to slow path (need character-level scanning for specific line endings)
+      if (utf16Endianness.HasValue)
+        return _FAST_PATH_FALLBACK;
+      // Resolve AutoDetect by scanning file content for line endings
+      var actualMode = newLine;
+      if (actualMode == LineBreakMode.AutoDetect) {
+        actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
+        if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
+          return _FAST_PATH_FALLBACK;
+      }
+
+      // Only support simple single-byte or two-byte line endings
+      if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
+        return _FAST_PATH_FALLBACK;
+
+      // Scan backwards to find line positions
+      lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
+      if (lineStartPositions == null)
+        return _FAST_PATH_SUCCESS_NO_CHANGE;
+    }
+
+    var readPosition = lineStartPositions[0];
+    var writePosition = preambleSize;
+
+    // Copy data from readPosition to writePosition
+    const int bufferSize = 256 * 1024; // Larger buffer for better performance
+    var buffer = new byte[bufferSize];
+
+    while (readPosition < fileLength) {
+      stream.Position = readPosition;
+      var bytesRead = stream.Read(buffer, 0, bufferSize);
+      if (bytesRead <= 0)
+        break;
+
+      stream.Position = writePosition;
+      stream.Write(buffer, 0, bytesRead);
+
+      readPosition += bytesRead;
+      writePosition += bytesRead;
+    }
+
+    stream.Flush();
+    return writePosition;
+  }
+
+  /// <summary>
+  ///   Attempts to keep the last N lines in an already-open stream using fast reverse byte scanning.
+  ///   Works for simple line endings (CrLf, Lf, Cr) and LineBreakMode.All with ASCII-compatible and UTF-16 encodings.
+  /// </summary>
+  /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
+  internal static bool _TryFastKeepLastLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
+      return false;
+
     var fileLength = stream.Length;
 
     // Detect preamble size and encoding type from BOM
@@ -3085,6 +3293,8 @@ public static partial class FileInfoExtensions {
       writePosition += bytesRead;
     }
 
+    // Flush is required before SetLength on Windows when the stream has been read from
+    stream.Flush();
     stream.SetLength(writePosition);
     return true;
   }
@@ -3822,9 +4032,17 @@ public static partial class FileInfoExtensions {
 
   private static void _RemoveFirstLinesSlow(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    _RemoveFirstLinesOnStream(stream, count, encoding, newLine);
+  }
 
+  /// <summary>
+  ///   Removes the first N lines from an already-open stream using character-by-character scanning.
+  ///   The stream must support reading, writing, and seeking.
+  /// </summary>
+  internal static void _RemoveFirstLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
     var readPosition = 0L;
     var preambleSize = 0L;
+    var truncateOnly = false;
 
     // Use using to ensure reader is properly disposed and stream position is synced
     using (CustomTextReader.Initialized reader = encoding == null
@@ -3843,15 +4061,18 @@ public static partial class FileInfoExtensions {
       }
 
       preambleSize = reader.PreambleSize;
-
-      if (lineCounter < count) {
-        stream.SetLength(preambleSize);
-        return;
-      }
+      truncateOnly = lineCounter < count;
     }
 
-    // After disposing reader, the underlying stream position is now synced to readPosition
-    // No need for additional Seek
+    // Seek to start, flush to release internal buffers before SetLength
+    stream.Position = 0;
+    stream.Flush();
+
+    if (truncateOnly) {
+      stream.Position = preambleSize;
+      stream.SetLength(preambleSize);
+      return;
+    }
 
     var writePosition = preambleSize;
 
@@ -3871,6 +4092,10 @@ public static partial class FileInfoExtensions {
       writePosition += bytesRead;
     }
 
+    // Seek to start, flush, then seek to write position to release internal buffers
+    stream.Position = 0;
+    stream.Flush();
+    stream.Position = writePosition;
     stream.SetLength(writePosition);
   }
 
@@ -3879,7 +4104,25 @@ public static partial class FileInfoExtensions {
     if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
-    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var truncatePosition = _TryFastRemoveFirstLinesCore(stream, count, encoding, newLine);
+    if (truncatePosition == _FAST_PATH_FALLBACK) {
+      stream.Dispose();
+      return false;
+    }
+
+    _TruncateFileWithReopen(@this, stream, truncatePosition);
+    return true;
+  }
+
+  /// <summary>
+  ///   Core implementation for fast remove-first-lines. Returns the truncate position or a sentinel value.
+  /// </summary>
+  /// <returns>
+  ///   <see cref="_FAST_PATH_FALLBACK"/> if should fall back to slow path;
+  ///   >= 0 as the truncate position to apply (including preambleSize if file has fewer lines than requested).
+  /// </returns>
+  private static long _TryFastRemoveFirstLinesCore(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
     var fileLength = stream.Length;
 
     // Detect preamble size and encoding type from BOM
@@ -3904,7 +4147,7 @@ public static partial class FileInfoExtensions {
       if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
         utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
       else if (!_IsAsciiCompatibleEncoding(encoding))
-        return false; // Unsupported encoding
+        return _FAST_PATH_FALLBACK;
 
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
@@ -3927,27 +4170,25 @@ public static partial class FileInfoExtensions {
     } else {
       // UTF-16 with non-All mode falls back to slow path
       if (utf16Endianness.HasValue)
-        return false;
+        return _FAST_PATH_FALLBACK;
       // Resolve AutoDetect by scanning file content for line endings
       var actualMode = newLine;
       if (actualMode == LineBreakMode.AutoDetect) {
         actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
         if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-          return false; // Can't use fast path for mixed line endings
+          return _FAST_PATH_FALLBACK;
       }
 
       // Only support simple line endings
       if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
-        return false;
+        return _FAST_PATH_FALLBACK;
 
       // Scan forward to find the position after N lines
       readPosition = _ScanForwardForLineEnd(stream, fileLength, preambleSize, lineEndingBytes, count);
     }
-    if (readPosition < 0) {
+    if (readPosition < 0)
       // File has fewer lines than requested, truncate to just the preamble
-      stream.SetLength(preambleSize);
-      return true;
-    }
+      return preambleSize;
 
     // Copy remaining data from readPosition to preambleSize
     var writePosition = preambleSize;
@@ -3967,8 +4208,8 @@ public static partial class FileInfoExtensions {
       writePosition += bytesRead;
     }
 
-    stream.SetLength(writePosition);
-    return true;
+    stream.Flush();
+    return writePosition;
   }
 
   // Private helpers for RemoveLastLines
@@ -3987,24 +4228,38 @@ public static partial class FileInfoExtensions {
 
   private static void _RemoveLastLinesForward(FileInfo @this, int count, Encoding encoding, LineBreakMode newLine) {
     using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    _RemoveLastLinesOnStream(stream, count, encoding, newLine);
+  }
+
+  /// <summary>
+  ///   Removes the last N lines from an already-open stream using forward scanning.
+  ///   The stream must support reading, writing, and seeking.
+  /// </summary>
+  internal static void _RemoveLastLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
     var linePositions = new long[count];
     var index = 0;
+    long truncate;
 
-    CustomTextReader.Initialized reader = encoding == null
-        ? new(stream, true, newLine)
-        : new(stream, encoding, newLine)
-      ;
+    using (CustomTextReader.Initialized reader = encoding == null
+             ? new(stream, true, newLine)
+             : new(stream, encoding, newLine)) {
 
-    for (;;) {
-      var startOfLine = reader.Position;
-      if (reader.ReadLine() == null)
-        break;
+      for (;;) {
+        var startOfLine = reader.Position;
+        if (reader.ReadLine() == null)
+          break;
 
-      linePositions[index] = ++startOfLine;
-      index = ++index % linePositions.Length;
+        linePositions[index] = ++startOfLine;
+        index = ++index % linePositions.Length;
+      }
+
+      truncate = Math.Max(reader.PreambleSize, linePositions[index] - 1);
     }
 
-    var truncate = Math.Max(reader.PreambleSize, linePositions[index] - 1);
+    // Seek to start, flush, then seek to truncate position to release internal buffers
+    stream.Position = 0;
+    stream.Flush();
+    stream.Position = truncate;
     stream.SetLength(truncate);
   }
 
@@ -4018,7 +4273,29 @@ public static partial class FileInfoExtensions {
     if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
       return false;
 
-    using var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var stream = @this.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var truncatePosition = _TryFastRemoveLastLinesCore(stream, count, encoding, newLine);
+    if (truncatePosition == _FAST_PATH_FALLBACK) {
+      stream.Dispose();
+      return false; // Fall back to slow path
+    }
+
+    _TruncateFileWithReopen(@this, stream, truncatePosition);
+    return true;
+  }
+
+  /// <summary>
+  ///   Core implementation for fast remove-last-lines. Returns the truncate position or a sentinel value.
+  /// </summary>
+  /// <returns>
+  ///   <see cref="_FAST_PATH_FALLBACK"/> if should fall back to slow path;
+  ///   >= 0 as the truncate position to apply (including preambleSize if file has fewer lines than requested).
+  /// </returns>
+  private static long _TryFastRemoveLastLinesCore(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
+    // For explicit modes (except All), verify we support them before opening the file
+    if (newLine != LineBreakMode.AutoDetect && newLine != LineBreakMode.All && !_TryGetLineEndingBytes(newLine, out _))
+      return _FAST_PATH_FALLBACK;
+
     var fileLength = stream.Length;
 
     // Detect preamble size and encoding type from BOM
@@ -4043,7 +4320,7 @@ public static partial class FileInfoExtensions {
       if (encodingName.Contains("utf-16") || encodingName.Contains("unicodefffe") || encodingName == "utf-16be")
         utf16Endianness = encodingName.Contains("be") || encodingName == "unicodefffe" ? Utf16Endianness.BigEndian : Utf16Endianness.LittleEndian;
       else if (!_IsAsciiCompatibleEncoding(encoding))
-        return false; // Unsupported encoding
+        return _FAST_PATH_FALLBACK; // Unsupported encoding
 
       var preamble = encoding.GetPreamble();
       if (preamble.Length > 0 && bomRead >= preamble.Length) {
@@ -4064,38 +4341,48 @@ public static partial class FileInfoExtensions {
       else
         lineStartPositions = _ScanBackwardsForLineStartsAllPatterns(stream, fileLength, preambleSize, count);
 
-      if (lineStartPositions == null || lineStartPositions.Length == 0) {
+      if (lineStartPositions == null || lineStartPositions.Length == 0)
         // File has fewer lines than requested - truncate to just preamble
-        stream.SetLength(preambleSize);
-        return true;
-      }
+        return preambleSize;
     } else {
       // UTF-16 with non-All mode falls back to slow path
       if (utf16Endianness.HasValue)
-        return false;
+        return _FAST_PATH_FALLBACK;
       // Resolve AutoDetect by scanning file content for line endings
       var actualMode = newLine;
       if (actualMode == LineBreakMode.AutoDetect) {
         actualMode = _DetectLineBreakModeFromStream(stream, preambleSize);
         if (actualMode == LineBreakMode.None || actualMode == LineBreakMode.All)
-          return false; // Can't use fast path for mixed line endings
+          return _FAST_PATH_FALLBACK; // Can't use fast path for mixed line endings
       }
 
       // Only support simple single-byte or two-byte line endings
       if (!_TryGetLineEndingBytes(actualMode, out var lineEndingBytes))
-        return false;
+        return _FAST_PATH_FALLBACK;
 
       // Scan backwards to find the start of the lines to remove
       lineStartPositions = _ScanBackwardsForLineStarts(stream, fileLength, preambleSize, lineEndingBytes, count);
-      if (lineStartPositions == null) {
+      if (lineStartPositions == null)
         // File has fewer lines than requested - truncate to just preamble
-        stream.SetLength(preambleSize);
-        return true;
-      }
+        return preambleSize;
     }
 
     // Truncate at the start of the first line we want to remove
-    stream.SetLength(lineStartPositions[0]);
+    stream.Flush();
+    return lineStartPositions[0];
+  }
+
+  /// <summary>
+  ///   Attempts to remove the last N lines from an already-open stream using fast reverse byte scanning.
+  ///   Works for simple line endings (CrLf, Lf, Cr) and LineBreakMode.All with ASCII-compatible and UTF-16 encodings.
+  /// </summary>
+  /// <returns><see langword="true"/> if the operation was performed; otherwise <see langword="false"/> to fall back to forward scanning.</returns>
+  internal static bool _TryFastRemoveLastLinesOnStream(Stream stream, int count, Encoding encoding, LineBreakMode newLine) {
+    var truncatePosition = _TryFastRemoveLastLinesCore(stream, count, encoding, newLine);
+    if (truncatePosition < 0)
+      return false;
+
+    stream.SetLength(truncatePosition);
     return true;
   }
 
