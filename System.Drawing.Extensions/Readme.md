@@ -382,6 +382,11 @@ Adaptive quantizers analyze the image to generate an optimal palette for each sp
 | [`FuzzyCMeansQuantizer`](https://en.wikipedia.org/wiki/Fuzzy_clustering#Fuzzy_C-means_clustering)                | J.C. Bezdek           | 1981 | Clustering | [Pattern Recognition](https://doi.org/10.1007/978-1-4757-0450-1). [Ref](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/cluster/_kmeans.py) |
 | [`PopularityQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Popularity_algorithm)                   | -                     | -    | Histogram  | [Most frequent colors](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c) |
 | [`UniformQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Uniform_quantization)                      | -                     | -    | Fixed      | [Uniform RGB grid](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)  |
+| [`HierarchicalCompetitiveLearningQuantizer`](https://doi.org/10.1016/S0167-8655%2897%2900116-3)                       | P. Scheunders         | 1997 | Clustering | [Hierarchical CL](https://doi.org/10.1016/S0167-8655(97)00116-3) - initialization-independent progressive splitting |
+| [`GeneticCMeansQuantizer`](https://doi.org/10.1016/S0167-8655%2897%2900116-3)                                         | P. Scheunders         | 1997 | Clustering | [Genetic Algorithm + C-Means](https://doi.org/10.1016/S0167-8655(97)00116-3) - global optimization avoids local optima |
+| [`EnhancedOctreeQuantizer`](https://leptonica.github.io/leptonica/colorquant.html)                                | D.S. Bloomberg        | 2008 | Tree       | [Enhanced Octree](https://leptonica.github.io/leptonica/colorquant.html) - variance tracking, adaptive thresholds |
+| [`OctreeSomQuantizer`](https://doi.org/10.14311/NNW.2015.25.006)                                                  | Park, Kim, Cha        | 2015 | Neural     | [Octree-SOM](https://doi.org/10.14311/NNW.2015.25.006) - two-rate learning reduces color loss |
+| [`HuffmanQuantizer`](https://en.wikipedia.org/wiki/Huffman_coding)                                                | -                     | -    | Clustering | Huffman-inspired bottom-up merging - preserves dominant colors exactly |
 
 #### Quantizer Parameters
 
@@ -415,6 +420,24 @@ Adaptive quantizers analyze the image to generate an optimal palette for each sp
 | **FuzzyCMeansQuantizer**            | `MaxIterations`         | `int`   | `100`     | 10-500       | Clustering iterations                            |
 |                                     | `Fuzziness`             | `float` | `2.0f`    | 1.1-5        | Cluster overlap (higher = softer)                |
 |                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
+| **HierarchicalCompetitiveLearningQuantizer** | `EpochsPerSplit` | `int`   | `5`       | 1-20         | CL training epochs after each cluster split      |
+|                                     | `InitialLearningRate`   | `float` | `0.1f`    | 0.01-0.5     | Initial learning rate for CL                     |
+|                                     | `MaxSampleSize`         | `int`   | `8192`    | 1000-100000  | Maximum histogram entries to process             |
+| **GeneticCMeansQuantizer**          | `PopulationSize`        | `int`   | `20`      | 10-100       | Number of candidate palettes                     |
+|                                     | `Generations`           | `int`   | `50`      | 10-500       | Number of generations to evolve                  |
+|                                     | `TournamentSize`        | `int`   | `3`       | 2-10         | Tournament selection size                        |
+|                                     | `MutationSigma`         | `float` | `10.0f`   | 1-50         | Gaussian mutation standard deviation             |
+|                                     | `EliteCount`            | `int`   | `2`       | 0-10         | Elite individuals preserved each generation      |
+|                                     | `CMeansIterationsPerOffspring` | `int` | `3`   | 1-10         | C-Means iterations per offspring                 |
+|                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
+| **EnhancedOctreeQuantizer**         | `MaxLevel`              | `int`   | `5`       | 3-7          | Tree depth (2^level max leaves)                  |
+|                                     | `ReservedLevel2Colors`  | `int`   | `64`      | 0-128        | Colors reserved at level 2 for coverage          |
+| **OctreeSomQuantizer**              | `MaxEpochs`             | `int`   | `50`      | 10-200       | SOM training epochs                              |
+|                                     | `WinnerLearningRate`    | `float` | `0.1f`    | 0.01-0.5     | Learning rate for BMU                            |
+|                                     | `NeighborLearningRate`  | `float` | `0.001f`  | 0.0001-0.01  | Learning rate for neighbors (1% of winner)       |
+|                                     | `MaxSampleSize`         | `int`   | `8192`    | 1000-100000  | Maximum histogram entries to process             |
+| **HuffmanQuantizer**                | `CandidatesToExamine`   | `int`   | `20`      | 5-100        | Top candidates for merge selection               |
+|                                     | `SimilarityWeight`      | `float` | `10000.0f`| 100-100000   | Balance frequency vs. similarity in merge        |
 
 ### Quantizer Wrappers
 
