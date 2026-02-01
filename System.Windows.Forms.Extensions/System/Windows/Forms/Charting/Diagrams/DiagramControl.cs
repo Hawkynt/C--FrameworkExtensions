@@ -43,31 +43,6 @@ namespace System.Windows.Forms.Charting.Diagrams;
 public class DiagramControl : Control {
   #region Fields
 
-  private DiagramType _diagramType = DiagramType.Network;
-  private DiagramRenderer _customRenderer;
-
-  private string _title;
-  private string _subtitle;
-  private Font _titleFont;
-  private Font _subtitleFont;
-  private Color _titleColor = Color.Black;
-  private Color _subtitleColor = Color.Gray;
-  private DiagramColorPalette _colorPalette = DiagramColorPalette.Default;
-  private Color[] _customColors;
-  private bool _enableTooltips = true;
-  private DiagramTooltipTrigger _tooltipTrigger = DiagramTooltipTrigger.Hover;
-  private DiagramSelectionMode _selectionMode = DiagramSelectionMode.None;
-  private bool _enableAnimation;
-  private DiagramAnimationStyle _animationStyle = DiagramAnimationStyle.Grow;
-  private int _animationDuration = 500;
-  private DiagramLegendPosition _legendPosition = DiagramLegendPosition.Right;
-  private bool _showLegend = true;
-
-  private int _padding = 10;
-  private Color _plotAreaBackground = Color.White;
-  private Color _plotAreaBorderColor = Color.LightGray;
-  private int _plotAreaBorderWidth = 1;
-
   private ToolTip _toolTip;
   private readonly Dictionary<object, RectangleF> _hitTestRects = new();
   private DiagramNode _hoveredNode;
@@ -86,20 +61,13 @@ public class DiagramControl : Control {
   // Zoom and pan state
   private float _zoomLevel = 1.0f;
   private PointF _panOffset = PointF.Empty;
-  private bool _enableZoom = true;
-  private bool _showZoomIndicator;
-  private DiagramCornerPosition _zoomIndicatorPosition = DiagramCornerPosition.BottomRight;
   private bool _isUserZoomed;
-  private float _minZoom = 0.1f;
-  private float _maxZoom = 10.0f;
-  private float _zoomStep = 0.1f;
   private bool _isPanning;
   private Point _lastPanPoint;
   private bool _isDraggingSlider;
   private RectangleF _zoomSliderTrackRect;
   private RectangleF _zoomTextRect;
   private TextBox _zoomInputBox;
-  private bool _showZoomSlider = true;
 
   private static readonly Dictionary<DiagramType, DiagramRenderer> RendererCache = new();
 
@@ -265,23 +233,23 @@ public class DiagramControl : Control {
   [Description("The type of diagram to display.")]
   [DefaultValue(DiagramType.Network)]
   public DiagramType DiagramType {
-    get => this._diagramType;
+    get;
     set {
-      if (this._diagramType == value)
+      if (field == value)
         return;
-      this._diagramType = value;
+      field = value;
       this._StartAnimation();
       this.Invalidate();
     }
-  }
+  } = DiagramType.Network;
 
   /// <summary>Gets or sets a custom renderer (overrides DiagramType).</summary>
   [Browsable(false)]
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public DiagramRenderer CustomRenderer {
-    get => this._customRenderer;
+    get;
     set {
-      this._customRenderer = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -530,11 +498,11 @@ public class DiagramControl : Control {
   [Description("The title displayed at the top of the diagram.")]
   [DefaultValue(null)]
   public string Title {
-    get => this._title;
+    get;
     set {
-      if (this._title == value)
+      if (field == value)
         return;
-      this._title = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -544,11 +512,11 @@ public class DiagramControl : Control {
   [Description("The subtitle displayed below the title.")]
   [DefaultValue(null)]
   public string Subtitle {
-    get => this._subtitle;
+    get;
     set {
-      if (this._subtitle == value)
+      if (field == value)
         return;
-      this._subtitle = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -557,9 +525,9 @@ public class DiagramControl : Control {
   [Category("Appearance")]
   [Description("The font for the diagram title.")]
   public Font TitleFont {
-    get => this._titleFont;
+    get;
     set {
-      this._titleFont = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -568,9 +536,9 @@ public class DiagramControl : Control {
   [Category("Appearance")]
   [Description("The font for the diagram subtitle.")]
   public Font SubtitleFont {
-    get => this._subtitleFont;
+    get;
     set {
-      this._subtitleFont = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -579,43 +547,43 @@ public class DiagramControl : Control {
   [Category("Appearance")]
   [Description("The color of the diagram title.")]
   public Color TitleColor {
-    get => this._titleColor;
+    get;
     set {
-      this._titleColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the subtitle color.</summary>
   [Category("Appearance")]
   [Description("The color of the diagram subtitle.")]
   public Color SubtitleColor {
-    get => this._subtitleColor;
+    get;
     set {
-      this._subtitleColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.Gray;
 
   /// <summary>Gets or sets the color palette.</summary>
   [Category("Appearance")]
   [Description("The color palette for diagram elements.")]
   [DefaultValue(DiagramColorPalette.Default)]
   public DiagramColorPalette ColorPalette {
-    get => this._colorPalette;
+    get;
     set {
-      this._colorPalette = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = DiagramColorPalette.Default;
 
   /// <summary>Gets or sets custom colors (when ColorPalette is Custom).</summary>
   [Category("Appearance")]
   [Description("Custom colors for diagram elements.")]
   public Color[] CustomColors {
-    get => this._customColors;
+    get;
     set {
-      this._customColors = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -625,60 +593,51 @@ public class DiagramControl : Control {
   [Description("Whether to show the legend.")]
   [DefaultValue(true)]
   public bool ShowLegend {
-    get => this._showLegend;
+    get;
     set {
-      this._showLegend = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets the legend position.</summary>
   [Category("Legend")]
   [Description("The position of the legend.")]
   [DefaultValue(DiagramLegendPosition.Right)]
   public DiagramLegendPosition LegendPosition {
-    get => this._legendPosition;
+    get;
     set {
-      this._legendPosition = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = DiagramLegendPosition.Right;
 
   /// <summary>Gets or sets whether to enable tooltips.</summary>
   [Category("Behavior")]
   [Description("Whether to show tooltips on hover.")]
   [DefaultValue(true)]
-  public bool EnableTooltips {
-    get => this._enableTooltips;
-    set => this._enableTooltips = value;
-  }
+  public bool EnableTooltips { get; set; } = true;
 
   /// <summary>Gets or sets the tooltip trigger mode.</summary>
   [Category("Behavior")]
   [Description("How tooltips are triggered.")]
   [DefaultValue(DiagramTooltipTrigger.Hover)]
-  public DiagramTooltipTrigger TooltipTrigger {
-    get => this._tooltipTrigger;
-    set => this._tooltipTrigger = value;
-  }
+  public DiagramTooltipTrigger TooltipTrigger { get; set; } = DiagramTooltipTrigger.Hover;
 
   /// <summary>Gets or sets the selection mode.</summary>
   [Category("Behavior")]
   [Description("The selection mode for diagram elements.")]
   [DefaultValue(DiagramSelectionMode.None)]
-  public DiagramSelectionMode SelectionMode {
-    get => this._selectionMode;
-    set => this._selectionMode = value;
-  }
+  public DiagramSelectionMode SelectionMode { get; set; } = DiagramSelectionMode.None;
 
   /// <summary>Gets or sets whether to enable animation.</summary>
   [Category("Behavior")]
   [Description("Whether to animate diagram transitions.")]
   [DefaultValue(false)]
   public bool EnableAnimation {
-    get => this._enableAnimation;
+    get;
     set {
-      this._enableAnimation = value;
+      field = value;
       if (value)
         this._animationProgress = 0;
     }
@@ -688,65 +647,62 @@ public class DiagramControl : Control {
   [Category("Behavior")]
   [Description("The style of animation.")]
   [DefaultValue(DiagramAnimationStyle.Grow)]
-  public DiagramAnimationStyle AnimationStyle {
-    get => this._animationStyle;
-    set => this._animationStyle = value;
-  }
+  public DiagramAnimationStyle AnimationStyle { get; set; } = DiagramAnimationStyle.Grow;
 
   /// <summary>Gets or sets the animation duration in milliseconds.</summary>
   [Category("Behavior")]
   [Description("The duration of animations in milliseconds.")]
   [DefaultValue(500)]
   public int AnimationDuration {
-    get => this._animationDuration;
-    set => this._animationDuration = Math.Max(0, value);
-  }
+    get;
+    set => field = Math.Max(0, value);
+  } = 500;
 
   /// <summary>Gets or sets the padding around the diagram.</summary>
   [Category("Layout")]
   [Description("The padding around the diagram in pixels.")]
   [DefaultValue(10)]
   public int DiagramPadding {
-    get => this._padding;
+    get;
     set {
-      this._padding = Math.Max(0, value);
+      field = Math.Max(0, value);
       this.Invalidate();
     }
-  }
+  } = 10;
 
   /// <summary>Gets or sets the plot area background color.</summary>
   [Category("Appearance")]
   [Description("The background color of the plot area.")]
   public Color PlotAreaBackground {
-    get => this._plotAreaBackground;
+    get;
     set {
-      this._plotAreaBackground = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.White;
 
   /// <summary>Gets or sets the plot area border color.</summary>
   [Category("Appearance")]
   [Description("The border color of the plot area.")]
   public Color PlotAreaBorderColor {
-    get => this._plotAreaBorderColor;
+    get;
     set {
-      this._plotAreaBorderColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.LightGray;
 
   /// <summary>Gets or sets the plot area border width.</summary>
   [Category("Appearance")]
   [Description("The border width of the plot area.")]
   [DefaultValue(1)]
   public int PlotAreaBorderWidth {
-    get => this._plotAreaBorderWidth;
+    get;
     set {
-      this._plotAreaBorderWidth = Math.Max(0, value);
+      field = Math.Max(0, value);
       this.Invalidate();
     }
-  }
+  } = 1;
 
   #region Zoom Properties
 
@@ -757,7 +713,7 @@ public class DiagramControl : Control {
   public float ZoomLevel {
     get => this._zoomLevel;
     set {
-      value = Math.Max(this._minZoom, Math.Min(this._maxZoom, value));
+      value = Math.Max(this.MinZoom, Math.Min(this.MaxZoom, value));
       if (Math.Abs(this._zoomLevel - value) < 0.0001f)
         return;
       this._zoomLevel = value;
@@ -770,19 +726,16 @@ public class DiagramControl : Control {
   [Category("Zoom")]
   [Description("Whether to enable mouse wheel zooming.")]
   [DefaultValue(true)]
-  public bool EnableZoom {
-    get => this._enableZoom;
-    set => this._enableZoom = value;
-  }
+  public bool EnableZoom { get; set; } = true;
 
   /// <summary>Gets or sets whether to show the zoom indicator.</summary>
   [Category("Zoom")]
   [Description("Whether to show a zoom level indicator in a corner.")]
   [DefaultValue(false)]
   public bool ShowZoomIndicator {
-    get => this._showZoomIndicator;
+    get;
     set {
-      this._showZoomIndicator = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -792,39 +745,39 @@ public class DiagramControl : Control {
   [Description("The corner position of the zoom indicator.")]
   [DefaultValue(DiagramCornerPosition.BottomRight)]
   public DiagramCornerPosition ZoomIndicatorPosition {
-    get => this._zoomIndicatorPosition;
+    get;
     set {
-      this._zoomIndicatorPosition = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = DiagramCornerPosition.BottomRight;
 
   /// <summary>Gets or sets the minimum zoom level.</summary>
   [Category("Zoom")]
   [Description("The minimum allowed zoom level.")]
   [DefaultValue(0.1f)]
   public float MinZoom {
-    get => this._minZoom;
-    set => this._minZoom = Math.Max(0.01f, value);
-  }
+    get;
+    set => field = Math.Max(0.01f, value);
+  } = 0.1f;
 
   /// <summary>Gets or sets the maximum zoom level.</summary>
   [Category("Zoom")]
   [Description("The maximum allowed zoom level.")]
   [DefaultValue(10.0f)]
   public float MaxZoom {
-    get => this._maxZoom;
-    set => this._maxZoom = Math.Max(this._minZoom, value);
-  }
+    get;
+    set => field = Math.Max(this.MinZoom, value);
+  } = 10.0f;
 
   /// <summary>Gets or sets the zoom step for mouse wheel.</summary>
   [Category("Zoom")]
   [Description("The amount to zoom per mouse wheel notch.")]
   [DefaultValue(0.1f)]
   public float ZoomStep {
-    get => this._zoomStep;
-    set => this._zoomStep = Math.Max(0.01f, value);
-  }
+    get;
+    set => field = Math.Max(0.01f, value);
+  } = 0.1f;
 
   /// <summary>Gets the current pan offset.</summary>
   [Browsable(false)]
@@ -841,12 +794,12 @@ public class DiagramControl : Control {
   [Description("Whether to show a zoom slider next to the zoom indicator.")]
   [DefaultValue(true)]
   public bool ShowZoomSlider {
-    get => this._showZoomSlider;
+    get;
     set {
-      this._showZoomSlider = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = true;
 
   #endregion
 
@@ -933,7 +886,7 @@ public class DiagramControl : Control {
   /// </summary>
   public new void Refresh() {
     base.Refresh();
-    if (this._enableAnimation)
+    if (this.EnableAnimation)
       this._StartAnimation();
     this.Invalidate();
   }
@@ -1003,7 +956,7 @@ public class DiagramControl : Control {
   /// Sets zoom level centered on a specific point.
   /// </summary>
   public void ZoomAt(float newZoom, PointF center) {
-    newZoom = Math.Max(this._minZoom, Math.Min(this._maxZoom, newZoom));
+    newZoom = Math.Max(this.MinZoom, Math.Min(this.MaxZoom, newZoom));
 
     // Calculate the point in content coordinates before zoom
     var contentX = (center.X - this._plotArea.Left - this._panOffset.X) / this._zoomLevel;
@@ -1040,10 +993,10 @@ public class DiagramControl : Control {
   protected override void OnMouseWheel(MouseEventArgs e) {
     base.OnMouseWheel(e);
 
-    if (!this._enableZoom || !this._plotArea.Contains(e.Location))
+    if (!this.EnableZoom || !this._plotArea.Contains(e.Location))
       return;
 
-    var delta = e.Delta > 0 ? this._zoomStep : -this._zoomStep;
+    var delta = e.Delta > 0 ? this.ZoomStep : -this.ZoomStep;
     var newZoom = this._zoomLevel + delta * this._zoomLevel; // Proportional zoom
 
     this.ZoomAt(newZoom, e.Location);
@@ -1055,7 +1008,7 @@ public class DiagramControl : Control {
 
     if (e.Button == MouseButtons.Left) {
       // Check zoom slider drag start
-      if (this._showZoomIndicator && this._showZoomSlider) {
+      if (this.ShowZoomIndicator && this.ShowZoomSlider) {
         var thumbExtent = new RectangleF(
           this._zoomSliderTrackRect.Left - 6,
           this._zoomSliderTrackRect.Top - 10,
@@ -1118,7 +1071,7 @@ public class DiagramControl : Control {
     }
 
     // Handle zoom indicator interaction
-    if (e.Button == MouseButtons.Left && this._showZoomIndicator) {
+    if (e.Button == MouseButtons.Left && this.ShowZoomIndicator) {
       this._HandleZoomIndicatorClick(e.Location);
     }
 
@@ -1173,16 +1126,16 @@ public class DiagramControl : Control {
   #region Private Methods
 
   private DiagramRenderer _GetRenderer() {
-    if (this._customRenderer != null)
-      return this._customRenderer;
+    if (this.CustomRenderer != null)
+      return this.CustomRenderer;
 
-    if (RendererCache.TryGetValue(this._diagramType, out var renderer))
+    if (RendererCache.TryGetValue(this.DiagramType, out var renderer))
       return renderer;
 
     // Create and cache default renderers
-    renderer = this._CreateDefaultRenderer(this._diagramType);
+    renderer = this._CreateDefaultRenderer(this.DiagramType);
     if (renderer != null)
-      RendererCache[this._diagramType] = renderer;
+      RendererCache[this.DiagramType] = renderer;
 
     return renderer;
   }
@@ -1267,32 +1220,32 @@ public class DiagramControl : Control {
   }
 
   private void _CalculateLayout(Graphics g, RectangleF bounds) {
-    var left = bounds.Left + this._padding;
-    var top = bounds.Top + this._padding;
-    var right = bounds.Right - this._padding;
-    var bottom = bounds.Bottom - this._padding;
+    var left = bounds.Left + this.DiagramPadding;
+    var top = bounds.Top + this.DiagramPadding;
+    var right = bounds.Right - this.DiagramPadding;
+    var bottom = bounds.Bottom - this.DiagramPadding;
 
     // Title area
-    if (!string.IsNullOrEmpty(this._title)) {
-      var titleFont = this._titleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
-      var titleSize = g.MeasureString(this._title, titleFont);
+    if (!string.IsNullOrEmpty(this.Title)) {
+      var titleFont = this.TitleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
+      var titleSize = g.MeasureString(this.Title, titleFont);
       top += titleSize.Height + 5;
     }
 
     // Subtitle area
-    if (!string.IsNullOrEmpty(this._subtitle)) {
-      var subtitleFont = this._subtitleFont ?? this.Font;
-      var subtitleSize = g.MeasureString(this._subtitle, subtitleFont);
+    if (!string.IsNullOrEmpty(this.Subtitle)) {
+      var subtitleFont = this.SubtitleFont ?? this.Font;
+      var subtitleSize = g.MeasureString(this.Subtitle, subtitleFont);
       top += subtitleSize.Height + 5;
     }
 
     // Legend area
-    if (this._showLegend && this._legendPosition != DiagramLegendPosition.None) {
+    if (this.ShowLegend && this.LegendPosition != DiagramLegendPosition.None) {
       this._legendItems = this._GetLegendItems();
       if (this._legendItems.Count > 0) {
         var legendSize = this._CalculateLegendSize(g, this._legendItems);
 
-        switch (this._legendPosition) {
+        switch (this.LegendPosition) {
           case DiagramLegendPosition.Right:
           case DiagramLegendPosition.TopRight:
           case DiagramLegendPosition.BottomRight:
@@ -1323,14 +1276,14 @@ public class DiagramControl : Control {
     this._DrawTitle(context.Graphics);
 
     // Draw plot area background
-    if (this._plotAreaBackground != Color.Transparent) {
-      using var bgBrush = new SolidBrush(this._plotAreaBackground);
+    if (this.PlotAreaBackground != Color.Transparent) {
+      using var bgBrush = new SolidBrush(this.PlotAreaBackground);
       context.Graphics.FillRectangle(bgBrush, this._plotArea);
     }
 
     // Draw plot area border
-    if (this._plotAreaBorderWidth > 0) {
-      using var borderPen = new Pen(this._plotAreaBorderColor, this._plotAreaBorderWidth);
+    if (this.PlotAreaBorderWidth > 0) {
+      using var borderPen = new Pen(this.PlotAreaBorderColor, this.PlotAreaBorderWidth);
       context.Graphics.DrawRectangle(borderPen, this._plotArea.X, this._plotArea.Y, this._plotArea.Width, this._plotArea.Height);
     }
 
@@ -1372,11 +1325,11 @@ public class DiagramControl : Control {
     }
 
     // Draw legend
-    if (this._showLegend && this._legendPosition != DiagramLegendPosition.None && this._legendItems.Count > 0)
+    if (this.ShowLegend && this.LegendPosition != DiagramLegendPosition.None && this._legendItems.Count > 0)
       this._DrawLegend(context.Graphics, context.TotalBounds, this._legendItems);
 
     // Draw zoom indicator
-    if (this._showZoomIndicator)
+    if (this.ShowZoomIndicator)
       this._DrawZoomIndicator(context.Graphics);
   }
 
@@ -1384,13 +1337,13 @@ public class DiagramControl : Control {
     var zoomText = $"{this._zoomLevel * 100:F0}%";
     var textSize = g.MeasureString(zoomText, this.Font);
     var padding = 5f;
-    var sliderWidth = this._showZoomSlider ? 100f : 0f;
+    var sliderWidth = this.ShowZoomSlider ? 100f : 0f;
     var buttonSize = 18f;
-    var totalWidth = textSize.Width + padding * 4 + sliderWidth + (this._showZoomSlider ? buttonSize * 2 + padding * 2 : 0);
+    var totalWidth = textSize.Width + padding * 4 + sliderWidth + (this.ShowZoomSlider ? buttonSize * 2 + padding * 2 : 0);
     var indicatorHeight = Math.Max(textSize.Height, buttonSize) + padding * 2;
 
     float x, y;
-    switch (this._zoomIndicatorPosition) {
+    switch (this.ZoomIndicatorPosition) {
       case DiagramCornerPosition.TopLeft:
         x = this._plotArea.Left + padding;
         y = this._plotArea.Top + padding;
@@ -1422,7 +1375,7 @@ public class DiagramControl : Control {
     var currentX = x + padding;
     var centerY = y + indicatorHeight / 2;
 
-    if (this._showZoomSlider) {
+    if (this.ShowZoomSlider) {
       // Draw minus button
       var minusRect = new RectangleF(currentX, centerY - buttonSize / 2, buttonSize, buttonSize);
       this._DrawZoomButton(g, minusRect, "-", Color.FromArgb(220, 220, 220));
@@ -1437,7 +1390,7 @@ public class DiagramControl : Control {
         g.FillRectangle(trackBrush, trackRect);
 
       // Draw slider thumb position based on zoom level (logarithmic scale)
-      var normalizedZoom = (float)((Math.Log(this._zoomLevel) - Math.Log(this._minZoom)) / (Math.Log(this._maxZoom) - Math.Log(this._minZoom)));
+      var normalizedZoom = (float)((Math.Log(this._zoomLevel) - Math.Log(this.MinZoom)) / (Math.Log(this.MaxZoom) - Math.Log(this.MinZoom)));
       normalizedZoom = Math.Max(0, Math.Min(1, normalizedZoom));
       var thumbX = trackRect.Left + normalizedZoom * (trackRect.Width - 12);
       var thumbRect = new RectangleF(thumbX, centerY - 8, 12, 16);
@@ -1446,7 +1399,7 @@ public class DiagramControl : Control {
         g.FillRectangle(thumbBrush, thumbRect);
 
       // Draw 100% marker
-      var hundredPctPos = (float)((Math.Log(1.0) - Math.Log(this._minZoom)) / (Math.Log(this._maxZoom) - Math.Log(this._minZoom)));
+      var hundredPctPos = (float)((Math.Log(1.0) - Math.Log(this.MinZoom)) / (Math.Log(this.MaxZoom) - Math.Log(this.MinZoom)));
       var markerX = trackRect.Left + hundredPctPos * trackRect.Width;
       using (var markerPen = new Pen(Color.FromArgb(100, 100, 100), 1))
         g.DrawLine(markerPen, markerX, trackRect.Top - 2, markerX, trackRect.Bottom + 2);
@@ -1486,7 +1439,7 @@ public class DiagramControl : Control {
   }
 
   private void _HandleZoomIndicatorClick(Point location) {
-    if (!this._showZoomIndicator)
+    if (!this.ShowZoomIndicator)
       return;
 
     // Check text area click for manual input
@@ -1495,7 +1448,7 @@ public class DiagramControl : Control {
       return;
     }
 
-    if (!this._showZoomSlider)
+    if (!this.ShowZoomSlider)
       return;
 
     // Check slider track click
@@ -1526,7 +1479,7 @@ public class DiagramControl : Control {
     var normalized = (mouseX - this._zoomSliderTrackRect.Left) / this._zoomSliderTrackRect.Width;
     normalized = Math.Max(0, Math.Min(1, normalized));
     // Logarithmic scale
-    var logZoom = Math.Log(this._minZoom) + normalized * (Math.Log(this._maxZoom) - Math.Log(this._minZoom));
+    var logZoom = Math.Log(this.MinZoom) + normalized * (Math.Log(this.MaxZoom) - Math.Log(this.MinZoom));
     this.ZoomLevel = (float)Math.Exp(logZoom);
   }
 
@@ -1589,21 +1542,21 @@ public class DiagramControl : Control {
   }
 
   private void _DrawTitle(Graphics g) {
-    var y = (float)this._padding;
+    var y = (float)this.DiagramPadding;
 
-    if (!string.IsNullOrEmpty(this._title)) {
-      var titleFont = this._titleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
-      var titleSize = g.MeasureString(this._title, titleFont);
-      using var brush = new SolidBrush(this._titleColor);
-      g.DrawString(this._title, titleFont, brush, (this.Width - titleSize.Width) / 2, y);
+    if (!string.IsNullOrEmpty(this.Title)) {
+      var titleFont = this.TitleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
+      var titleSize = g.MeasureString(this.Title, titleFont);
+      using var brush = new SolidBrush(this.TitleColor);
+      g.DrawString(this.Title, titleFont, brush, (this.Width - titleSize.Width) / 2, y);
       y += titleSize.Height + 5;
     }
 
-    if (!string.IsNullOrEmpty(this._subtitle)) {
-      var subtitleFont = this._subtitleFont ?? this.Font;
-      var subtitleSize = g.MeasureString(this._subtitle, subtitleFont);
-      using var brush = new SolidBrush(this._subtitleColor);
-      g.DrawString(this._subtitle, subtitleFont, brush, (this.Width - subtitleSize.Width) / 2, y);
+    if (!string.IsNullOrEmpty(this.Subtitle)) {
+      var subtitleFont = this.SubtitleFont ?? this.Font;
+      var subtitleSize = g.MeasureString(this.Subtitle, subtitleFont);
+      using var brush = new SolidBrush(this.SubtitleColor);
+      g.DrawString(this.Subtitle, subtitleFont, brush, (this.Width - subtitleSize.Width) / 2, y);
     }
   }
 
@@ -1670,21 +1623,21 @@ public class DiagramControl : Control {
   }
 
   private RectangleF _GetLegendBounds(RectangleF totalBounds, SizeF legendSize) {
-    return this._legendPosition switch {
-      DiagramLegendPosition.Right => new RectangleF(totalBounds.Right - legendSize.Width - this._padding, this._plotArea.Top, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.Left => new RectangleF(totalBounds.Left + this._padding, this._plotArea.Top, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.Top => new RectangleF(totalBounds.Left + (totalBounds.Width - legendSize.Width) / 2, totalBounds.Top + this._padding, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.Bottom => new RectangleF(totalBounds.Left + (totalBounds.Width - legendSize.Width) / 2, totalBounds.Bottom - legendSize.Height - this._padding, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.TopRight => new RectangleF(totalBounds.Right - legendSize.Width - this._padding, totalBounds.Top + this._padding, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.TopLeft => new RectangleF(totalBounds.Left + this._padding, totalBounds.Top + this._padding, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.BottomRight => new RectangleF(totalBounds.Right - legendSize.Width - this._padding, totalBounds.Bottom - legendSize.Height - this._padding, legendSize.Width, legendSize.Height),
-      DiagramLegendPosition.BottomLeft => new RectangleF(totalBounds.Left + this._padding, totalBounds.Bottom - legendSize.Height - this._padding, legendSize.Width, legendSize.Height),
-      _ => new RectangleF(totalBounds.Right - legendSize.Width - this._padding, this._plotArea.Top, legendSize.Width, legendSize.Height)
+    return this.LegendPosition switch {
+      DiagramLegendPosition.Right => new RectangleF(totalBounds.Right - legendSize.Width - this.DiagramPadding, this._plotArea.Top, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.Left => new RectangleF(totalBounds.Left + this.DiagramPadding, this._plotArea.Top, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.Top => new RectangleF(totalBounds.Left + (totalBounds.Width - legendSize.Width) / 2, totalBounds.Top + this.DiagramPadding, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.Bottom => new RectangleF(totalBounds.Left + (totalBounds.Width - legendSize.Width) / 2, totalBounds.Bottom - legendSize.Height - this.DiagramPadding, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.TopRight => new RectangleF(totalBounds.Right - legendSize.Width - this.DiagramPadding, totalBounds.Top + this.DiagramPadding, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.TopLeft => new RectangleF(totalBounds.Left + this.DiagramPadding, totalBounds.Top + this.DiagramPadding, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.BottomRight => new RectangleF(totalBounds.Right - legendSize.Width - this.DiagramPadding, totalBounds.Bottom - legendSize.Height - this.DiagramPadding, legendSize.Width, legendSize.Height),
+      DiagramLegendPosition.BottomLeft => new RectangleF(totalBounds.Left + this.DiagramPadding, totalBounds.Bottom - legendSize.Height - this.DiagramPadding, legendSize.Width, legendSize.Height),
+      _ => new RectangleF(totalBounds.Right - legendSize.Width - this.DiagramPadding, this._plotArea.Top, legendSize.Width, legendSize.Height)
     };
   }
 
-  internal Color[] _GetColorPalette() => this._colorPalette switch {
-    DiagramColorPalette.Custom when this._customColors != null => this._customColors,
+  internal Color[] _GetColorPalette() => this.ColorPalette switch {
+    DiagramColorPalette.Custom when this.CustomColors != null => this.CustomColors,
     DiagramColorPalette.Pastel => new[] { Color.FromArgb(174, 198, 207), Color.FromArgb(255, 179, 186), Color.FromArgb(255, 223, 186), Color.FromArgb(255, 255, 186), Color.FromArgb(186, 255, 201), Color.FromArgb(186, 225, 255) },
     DiagramColorPalette.Bright => new[] { Color.Red, Color.Orange, Color.Yellow, Color.Green, Color.Blue, Color.Purple },
     DiagramColorPalette.Dark => new[] { Color.DarkRed, Color.DarkOrange, Color.DarkGoldenrod, Color.DarkGreen, Color.DarkBlue, Color.DarkViolet },
@@ -1697,7 +1650,7 @@ public class DiagramControl : Control {
 
   private void _HandleHover(Point location) {
     // Check legend hit
-    if (this._showLegend && this._legendItems.Count > 0) {
+    if (this.ShowLegend && this._legendItems.Count > 0) {
       var legendSize = this._CalculateLegendSize(this.CreateGraphics(), this._legendItems);
       var legendBounds = this._GetLegendBounds(this.ClientRectangle, legendSize);
       if (legendBounds.Contains(location)) {
@@ -1751,7 +1704,7 @@ public class DiagramControl : Control {
     this._hoveredLink = hoveredLink;
 
     if (changed) {
-      if (this._enableTooltips) {
+      if (this.EnableTooltips) {
         string tooltipText = null;
 
         if (hoveredNode != null) {
@@ -1806,7 +1759,7 @@ public class DiagramControl : Control {
   }
 
   private void _StartAnimation() {
-    if (!this._enableAnimation || this._animationDuration <= 0) {
+    if (!this.EnableAnimation || this.AnimationDuration <= 0) {
       this._animationProgress = 1.0;
       return;
     }
@@ -1826,7 +1779,7 @@ public class DiagramControl : Control {
 
   private void _OnAnimationTick(object sender, EventArgs e) {
     var elapsed = (DateTime.Now - this._animationStartTime).TotalMilliseconds;
-    this._animationProgress = Math.Min(1.0, elapsed / this._animationDuration);
+    this._animationProgress = Math.Min(1.0, elapsed / this.AnimationDuration);
 
     // Apply easing
     this._animationProgress = this._EaseOutCubic(this._animationProgress);

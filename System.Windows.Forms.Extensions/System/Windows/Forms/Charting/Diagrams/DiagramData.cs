@@ -64,31 +64,27 @@ public class DiagramNode {
 /// <summary>
 /// Collection of diagram nodes.
 /// </summary>
-public class DiagramNodeCollection : List<DiagramNode> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramNodeCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramNodeCollection(DiagramControl owner) : List<DiagramNode> {
   public new void Add(DiagramNode node) {
     base.Add(node);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramNode node) {
     var result = base.Remove(node);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramNode> nodes) {
     base.AddRange(nodes);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -134,31 +130,27 @@ public class DiagramEdge {
 /// <summary>
 /// Collection of diagram edges.
 /// </summary>
-public class DiagramEdgeCollection : List<DiagramEdge> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramEdgeCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramEdgeCollection(DiagramControl owner) : List<DiagramEdge> {
   public new void Add(DiagramEdge edge) {
     base.Add(edge);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramEdge edge) {
     var result = base.Remove(edge);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramEdge> edges) {
     base.AddRange(edges);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -200,31 +192,27 @@ public class DiagramSankeyLink {
 /// <summary>
 /// Collection of Sankey links.
 /// </summary>
-public class DiagramSankeyLinkCollection : List<DiagramSankeyLink> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramSankeyLinkCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramSankeyLinkCollection(DiagramControl owner) : List<DiagramSankeyLink> {
   public new void Add(DiagramSankeyLink link) {
     base.Add(link);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramSankeyLink link) {
     var result = base.Remove(link);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramSankeyLink> links) {
     base.AddRange(links);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -273,31 +261,27 @@ public class DiagramHierarchyNode {
 /// <summary>
 /// Collection of hierarchical diagram nodes.
 /// </summary>
-public class DiagramHierarchyNodeCollection : List<DiagramHierarchyNode> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramHierarchyNodeCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramHierarchyNodeCollection(DiagramControl owner) : List<DiagramHierarchyNode> {
   public new void Add(DiagramHierarchyNode node) {
     base.Add(node);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramHierarchyNode node) {
     var result = base.Remove(node);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramHierarchyNode> nodes) {
     base.AddRange(nodes);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   /// <summary>
@@ -453,62 +437,54 @@ public class DiagramClassRelation {
 /// <summary>
 /// Collection of UML class nodes.
 /// </summary>
-public class DiagramClassNodeCollection : List<DiagramClassNode> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramClassNodeCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramClassNodeCollection(DiagramControl owner) : List<DiagramClassNode> {
   public new void Add(DiagramClassNode node) {
     base.Add(node);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramClassNode node) {
     var result = base.Remove(node);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramClassNode> nodes) {
     base.AddRange(nodes);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of UML class relations.
 /// </summary>
-public class DiagramClassRelationCollection : List<DiagramClassRelation> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramClassRelationCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramClassRelationCollection(DiagramControl owner) : List<DiagramClassRelation> {
   public new void Add(DiagramClassRelation relation) {
     base.Add(relation);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramClassRelation relation) {
     var result = base.Remove(relation);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<DiagramClassRelation> relations) {
     base.AddRange(relations);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -604,78 +580,66 @@ public class DiagramActivation {
 /// <summary>
 /// Collection of activations.
 /// </summary>
-public class DiagramActivationCollection : List<DiagramActivation> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramActivationCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramActivationCollection(DiagramControl owner) : List<DiagramActivation> {
   public new void Add(DiagramActivation activation) {
     base.Add(activation);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramActivation activation) {
     var result = base.Remove(activation);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of lifelines.
 /// </summary>
-public class DiagramLifelineCollection : List<DiagramLifeline> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramLifelineCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramLifelineCollection(DiagramControl owner) : List<DiagramLifeline> {
   public new void Add(DiagramLifeline lifeline) {
     base.Add(lifeline);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramLifeline lifeline) {
     var result = base.Remove(lifeline);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of messages.
 /// </summary>
-public class DiagramMessageCollection : List<DiagramMessage> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramMessageCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramMessageCollection(DiagramControl owner) : List<DiagramMessage> {
   public new void Add(DiagramMessage message) {
     base.Add(message);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramMessage message) {
     var result = base.Remove(message);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -745,52 +709,44 @@ public class DiagramUseCase {
 /// <summary>
 /// Collection of actors.
 /// </summary>
-public class DiagramActorCollection : List<DiagramActor> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramActorCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramActorCollection(DiagramControl owner) : List<DiagramActor> {
   public new void Add(DiagramActor actor) {
     base.Add(actor);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramActor actor) {
     var result = base.Remove(actor);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of use cases.
 /// </summary>
-public class DiagramUseCaseCollection : List<DiagramUseCase> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramUseCaseCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramUseCaseCollection(DiagramControl owner) : List<DiagramUseCase> {
   public new void Add(DiagramUseCase useCase) {
     base.Add(useCase);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramUseCase useCase) {
     var result = base.Remove(useCase);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -934,104 +890,88 @@ public class DiagramPackage {
 /// <summary>
 /// Collection of deployment nodes.
 /// </summary>
-public class DiagramDeploymentNodeCollection : List<DiagramDeploymentNode> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramDeploymentNodeCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramDeploymentNodeCollection(DiagramControl owner) : List<DiagramDeploymentNode> {
   public new void Add(DiagramDeploymentNode node) {
     base.Add(node);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramDeploymentNode node) {
     var result = base.Remove(node);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of packages.
 /// </summary>
-public class DiagramPackageCollection : List<DiagramPackage> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramPackageCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramPackageCollection(DiagramControl owner) : List<DiagramPackage> {
   public new void Add(DiagramPackage package) {
     base.Add(package);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramPackage package) {
     var result = base.Remove(package);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of swimlanes.
 /// </summary>
-public class DiagramSwimlaneCollection : List<DiagramSwimlane> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramSwimlaneCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramSwimlaneCollection(DiagramControl owner) : List<DiagramSwimlane> {
   public new void Add(DiagramSwimlane swimlane) {
     base.Add(swimlane);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramSwimlane swimlane) {
     var result = base.Remove(swimlane);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of components.
 /// </summary>
-public class DiagramComponentCollection : List<DiagramComponent> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramComponentCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramComponentCollection(DiagramControl owner) : List<DiagramComponent> {
   public new void Add(DiagramComponent component) {
     base.Add(component);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramComponent component) {
     var result = base.Remove(component);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1169,78 +1109,66 @@ public class DiagramDataFlowElement {
 /// <summary>
 /// Collection of entities.
 /// </summary>
-public class DiagramEntityCollection : List<DiagramEntity> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramEntityCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramEntityCollection(DiagramControl owner) : List<DiagramEntity> {
   public new void Add(DiagramEntity entity) {
     base.Add(entity);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramEntity entity) {
     var result = base.Remove(entity);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of ER relationships.
 /// </summary>
-public class DiagramRelationshipCollection : List<DiagramRelationship> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramRelationshipCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramRelationshipCollection(DiagramControl owner) : List<DiagramRelationship> {
   public new void Add(DiagramRelationship relationship) {
     base.Add(relationship);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramRelationship relationship) {
     var result = base.Remove(relationship);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of data flow elements.
 /// </summary>
-public class DiagramDataFlowElementCollection : List<DiagramDataFlowElement> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramDataFlowElementCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramDataFlowElementCollection(DiagramControl owner) : List<DiagramDataFlowElement> {
   public new void Add(DiagramDataFlowElement element) {
     base.Add(element);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramDataFlowElement element) {
     var result = base.Remove(element);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1518,208 +1446,176 @@ public class DiagramKanbanCard {
 /// <summary>
 /// Collection of sets.
 /// </summary>
-public class DiagramSetCollection : List<DiagramSet> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramSetCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramSetCollection(DiagramControl owner) : List<DiagramSet> {
   public new void Add(DiagramSet set) {
     base.Add(set);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramSet set) {
     var result = base.Remove(set);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of set intersections.
 /// </summary>
-public class DiagramSetIntersectionCollection : List<DiagramSetIntersection> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramSetIntersectionCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramSetIntersectionCollection(DiagramControl owner) : List<DiagramSetIntersection> {
   public new void Add(DiagramSetIntersection intersection) {
     base.Add(intersection);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramSetIntersection intersection) {
     var result = base.Remove(intersection);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of quadrants.
 /// </summary>
-public class DiagramQuadrantCollection : List<DiagramQuadrant> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramQuadrantCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramQuadrantCollection(DiagramControl owner) : List<DiagramQuadrant> {
   public new void Add(DiagramQuadrant quadrant) {
     base.Add(quadrant);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramQuadrant quadrant) {
     var result = base.Remove(quadrant);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of matrix items.
 /// </summary>
-public class DiagramMatrixItemCollection : List<DiagramMatrixItem> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramMatrixItemCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramMatrixItemCollection(DiagramControl owner) : List<DiagramMatrixItem> {
   public new void Add(DiagramMatrixItem item) {
     base.Add(item);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramMatrixItem item) {
     var result = base.Remove(item);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of journey stages.
 /// </summary>
-public class DiagramJourneyStageCollection : List<DiagramJourneyStage> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramJourneyStageCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramJourneyStageCollection(DiagramControl owner) : List<DiagramJourneyStage> {
   public new void Add(DiagramJourneyStage stage) {
     base.Add(stage);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramJourneyStage stage) {
     var result = base.Remove(stage);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of BPMN elements.
 /// </summary>
-public class DiagramBPMNElementCollection : List<DiagramBPMNElement> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramBPMNElementCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramBPMNElementCollection(DiagramControl owner) : List<DiagramBPMNElement> {
   public new void Add(DiagramBPMNElement element) {
     base.Add(element);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramBPMNElement element) {
     var result = base.Remove(element);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of Kanban columns.
 /// </summary>
-public class DiagramKanbanColumnCollection : List<DiagramKanbanColumn> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramKanbanColumnCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramKanbanColumnCollection(DiagramControl owner) : List<DiagramKanbanColumn> {
   public new void Add(DiagramKanbanColumn column) {
     base.Add(column);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramKanbanColumn column) {
     var result = base.Remove(column);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of Kanban cards.
 /// </summary>
-public class DiagramKanbanCardCollection : List<DiagramKanbanCard> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramKanbanCardCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramKanbanCardCollection(DiagramControl owner) : List<DiagramKanbanCard> {
   public new void Add(DiagramKanbanCard card) {
     base.Add(card);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramKanbanCard card) {
     var result = base.Remove(card);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1850,104 +1746,88 @@ public class DiagramRequirementRelation {
 /// <summary>
 /// Collection of git commits.
 /// </summary>
-public class DiagramGitCommitCollection : List<DiagramGitCommit> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramGitCommitCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramGitCommitCollection(DiagramControl owner) : List<DiagramGitCommit> {
   public new void Add(DiagramGitCommit commit) {
     base.Add(commit);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramGitCommit commit) {
     var result = base.Remove(commit);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of git branches.
 /// </summary>
-public class DiagramGitBranchCollection : List<DiagramGitBranch> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramGitBranchCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramGitBranchCollection(DiagramControl owner) : List<DiagramGitBranch> {
   public new void Add(DiagramGitBranch branch) {
     base.Add(branch);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramGitBranch branch) {
     var result = base.Remove(branch);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of requirements.
 /// </summary>
-public class DiagramRequirementCollection : List<DiagramRequirement> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramRequirementCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramRequirementCollection(DiagramControl owner) : List<DiagramRequirement> {
   public new void Add(DiagramRequirement requirement) {
     base.Add(requirement);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramRequirement requirement) {
     var result = base.Remove(requirement);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of requirement relations.
 /// </summary>
-public class DiagramRequirementRelationCollection : List<DiagramRequirementRelation> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramRequirementRelationCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramRequirementRelationCollection(DiagramControl owner) : List<DiagramRequirementRelation> {
   public new void Add(DiagramRequirementRelation relation) {
     base.Add(relation);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramRequirementRelation relation) {
     var result = base.Remove(relation);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -2129,130 +2009,110 @@ public class DiagramSignalTransition {
 /// <summary>
 /// Collection of racks.
 /// </summary>
-public class DiagramRackCollection : List<DiagramRack> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramRackCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramRackCollection(DiagramControl owner) : List<DiagramRack> {
   public new void Add(DiagramRack rack) {
     base.Add(rack);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramRack rack) {
     var result = base.Remove(rack);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of rack devices.
 /// </summary>
-public class DiagramRackDeviceCollection : List<DiagramRackDevice> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramRackDeviceCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramRackDeviceCollection(DiagramControl owner) : List<DiagramRackDevice> {
   public new void Add(DiagramRackDevice device) {
     base.Add(device);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramRackDevice device) {
     var result = base.Remove(device);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of packet fields.
 /// </summary>
-public class DiagramPacketFieldCollection : List<DiagramPacketField> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramPacketFieldCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramPacketFieldCollection(DiagramControl owner) : List<DiagramPacketField> {
   public new void Add(DiagramPacketField field) {
     base.Add(field);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramPacketField field) {
     var result = base.Remove(field);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of byte fields.
 /// </summary>
-public class DiagramByteFieldCollection : List<DiagramByteField> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramByteFieldCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramByteFieldCollection(DiagramControl owner) : List<DiagramByteField> {
   public new void Add(DiagramByteField field) {
     base.Add(field);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramByteField field) {
     var result = base.Remove(field);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of signals.
 /// </summary>
-public class DiagramSignalCollection : List<DiagramSignal> {
-  private readonly DiagramControl _owner;
-
-  internal DiagramSignalCollection(DiagramControl owner) => this._owner = owner;
-
+public class DiagramSignalCollection(DiagramControl owner) : List<DiagramSignal> {
   public new void Add(DiagramSignal signal) {
     base.Add(signal);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(DiagramSignal signal) {
     var result = base.Remove(signal);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 

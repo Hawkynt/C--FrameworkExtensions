@@ -43,38 +43,11 @@ namespace System.Windows.Forms.Charting;
 public partial class AdvancedChart : Control {
   #region Fields
 
-  private AdvancedChartType _chartType = AdvancedChartType.Line;
-  private ChartRenderer _customRenderer;
   private readonly ChartSeriesCollection _series;
   private readonly ChartAxis _xAxis;
   private readonly ChartAxis _yAxis;
   private readonly ChartAxis _y2Axis;
   private readonly ChartLegend _legend;
-
-  private string _title;
-  private string _subtitle;
-  private Font _titleFont;
-  private Font _subtitleFont;
-  private Color _titleColor = Color.Black;
-  private Color _subtitleColor = Color.Gray;
-  private ChartColorPalette _colorPalette = ChartColorPalette.Default;
-  private Color[] _customColors;
-  private bool _showDataLabels;
-  private ChartDataLabelPosition _dataLabelPosition = ChartDataLabelPosition.Top;
-  private bool _enableTooltips = true;
-  private ChartTooltipTrigger _tooltipTrigger = ChartTooltipTrigger.Hover;
-  private bool _enableZoom;
-  private bool _enablePan;
-  private bool _enableCrosshair;
-  private ChartSelectionMode _selectionMode = ChartSelectionMode.None;
-  private bool _enableAnimation;
-  private ChartAnimationStyle _animationStyle = ChartAnimationStyle.Grow;
-  private int _animationDuration = 500;
-
-  private int _padding = 10;
-  private Color _plotAreaBackground = Color.White;
-  private Color _plotAreaBorderColor = Color.LightGray;
-  private int _plotAreaBorderWidth = 1;
 
   private ToolTip _toolTip;
   private readonly Dictionary<object, RectangleF> _hitTestRects = new();
@@ -200,23 +173,23 @@ public partial class AdvancedChart : Control {
   [Description("The type of chart to display.")]
   [DefaultValue(AdvancedChartType.Line)]
   public AdvancedChartType ChartType {
-    get => this._chartType;
+    get;
     set {
-      if (this._chartType == value)
+      if (field == value)
         return;
-      this._chartType = value;
+      field = value;
       this._StartAnimation();
       this.Invalidate();
     }
-  }
+  } = AdvancedChartType.Line;
 
   /// <summary>Gets or sets a custom renderer (overrides ChartType).</summary>
   [Browsable(false)]
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public ChartRenderer CustomRenderer {
-    get => this._customRenderer;
+    get;
     set {
-      this._customRenderer = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -379,11 +352,11 @@ public partial class AdvancedChart : Control {
   [Description("The title displayed at the top of the chart.")]
   [DefaultValue(null)]
   public string Title {
-    get => this._title;
+    get;
     set {
-      if (this._title == value)
+      if (field == value)
         return;
-      this._title = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -393,11 +366,11 @@ public partial class AdvancedChart : Control {
   [Description("The subtitle displayed below the title.")]
   [DefaultValue(null)]
   public string Subtitle {
-    get => this._subtitle;
+    get;
     set {
-      if (this._subtitle == value)
+      if (field == value)
         return;
-      this._subtitle = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -406,9 +379,9 @@ public partial class AdvancedChart : Control {
   [Category("Appearance")]
   [Description("The font for the chart title.")]
   public Font TitleFont {
-    get => this._titleFont;
+    get;
     set {
-      this._titleFont = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -417,9 +390,9 @@ public partial class AdvancedChart : Control {
   [Category("Appearance")]
   [Description("The font for the chart subtitle.")]
   public Font SubtitleFont {
-    get => this._subtitleFont;
+    get;
     set {
-      this._subtitleFont = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -428,43 +401,43 @@ public partial class AdvancedChart : Control {
   [Category("Appearance")]
   [Description("The color of the chart title.")]
   public Color TitleColor {
-    get => this._titleColor;
+    get;
     set {
-      this._titleColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the subtitle color.</summary>
   [Category("Appearance")]
   [Description("The color of the chart subtitle.")]
   public Color SubtitleColor {
-    get => this._subtitleColor;
+    get;
     set {
-      this._subtitleColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.Gray;
 
   /// <summary>Gets or sets the color palette.</summary>
   [Category("Appearance")]
   [Description("The color palette for series.")]
   [DefaultValue(ChartColorPalette.Default)]
   public ChartColorPalette ColorPalette {
-    get => this._colorPalette;
+    get;
     set {
-      this._colorPalette = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = ChartColorPalette.Default;
 
   /// <summary>Gets or sets custom colors (when ColorPalette is Custom).</summary>
   [Category("Appearance")]
   [Description("Custom colors for series.")]
   public Color[] CustomColors {
-    get => this._customColors;
+    get;
     set {
-      this._customColors = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -474,9 +447,9 @@ public partial class AdvancedChart : Control {
   [Description("Whether to show data labels.")]
   [DefaultValue(false)]
   public bool ShowDataLabels {
-    get => this._showDataLabels;
+    get;
     set {
-      this._showDataLabels = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -486,57 +459,45 @@ public partial class AdvancedChart : Control {
   [Description("The position of data labels.")]
   [DefaultValue(ChartDataLabelPosition.Top)]
   public ChartDataLabelPosition DataLabelPosition {
-    get => this._dataLabelPosition;
+    get;
     set {
-      this._dataLabelPosition = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = ChartDataLabelPosition.Top;
 
   /// <summary>Gets or sets whether to enable tooltips.</summary>
   [Category("Behavior")]
   [Description("Whether to show tooltips on hover.")]
   [DefaultValue(true)]
-  public bool EnableTooltips {
-    get => this._enableTooltips;
-    set => this._enableTooltips = value;
-  }
+  public bool EnableTooltips { get; set; } = true;
 
   /// <summary>Gets or sets the tooltip trigger mode.</summary>
   [Category("Behavior")]
   [Description("How tooltips are triggered.")]
   [DefaultValue(ChartTooltipTrigger.Hover)]
-  public ChartTooltipTrigger TooltipTrigger {
-    get => this._tooltipTrigger;
-    set => this._tooltipTrigger = value;
-  }
+  public ChartTooltipTrigger TooltipTrigger { get; set; } = ChartTooltipTrigger.Hover;
 
   /// <summary>Gets or sets whether to enable zooming.</summary>
   [Category("Behavior")]
   [Description("Whether to enable mouse wheel zooming.")]
   [DefaultValue(false)]
-  public bool EnableZoom {
-    get => this._enableZoom;
-    set => this._enableZoom = value;
-  }
+  public bool EnableZoom { get; set; }
 
   /// <summary>Gets or sets whether to enable panning.</summary>
   [Category("Behavior")]
   [Description("Whether to enable mouse drag panning.")]
   [DefaultValue(false)]
-  public bool EnablePan {
-    get => this._enablePan;
-    set => this._enablePan = value;
-  }
+  public bool EnablePan { get; set; }
 
   /// <summary>Gets or sets whether to enable crosshair.</summary>
   [Category("Behavior")]
   [Description("Whether to show crosshair on hover.")]
   [DefaultValue(false)]
   public bool EnableCrosshair {
-    get => this._enableCrosshair;
+    get;
     set {
-      this._enableCrosshair = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -545,19 +506,16 @@ public partial class AdvancedChart : Control {
   [Category("Behavior")]
   [Description("The selection mode for data points.")]
   [DefaultValue(ChartSelectionMode.None)]
-  public ChartSelectionMode SelectionMode {
-    get => this._selectionMode;
-    set => this._selectionMode = value;
-  }
+  public ChartSelectionMode SelectionMode { get; set; } = ChartSelectionMode.None;
 
   /// <summary>Gets or sets whether to enable animation.</summary>
   [Category("Behavior")]
   [Description("Whether to animate chart transitions.")]
   [DefaultValue(false)]
   public bool EnableAnimation {
-    get => this._enableAnimation;
+    get;
     set {
-      this._enableAnimation = value;
+      field = value;
       // When animation is enabled, start at progress 0 so initial render shows starting state
       if (value)
         this._animationProgress = 0;
@@ -568,65 +526,62 @@ public partial class AdvancedChart : Control {
   [Category("Behavior")]
   [Description("The style of animation.")]
   [DefaultValue(ChartAnimationStyle.Grow)]
-  public ChartAnimationStyle AnimationStyle {
-    get => this._animationStyle;
-    set => this._animationStyle = value;
-  }
+  public ChartAnimationStyle AnimationStyle { get; set; } = ChartAnimationStyle.Grow;
 
   /// <summary>Gets or sets the animation duration in milliseconds.</summary>
   [Category("Behavior")]
   [Description("The duration of animations in milliseconds.")]
   [DefaultValue(500)]
   public int AnimationDuration {
-    get => this._animationDuration;
-    set => this._animationDuration = Math.Max(0, value);
-  }
+    get;
+    set => field = Math.Max(0, value);
+  } = 500;
 
   /// <summary>Gets or sets the padding around the chart.</summary>
   [Category("Layout")]
   [Description("The padding around the chart in pixels.")]
   [DefaultValue(10)]
   public int ChartPadding {
-    get => this._padding;
+    get;
     set {
-      this._padding = Math.Max(0, value);
+      field = Math.Max(0, value);
       this.Invalidate();
     }
-  }
+  } = 10;
 
   /// <summary>Gets or sets the plot area background color.</summary>
   [Category("Appearance")]
   [Description("The background color of the plot area.")]
   public Color PlotAreaBackground {
-    get => this._plotAreaBackground;
+    get;
     set {
-      this._plotAreaBackground = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.White;
 
   /// <summary>Gets or sets the plot area border color.</summary>
   [Category("Appearance")]
   [Description("The border color of the plot area.")]
   public Color PlotAreaBorderColor {
-    get => this._plotAreaBorderColor;
+    get;
     set {
-      this._plotAreaBorderColor = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.LightGray;
 
   /// <summary>Gets or sets the plot area border width.</summary>
   [Category("Appearance")]
   [Description("The border width of the plot area.")]
   [DefaultValue(1)]
   public int PlotAreaBorderWidth {
-    get => this._plotAreaBorderWidth;
+    get;
     set {
-      this._plotAreaBorderWidth = Math.Max(0, value);
+      field = Math.Max(0, value);
       this.Invalidate();
     }
-  }
+  } = 1;
 
   #endregion
 
@@ -688,7 +643,7 @@ public partial class AdvancedChart : Control {
   /// </summary>
   public new void Refresh() {
     base.Refresh();
-    if (this._enableAnimation)
+    if (this.EnableAnimation)
       this._StartAnimation();
     this.Invalidate();
   }
@@ -752,7 +707,7 @@ public partial class AdvancedChart : Control {
   protected override void OnMouseMove(MouseEventArgs e) {
     base.OnMouseMove(e);
 
-    if (this._enablePan && this._panStart.HasValue) {
+    if (this.EnablePan && this._panStart.HasValue) {
       this._HandlePan(e.Location);
       return;
     }
@@ -764,7 +719,7 @@ public partial class AdvancedChart : Control {
   protected override void OnMouseDown(MouseEventArgs e) {
     base.OnMouseDown(e);
 
-    if (this._enablePan && e.Button == MouseButtons.Left && this._plotArea.Contains(e.Location)) {
+    if (this.EnablePan && e.Button == MouseButtons.Left && this._plotArea.Contains(e.Location)) {
       this._panStart = e.Location;
       this.Cursor = Cursors.Hand;
     }
@@ -786,7 +741,7 @@ public partial class AdvancedChart : Control {
   protected override void OnMouseWheel(MouseEventArgs e) {
     base.OnMouseWheel(e);
 
-    if (this._enableZoom && this._plotArea.Contains(e.Location))
+    if (this.EnableZoom && this._plotArea.Contains(e.Location))
       this._HandleZoom(e.Location, e.Delta);
   }
 
@@ -832,16 +787,16 @@ public partial class AdvancedChart : Control {
   }
 
   private ChartRenderer _GetRenderer() {
-    if (this._customRenderer != null)
-      return this._customRenderer;
+    if (this.CustomRenderer != null)
+      return this.CustomRenderer;
 
-    if (RendererCache.TryGetValue(this._chartType, out var renderer))
+    if (RendererCache.TryGetValue(this.ChartType, out var renderer))
       return renderer;
 
     // Create and cache default renderers
-    renderer = this._CreateDefaultRenderer(this._chartType);
+    renderer = this._CreateDefaultRenderer(this.ChartType);
     if (renderer != null)
-      RendererCache[this._chartType] = renderer;
+      RendererCache[this.ChartType] = renderer;
 
     return renderer;
   }
@@ -989,29 +944,29 @@ public partial class AdvancedChart : Control {
       Y2Max = this._y2Max,
       Series = this._series.Where(s => s.Visible).ToList(),
       HighlightedSeriesIndex = this._hoveredSeries != null ? this._series.IndexOf(this._hoveredSeries) : (int?)null,
-      ShowDataLabels = this._showDataLabels,
-      DataLabelPosition = this._dataLabelPosition,
+      ShowDataLabels = this.ShowDataLabels,
+      DataLabelPosition = this.DataLabelPosition,
       AnimationProgress = this._animationProgress
     };
   }
 
   private void _CalculateLayout(Graphics g, RectangleF bounds) {
-    var left = bounds.Left + this._padding;
-    var top = bounds.Top + this._padding;
-    var right = bounds.Right - this._padding;
-    var bottom = bounds.Bottom - this._padding;
+    var left = bounds.Left + this.ChartPadding;
+    var top = bounds.Top + this.ChartPadding;
+    var right = bounds.Right - this.ChartPadding;
+    var bottom = bounds.Bottom - this.ChartPadding;
 
     // Title area
-    if (!string.IsNullOrEmpty(this._title)) {
-      var titleFont = this._titleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
-      var titleSize = g.MeasureString(this._title, titleFont);
+    if (!string.IsNullOrEmpty(this.Title)) {
+      var titleFont = this.TitleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
+      var titleSize = g.MeasureString(this.Title, titleFont);
       top += titleSize.Height + 5;
     }
 
     // Subtitle area
-    if (!string.IsNullOrEmpty(this._subtitle)) {
-      var subtitleFont = this._subtitleFont ?? this.Font;
-      var subtitleSize = g.MeasureString(this._subtitle, subtitleFont);
+    if (!string.IsNullOrEmpty(this.Subtitle)) {
+      var subtitleFont = this.SubtitleFont ?? this.Font;
+      var subtitleSize = g.MeasureString(this.Subtitle, subtitleFont);
       top += subtitleSize.Height + 5;
     }
 
@@ -1101,7 +1056,7 @@ public partial class AdvancedChart : Control {
       this._CalculateStackedYBounds();
 
     // For waterfall charts, calculate Y bounds from running totals
-    if (this._chartType == AdvancedChartType.Waterfall)
+    if (this.ChartType == AdvancedChartType.Waterfall)
       this._CalculateWaterfallYBounds();
 
     // Include OHLC data bounds
@@ -1167,7 +1122,7 @@ public partial class AdvancedChart : Control {
   }
 
   private bool _IsStackedChartType() =>
-    this._chartType is AdvancedChartType.StackedArea
+    this.ChartType is AdvancedChartType.StackedArea
       or AdvancedChartType.StackedArea100
       or AdvancedChartType.StackedBar
       or AdvancedChartType.StackedColumn
@@ -1211,14 +1166,14 @@ public partial class AdvancedChart : Control {
     }
 
     // For percentage stacked charts, Y range is always 0-100
-    if (this._chartType is AdvancedChartType.StackedArea100 or AdvancedChartType.StackedBar100 or AdvancedChartType.StackedColumn100) {
+    if (this.ChartType is AdvancedChartType.StackedArea100 or AdvancedChartType.StackedBar100 or AdvancedChartType.StackedColumn100) {
       this._yMin = 0;
       this._yMax = 100;
       return;
     }
 
     // For diverging stacked bar, we need symmetric bounds
-    if (this._chartType == AdvancedChartType.DivergingStackedBar) {
+    if (this.ChartType == AdvancedChartType.DivergingStackedBar) {
       var maxStack = Math.Max(maxPositiveStack, maxNegativeStack);
       this._yMin = -maxStack;
       this._yMax = maxStack;
@@ -1290,8 +1245,8 @@ public partial class AdvancedChart : Control {
 
     if (renderer.UsesAxes) {
       // Draw plot area background
-      if (this._plotAreaBackground != Color.Transparent) {
-        using var bgBrush = new SolidBrush(this._plotAreaBackground);
+      if (this.PlotAreaBackground != Color.Transparent) {
+        using var bgBrush = new SolidBrush(this.PlotAreaBackground);
         context.Graphics.FillRectangle(bgBrush, this._plotArea);
       }
 
@@ -1299,8 +1254,8 @@ public partial class AdvancedChart : Control {
       this._DrawAxes(context);
 
       // Draw plot area border
-      if (this._plotAreaBorderWidth > 0) {
-        using var borderPen = new Pen(this._plotAreaBorderColor, this._plotAreaBorderWidth);
+      if (this.PlotAreaBorderWidth > 0) {
+        using var borderPen = new Pen(this.PlotAreaBorderColor, this.PlotAreaBorderWidth);
         context.Graphics.DrawRectangle(borderPen, this._plotArea.X, this._plotArea.Y, this._plotArea.Width, this._plotArea.Height);
       }
     }
@@ -1326,26 +1281,26 @@ public partial class AdvancedChart : Control {
     }
 
     // Draw crosshair
-    if (this._enableCrosshair && this._hoveredPoint != null)
+    if (this.EnableCrosshair && this._hoveredPoint != null)
       this._DrawCrosshair(context);
   }
 
   private void _DrawTitle(Graphics g) {
-    var y = (float)this._padding;
+    var y = (float)this.ChartPadding;
 
-    if (!string.IsNullOrEmpty(this._title)) {
-      var titleFont = this._titleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
-      var titleSize = g.MeasureString(this._title, titleFont);
-      using var brush = new SolidBrush(this._titleColor);
-      g.DrawString(this._title, titleFont, brush, (this.Width - titleSize.Width) / 2, y);
+    if (!string.IsNullOrEmpty(this.Title)) {
+      var titleFont = this.TitleFont ?? new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
+      var titleSize = g.MeasureString(this.Title, titleFont);
+      using var brush = new SolidBrush(this.TitleColor);
+      g.DrawString(this.Title, titleFont, brush, (this.Width - titleSize.Width) / 2, y);
       y += titleSize.Height + 5;
     }
 
-    if (!string.IsNullOrEmpty(this._subtitle)) {
-      var subtitleFont = this._subtitleFont ?? this.Font;
-      var subtitleSize = g.MeasureString(this._subtitle, subtitleFont);
-      using var brush = new SolidBrush(this._subtitleColor);
-      g.DrawString(this._subtitle, subtitleFont, brush, (this.Width - subtitleSize.Width) / 2, y);
+    if (!string.IsNullOrEmpty(this.Subtitle)) {
+      var subtitleFont = this.SubtitleFont ?? this.Font;
+      var subtitleSize = g.MeasureString(this.Subtitle, subtitleFont);
+      using var brush = new SolidBrush(this.SubtitleColor);
+      g.DrawString(this.Subtitle, subtitleFont, brush, (this.Width - subtitleSize.Width) / 2, y);
     }
   }
 
@@ -1388,7 +1343,7 @@ public partial class AdvancedChart : Control {
         var titleFont = this._yAxis.GetEffectiveTitleFont();
         var titleSize = g.MeasureString(this._yAxis.Title, titleFont);
         var state = g.Save();
-        g.TranslateTransform(this._padding + 5, this._plotArea.Top + this._plotArea.Height / 2 + titleSize.Width / 2);
+        g.TranslateTransform(this.ChartPadding + 5, this._plotArea.Top + this._plotArea.Height / 2 + titleSize.Width / 2);
         g.RotateTransform(-90);
         using var titleBrush = new SolidBrush(this._yAxis.TitleColor);
         g.DrawString(this._yAxis.Title, titleFont, titleBrush, 0, 0);
@@ -1471,8 +1426,8 @@ public partial class AdvancedChart : Control {
     return colors[index % colors.Length];
   }
 
-  private Color[] _GetColorPalette() => this._colorPalette switch {
-    ChartColorPalette.Custom when this._customColors != null => this._customColors,
+  private Color[] _GetColorPalette() => this.ColorPalette switch {
+    ChartColorPalette.Custom when this.CustomColors != null => this.CustomColors,
     ChartColorPalette.Pastel => new[] { Color.FromArgb(174, 198, 207), Color.FromArgb(255, 179, 186), Color.FromArgb(255, 223, 186), Color.FromArgb(255, 255, 186), Color.FromArgb(186, 255, 201), Color.FromArgb(186, 225, 255) },
     ChartColorPalette.Bright => new[] { Color.Red, Color.Orange, Color.Yellow, Color.Green, Color.Blue, Color.Purple },
     ChartColorPalette.Dark => new[] { Color.DarkRed, Color.DarkOrange, Color.DarkGoldenrod, Color.DarkGreen, Color.DarkBlue, Color.DarkViolet },
@@ -1511,7 +1466,7 @@ public partial class AdvancedChart : Control {
       this._hoveredPoint = hoveredPoint;
       this._hoveredSeries = hoveredSeries;
 
-      if (hoveredPoint != null && this._enableTooltips) {
+      if (hoveredPoint != null && this.EnableTooltips) {
         var tooltipText = hoveredPoint.Label ?? $"X: {hoveredPoint.X:N2}, Y: {hoveredPoint.Y:N2}";
         if (hoveredSeries != null)
           tooltipText = $"{hoveredSeries.Name}\n{tooltipText}";
@@ -1608,7 +1563,7 @@ public partial class AdvancedChart : Control {
   }
 
   private void _StartAnimation() {
-    if (!this._enableAnimation || this._animationDuration <= 0) {
+    if (!this.EnableAnimation || this.AnimationDuration <= 0) {
       this._animationProgress = 1.0;
       return;
     }
@@ -1629,7 +1584,7 @@ public partial class AdvancedChart : Control {
 
   private void _OnAnimationTick(object sender, EventArgs e) {
     var elapsed = (DateTime.Now - this._animationStartTime).TotalMilliseconds;
-    this._animationProgress = Math.Min(1.0, elapsed / this._animationDuration);
+    this._animationProgress = Math.Min(1.0, elapsed / this.AnimationDuration);
 
     // Apply easing
     this._animationProgress = this._EaseOutCubic(this._animationProgress);

@@ -30,23 +30,6 @@ namespace System.Windows.Forms.Charting;
 public class ChartLegend {
   private readonly AdvancedChart _owner;
 
-  private ChartLegendPosition _position = ChartLegendPosition.Right;
-  private bool _visible = true;
-  private Font _font;
-  private Color _textColor = Color.Black;
-  private Color _backgroundColor = Color.Transparent;
-  private Color _borderColor = Color.LightGray;
-  private int _borderWidth;
-  private int _padding = 8;
-  private int _itemSpacing = 4;
-  private int _symbolWidth = 20;
-  private int _symbolHeight = 10;
-  private ChartOrientation _orientation = ChartOrientation.Vertical;
-  private Point _floatingPosition;
-  private int _maxColumns = 1;
-  private bool _interactiveHighlight = true;
-  private bool _allowToggle = true;
-
   internal ChartLegend(AdvancedChart owner) => this._owner = owner;
 
   /// <summary>Gets or sets the legend position.</summary>
@@ -54,32 +37,32 @@ public class ChartLegend {
   [Description("The position of the legend.")]
   [DefaultValue(ChartLegendPosition.Right)]
   public ChartLegendPosition Position {
-    get => this._position;
+    get;
     set {
-      this._position = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartLegendPosition.Right;
 
   /// <summary>Gets or sets whether the legend is visible.</summary>
   [Category("Behavior")]
   [Description("Whether the legend is visible.")]
   [DefaultValue(true)]
   public bool Visible {
-    get => this._visible;
+    get;
     set {
-      this._visible = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets the font for legend text.</summary>
   [Category("Appearance")]
   [Description("The font for legend text.")]
   public Font Font {
-    get => this._font;
+    get;
     set {
-      this._font = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -88,43 +71,43 @@ public class ChartLegend {
   [Category("Appearance")]
   [Description("The color of legend text.")]
   public Color TextColor {
-    get => this._textColor;
+    get;
     set {
-      this._textColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the background color.</summary>
   [Category("Appearance")]
   [Description("The background color of the legend.")]
   public Color BackgroundColor {
-    get => this._backgroundColor;
+    get;
     set {
-      this._backgroundColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.Transparent;
 
   /// <summary>Gets or sets the border color.</summary>
   [Category("Appearance")]
   [Description("The border color of the legend.")]
   public Color BorderColor {
-    get => this._borderColor;
+    get;
     set {
-      this._borderColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.LightGray;
 
   /// <summary>Gets or sets the border width.</summary>
   [Category("Appearance")]
   [Description("The border width in pixels.")]
   [DefaultValue(0)]
   public int BorderWidth {
-    get => this._borderWidth;
+    get;
     set {
-      this._borderWidth = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
   }
@@ -134,68 +117,68 @@ public class ChartLegend {
   [Description("The padding inside the legend in pixels.")]
   [DefaultValue(8)]
   public int Padding {
-    get => this._padding;
+    get;
     set {
-      this._padding = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 8;
 
   /// <summary>Gets or sets the spacing between items.</summary>
   [Category("Layout")]
   [Description("The spacing between legend items in pixels.")]
   [DefaultValue(4)]
   public int ItemSpacing {
-    get => this._itemSpacing;
+    get;
     set {
-      this._itemSpacing = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 4;
 
   /// <summary>Gets or sets the width of the symbol/swatch.</summary>
   [Category("Appearance")]
   [Description("The width of the color symbol in pixels.")]
   [DefaultValue(20)]
   public int SymbolWidth {
-    get => this._symbolWidth;
+    get;
     set {
-      this._symbolWidth = Math.Max(4, value);
+      field = Math.Max(4, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 20;
 
   /// <summary>Gets or sets the height of the symbol/swatch.</summary>
   [Category("Appearance")]
   [Description("The height of the color symbol in pixels.")]
   [DefaultValue(10)]
   public int SymbolHeight {
-    get => this._symbolHeight;
+    get;
     set {
-      this._symbolHeight = Math.Max(4, value);
+      field = Math.Max(4, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 10;
 
   /// <summary>Gets or sets the legend orientation.</summary>
   [Category("Layout")]
   [Description("The orientation of legend items.")]
   [DefaultValue(ChartOrientation.Vertical)]
   public ChartOrientation Orientation {
-    get => this._orientation;
+    get;
     set {
-      this._orientation = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartOrientation.Vertical;
 
   /// <summary>Gets or sets the floating position when Position is Floating.</summary>
   [Category("Layout")]
   [Description("The position when using floating layout.")]
   public Point FloatingPosition {
-    get => this._floatingPosition;
+    get;
     set {
-      this._floatingPosition = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -205,46 +188,40 @@ public class ChartLegend {
   [Description("The maximum number of columns.")]
   [DefaultValue(1)]
   public int MaxColumns {
-    get => this._maxColumns;
+    get;
     set {
-      this._maxColumns = Math.Max(1, value);
+      field = Math.Max(1, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 1;
 
   /// <summary>Gets or sets whether hovering over legend items highlights the series.</summary>
   [Category("Behavior")]
   [Description("Whether hovering highlights the corresponding series.")]
   [DefaultValue(true)]
-  public bool InteractiveHighlight {
-    get => this._interactiveHighlight;
-    set => this._interactiveHighlight = value;
-  }
+  public bool InteractiveHighlight { get; set; } = true;
 
   /// <summary>Gets or sets whether clicking toggles series visibility.</summary>
   [Category("Behavior")]
   [Description("Whether clicking toggles the series visibility.")]
   [DefaultValue(true)]
-  public bool AllowToggle {
-    get => this._allowToggle;
-    set => this._allowToggle = value;
-  }
+  public bool AllowToggle { get; set; } = true;
 
   /// <summary>
   /// Gets the effective font for the legend.
   /// </summary>
-  internal Font GetEffectiveFont() => this._font ?? this._owner?.Font ?? SystemFonts.DefaultFont;
+  internal Font GetEffectiveFont() => this.Font ?? this._owner?.Font ?? SystemFonts.DefaultFont;
 
   /// <summary>
   /// Calculates the required size for the legend.
   /// </summary>
   internal SizeF CalculateSize(Graphics g, IEnumerable<LegendItem> items) {
-    if (!this._visible || this._position == ChartLegendPosition.None)
+    if (!this.Visible || this.Position == ChartLegendPosition.None)
       return SizeF.Empty;
 
     var font = this.GetEffectiveFont();
     var maxTextWidth = 0f;
-    var itemHeight = Math.Max(font.Height, this._symbolHeight);
+    var itemHeight = Math.Max(font.Height, this.SymbolHeight);
     var itemCount = 0;
 
     foreach (var item in items) {
@@ -256,19 +233,19 @@ public class ChartLegend {
     if (itemCount == 0)
       return SizeF.Empty;
 
-    var singleItemWidth = this._symbolWidth + this._itemSpacing + maxTextWidth;
+    var singleItemWidth = this.SymbolWidth + this.ItemSpacing + maxTextWidth;
     var singleItemHeight = itemHeight;
 
     float width, height;
 
-    if (this._orientation == ChartOrientation.Vertical) {
-      width = singleItemWidth + this._padding * 2;
-      height = itemCount * singleItemHeight + (itemCount - 1) * this._itemSpacing + this._padding * 2;
+    if (this.Orientation == ChartOrientation.Vertical) {
+      width = singleItemWidth + this.Padding * 2;
+      height = itemCount * singleItemHeight + (itemCount - 1) * this.ItemSpacing + this.Padding * 2;
     } else {
-      var columns = Math.Min(this._maxColumns, itemCount);
+      var columns = Math.Min(this.MaxColumns, itemCount);
       var rows = (int)Math.Ceiling(itemCount / (double)columns);
-      width = columns * singleItemWidth + (columns - 1) * this._itemSpacing + this._padding * 2;
-      height = rows * singleItemHeight + (rows - 1) * this._itemSpacing + this._padding * 2;
+      width = columns * singleItemWidth + (columns - 1) * this.ItemSpacing + this.Padding * 2;
+      height = rows * singleItemHeight + (rows - 1) * this.ItemSpacing + this.Padding * 2;
     }
 
     return new SizeF(width, height);
@@ -278,13 +255,13 @@ public class ChartLegend {
   /// Calculates the bounds for the legend based on the chart area.
   /// </summary>
   internal RectangleF CalculateBounds(RectangleF chartBounds, SizeF legendSize) {
-    if (!this._visible || this._position == ChartLegendPosition.None)
+    if (!this.Visible || this.Position == ChartLegendPosition.None)
       return RectangleF.Empty;
 
-    switch (this._position) {
+    switch (this.Position) {
       case ChartLegendPosition.Right:
         return new RectangleF(
-          chartBounds.Right - legendSize.Width - this._padding,
+          chartBounds.Right - legendSize.Width - this.Padding,
           chartBounds.Top + (chartBounds.Height - legendSize.Height) / 2,
           legendSize.Width,
           legendSize.Height
@@ -292,7 +269,7 @@ public class ChartLegend {
 
       case ChartLegendPosition.Left:
         return new RectangleF(
-          chartBounds.Left + this._padding,
+          chartBounds.Left + this.Padding,
           chartBounds.Top + (chartBounds.Height - legendSize.Height) / 2,
           legendSize.Width,
           legendSize.Height
@@ -301,7 +278,7 @@ public class ChartLegend {
       case ChartLegendPosition.Top:
         return new RectangleF(
           chartBounds.Left + (chartBounds.Width - legendSize.Width) / 2,
-          chartBounds.Top + this._padding,
+          chartBounds.Top + this.Padding,
           legendSize.Width,
           legendSize.Height
         );
@@ -309,47 +286,47 @@ public class ChartLegend {
       case ChartLegendPosition.Bottom:
         return new RectangleF(
           chartBounds.Left + (chartBounds.Width - legendSize.Width) / 2,
-          chartBounds.Bottom - legendSize.Height - this._padding,
+          chartBounds.Bottom - legendSize.Height - this.Padding,
           legendSize.Width,
           legendSize.Height
         );
 
       case ChartLegendPosition.TopLeft:
         return new RectangleF(
-          chartBounds.Left + this._padding,
-          chartBounds.Top + this._padding,
+          chartBounds.Left + this.Padding,
+          chartBounds.Top + this.Padding,
           legendSize.Width,
           legendSize.Height
         );
 
       case ChartLegendPosition.TopRight:
         return new RectangleF(
-          chartBounds.Right - legendSize.Width - this._padding,
-          chartBounds.Top + this._padding,
+          chartBounds.Right - legendSize.Width - this.Padding,
+          chartBounds.Top + this.Padding,
           legendSize.Width,
           legendSize.Height
         );
 
       case ChartLegendPosition.BottomLeft:
         return new RectangleF(
-          chartBounds.Left + this._padding,
-          chartBounds.Bottom - legendSize.Height - this._padding,
+          chartBounds.Left + this.Padding,
+          chartBounds.Bottom - legendSize.Height - this.Padding,
           legendSize.Width,
           legendSize.Height
         );
 
       case ChartLegendPosition.BottomRight:
         return new RectangleF(
-          chartBounds.Right - legendSize.Width - this._padding,
-          chartBounds.Bottom - legendSize.Height - this._padding,
+          chartBounds.Right - legendSize.Width - this.Padding,
+          chartBounds.Bottom - legendSize.Height - this.Padding,
           legendSize.Width,
           legendSize.Height
         );
 
       case ChartLegendPosition.Floating:
         return new RectangleF(
-          this._floatingPosition.X,
-          this._floatingPosition.Y,
+          this.FloatingPosition.X,
+          this.FloatingPosition.Y,
           legendSize.Width,
           legendSize.Height
         );
@@ -363,28 +340,28 @@ public class ChartLegend {
   /// Draws the legend.
   /// </summary>
   internal void Draw(Graphics g, RectangleF bounds, IList<LegendItem> items, int? highlightedIndex = null) {
-    if (!this._visible || this._position == ChartLegendPosition.None || items.Count == 0)
+    if (!this.Visible || this.Position == ChartLegendPosition.None || items.Count == 0)
       return;
 
     // Draw background
-    if (this._backgroundColor != Color.Transparent) {
-      using var bgBrush = new SolidBrush(this._backgroundColor);
+    if (this.BackgroundColor != Color.Transparent) {
+      using var bgBrush = new SolidBrush(this.BackgroundColor);
       g.FillRectangle(bgBrush, bounds);
     }
 
     // Draw border
-    if (this._borderWidth > 0) {
-      using var borderPen = new Pen(this._borderColor, this._borderWidth);
+    if (this.BorderWidth > 0) {
+      using var borderPen = new Pen(this.BorderColor, this.BorderWidth);
       g.DrawRectangle(borderPen, bounds.X, bounds.Y, bounds.Width, bounds.Height);
     }
 
     var font = this.GetEffectiveFont();
-    var itemHeight = Math.Max(font.Height, this._symbolHeight);
-    var x = bounds.X + this._padding;
-    var y = bounds.Y + this._padding;
+    var itemHeight = Math.Max(font.Height, this.SymbolHeight);
+    var x = bounds.X + this.Padding;
+    var y = bounds.Y + this.Padding;
 
-    var columns = this._orientation == ChartOrientation.Horizontal ? Math.Min(this._maxColumns, items.Count) : 1;
-    var columnWidth = (bounds.Width - this._padding * 2 + this._itemSpacing) / columns - this._itemSpacing;
+    var columns = this.Orientation == ChartOrientation.Horizontal ? Math.Min(this.MaxColumns, items.Count) : 1;
+    var columnWidth = (bounds.Width - this.Padding * 2 + this.ItemSpacing) / columns - this.ItemSpacing;
     var currentColumn = 0;
 
     for (var i = 0; i < items.Count; ++i) {
@@ -393,12 +370,12 @@ public class ChartLegend {
       var isHighlighted = highlightedIndex == i;
 
       // Draw symbol
-      var symbolRect = new RectangleF(x, y + (itemHeight - this._symbolHeight) / 2, this._symbolWidth, this._symbolHeight);
+      var symbolRect = new RectangleF(x, y + (itemHeight - this.SymbolHeight) / 2, this.SymbolWidth, this.SymbolHeight);
       this._DrawSymbol(g, symbolRect, item, alpha, isHighlighted);
 
       // Draw text
-      var textX = x + this._symbolWidth + this._itemSpacing;
-      var textColor = Color.FromArgb(alpha, this._textColor);
+      var textX = x + this.SymbolWidth + this.ItemSpacing;
+      var textColor = Color.FromArgb(alpha, this.TextColor);
       using (var textBrush = new SolidBrush(textColor))
         g.DrawString(item.Text, font, textBrush, textX, y + (itemHeight - font.Height) / 2);
 
@@ -406,16 +383,16 @@ public class ChartLegend {
       item.Bounds = new RectangleF(x, y, columnWidth, itemHeight);
 
       // Move to next position
-      if (this._orientation == ChartOrientation.Horizontal) {
+      if (this.Orientation == ChartOrientation.Horizontal) {
         ++currentColumn;
         if (currentColumn >= columns) {
           currentColumn = 0;
-          x = bounds.X + this._padding;
-          y += itemHeight + this._itemSpacing;
+          x = bounds.X + this.Padding;
+          y += itemHeight + this.ItemSpacing;
         } else
-          x += columnWidth + this._itemSpacing;
+          x += columnWidth + this.ItemSpacing;
       } else
-        y += itemHeight + this._itemSpacing;
+        y += itemHeight + this.ItemSpacing;
     }
   }
 

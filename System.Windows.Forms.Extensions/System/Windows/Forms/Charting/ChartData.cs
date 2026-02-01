@@ -58,15 +58,6 @@ public class ChartPoint {
 /// </summary>
 public class ChartDataSeries {
   private readonly AdvancedChart _owner;
-  private string _name;
-  private Color _color = Color.DodgerBlue;
-  private int _lineWidth = 2;
-  private bool _showMarkers = true;
-  private int _markerSize = 6;
-  private AdvancedMarkerStyle _markerStyle = AdvancedMarkerStyle.Circle;
-  private bool _visible = true;
-  private AdvancedChartType? _chartTypeOverride;
-  private ChartAxisType _yAxisType = ChartAxisType.Primary;
 
   internal ChartDataSeries(AdvancedChart owner) {
     this._owner = owner;
@@ -75,84 +66,84 @@ public class ChartDataSeries {
 
   /// <summary>Gets or sets the name of the series.</summary>
   public string Name {
-    get => this._name;
+    get;
     set {
-      this._name = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
 
   /// <summary>Gets or sets the color of the series.</summary>
   public Color Color {
-    get => this._color;
+    get;
     set {
-      this._color = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.DodgerBlue;
 
   /// <summary>Gets or sets the line width.</summary>
   public int LineWidth {
-    get => this._lineWidth;
+    get;
     set {
-      this._lineWidth = Math.Max(1, value);
+      field = Math.Max(1, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 2;
 
   /// <summary>Gets or sets whether to show markers on data points.</summary>
   public bool ShowMarkers {
-    get => this._showMarkers;
+    get;
     set {
-      this._showMarkers = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets the marker size.</summary>
   public int MarkerSize {
-    get => this._markerSize;
+    get;
     set {
-      this._markerSize = Math.Max(2, value);
+      field = Math.Max(2, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 6;
 
   /// <summary>Gets or sets the marker style.</summary>
   public AdvancedMarkerStyle MarkerStyle {
-    get => this._markerStyle;
+    get;
     set {
-      this._markerStyle = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = AdvancedMarkerStyle.Circle;
 
   /// <summary>Gets or sets whether the series is visible.</summary>
   public bool Visible {
-    get => this._visible;
+    get;
     set {
-      this._visible = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets an optional chart type override for this series.</summary>
   public AdvancedChartType? ChartTypeOverride {
-    get => this._chartTypeOverride;
+    get;
     set {
-      this._chartTypeOverride = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
 
   /// <summary>Gets or sets which Y-axis this series uses.</summary>
   public ChartAxisType YAxisType {
-    get => this._yAxisType;
+    get;
     set {
-      this._yAxisType = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartAxisType.Primary;
 
   /// <summary>Gets the collection of data points.</summary>
   public ChartPointCollection Points { get; }
@@ -174,57 +165,49 @@ public class ChartDataSeries {
 /// <summary>
 /// Collection of chart data points.
 /// </summary>
-public class ChartPointCollection : List<ChartPoint> {
-  private readonly AdvancedChart _owner;
-
-  internal ChartPointCollection(AdvancedChart owner) => this._owner = owner;
-
+public class ChartPointCollection(AdvancedChart owner) : List<ChartPoint> {
   public new void Add(ChartPoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(ChartPoint point) {
     var result = base.Remove(point);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void AddRange(IEnumerable<ChartPoint> points) {
     base.AddRange(points);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of chart data series.
 /// </summary>
-public class ChartSeriesCollection : List<ChartDataSeries> {
-  private readonly AdvancedChart _owner;
-
-  internal ChartSeriesCollection(AdvancedChart owner) => this._owner = owner;
-
+public class ChartSeriesCollection(AdvancedChart owner) : List<ChartDataSeries> {
   public new void Add(ChartDataSeries series) {
     base.Add(series);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new bool Remove(ChartDataSeries series) {
     var result = base.Remove(series);
     if (result)
-      this._owner?.Invalidate();
+      owner?.Invalidate();
     return result;
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -275,19 +258,15 @@ public class OHLCDataPoint {
 /// <summary>
 /// Collection of OHLC data points.
 /// </summary>
-public class OHLCDataCollection : List<OHLCDataPoint> {
-  private readonly AdvancedChart _owner;
-
-  internal OHLCDataCollection(AdvancedChart owner) => this._owner = owner;
-
+public class OHLCDataCollection(AdvancedChart owner) : List<OHLCDataPoint> {
   public new void Add(OHLCDataPoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -336,19 +315,15 @@ public class HierarchicalDataPoint {
 /// <summary>
 /// Collection of hierarchical data points.
 /// </summary>
-public class HierarchicalDataCollection : List<HierarchicalDataPoint> {
-  private readonly AdvancedChart _owner;
-
-  internal HierarchicalDataCollection(AdvancedChart owner) => this._owner = owner;
-
+public class HierarchicalDataCollection(AdvancedChart owner) : List<HierarchicalDataPoint> {
   public new void Add(HierarchicalDataPoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   /// <summary>
@@ -451,38 +426,30 @@ public class NetworkEdge {
 /// <summary>
 /// Collection of network nodes.
 /// </summary>
-public class NetworkNodeCollection : List<NetworkNode> {
-  private readonly AdvancedChart _owner;
-
-  internal NetworkNodeCollection(AdvancedChart owner) => this._owner = owner;
-
+public class NetworkNodeCollection(AdvancedChart owner) : List<NetworkNode> {
   public new void Add(NetworkNode node) {
     base.Add(node);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of network edges.
 /// </summary>
-public class NetworkEdgeCollection : List<NetworkEdge> {
-  private readonly AdvancedChart _owner;
-
-  internal NetworkEdgeCollection(AdvancedChart owner) => this._owner = owner;
-
+public class NetworkEdgeCollection(AdvancedChart owner) : List<NetworkEdge> {
   public new void Add(NetworkEdge edge) {
     base.Add(edge);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -620,57 +587,45 @@ public class CalendarHeatmapDay {
 /// <summary>
 /// Collection of Gantt tasks.
 /// </summary>
-public class GanttTaskCollection : List<GanttTask> {
-  private readonly AdvancedChart _owner;
-
-  internal GanttTaskCollection(AdvancedChart owner) => this._owner = owner;
-
+public class GanttTaskCollection(AdvancedChart owner) : List<GanttTask> {
   public new void Add(GanttTask task) {
     base.Add(task);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of timeline events.
 /// </summary>
-public class TimelineEventCollection : List<TimelineEvent> {
-  private readonly AdvancedChart _owner;
-
-  internal TimelineEventCollection(AdvancedChart owner) => this._owner = owner;
-
+public class TimelineEventCollection(AdvancedChart owner) : List<TimelineEvent> {
   public new void Add(TimelineEvent evt) {
     base.Add(evt);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of calendar heatmap days.
 /// </summary>
-public class CalendarHeatmapCollection : List<CalendarHeatmapDay> {
-  private readonly AdvancedChart _owner;
-
-  internal CalendarHeatmapCollection(AdvancedChart owner) => this._owner = owner;
-
+public class CalendarHeatmapCollection(AdvancedChart owner) : List<CalendarHeatmapDay> {
   public new void Add(CalendarHeatmapDay day) {
     base.Add(day);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -870,38 +825,30 @@ public class HeatmapCell {
 /// <summary>
 /// Collection of box plot data.
 /// </summary>
-public class BoxPlotDataCollection : List<BoxPlotData> {
-  private readonly AdvancedChart _owner;
-
-  internal BoxPlotDataCollection(AdvancedChart owner) => this._owner = owner;
-
+public class BoxPlotDataCollection(AdvancedChart owner) : List<BoxPlotData> {
   public new void Add(BoxPlotData data) {
     base.Add(data);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of histogram bins.
 /// </summary>
-public class HistogramBinCollection : List<HistogramBin> {
-  private readonly AdvancedChart _owner;
-
-  internal HistogramBinCollection(AdvancedChart owner) => this._owner = owner;
-
+public class HistogramBinCollection(AdvancedChart owner) : List<HistogramBin> {
   public new void Add(HistogramBin bin) {
     base.Add(bin);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   /// <summary>
@@ -950,19 +897,15 @@ public class HistogramBinCollection : List<HistogramBin> {
 /// <summary>
 /// Collection of heatmap cells.
 /// </summary>
-public class HeatmapCellCollection : List<HeatmapCell> {
-  private readonly AdvancedChart _owner;
-
-  internal HeatmapCellCollection(AdvancedChart owner) => this._owner = owner;
-
+public class HeatmapCellCollection(AdvancedChart owner) : List<HeatmapCell> {
   public new void Add(HeatmapCell cell) {
     base.Add(cell);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1083,76 +1026,60 @@ public class BulletData {
 /// <summary>
 /// Collection of funnel stages.
 /// </summary>
-public class FunnelStageCollection : List<FunnelStage> {
-  private readonly AdvancedChart _owner;
-
-  internal FunnelStageCollection(AdvancedChart owner) => this._owner = owner;
-
+public class FunnelStageCollection(AdvancedChart owner) : List<FunnelStage> {
   public new void Add(FunnelStage stage) {
     base.Add(stage);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of word cloud words.
 /// </summary>
-public class WordCloudCollection : List<WordCloudWord> {
-  private readonly AdvancedChart _owner;
-
-  internal WordCloudCollection(AdvancedChart owner) => this._owner = owner;
-
+public class WordCloudCollection(AdvancedChart owner) : List<WordCloudWord> {
   public new void Add(WordCloudWord word) {
     base.Add(word);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of gauge zones.
 /// </summary>
-public class GaugeZoneCollection : List<GaugeZone> {
-  private readonly AdvancedChart _owner;
-
-  internal GaugeZoneCollection(AdvancedChart owner) => this._owner = owner;
-
+public class GaugeZoneCollection(AdvancedChart owner) : List<GaugeZone> {
   public new void Add(GaugeZone zone) {
     base.Add(zone);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
 /// <summary>
 /// Collection of bullet data.
 /// </summary>
-public class BulletDataCollection : List<BulletData> {
-  private readonly AdvancedChart _owner;
-
-  internal BulletDataCollection(AdvancedChart owner) => this._owner = owner;
-
+public class BulletDataCollection(AdvancedChart owner) : List<BulletData> {
   public new void Add(BulletData data) {
     base.Add(data);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1194,19 +1121,15 @@ public class WaterfallStep {
 /// <summary>
 /// Collection of waterfall steps.
 /// </summary>
-public class WaterfallStepCollection : List<WaterfallStep> {
-  private readonly AdvancedChart _owner;
-
-  internal WaterfallStepCollection(AdvancedChart owner) => this._owner = owner;
-
+public class WaterfallStepCollection(AdvancedChart owner) : List<WaterfallStep> {
   public new void Add(WaterfallStep step) {
     base.Add(step);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1252,19 +1175,15 @@ public class RangePoint {
 /// <summary>
 /// Collection of range points.
 /// </summary>
-public class RangePointCollection : List<RangePoint> {
-  private readonly AdvancedChart _owner;
-
-  internal RangePointCollection(AdvancedChart owner) => this._owner = owner;
-
+public class RangePointCollection(AdvancedChart owner) : List<RangePoint> {
   public new void Add(RangePoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1296,19 +1215,15 @@ public class RadarPoint {
 /// <summary>
 /// Collection of radar points.
 /// </summary>
-public class RadarPointCollection : List<RadarPoint> {
-  private readonly AdvancedChart _owner;
-
-  internal RadarPointCollection(AdvancedChart owner) => this._owner = owner;
-
+public class RadarPointCollection(AdvancedChart owner) : List<RadarPoint> {
   public new void Add(RadarPoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1351,19 +1266,15 @@ public class MapRegion {
 /// <summary>
 /// Collection of map regions for geospatial charts.
 /// </summary>
-public class MapRegionCollection : List<MapRegion> {
-  private readonly AdvancedChart _owner;
-
-  internal MapRegionCollection(AdvancedChart owner) => this._owner = owner;
-
+public class MapRegionCollection(AdvancedChart owner) : List<MapRegion> {
   public new void Add(MapRegion region) {
     base.Add(region);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 
@@ -1402,19 +1313,15 @@ public class BubbleMapPoint {
 /// <summary>
 /// Collection of bubble map points.
 /// </summary>
-public class BubbleMapPointCollection : List<BubbleMapPoint> {
-  private readonly AdvancedChart _owner;
-
-  internal BubbleMapPointCollection(AdvancedChart owner) => this._owner = owner;
-
+public class BubbleMapPointCollection(AdvancedChart owner) : List<BubbleMapPoint> {
   public new void Add(BubbleMapPoint point) {
     base.Add(point);
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 
   public new void Clear() {
     base.Clear();
-    this._owner?.Invalidate();
+    owner?.Invalidate();
   }
 }
 

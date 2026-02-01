@@ -30,33 +30,6 @@ public class ChartAxis {
   private readonly ChartAxisType _axisType;
   private readonly bool _isXAxis;
 
-  private string _title;
-  private Font _titleFont;
-  private Color _titleColor = Color.Black;
-  private Font _labelFont;
-  private Color _labelColor = Color.Black;
-  private Color _lineColor = Color.Black;
-  private int _lineWidth = 1;
-  private bool _visible = true;
-  private bool _showGrid = true;
-  private Color _gridColor = Color.LightGray;
-  private ChartGridLineStyle _gridLineStyle = ChartGridLineStyle.Dashed;
-  private ChartScaleType _scaleType = ChartScaleType.Linear;
-  private double _minimum = double.NaN;
-  private double _maximum = double.NaN;
-  private double? _interval;
-  private string _labelFormat = "N1";
-  private ChartAxisLabelPosition _labelPosition = ChartAxisLabelPosition.Outside;
-  private int _labelAngle;
-  private bool _inverted;
-  private double _crossingValue = double.NaN;
-  private bool _showMinorTicks;
-  private int _minorTickCount = 4;
-  private int _majorTickLength = 6;
-  private int _minorTickLength = 3;
-  private string[] _categories;
-  private bool _logarithmicBase10 = true;
-
   internal ChartAxis(AdvancedChart owner, ChartAxisType axisType, bool isXAxis) {
     this._owner = owner;
     this._axisType = axisType;
@@ -73,9 +46,9 @@ public class ChartAxis {
   [Category("Appearance")]
   [Description("The title displayed along the axis.")]
   public string Title {
-    get => this._title;
+    get;
     set {
-      this._title = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -84,9 +57,9 @@ public class ChartAxis {
   [Category("Appearance")]
   [Description("The font used for the axis title.")]
   public Font TitleFont {
-    get => this._titleFont;
+    get;
     set {
-      this._titleFont = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -95,20 +68,20 @@ public class ChartAxis {
   [Category("Appearance")]
   [Description("The color of the axis title.")]
   public Color TitleColor {
-    get => this._titleColor;
+    get;
     set {
-      this._titleColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the font used for labels.</summary>
   [Category("Appearance")]
   [Description("The font used for axis labels.")]
   public Font LabelFont {
-    get => this._labelFont;
+    get;
     set {
-      this._labelFont = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -117,124 +90,124 @@ public class ChartAxis {
   [Category("Appearance")]
   [Description("The color of axis labels.")]
   public Color LabelColor {
-    get => this._labelColor;
+    get;
     set {
-      this._labelColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the color of the axis line.</summary>
   [Category("Appearance")]
   [Description("The color of the axis line.")]
   public Color LineColor {
-    get => this._lineColor;
+    get;
     set {
-      this._lineColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.Black;
 
   /// <summary>Gets or sets the width of the axis line.</summary>
   [Category("Appearance")]
   [Description("The width of the axis line.")]
   [DefaultValue(1)]
   public int LineWidth {
-    get => this._lineWidth;
+    get;
     set {
-      this._lineWidth = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 1;
 
   /// <summary>Gets or sets whether the axis is visible.</summary>
   [Category("Behavior")]
   [Description("Whether the axis is visible.")]
   [DefaultValue(true)]
   public bool Visible {
-    get => this._visible;
+    get;
     set {
-      this._visible = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets whether to show grid lines.</summary>
   [Category("Appearance")]
   [Description("Whether to show grid lines for this axis.")]
   [DefaultValue(true)]
   public bool ShowGrid {
-    get => this._showGrid;
+    get;
     set {
-      this._showGrid = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets or sets the color of grid lines.</summary>
   [Category("Appearance")]
   [Description("The color of grid lines.")]
   public Color GridColor {
-    get => this._gridColor;
+    get;
     set {
-      this._gridColor = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = Color.LightGray;
 
   /// <summary>Gets or sets the style of grid lines.</summary>
   [Category("Appearance")]
   [Description("The style of grid lines.")]
   [DefaultValue(ChartGridLineStyle.Dashed)]
   public ChartGridLineStyle GridLineStyle {
-    get => this._gridLineStyle;
+    get;
     set {
-      this._gridLineStyle = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartGridLineStyle.Dashed;
 
   /// <summary>Gets or sets the scale type.</summary>
   [Category("Behavior")]
   [Description("The type of scale for this axis.")]
   [DefaultValue(ChartScaleType.Linear)]
   public ChartScaleType ScaleType {
-    get => this._scaleType;
+    get;
     set {
-      this._scaleType = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartScaleType.Linear;
 
   /// <summary>Gets or sets the minimum value.</summary>
   [Category("Behavior")]
   [Description("The minimum value for the axis. Use NaN for auto-scaling.")]
   public double Minimum {
-    get => this._minimum;
+    get;
     set {
-      this._minimum = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = double.NaN;
 
   /// <summary>Gets or sets the maximum value.</summary>
   [Category("Behavior")]
   [Description("The maximum value for the axis. Use NaN for auto-scaling.")]
   public double Maximum {
-    get => this._maximum;
+    get;
     set {
-      this._maximum = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = double.NaN;
 
   /// <summary>Gets or sets the interval between major ticks.</summary>
   [Category("Behavior")]
   [Description("The interval between major tick marks. Null for auto.")]
   public double? Interval {
-    get => this._interval;
+    get;
     set {
-      this._interval = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -244,33 +217,33 @@ public class ChartAxis {
   [Description("The format string for axis labels.")]
   [DefaultValue("N1")]
   public string LabelFormat {
-    get => this._labelFormat;
+    get;
     set {
-      this._labelFormat = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = "N1";
 
   /// <summary>Gets or sets the position of axis labels.</summary>
   [Category("Appearance")]
   [Description("The position of axis labels.")]
   [DefaultValue(ChartAxisLabelPosition.Outside)]
   public ChartAxisLabelPosition LabelPosition {
-    get => this._labelPosition;
+    get;
     set {
-      this._labelPosition = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = ChartAxisLabelPosition.Outside;
 
   /// <summary>Gets or sets the angle of labels in degrees.</summary>
   [Category("Appearance")]
   [Description("The rotation angle of labels in degrees.")]
   [DefaultValue(0)]
   public int LabelAngle {
-    get => this._labelAngle;
+    get;
     set {
-      this._labelAngle = value % 360;
+      field = value % 360;
       this._owner?.Invalidate();
     }
   }
@@ -280,9 +253,9 @@ public class ChartAxis {
   [Description("Whether the axis direction is inverted.")]
   [DefaultValue(false)]
   public bool Inverted {
-    get => this._inverted;
+    get;
     set {
-      this._inverted = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -291,21 +264,21 @@ public class ChartAxis {
   [Category("Behavior")]
   [Description("The value where this axis crosses the perpendicular axis.")]
   public double CrossingValue {
-    get => this._crossingValue;
+    get;
     set {
-      this._crossingValue = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = double.NaN;
 
   /// <summary>Gets or sets whether to show minor tick marks.</summary>
   [Category("Appearance")]
   [Description("Whether to show minor tick marks.")]
   [DefaultValue(false)]
   public bool ShowMinorTicks {
-    get => this._showMinorTicks;
+    get;
     set {
-      this._showMinorTicks = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -315,44 +288,44 @@ public class ChartAxis {
   [Description("The number of minor ticks between major ticks.")]
   [DefaultValue(4)]
   public int MinorTickCount {
-    get => this._minorTickCount;
+    get;
     set {
-      this._minorTickCount = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 4;
 
   /// <summary>Gets or sets the length of major tick marks in pixels.</summary>
   [Category("Appearance")]
   [Description("The length of major tick marks in pixels.")]
   [DefaultValue(6)]
   public int MajorTickLength {
-    get => this._majorTickLength;
+    get;
     set {
-      this._majorTickLength = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 6;
 
   /// <summary>Gets or sets the length of minor tick marks in pixels.</summary>
   [Category("Appearance")]
   [Description("The length of minor tick marks in pixels.")]
   [DefaultValue(3)]
   public int MinorTickLength {
-    get => this._minorTickLength;
+    get;
     set {
-      this._minorTickLength = Math.Max(0, value);
+      field = Math.Max(0, value);
       this._owner?.Invalidate();
     }
-  }
+  } = 3;
 
   /// <summary>Gets or sets the category labels for category axes.</summary>
   [Category("Data")]
   [Description("The category labels for category scale axes.")]
   public string[] Categories {
-    get => this._categories;
+    get;
     set {
-      this._categories = value;
+      field = value;
       this._owner?.Invalidate();
     }
   }
@@ -362,30 +335,30 @@ public class ChartAxis {
   [Description("Whether to use base 10 (true) or base e (false) for logarithmic scale.")]
   [DefaultValue(true)]
   public bool LogarithmicBase10 {
-    get => this._logarithmicBase10;
+    get;
     set {
-      this._logarithmicBase10 = value;
+      field = value;
       this._owner?.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>Gets whether auto-scaling is enabled for minimum.</summary>
-  public bool AutoMinimum => double.IsNaN(this._minimum);
+  public bool AutoMinimum => double.IsNaN(this.Minimum);
 
   /// <summary>Gets whether auto-scaling is enabled for maximum.</summary>
-  public bool AutoMaximum => double.IsNaN(this._maximum);
+  public bool AutoMaximum => double.IsNaN(this.Maximum);
 
   /// <summary>
   /// Gets the effective font for labels.
   /// </summary>
-  internal Font GetEffectiveLabelFont() => this._labelFont ?? this._owner?.Font ?? SystemFonts.DefaultFont;
+  internal Font GetEffectiveLabelFont() => this.LabelFont ?? this._owner?.Font ?? SystemFonts.DefaultFont;
 
   /// <summary>
   /// Gets the effective font for the title.
   /// </summary>
   internal Font GetEffectiveTitleFont() {
-    if (this._titleFont != null)
-      return this._titleFont;
+    if (this.TitleFont != null)
+      return this.TitleFont;
 
     var baseFont = this._owner?.Font ?? SystemFonts.DefaultFont;
     return new Font(baseFont.FontFamily, baseFont.Size + 2, FontStyle.Bold);
@@ -400,11 +373,11 @@ public class ChartAxis {
 
     double position;
 
-    if (this._scaleType == ChartScaleType.Logarithmic) {
+    if (this.ScaleType == ChartScaleType.Logarithmic) {
       if (value <= 0 || min <= 0)
         return 0;
 
-      var logBase = this._logarithmicBase10 ? 10 : Math.E;
+      var logBase = this.LogarithmicBase10 ? 10 : Math.E;
       var logMin = Math.Log(min) / Math.Log(logBase);
       var logMax = Math.Log(max) / Math.Log(logBase);
       var logValue = Math.Log(value) / Math.Log(logBase);
@@ -413,21 +386,21 @@ public class ChartAxis {
     } else
       position = (value - min) / (max - min);
 
-    return this._inverted ? 1 - position : position;
+    return this.Inverted ? 1 - position : position;
   }
 
   /// <summary>
   /// Converts an axis position (0-1 range) to a value.
   /// </summary>
   public double PositionToValue(double position, double min, double max) {
-    if (this._inverted)
+    if (this.Inverted)
       position = 1 - position;
 
-    if (this._scaleType == ChartScaleType.Logarithmic) {
+    if (this.ScaleType == ChartScaleType.Logarithmic) {
       if (min <= 0)
         return min;
 
-      var logBase = this._logarithmicBase10 ? 10 : Math.E;
+      var logBase = this.LogarithmicBase10 ? 10 : Math.E;
       var logMin = Math.Log(min) / Math.Log(logBase);
       var logMax = Math.Log(max) / Math.Log(logBase);
       var logValue = logMin + position * (logMax - logMin);
@@ -488,23 +461,23 @@ public class ChartAxis {
   /// Formats a value according to the axis settings.
   /// </summary>
   public string FormatValue(double value) {
-    if (this._scaleType == ChartScaleType.Category && this._categories != null) {
+    if (this.ScaleType == ChartScaleType.Category && this.Categories != null) {
       var index = (int)Math.Round(value);
-      if (index >= 0 && index < this._categories.Length)
-        return this._categories[index];
+      if (index >= 0 && index < this.Categories.Length)
+        return this.Categories[index];
     }
 
-    if (this._scaleType == ChartScaleType.DateTime) {
+    if (this.ScaleType == ChartScaleType.DateTime) {
       try {
         var date = DateTime.FromOADate(value);
-        return date.ToString(string.IsNullOrEmpty(this._labelFormat) ? "d" : this._labelFormat);
+        return date.ToString(string.IsNullOrEmpty(this.LabelFormat) ? "d" : this.LabelFormat);
       } catch {
-        return value.ToString(this._labelFormat ?? "N1");
+        return value.ToString(this.LabelFormat ?? "N1");
       }
     }
 
     try {
-      return value.ToString(this._labelFormat ?? "N1");
+      return value.ToString(this.LabelFormat ?? "N1");
     } catch {
       return value.ToString();
     }

@@ -41,20 +41,7 @@ namespace System.Windows.Forms;
 /// </code>
 /// </example>
 public class SimpleChart : Control {
-  private ChartType _chartType = ChartType.Line;
   private readonly ChartSeriesCollection _series;
-  private string _title;
-  private string _xAxisTitle;
-  private string _yAxisTitle;
-  private bool _showLegend = true;
-  private LegendPosition _legendPosition = LegendPosition.Right;
-  private bool _showGrid = true;
-  private Color _gridColor = Color.LightGray;
-  private bool _autoScale = true;
-  private double _xAxisMin;
-  private double _xAxisMax = 100;
-  private double _yAxisMin;
-  private double _yAxisMax = 100;
   private bool _showDataLabels;
   private bool _enableTooltips = true;
 
@@ -62,7 +49,7 @@ public class SimpleChart : Control {
   private ToolTip _toolTip;
   private readonly Dictionary<ChartDataPoint, RectangleF> _hitTestRects = new();
 
-  private static readonly Color[] DefaultColors = {
+  private static readonly Color[] DefaultColors = [
     Color.DodgerBlue,
     Color.OrangeRed,
     Color.ForestGreen,
@@ -71,7 +58,7 @@ public class SimpleChart : Control {
     Color.Crimson,
     Color.Teal,
     Color.SlateBlue
-  };
+  ];
 
   /// <summary>
   /// Occurs when a data point is clicked.
@@ -99,9 +86,9 @@ public class SimpleChart : Control {
       true
     );
 
-    this.Size = new Size(400, 300);
-    this._series = new ChartSeriesCollection(this);
-    this._toolTip = new ToolTip();
+    this.Size = new(400, 300);
+    this._series = new(this);
+    this._toolTip = new();
   }
 
   /// <summary>
@@ -111,14 +98,14 @@ public class SimpleChart : Control {
   [Description("The type of chart to display.")]
   [DefaultValue(ChartType.Line)]
   public ChartType ChartType {
-    get => this._chartType;
+    get;
     set {
-      if (this._chartType == value)
+      if (field == value)
         return;
-      this._chartType = value;
+      field = value;
       this.Invalidate();
     }
-  }
+  } = ChartType.Line;
 
   /// <summary>
   /// Gets the collection of data series.
@@ -135,11 +122,12 @@ public class SimpleChart : Control {
   [Description("The title displayed at the top of the chart.")]
   [DefaultValue(null)]
   public string Title {
-    get => this._title;
+    get;
     set {
-      if (this._title == value)
+      if (field == value)
         return;
-      this._title = value;
+
+      field = value;
       this.Invalidate();
     }
   }
@@ -151,11 +139,12 @@ public class SimpleChart : Control {
   [Description("The title for the X-axis.")]
   [DefaultValue(null)]
   public string XAxisTitle {
-    get => this._xAxisTitle;
+    get;
     set {
-      if (this._xAxisTitle == value)
+      if (field == value)
         return;
-      this._xAxisTitle = value;
+
+      field = value;
       this.Invalidate();
     }
   }
@@ -167,11 +156,11 @@ public class SimpleChart : Control {
   [Description("The title for the Y-axis.")]
   [DefaultValue(null)]
   public string YAxisTitle {
-    get => this._yAxisTitle;
+    get;
     set {
-      if (this._yAxisTitle == value)
+      if (field == value)
         return;
-      this._yAxisTitle = value;
+      field = value;
       this.Invalidate();
     }
   }
@@ -183,14 +172,15 @@ public class SimpleChart : Control {
   [Description("Whether to show the legend.")]
   [DefaultValue(true)]
   public bool ShowLegend {
-    get => this._showLegend;
+    get;
     set {
-      if (this._showLegend == value)
+      if (field == value)
         return;
-      this._showLegend = value;
+      
+      field = value;
       this.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>
   /// Gets or sets the legend position.
@@ -199,14 +189,15 @@ public class SimpleChart : Control {
   [Description("The position of the legend.")]
   [DefaultValue(LegendPosition.Right)]
   public LegendPosition LegendPosition {
-    get => this._legendPosition;
+    get;
     set {
-      if (this._legendPosition == value)
+      if (field == value)
         return;
-      this._legendPosition = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = LegendPosition.Right;
 
   /// <summary>
   /// Gets or sets whether to show grid lines.
@@ -215,14 +206,15 @@ public class SimpleChart : Control {
   [Description("Whether to show grid lines.")]
   [DefaultValue(true)]
   public bool ShowGrid {
-    get => this._showGrid;
+    get;
     set {
-      if (this._showGrid == value)
+      if (field == value)
         return;
-      this._showGrid = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>
   /// Gets or sets the grid line color.
@@ -230,14 +222,15 @@ public class SimpleChart : Control {
   [Category("Appearance")]
   [Description("The color of the grid lines.")]
   public Color GridColor {
-    get => this._gridColor;
+    get;
     set {
-      if (this._gridColor == value)
+      if (field == value)
         return;
-      this._gridColor = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = Color.LightGray;
 
   /// <summary>
   /// Gets or sets whether to auto-scale the axes.
@@ -246,14 +239,15 @@ public class SimpleChart : Control {
   [Description("Whether to automatically scale axes based on data.")]
   [DefaultValue(true)]
   public bool AutoScale {
-    get => this._autoScale;
+    get;
     set {
-      if (this._autoScale == value)
+      if (field == value)
         return;
-      this._autoScale = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = true;
 
   /// <summary>
   /// Gets or sets the minimum X-axis value.
@@ -262,14 +256,15 @@ public class SimpleChart : Control {
   [Description("The minimum value for the X-axis.")]
   [DefaultValue(0d)]
   public double XAxisMin {
-    get => this._xAxisMin;
+    get;
     set {
-      if (Math.Abs(this._xAxisMin - value) < double.Epsilon)
+      if (Math.Abs(field - value) < double.Epsilon)
         return;
-      this._xAxisMin = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = 0;
 
   /// <summary>
   /// Gets or sets the maximum X-axis value.
@@ -278,14 +273,15 @@ public class SimpleChart : Control {
   [Description("The maximum value for the X-axis.")]
   [DefaultValue(100d)]
   public double XAxisMax {
-    get => this._xAxisMax;
+    get;
     set {
-      if (Math.Abs(this._xAxisMax - value) < double.Epsilon)
+      if (Math.Abs(field - value) < double.Epsilon)
         return;
-      this._xAxisMax = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = 100;
 
   /// <summary>
   /// Gets or sets the minimum Y-axis value.
@@ -294,14 +290,15 @@ public class SimpleChart : Control {
   [Description("The minimum value for the Y-axis.")]
   [DefaultValue(0d)]
   public double YAxisMin {
-    get => this._yAxisMin;
+    get;
     set {
-      if (Math.Abs(this._yAxisMin - value) < double.Epsilon)
+      if (Math.Abs(field - value) < double.Epsilon)
         return;
-      this._yAxisMin = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = 0;
 
   /// <summary>
   /// Gets or sets the maximum Y-axis value.
@@ -310,14 +307,15 @@ public class SimpleChart : Control {
   [Description("The maximum value for the Y-axis.")]
   [DefaultValue(100d)]
   public double YAxisMax {
-    get => this._yAxisMax;
+    get;
     set {
-      if (Math.Abs(this._yAxisMax - value) < double.Epsilon)
+      if (Math.Abs(field - value) < double.Epsilon)
         return;
-      this._yAxisMax = value;
+
+      field = value;
       this.Invalidate();
     }
-  }
+  } = 100;
 
   /// <summary>
   /// Gets or sets whether to show data labels.
@@ -346,8 +344,8 @@ public class SimpleChart : Control {
     set => this._enableTooltips = value;
   }
 
-  private bool ShouldSerializeGridColor() => this._gridColor != Color.LightGray;
-  private void ResetGridColor() => this._gridColor = Color.LightGray;
+  private bool ShouldSerializeGridColor() => this.GridColor != Color.LightGray;
+  private void ResetGridColor() => this.GridColor = Color.LightGray;
 
   /// <summary>
   /// Adds a new series to the chart.
@@ -358,7 +356,7 @@ public class SimpleChart : Control {
   public ChartSeries AddSeries(string name, ChartType? type = null) {
     var series = new ChartSeries(this) {
       Name = name,
-      ChartType = type ?? this._chartType,
+      ChartType = type ?? this.ChartType,
       Color = DefaultColors[this._series.Count % DefaultColors.Length]
     };
     this._series.Add(series);
@@ -422,14 +420,14 @@ public class SimpleChart : Control {
     this._CalculateAxisBounds(out var xMin, out var xMax, out var yMin, out var yMax);
 
     // Draw title
-    if (!string.IsNullOrEmpty(this._title)) {
+    if (!string.IsNullOrEmpty(this.Title)) {
       using var titleFont = new Font(this.Font.FontFamily, this.Font.Size + 4, FontStyle.Bold);
-      var titleSize = g.MeasureString(this._title, titleFont);
-      g.DrawString(this._title, titleFont, Brushes.Black, (this.Width - titleSize.Width) / 2, 5);
+      var titleSize = g.MeasureString(this.Title, titleFont);
+      g.DrawString(this.Title, titleFont, Brushes.Black, (this.Width - titleSize.Width) / 2, 5);
     }
 
     // Draw based on chart type
-    if (this._chartType == ChartType.Pie || this._chartType == ChartType.Donut)
+    if (this.ChartType is ChartType.Pie or ChartType.Donut)
       this._DrawPieChart(g, chartArea);
     else {
       // Draw axes and grid
@@ -459,39 +457,40 @@ public class SimpleChart : Control {
     }
 
     // Draw legend
-    if (this._showLegend && this._legendPosition != LegendPosition.None)
+    if (this.ShowLegend && this.LegendPosition != LegendPosition.None)
       this._DrawLegend(g, chartArea);
   }
 
   private RectangleF _CalculateChartArea(Graphics g) {
     var left = 60f;
-    var top = string.IsNullOrEmpty(this._title) ? 20f : 40f;
+    var top = string.IsNullOrEmpty(this.Title) ? 20f : 40f;
     var right = 20f;
     var bottom = 40f;
 
-    if (!string.IsNullOrEmpty(this._yAxisTitle))
+    if (!string.IsNullOrEmpty(this.YAxisTitle))
       left += 20;
-    if (!string.IsNullOrEmpty(this._xAxisTitle))
+    if (!string.IsNullOrEmpty(this.XAxisTitle))
       bottom += 20;
 
-    if (this._showLegend && this._series.Count > 0) {
-      switch (this._legendPosition) {
-        case LegendPosition.Right:
-          right += this._CalculateLegendWidth(g) + 10;
-          break;
-        case LegendPosition.Left:
-          left += this._CalculateLegendWidth(g) + 10;
-          break;
-        case LegendPosition.Top:
-          top += 25;
-          break;
-        case LegendPosition.Bottom:
-          bottom += 25;
-          break;
-      }
+    if (!this.ShowLegend || this._series.Count <= 0)
+      return new(left, top, this.Width - left - right, this.Height - top - bottom);
+
+    switch (this.LegendPosition) {
+      case LegendPosition.Right:
+        right += this._CalculateLegendWidth(g) + 10;
+        break;
+      case LegendPosition.Left:
+        left += this._CalculateLegendWidth(g) + 10;
+        break;
+      case LegendPosition.Top:
+        top += 25;
+        break;
+      case LegendPosition.Bottom:
+        bottom += 25;
+        break;
     }
 
-    return new RectangleF(left, top, this.Width - left - right, this.Height - top - bottom);
+    return new(left, top, this.Width - left - right, this.Height - top - bottom);
   }
 
   private float _CalculateLegendWidth(Graphics g) {
@@ -504,11 +503,11 @@ public class SimpleChart : Control {
   }
 
   private void _CalculateAxisBounds(out double xMin, out double xMax, out double yMin, out double yMax) {
-    if (!this._autoScale || this._series.Count == 0 || this._series.All(s => s.DataPoints.Count == 0)) {
-      xMin = this._xAxisMin;
-      xMax = this._xAxisMax;
-      yMin = this._yAxisMin;
-      yMax = this._yAxisMax;
+    if (!this.AutoScale || this._series.Count == 0 || this._series.All(s => s.DataPoints.Count == 0)) {
+      xMin = this.XAxisMin;
+      xMax = this.XAxisMax;
+      yMin = this.YAxisMin;
+      yMax = this.YAxisMax;
       return;
     }
 
@@ -543,7 +542,7 @@ public class SimpleChart : Control {
 
   private void _DrawAxes(Graphics g, RectangleF chartArea, double xMin, double xMax, double yMin, double yMax) {
     using var axisPen = new Pen(Color.Black, 1);
-    using var gridPen = new Pen(this._gridColor, 1);
+    using var gridPen = new Pen(this.GridColor, 1);
     gridPen.DashStyle = DashStyle.Dash;
 
     // Draw Y-axis
@@ -560,7 +559,7 @@ public class SimpleChart : Control {
       var y = chartArea.Bottom - (i * chartArea.Height / tickCount);
       var value = yMin + (i * (yMax - yMin) / tickCount);
 
-      if (this._showGrid && i > 0)
+      if (this.ShowGrid && i > 0)
         g.DrawLine(gridPen, chartArea.Left, y, chartArea.Right, y);
 
       g.DrawLine(axisPen, chartArea.Left - 5, y, chartArea.Left, y);
@@ -574,7 +573,7 @@ public class SimpleChart : Control {
       var x = chartArea.Left + (i * chartArea.Width / tickCount);
       var value = xMin + (i * (xMax - xMin) / tickCount);
 
-      if (this._showGrid && i > 0)
+      if (this.ShowGrid && i > 0)
         g.DrawLine(gridPen, x, chartArea.Top, x, chartArea.Bottom);
 
       g.DrawLine(axisPen, x, chartArea.Bottom, x, chartArea.Bottom + 5);
@@ -584,18 +583,18 @@ public class SimpleChart : Control {
     }
 
     // Axis titles
-    if (!string.IsNullOrEmpty(this._yAxisTitle)) {
-      var yTitleSize = g.MeasureString(this._yAxisTitle, this.Font);
+    if (!string.IsNullOrEmpty(this.YAxisTitle)) {
+      var yTitleSize = g.MeasureString(this.YAxisTitle, this.Font);
       var state = g.Save();
       g.TranslateTransform(15, chartArea.Top + chartArea.Height / 2 + yTitleSize.Width / 2);
       g.RotateTransform(-90);
-      g.DrawString(this._yAxisTitle, this.Font, Brushes.Black, 0, 0);
+      g.DrawString(this.YAxisTitle, this.Font, Brushes.Black, 0, 0);
       g.Restore(state);
     }
 
-    if (!string.IsNullOrEmpty(this._xAxisTitle)) {
-      var xTitleSize = g.MeasureString(this._xAxisTitle, this.Font);
-      g.DrawString(this._xAxisTitle, this.Font, Brushes.Black,
+    if (!string.IsNullOrEmpty(this.XAxisTitle)) {
+      var xTitleSize = g.MeasureString(this.XAxisTitle, this.Font);
+      g.DrawString(this.XAxisTitle, this.Font, Brushes.Black,
         chartArea.Left + chartArea.Width / 2 - xTitleSize.Width / 2,
         chartArea.Bottom + 25);
     }
@@ -611,7 +610,7 @@ public class SimpleChart : Control {
     foreach (var dp in series.DataPoints) {
       var px = chartArea.Left + (float)((dp.X - xMin) / (xMax - xMin) * chartArea.Width);
       var py = chartArea.Bottom - (float)((dp.Y - yMin) / (yMax - yMin) * chartArea.Height);
-      points.Add(new PointF(px, py));
+      points.Add(new(px, py));
     }
 
     if (points.Count > 1)
@@ -619,11 +618,11 @@ public class SimpleChart : Control {
 
     // Draw markers
     if (series.ShowMarkers)
-      this._DrawMarkers(g, series, points.ToArray());
+      _DrawMarkers(g, series, points.ToArray());
 
     // Register hit test regions
     for (var i = 0; i < series.DataPoints.Count; ++i)
-      this._hitTestRects[series.DataPoints[i]] = new RectangleF(points[i].X - 5, points[i].Y - 5, 10, 10);
+      this._hitTestRects[series.DataPoints[i]] = new(points[i].X - 5, points[i].Y - 5, 10, 10);
 
     // Draw data labels
     if (this._showDataLabels)
@@ -641,7 +640,7 @@ public class SimpleChart : Control {
     foreach (var dp in series.DataPoints) {
       var px = chartArea.Left + (float)((dp.X - xMin) / (xMax - xMin) * chartArea.Width);
       var py = chartArea.Bottom - (float)((dp.Y - yMin) / (yMax - yMin) * chartArea.Height);
-      points.Add(new PointF(px, py));
+      points.Add(new(px, py));
     }
 
     // Create polygon for area fill
@@ -650,7 +649,8 @@ public class SimpleChart : Control {
       path.AddLine(points[0].X, baseY, points[0].X, points[0].Y);
       for (var i = 1; i < points.Count; ++i)
         path.AddLine(points[i - 1], points[i]);
-      path.AddLine(points[points.Count - 1].X, points[points.Count - 1].Y, points[points.Count - 1].X, baseY);
+
+      path.AddLine(points[^1].X, points[^1].Y, points[^1].X, baseY);
       path.CloseFigure();
 
       using var brush = new SolidBrush(Color.FromArgb(100, series.Color));
@@ -664,7 +664,7 @@ public class SimpleChart : Control {
 
     // Register hit test regions
     for (var i = 0; i < series.DataPoints.Count; ++i)
-      this._hitTestRects[series.DataPoints[i]] = new RectangleF(points[i].X - 5, points[i].Y - 5, 10, 10);
+      this._hitTestRects[series.DataPoints[i]] = new(points[i].X - 5, points[i].Y - 5, 10, 10);
   }
 
   private void _DrawBarSeries(Graphics g, RectangleF chartArea, ChartSeries series, double xMin, double xMax, double yMin, double yMax, bool horizontal) {
@@ -688,7 +688,7 @@ public class SimpleChart : Control {
         var barWidth = (float)((dp.Y - yMin) / (yMax - yMin) * chartArea.Width);
         var px = chartArea.Left;
 
-        rect = new RectangleF(px, py - barHeight / 2, barWidth, barHeight);
+        rect = new(px, py - barHeight / 2, barWidth, barHeight);
       } else {
         // Vertical bars (Column chart)
         var barWidth = chartArea.Width / series.DataPoints.Count / visibleSeriesCount * 0.7f;
@@ -697,7 +697,7 @@ public class SimpleChart : Control {
         var baseY = chartArea.Bottom - (float)((Math.Max(0, yMin) - yMin) / (yMax - yMin) * chartArea.Height);
         var barHeight = (float)((dp.Y - Math.Max(0, yMin)) / (yMax - yMin) * chartArea.Height);
 
-        rect = new RectangleF(px - barWidth / 2, baseY - barHeight, barWidth, barHeight);
+        rect = new(px - barWidth / 2, baseY - barHeight, barWidth, barHeight);
       }
 
       g.FillRectangle(brush, rect);
@@ -722,14 +722,14 @@ public class SimpleChart : Control {
     foreach (var dp in series.DataPoints) {
       var px = chartArea.Left + (float)((dp.X - xMin) / (xMax - xMin) * chartArea.Width);
       var py = chartArea.Bottom - (float)((dp.Y - yMin) / (yMax - yMin) * chartArea.Height);
-      points.Add(new PointF(px, py));
+      points.Add(new(px, py));
     }
 
-    this._DrawMarkers(g, series, points.ToArray());
+    _DrawMarkers(g, series, points.ToArray());
 
     // Register hit test regions
     for (var i = 0; i < series.DataPoints.Count; ++i)
-      this._hitTestRects[series.DataPoints[i]] = new RectangleF(points[i].X - series.MarkerSize / 2, points[i].Y - series.MarkerSize / 2, series.MarkerSize, series.MarkerSize);
+      this._hitTestRects[series.DataPoints[i]] = new(points[i].X - series.MarkerSize / 2, points[i].Y - series.MarkerSize / 2, series.MarkerSize, series.MarkerSize);
 
     if (this._showDataLabels)
       this._DrawDataLabels(g, series, points.ToArray());
@@ -752,7 +752,7 @@ public class SimpleChart : Control {
     var centerY = chartArea.Top + chartArea.Height / 2;
     var pieRect = new RectangleF(centerX - size / 2, centerY - size / 2, size, size);
 
-    var donutHoleSize = this._chartType == ChartType.Donut ? size * 0.5f : 0;
+    var donutHoleSize = this.ChartType == ChartType.Donut ? size * 0.5f : 0;
     var startAngle = -90f;
 
     for (var i = 0; i < series.DataPoints.Count; ++i) {
@@ -763,7 +763,7 @@ public class SimpleChart : Control {
       using var brush = new SolidBrush(color);
       using var path = new GraphicsPath();
 
-      if (this._chartType == ChartType.Donut) {
+      if (this.ChartType == ChartType.Donut) {
         var innerRect = new RectangleF(centerX - donutHoleSize / 2, centerY - donutHoleSize / 2, donutHoleSize, donutHoleSize);
         path.AddArc(pieRect, startAngle, sweepAngle);
         path.AddArc(innerRect, startAngle + sweepAngle, -sweepAngle);
@@ -779,7 +779,7 @@ public class SimpleChart : Control {
       var midRad = midAngle * Math.PI / 180;
       var hitX = centerX + (float)(Math.Cos(midRad) * size / 4);
       var hitY = centerY + (float)(Math.Sin(midRad) * size / 4);
-      this._hitTestRects[dp] = new RectangleF(hitX - 15, hitY - 15, 30, 30);
+      this._hitTestRects[dp] = new(hitX - 15, hitY - 15, 30, 30);
 
       // Draw label
       if (this._showDataLabels) {
@@ -796,7 +796,7 @@ public class SimpleChart : Control {
     }
   }
 
-  private void _DrawMarkers(Graphics g, ChartSeries series, PointF[] points) {
+  private static void _DrawMarkers(Graphics g, ChartSeries series, PointF[] points) {
     using var brush = new SolidBrush(series.Color);
     using var pen = new Pen(series.Color, 1);
 
@@ -819,22 +819,26 @@ public class SimpleChart : Control {
           break;
         case ChartMarkerStyle.Diamond:
           using (var path = new GraphicsPath()) {
-            path.AddPolygon(new[] {
+            path.AddPolygon(
+            [
               new PointF(pt.X, pt.Y - halfSize),
               new PointF(pt.X + halfSize, pt.Y),
               new PointF(pt.X, pt.Y + halfSize),
               new PointF(pt.X - halfSize, pt.Y)
-            });
+            ]
+            );
             g.FillPath(markerBrush, path);
           }
           break;
         case ChartMarkerStyle.Triangle:
           using (var path = new GraphicsPath()) {
-            path.AddPolygon(new[] {
+            path.AddPolygon(
+            [
               new PointF(pt.X, pt.Y - halfSize),
               new PointF(pt.X + halfSize, pt.Y + halfSize),
               new PointF(pt.X - halfSize, pt.Y + halfSize)
-            });
+            ]
+            );
             g.FillPath(markerBrush, path);
           }
           break;
@@ -867,18 +871,18 @@ public class SimpleChart : Control {
     var legendHeight = this._series.Count * itemHeight;
     RectangleF legendRect;
 
-    switch (this._legendPosition) {
+    switch (this.LegendPosition) {
       case LegendPosition.Right:
-        legendRect = new RectangleF(chartArea.Right + 15, chartArea.Top + (chartArea.Height - legendHeight) / 2, legendWidth, legendHeight);
+        legendRect = new(chartArea.Right + 15, chartArea.Top + (chartArea.Height - legendHeight) / 2, legendWidth, legendHeight);
         break;
       case LegendPosition.Left:
-        legendRect = new RectangleF(chartArea.Left - legendWidth - 15, chartArea.Top + (chartArea.Height - legendHeight) / 2, legendWidth, legendHeight);
+        legendRect = new(chartArea.Left - legendWidth - 15, chartArea.Top + (chartArea.Height - legendHeight) / 2, legendWidth, legendHeight);
         break;
       case LegendPosition.Top:
-        legendRect = new RectangleF(chartArea.Left + (chartArea.Width - legendWidth) / 2, chartArea.Top - legendHeight - 10, legendWidth, legendHeight);
+        legendRect = new(chartArea.Left + (chartArea.Width - legendWidth) / 2, chartArea.Top - legendHeight - 10, legendWidth, legendHeight);
         break;
       case LegendPosition.Bottom:
-        legendRect = new RectangleF(chartArea.Left + (chartArea.Width - legendWidth) / 2, chartArea.Bottom + 30, legendWidth, legendHeight);
+        legendRect = new(chartArea.Left + (chartArea.Width - legendWidth) / 2, chartArea.Bottom + 30, legendWidth, legendHeight);
         break;
       default:
         return;
@@ -902,22 +906,24 @@ public class SimpleChart : Control {
 
     ChartDataPoint hoveredPoint = null;
     foreach (var kvp in this._hitTestRects) {
-      if (kvp.Value.Contains(e.Location)) {
-        hoveredPoint = kvp.Key;
-        break;
-      }
+      if (!kvp.Value.Contains(e.Location))
+        continue;
+
+      hoveredPoint = kvp.Key;
+      break;
     }
 
-    if (hoveredPoint != this._hoveredPoint) {
-      this._hoveredPoint = hoveredPoint;
+    if (hoveredPoint == this._hoveredPoint)
+      return;
 
-      if (hoveredPoint != null) {
-        var tooltipText = hoveredPoint.Label ?? $"X: {hoveredPoint.X:N2}, Y: {hoveredPoint.Y:N2}";
-        this._toolTip.Show(tooltipText, this, e.X + 15, e.Y + 15);
-        this.OnDataPointHovered(new ChartDataPointEventArgs(hoveredPoint));
-      } else
-        this._toolTip.Hide(this);
-    }
+    this._hoveredPoint = hoveredPoint;
+
+    if (hoveredPoint != null) {
+      var tooltipText = hoveredPoint.Label ?? $"X: {hoveredPoint.X:N2}, Y: {hoveredPoint.Y:N2}";
+      this._toolTip.Show(tooltipText, this, e.X + 15, e.Y + 15);
+      this.OnDataPointHovered(new(hoveredPoint));
+    } else
+      this._toolTip.Hide(this);
   }
 
   /// <inheritdoc />
@@ -925,10 +931,11 @@ public class SimpleChart : Control {
     base.OnMouseClick(e);
 
     foreach (var kvp in this._hitTestRects) {
-      if (kvp.Value.Contains(e.Location)) {
-        this.OnDataPointClicked(new ChartDataPointEventArgs(kvp.Key));
-        break;
-      }
+      if (!kvp.Value.Contains(e.Location))
+        continue;
+
+      this.OnDataPointClicked(new(kvp.Key));
+      break;
     }
   }
 
@@ -954,27 +961,19 @@ public class SimpleChart : Control {
 /// </summary>
 public class ChartSeries {
   private readonly SimpleChart _owner;
-  private string _name;
-  private ChartType _chartType;
-  private Color _color = Color.DodgerBlue;
-  private int _lineWidth = 2;
-  private bool _showMarkers = true;
-  private int _markerSize = 6;
-  private ChartMarkerStyle _markerStyle = ChartMarkerStyle.Circle;
-  private bool _visible = true;
 
   internal ChartSeries(SimpleChart owner) {
     this._owner = owner;
-    this.DataPoints = new ChartDataPointCollection(owner);
+    this.DataPoints = new(owner);
   }
 
   /// <summary>
   /// Gets or sets the name of the series.
   /// </summary>
   public string Name {
-    get => this._name;
+    get;
     set {
-      this._name = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
   }
@@ -983,9 +982,9 @@ public class ChartSeries {
   /// Gets or sets the chart type for this series.
   /// </summary>
   public ChartType ChartType {
-    get => this._chartType;
+    get;
     set {
-      this._chartType = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
   }
@@ -999,67 +998,67 @@ public class ChartSeries {
   /// Gets or sets the color of the series.
   /// </summary>
   public Color Color {
-    get => this._color;
+    get;
     set {
-      this._color = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = Color.DodgerBlue;
 
   /// <summary>
   /// Gets or sets the line width.
   /// </summary>
   public int LineWidth {
-    get => this._lineWidth;
+    get;
     set {
-      this._lineWidth = Math.Max(1, value);
+      field = Math.Max(1, value);
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = 2;
 
   /// <summary>
   /// Gets or sets whether to show markers on data points.
   /// </summary>
   public bool ShowMarkers {
-    get => this._showMarkers;
+    get;
     set {
-      this._showMarkers = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = true;
 
   /// <summary>
   /// Gets or sets the marker size.
   /// </summary>
   public int MarkerSize {
-    get => this._markerSize;
+    get;
     set {
-      this._markerSize = Math.Max(2, value);
+      field = Math.Max(2, value);
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = 6;
 
   /// <summary>
   /// Gets or sets the marker style.
   /// </summary>
   public ChartMarkerStyle MarkerStyle {
-    get => this._markerStyle;
+    get;
     set {
-      this._markerStyle = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = ChartMarkerStyle.Circle;
 
   /// <summary>
   /// Gets or sets whether the series is visible.
   /// </summary>
   public bool Visible {
-    get => this._visible;
+    get;
     set {
-      this._visible = value;
+      field = value;
       this._owner?.NotifySeriesChanged();
     }
-  }
+  } = true;
 
   /// <summary>
   /// Adds a data point to the series.
@@ -1067,9 +1066,7 @@ public class ChartSeries {
   /// <param name="x">The X value.</param>
   /// <param name="y">The Y value.</param>
   /// <param name="label">Optional label for the point.</param>
-  public void AddPoint(double x, double y, string label = null) {
-    this.DataPoints.Add(new ChartDataPoint { X = x, Y = y, Label = label });
-  }
+  public void AddPoint(double x, double y, string label = null) => this.DataPoints.Add(new() { X = x, Y = y, Label = label });
 
   /// <summary>
   /// Adds multiple data points to the series.
