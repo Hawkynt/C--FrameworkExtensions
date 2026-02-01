@@ -170,9 +170,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ZipFileExtensions](https://learn.microsoft.com/dotnet/api/system.io.compression.zipfileextensions)
 
 - System.Numerics
-  - [BigInteger](https://learn.microsoft.com/dotnet/api/system.numerics.biginteger) (native polyfill for net20/net35)
+  - [BigInteger](https://learn.microsoft.com/dotnet/api/system.numerics.biginteger)
   - [BitOperations](https://learn.microsoft.com/dotnet/api/system.numerics.bitoperations)
-  - [Complex](https://learn.microsoft.com/dotnet/api/system.numerics.complex) (native polyfill for net20/net35)
+  - [Complex](https://learn.microsoft.com/dotnet/api/system.numerics.complex)
   - [Matrix3x2](https://learn.microsoft.com/dotnet/api/system.numerics.matrix3x2)
   - [Matrix4x4](https://learn.microsoft.com/dotnet/api/system.numerics.matrix4x4)
   - [Plane](https://learn.microsoft.com/dotnet/api/system.numerics.plane)

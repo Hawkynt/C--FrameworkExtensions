@@ -481,6 +481,129 @@ public class BigIntegerTests {
     Assert.That((int)(value >> 0), Is.EqualTo(42));
   }
 
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a & b), Is.EqualTo(0b1000));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_WithZero_ReturnsZero() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a & BigInteger.Zero), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_WithLong_ReturnsCorrectResult() {
+    var a = new BigInteger(0b11111111);
+    Assert.That((int)(a & 0b00001111L), Is.EqualTo(0b00001111));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a | b), Is.EqualTo(0b1110));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_WithZero_ReturnsSameValue() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a | BigInteger.Zero), Is.EqualTo(0xFF));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_WithInt_ReturnsCorrectResult() {
+    var a = new BigInteger(0b11110000);
+    Assert.That((int)(a | 0b00001111), Is.EqualTo(0b11111111));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseXor_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a ^ b), Is.EqualTo(0b0110));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseXor_WithSelf_ReturnsZero() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a ^ a), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_ReturnsCorrectResult() {
+    var a = new BigInteger(0);
+    Assert.That((int)(~a), Is.EqualTo(-1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_OfNegativeOne_ReturnsZero() {
+    var a = new BigInteger(-1);
+    Assert.That((int)(~a), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_OfPositive_ReturnsNegative() {
+    var a = new BigInteger(5);
+    Assert.That((int)(~a), Is.EqualTo(-6));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseAnd_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(long.MaxValue);
+    var b = new BigInteger(0x00FF00FF00FF00FFL);
+    var result = a & b;
+    Assert.That((long)result, Is.EqualTo(0x00FF00FF00FF00FFL));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseOr_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(0x0F0F0F0F0F0F0F0FL);
+    var b = new BigInteger(unchecked((long)0xF0F0F0F0F0F0F0F0L));
+    var result = a | b;
+    Assert.That(result, Is.EqualTo(BigInteger.MinusOne));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseXor_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(0x0F0F0F0F0F0F0F0FL);
+    var b = new BigInteger(-1);
+    var result = a ^ b;
+    Assert.That(result, Is.EqualTo(new BigInteger(unchecked((long)0xF0F0F0F0F0F0F0F0L))));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_NegativeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(-1);
+    var b = new BigInteger(0xFF);
+    Assert.That((int)(a & b), Is.EqualTo(0xFF));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_NegativeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(-256);
+    var b = new BigInteger(0xFF);
+    Assert.That((int)(a | b), Is.EqualTo(-1));
+  }
+
   #endregion
 
   #region Parsing Tests

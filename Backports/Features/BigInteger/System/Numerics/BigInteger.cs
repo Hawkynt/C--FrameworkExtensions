@@ -610,6 +610,100 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     return new(result == null ? 0 : value._sign, result);
   }
 
+  /// <summary>Performs a bitwise AND operation.</summary>
+  public static BigInteger operator &(BigInteger left, BigInteger right) {
+    if (left._sign == 0 || right._sign == 0)
+      return Zero;
+
+    // Convert to two's complement representation for the operation
+    var leftBytes = left.ToByteArray();
+    var rightBytes = right.ToByteArray();
+    var maxLen = Math.Max(leftBytes.Length, rightBytes.Length);
+
+    // Sign extend if needed
+    var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
+    var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
+
+    var result = new byte[maxLen];
+    for (var i = 0; i < maxLen; ++i) {
+      var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
+      var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
+      result[i] = (byte)(l & r);
+    }
+
+    return new BigInteger(result);
+  }
+
+  /// <summary>Performs a bitwise AND operation.</summary>
+  public static BigInteger operator &(BigInteger left, long right) => left & new BigInteger(right);
+
+  /// <summary>Performs a bitwise AND operation.</summary>
+  public static BigInteger operator &(BigInteger left, ulong right) => left & new BigInteger(right);
+
+  /// <summary>Performs a bitwise OR operation.</summary>
+  public static BigInteger operator |(BigInteger left, BigInteger right) {
+    if (left._sign == 0)
+      return right;
+    if (right._sign == 0)
+      return left;
+
+    var leftBytes = left.ToByteArray();
+    var rightBytes = right.ToByteArray();
+    var maxLen = Math.Max(leftBytes.Length, rightBytes.Length);
+
+    var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
+    var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
+
+    var result = new byte[maxLen];
+    for (var i = 0; i < maxLen; ++i) {
+      var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
+      var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
+      result[i] = (byte)(l | r);
+    }
+
+    return new BigInteger(result);
+  }
+
+  /// <summary>Performs a bitwise OR operation.</summary>
+  public static BigInteger operator |(BigInteger left, int right) => left | new BigInteger(right);
+
+  /// <summary>Performs a bitwise OR operation.</summary>
+  public static BigInteger operator |(BigInteger left, long right) => left | new BigInteger(right);
+
+  /// <summary>Performs a bitwise XOR operation.</summary>
+  public static BigInteger operator ^(BigInteger left, BigInteger right) {
+    if (left._sign == 0)
+      return right;
+    if (right._sign == 0)
+      return left;
+
+    var leftBytes = left.ToByteArray();
+    var rightBytes = right.ToByteArray();
+    var maxLen = Math.Max(leftBytes.Length, rightBytes.Length);
+
+    var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
+    var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
+
+    var result = new byte[maxLen];
+    for (var i = 0; i < maxLen; ++i) {
+      var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
+      var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
+      result[i] = (byte)(l ^ r);
+    }
+
+    return new BigInteger(result);
+  }
+
+  /// <summary>Performs a bitwise complement (NOT) operation.</summary>
+  public static BigInteger operator ~(BigInteger value) {
+    var bytes = value.ToByteArray();
+    var result = new byte[bytes.Length];
+    for (var i = 0; i < bytes.Length; ++i)
+      result[i] = (byte)~bytes[i];
+
+    return new BigInteger(result);
+  }
+
   #endregion
 
   #region Parsing
