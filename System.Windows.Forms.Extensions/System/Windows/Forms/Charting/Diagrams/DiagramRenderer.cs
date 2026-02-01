@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 
 namespace System.Windows.Forms.Charting.Diagrams;
 
@@ -218,6 +219,538 @@ public abstract class DiagramRenderer {
     Color.FromArgb(26, 188, 156),
     Color.FromArgb(52, 73, 94)
   };
+
+  #endregion
+
+  #region Layout Utilities
+
+  /// <summary>
+  /// Calculates a non-overlapping grid layout for items of uniform size.
+  /// </summary>
+  /// <param name="itemCount">Number of items to lay out.</param>
+  /// <param name="itemWidth">Width of each item.</param>
+  /// <param name="itemHeight">Height of each item.</param>
+  /// <param name="margin">Margin between items.</param>
+  /// <param name="plotArea">Available area for layout.</param>
+  /// <returns>Dictionary mapping item index to its rectangle.</returns>
+  protected static Dictionary<int, RectangleF> CalculateGridLayout(
+    int itemCount, float itemWidth, float itemHeight, float margin, RectangleF plotArea) {
+    var positions = new Dictionary<int, RectangleF>();
+    if (itemCount == 0)
+      return positions;
+
+    // Calculate cell size including margin
+    var cellWidth = itemWidth + margin;
+    var cellHeight = itemHeight + margin;
+
+    // Calculate optimal grid dimensions
+    var cols = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(itemCount * (cellWidth / cellHeight))));
+    var rows = (int)Math.Ceiling((float)itemCount / cols);
+
+    // Calculate total content size
+    var contentWidth = cols * cellWidth;
+    var contentHeight = rows * cellHeight;
+
+    // Calculate starting position (centered if fits, otherwise start at origin)
+    var startX = plotArea.Left + Math.Max(0, (plotArea.Width - contentWidth) / 2) + margin / 2;
+    var startY = plotArea.Top + Math.Max(0, (plotArea.Height - contentHeight) / 2) + margin / 2;
+
+    for (var i = 0; i < itemCount; ++i) {
+      var col = i % cols;
+      var row = i / cols;
+      var x = startX + col * cellWidth;
+      var y = startY + row * cellHeight;
+      positions[i] = new RectangleF(x, y, itemWidth, itemHeight);
+    }
+
+    return positions;
+  }
+
+  /// <summary>
+  /// Calculates the content bounds from a collection of rectangles and reports them for auto-zoom.
+  /// </summary>
+  protected static RectangleF CalculateContentBounds(IEnumerable<RectangleF> rectangles, float padding = 20f) {
+    var minX = float.MaxValue;
+    var minY = float.MaxValue;
+    var maxX = float.MinValue;
+    var maxY = float.MinValue;
+    var hasAny = false;
+
+    foreach (var rect in rectangles) {
+      hasAny = true;
+      minX = Math.Min(minX, rect.Left);
+      minY = Math.Min(minY, rect.Top);
+      maxX = Math.Max(maxX, rect.Right);
+      maxY = Math.Max(maxY, rect.Bottom);
+    }
+
+    if (!hasAny)
+      return RectangleF.Empty;
+
+    return new RectangleF(
+      minX - padding,
+      minY - padding,
+      maxX - minX + padding * 2,
+      maxY - minY + padding * 2
+    );
+  }
+
+  /// <summary>
+  /// Calculates the zoom level needed to fit content in the viewport.
+  /// </summary>
+  protected static float CalculateAutoZoom(RectangleF contentBounds, RectangleF viewport) {
+    if (contentBounds.Width <= 0 || contentBounds.Height <= 0)
+      return 1f;
+
+    var scaleX = viewport.Width / contentBounds.Width;
+    var scaleY = viewport.Height / contentBounds.Height;
+    var scale = Math.Min(scaleX, scaleY);
+
+    // Clamp to reasonable zoom range
+    return Math.Max(0.1f, Math.Min(2f, scale));
+  }
+
+  /// <summary>
+  /// Adjusts positions to fit within the plot area, scaling both in and out as needed.
+  /// Returns the scale factor applied.
+  /// </summary>
+  protected static float AdjustLayoutToFit(
+    Dictionary<string, RectangleF> positions,
+    RectangleF plotArea,
+    float padding = 20f) {
+    if (positions.Count == 0)
+      return 1f;
+
+    var contentBounds = CalculateContentBounds(positions.Values, 0);
+
+    // Calculate scale needed to fit (scale both in and out)
+    var availableWidth = plotArea.Width - padding * 2;
+    var availableHeight = plotArea.Height - padding * 2;
+
+    var scaleX = contentBounds.Width > 0 ? availableWidth / contentBounds.Width : 1f;
+    var scaleY = contentBounds.Height > 0 ? availableHeight / contentBounds.Height : 1f;
+    var scale = Math.Min(scaleX, scaleY); // Scale both in and out
+
+    // Center the scaled content
+    var offsetX = plotArea.Left + padding + (availableWidth - contentBounds.Width * scale) / 2 - contentBounds.Left * scale;
+    var offsetY = plotArea.Top + padding + (availableHeight - contentBounds.Height * scale) / 2 - contentBounds.Top * scale;
+
+    // Apply transformation to all positions
+    var keys = new List<string>(positions.Keys);
+    foreach (var key in keys) {
+      var rect = positions[key];
+      positions[key] = new RectangleF(
+        rect.X * scale + offsetX,
+        rect.Y * scale + offsetY,
+        rect.Width * scale,
+        rect.Height * scale
+      );
+    }
+
+    return scale;
+  }
+
+  /// <summary>
+  /// Represents a virtual canvas for layout calculations in relative coordinates.
+  /// Nodes are laid out in virtual space and then transformed to fit the viewport.
+  /// </summary>
+  protected class VirtualCanvas {
+    private readonly Dictionary<string, RectangleF> _nodeRects = new();
+    private readonly float _cellWidth;
+    private readonly float _cellHeight;
+    private readonly float _margin;
+
+    /// <summary>Gets the uniform cell width including margin.</summary>
+    public float CellWidth => this._cellWidth;
+
+    /// <summary>Gets the uniform cell height including margin.</summary>
+    public float CellHeight => this._cellHeight;
+
+    /// <summary>
+    /// Creates a virtual canvas with uniform cell sizes based on measured node sizes.
+    /// </summary>
+    /// <param name="nodeSizes">Dictionary of node ID to measured size (including margin).</param>
+    public VirtualCanvas(Dictionary<string, SizeF> nodeSizes, float margin = 10f) {
+      this._margin = margin;
+      if (nodeSizes.Count == 0) {
+        this._cellWidth = 100;
+        this._cellHeight = 50;
+        return;
+      }
+
+      // Find max dimensions for uniform cells
+      this._cellWidth = nodeSizes.Values.Max(s => s.Width) + margin;
+      this._cellHeight = nodeSizes.Values.Max(s => s.Height) + margin;
+    }
+
+    /// <summary>
+    /// Creates a virtual canvas with explicit cell sizes.
+    /// </summary>
+    public VirtualCanvas(float cellWidth, float cellHeight, float margin = 10f) {
+      this._cellWidth = cellWidth + margin;
+      this._cellHeight = cellHeight + margin;
+      this._margin = margin;
+    }
+
+    /// <summary>
+    /// Places a node at the specified grid position (col, row).
+    /// </summary>
+    public void PlaceAtGrid(string nodeId, int col, int row) {
+      var x = col * this._cellWidth;
+      var y = row * this._cellHeight;
+      this._nodeRects[nodeId] = new RectangleF(x, y, this._cellWidth - this._margin, this._cellHeight - this._margin);
+    }
+
+    /// <summary>
+    /// Places a node at an explicit virtual position.
+    /// </summary>
+    public void PlaceAt(string nodeId, float x, float y, float width, float height)
+      => this._nodeRects[nodeId] = new RectangleF(x, y, width, height);
+
+    /// <summary>
+    /// Gets all node rectangles in virtual coordinates.
+    /// </summary>
+    public Dictionary<string, RectangleF> GetVirtualPositions() => new(this._nodeRects);
+
+    /// <summary>
+    /// Calculates a grid layout for the specified nodes, optimizing for the aspect ratio.
+    /// </summary>
+    public void LayoutAsGrid(IList<string> nodeIds, float targetAspectRatio = 1.5f) {
+      if (nodeIds.Count == 0)
+        return;
+
+      // Calculate optimal columns based on aspect ratio
+      var cols = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(nodeIds.Count * targetAspectRatio)));
+
+      for (var i = 0; i < nodeIds.Count; ++i) {
+        var col = i % cols;
+        var row = i / cols;
+        this.PlaceAtGrid(nodeIds[i], col, row);
+      }
+    }
+
+    /// <summary>
+    /// Transforms all virtual positions to fit within the viewport, scaling both in and out.
+    /// Returns the center positions for each node.
+    /// </summary>
+    public Dictionary<string, PointF> TransformToViewport(RectangleF viewport, float padding = 20f) {
+      var positions = new Dictionary<string, RectangleF>(this._nodeRects);
+      AdjustRectangleLayoutToFit(positions, viewport, padding);
+
+      // Return center points
+      var result = new Dictionary<string, PointF>();
+      foreach (var kvp in positions)
+        result[kvp.Key] = new PointF(kvp.Value.X + kvp.Value.Width / 2, kvp.Value.Y + kvp.Value.Height / 2);
+      return result;
+    }
+
+    /// <summary>
+    /// Transforms all virtual positions to fit within the viewport, returning full rectangles.
+    /// </summary>
+    public Dictionary<string, RectangleF> TransformToViewportRects(RectangleF viewport, float padding = 20f) {
+      var positions = new Dictionary<string, RectangleF>(this._nodeRects);
+      AdjustRectangleLayoutToFit(positions, viewport, padding);
+      return positions;
+    }
+  }
+
+  /// <summary>
+  /// Measures node sizes (icon + label) for all nodes, returning sizes including margin.
+  /// </summary>
+  protected static Dictionary<string, SizeF> MeasureNodeSizes(
+    Graphics g, Font font, IEnumerable<(string Id, string Label, float IconSize)> nodes, float margin = 15f) {
+    var sizes = new Dictionary<string, SizeF>();
+    foreach (var (id, label, iconSize) in nodes) {
+      var labelSize = g.MeasureString(label ?? id, font);
+      var width = Math.Max(iconSize, labelSize.Width) + margin;
+      var height = iconSize + labelSize.Height + margin;
+      sizes[id] = new SizeF(width, height);
+    }
+    return sizes;
+  }
+
+  /// <summary>
+  /// Calculates a hierarchical layout for tree structures.
+  /// </summary>
+  protected static Dictionary<string, PointF> CalculateHierarchicalLayout<T>(
+    IList<T> roots,
+    Func<T, string> getId,
+    Func<T, IEnumerable<T>> getChildren,
+    float nodeWidth, float nodeHeight, float horizontalSpacing, float verticalSpacing,
+    RectangleF plotArea) {
+    var positions = new Dictionary<string, PointF>();
+    if (roots == null || roots.Count == 0)
+      return positions;
+
+    // Calculate subtree widths
+    var subtreeWidths = new Dictionary<string, float>();
+    foreach (var root in roots)
+      _CalculateSubtreeWidth(root, getId, getChildren, nodeWidth, horizontalSpacing, subtreeWidths);
+
+    // Position nodes
+    var currentX = plotArea.Left + horizontalSpacing;
+    foreach (var root in roots) {
+      _PositionHierarchyNode(root, getId, getChildren, subtreeWidths, positions,
+        0, ref currentX, plotArea.Top + verticalSpacing, nodeWidth, nodeHeight, horizontalSpacing, verticalSpacing);
+      currentX += horizontalSpacing;
+    }
+
+    return positions;
+  }
+
+  private static float _CalculateSubtreeWidth<T>(
+    T node, Func<T, string> getId, Func<T, IEnumerable<T>> getChildren,
+    float nodeWidth, float spacing, Dictionary<string, float> widths) {
+    var id = getId(node);
+    var children = getChildren(node)?.ToList() ?? new List<T>();
+
+    if (children.Count == 0) {
+      widths[id] = nodeWidth;
+      return nodeWidth;
+    }
+
+    var totalWidth = 0f;
+    foreach (var child in children) {
+      if (totalWidth > 0)
+        totalWidth += spacing;
+      totalWidth += _CalculateSubtreeWidth(child, getId, getChildren, nodeWidth, spacing, widths);
+    }
+
+    widths[id] = Math.Max(nodeWidth, totalWidth);
+    return widths[id];
+  }
+
+  private static void _PositionHierarchyNode<T>(
+    T node, Func<T, string> getId, Func<T, IEnumerable<T>> getChildren,
+    Dictionary<string, float> subtreeWidths, Dictionary<string, PointF> positions,
+    int depth, ref float currentX, float startY,
+    float nodeWidth, float nodeHeight, float horizontalSpacing, float verticalSpacing) {
+    var id = getId(node);
+    var subtreeWidth = subtreeWidths.GetValueOrDefault(id, nodeWidth);
+    var children = getChildren(node)?.ToList() ?? new List<T>();
+
+    if (children.Count == 0) {
+      positions[id] = new PointF(currentX + nodeWidth / 2, startY + depth * (nodeHeight + verticalSpacing));
+      currentX += nodeWidth;
+    } else {
+      var childStartX = currentX;
+      foreach (var child in children) {
+        _PositionHierarchyNode(child, getId, getChildren, subtreeWidths, positions,
+          depth + 1, ref currentX, startY, nodeWidth, nodeHeight, horizontalSpacing, verticalSpacing);
+        currentX += horizontalSpacing;
+      }
+      currentX -= horizontalSpacing;
+
+      // Center parent above children
+      var x = (childStartX + currentX + nodeWidth) / 2;
+      positions[id] = new PointF(x, startY + depth * (nodeHeight + verticalSpacing));
+    }
+  }
+
+  /// <summary>
+  /// Simple edge crossing minimization by reordering nodes within layers.
+  /// </summary>
+  protected static void MinimizeEdgeCrossings<T>(
+    IList<T> items,
+    Func<T, string> getId,
+    Func<T, IEnumerable<string>> getConnectedIds,
+    Dictionary<string, PointF> positions) {
+    // Group by Y position (layers)
+    var layers = positions
+      .GroupBy(kvp => (int)(kvp.Value.Y / 10) * 10)
+      .OrderBy(g => g.Key)
+      .Select(g => g.OrderBy(kvp => kvp.Value.X).Select(kvp => kvp.Key).ToList())
+      .ToList();
+
+    // For each pair of adjacent layers, minimize crossings using barycenter heuristic
+    for (var i = 1; i < layers.Count; ++i) {
+      var upperLayer = layers[i - 1];
+      var lowerLayer = layers[i];
+
+      // Calculate barycenter for each node in lower layer
+      var barycenters = new Dictionary<string, float>();
+      foreach (var nodeId in lowerLayer) {
+        var item = items.FirstOrDefault(it => getId(it) == nodeId);
+        if (item == null)
+          continue;
+
+        var connectedIds = getConnectedIds(item)?.ToList() ?? new List<string>();
+        var connectedInUpper = connectedIds.Where(id => upperLayer.Contains(id)).ToList();
+
+        if (connectedInUpper.Count > 0) {
+          var sum = connectedInUpper.Sum(id => upperLayer.IndexOf(id));
+          barycenters[nodeId] = sum / (float)connectedInUpper.Count;
+        } else {
+          barycenters[nodeId] = lowerLayer.IndexOf(nodeId);
+        }
+      }
+
+      // Reorder by barycenter
+      layers[i] = lowerLayer.OrderBy(id => barycenters.GetValueOrDefault(id, 0)).ToList();
+
+      // Update positions
+      var layerY = positions[layers[i][0]].Y;
+      var spacing = layers[i].Count > 1
+        ? (positions[layers[i].Last()].X - positions[layers[i].First()].X) / (layers[i].Count - 1)
+        : 100f;
+      var startX = positions.Values.Min(p => p.X);
+
+      for (var j = 0; j < layers[i].Count; ++j) {
+        var id = layers[i][j];
+        positions[id] = new PointF(startX + j * spacing, layerY);
+      }
+    }
+  }
+
+  /// <summary>
+  /// Minimizes edge crossings for grid layouts by reordering nodes.
+  /// Uses barycenter heuristic for adjacent rows.
+  /// </summary>
+  protected static void MinimizeEdgeCrossingsForGrid<T>(
+    IList<T> items,
+    Func<T, string> getId,
+    Func<T, IEnumerable<string>> getConnectedIds,
+    Dictionary<string, RectangleF> positions,
+    int iterations = 2) {
+    if (positions.Count < 3)
+      return;
+
+    // Convert to center points
+    var centerPositions = new Dictionary<string, PointF>();
+    foreach (var kvp in positions)
+      centerPositions[kvp.Key] = new PointF(
+        kvp.Value.X + kvp.Value.Width / 2,
+        kvp.Value.Y + kvp.Value.Height / 2);
+
+    // Group by Y position (rows)
+    var tolerance = positions.Values.First().Height / 2;
+    var rows = centerPositions
+      .GroupBy(kvp => Math.Round(kvp.Value.Y / tolerance) * tolerance)
+      .OrderBy(g => g.Key)
+      .Select(g => g.OrderBy(kvp => kvp.Value.X).Select(kvp => kvp.Key).ToList())
+      .ToList();
+
+    if (rows.Count < 2)
+      return;
+
+    // Run barycenter iterations
+    for (var iter = 0; iter < iterations; ++iter) {
+      // Forward pass
+      for (var rowIdx = 1; rowIdx < rows.Count; ++rowIdx)
+        _ReorderRowByBarycenter(rows, rowIdx, items, getId, getConnectedIds, centerPositions, true);
+
+      // Backward pass
+      for (var rowIdx = rows.Count - 2; rowIdx >= 0; --rowIdx)
+        _ReorderRowByBarycenter(rows, rowIdx, items, getId, getConnectedIds, centerPositions, false);
+    }
+
+    // Apply new ordering to rectangles
+    foreach (var row in rows) {
+      var rowY = positions[row[0]].Y;
+      var sortedRects = row.Select(id => positions[id]).OrderBy(r => r.X).ToList();
+      for (var i = 0; i < row.Count; ++i) {
+        var id = row[i];
+        var oldRect = positions[id];
+        positions[id] = new RectangleF(sortedRects[i].X, rowY, oldRect.Width, oldRect.Height);
+      }
+    }
+  }
+
+  private static void _ReorderRowByBarycenter<T>(
+    List<List<string>> rows, int rowIdx,
+    IList<T> items, Func<T, string> getId, Func<T, IEnumerable<string>> getConnectedIds,
+    Dictionary<string, PointF> positions, bool useUpperRow) {
+    var currentRow = rows[rowIdx];
+    var adjacentRow = useUpperRow ? rows[rowIdx - 1] : rows[rowIdx + 1];
+
+    var barycenters = new Dictionary<string, float>();
+    foreach (var nodeId in currentRow) {
+      var item = items.FirstOrDefault(it => getId(it) == nodeId);
+      if (item == null) {
+        barycenters[nodeId] = currentRow.IndexOf(nodeId);
+        continue;
+      }
+
+      var connectedIds = getConnectedIds(item)?.ToList() ?? new List<string>();
+      var connectedInAdjacent = connectedIds.Where(id => adjacentRow.Contains(id)).ToList();
+
+      if (connectedInAdjacent.Count > 0) {
+        var sum = connectedInAdjacent.Sum(id => adjacentRow.IndexOf(id));
+        barycenters[nodeId] = sum / (float)connectedInAdjacent.Count;
+      } else {
+        barycenters[nodeId] = currentRow.IndexOf(nodeId);
+      }
+    }
+
+    // Reorder by barycenter
+    var newOrder = currentRow.OrderBy(id => barycenters.GetValueOrDefault(id, 0)).ToList();
+    rows[rowIdx] = newOrder;
+
+    // Update positions to reflect new order
+    var rowY = positions[currentRow[0]].Y;
+    var sortedX = currentRow.Select(id => positions[id].X).OrderBy(x => x).ToList();
+    for (var i = 0; i < newOrder.Count; ++i)
+      positions[newOrder[i]] = new PointF(sortedX[i], rowY);
+  }
+
+  /// <summary>
+  /// Adjusts a rectangle-based layout to fit within the plot area, scaling and centering as needed.
+  /// Returns the scale factor applied (1.0 if no scaling needed).
+  /// </summary>
+  protected static float AdjustRectangleLayoutToFit(
+    Dictionary<string, RectangleF> positions,
+    RectangleF plotArea,
+    float padding = 20f) {
+    if (positions.Count == 0)
+      return 1f;
+
+    // Calculate content bounds
+    var minX = float.MaxValue;
+    var minY = float.MaxValue;
+    var maxX = float.MinValue;
+    var maxY = float.MinValue;
+
+    foreach (var rect in positions.Values) {
+      minX = Math.Min(minX, rect.Left);
+      minY = Math.Min(minY, rect.Top);
+      maxX = Math.Max(maxX, rect.Right);
+      maxY = Math.Max(maxY, rect.Bottom);
+    }
+
+    var contentWidth = maxX - minX;
+    var contentHeight = maxY - minY;
+
+    if (contentWidth <= 0 || contentHeight <= 0)
+      return 1f;
+
+    // Calculate scale needed to fit (scale both in and out to fill viewport)
+    var availableWidth = plotArea.Width - padding * 2;
+    var availableHeight = plotArea.Height - padding * 2;
+
+    var scaleX = availableWidth / contentWidth;
+    var scaleY = availableHeight / contentHeight;
+    var scale = Math.Min(scaleX, scaleY); // Uniform scaling to fit
+
+    // Calculate offset to center content
+    var scaledWidth = contentWidth * scale;
+    var scaledHeight = contentHeight * scale;
+    var offsetX = plotArea.Left + padding + (availableWidth - scaledWidth) / 2 - minX * scale;
+    var offsetY = plotArea.Top + padding + (availableHeight - scaledHeight) / 2 - minY * scale;
+
+    // Apply transformation
+    var keys = new List<string>(positions.Keys);
+    foreach (var key in keys) {
+      var rect = positions[key];
+      positions[key] = new RectangleF(
+        rect.X * scale + offsetX,
+        rect.Y * scale + offsetY,
+        rect.Width * scale,
+        rect.Height * scale
+      );
+    }
+
+    return scale;
+  }
 
   #endregion
 }

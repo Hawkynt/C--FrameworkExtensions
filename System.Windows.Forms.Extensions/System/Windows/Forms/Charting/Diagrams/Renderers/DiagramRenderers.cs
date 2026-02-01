@@ -496,30 +496,73 @@ public class NetworkDiagramRenderer : DiagramRenderer {
 
     var nodeLookup = networkNodes?.ToDictionary(n => n.Id) ?? new Dictionary<string, DiagramNode>();
 
-    // Calculate positions using simple circular layout (or use provided positions)
-    var centerX = context.PlotArea.Left + context.PlotArea.Width / 2;
-    var centerY = context.PlotArea.Top + context.PlotArea.Height / 2;
-    var radius = Math.Min(context.PlotArea.Width, context.PlotArea.Height) / 2 * 0.7f;
+    // Calculate size range for variable-sized nodes
+    var maxSize = networkNodes?.Max(n => n.Size) ?? 1;
+    var minSize = networkNodes?.Min(n => n.Size) ?? 1;
+    var sizeRange = maxSize - minSize > 0 ? maxSize - minSize : 1;
 
-    var nodePositions = new Dictionary<string, PointF>();
-    for (var i = 0; i < nodes.Count; ++i) {
-      var nodeId = nodes[i];
+    // Measure all node sizes (icon + label)
+    var nodeSizes = MeasureNodeSizes(
+      g, context.Diagram.Font,
+      nodes.Select(nodeId => {
+        float iconSize;
+        string label;
+        if (nodeLookup.TryGetValue(nodeId, out var node)) {
+          var normalizedSize = (node.Size - minSize) / sizeRange;
+          iconSize = this.MinNodeSize + (float)(normalizedSize * (this.MaxNodeSize - this.MinNodeSize));
+          label = node.Label ?? nodeId;
+        } else {
+          iconSize = this.MinNodeSize;
+          label = nodeId;
+        }
+        return (nodeId, label, iconSize);
+      }));
 
-      // Use provided position if available
-      if (nodeLookup.TryGetValue(nodeId, out var node) && node.Position != PointF.Empty) {
-        // Map position to plot area (positions are 0-100 percentages)
-        nodePositions[nodeId] = new PointF(
-          context.PlotArea.Left + node.Position.X / 100f * context.PlotArea.Width,
-          context.PlotArea.Top + node.Position.Y / 100f * context.PlotArea.Height
-        );
-      } else {
-        // Circular layout
-        var angle = 2 * Math.PI * i / nodeCount - Math.PI / 2;
-        nodePositions[nodeId] = new PointF(
-          centerX + (float)(Math.Cos(angle) * radius),
-          centerY + (float)(Math.Sin(angle) * radius)
-        );
+    // Create virtual canvas with uniform cell sizes based on measured nodes
+    var canvas = new VirtualCanvas(nodeSizes);
+
+    var hasExplicitPositions = nodeLookup.Values.Any(n => n.Position != PointF.Empty && (n.Position.X > 0 || n.Position.Y > 0));
+    Dictionary<string, PointF> nodePositions;
+
+    if (hasExplicitPositions) {
+      // Use explicit positions (relative 0-100 space)
+      foreach (var nodeId in nodes) {
+        if (nodeLookup.TryGetValue(nodeId, out var node) && node.Position != PointF.Empty)
+          canvas.PlaceAt(nodeId, node.Position.X * 10, node.Position.Y * 10, canvas.CellWidth, canvas.CellHeight);
+        else {
+          var idx = nodes.IndexOf(nodeId);
+          var angle = 2 * Math.PI * idx / nodeCount - Math.PI / 2;
+          canvas.PlaceAt(nodeId,
+            500 + (float)(Math.Cos(angle) * 350),
+            500 + (float)(Math.Sin(angle) * 350),
+            canvas.CellWidth, canvas.CellHeight);
+        }
       }
+      nodePositions = canvas.TransformToViewport(context.PlotArea);
+    } else {
+      // Grid layout with uniform cells - no overlap guaranteed
+      canvas.LayoutAsGrid(nodes, context.PlotArea.Width / context.PlotArea.Height);
+
+      // Get virtual positions for edge crossing minimization
+      var rectPositions = canvas.GetVirtualPositions();
+
+      // Minimize edge crossings
+      if (networkEdges != null && networkEdges.Count > 0) {
+        MinimizeEdgeCrossingsForGrid(
+          nodes,
+          n => n,
+          n => networkEdges.Where(e => e.Source == n).Select(e => e.Target)
+               .Concat(networkEdges.Where(e => e.Target == n).Select(e => e.Source)),
+          rectPositions);
+      }
+
+      // Scale to fit viewport (both in and out)
+      AdjustRectangleLayoutToFit(rectPositions, context.PlotArea);
+
+      // Extract center positions
+      nodePositions = new Dictionary<string, PointF>();
+      foreach (var kvp in rectPositions)
+        nodePositions[kvp.Key] = new PointF(kvp.Value.X + kvp.Value.Width / 2, kvp.Value.Y + kvp.Value.Height / 2);
     }
 
     var colors = GetDefaultColors();
@@ -554,12 +597,6 @@ public class NetworkDiagramRenderer : DiagramRenderer {
     }
 
     // Draw nodes
-    var maxSize = networkNodes?.Max(n => n.Size) ?? 1;
-    var minSize = networkNodes?.Min(n => n.Size) ?? 1;
-    var sizeRange = maxSize - minSize;
-    if (sizeRange <= 0)
-      sizeRange = 1;
-
     for (var i = 0; i < nodes.Count; ++i) {
       var nodeId = nodes[i];
       var pos = nodePositions[nodeId];
@@ -634,24 +671,34 @@ public class TreeDiagramRenderer : DiagramRenderer {
     if (roots.Count == 0)
       return;
 
+    // Measure all node sizes (circle + label below)
+    var nodeRadius = 10f;
+    var nodeSizes = MeasureNodeSizes(
+      g, context.Diagram.Font,
+      hierarchicalData.Select(n => (n.Id, n.Label ?? n.Id, nodeRadius * 2)));
+
+    // Create virtual canvas with uniform cells
+    var canvas = new VirtualCanvas(nodeSizes);
+
     // Build tree structure
     var childrenMap = hierarchicalData
       .Where(d => !string.IsNullOrEmpty(d.ParentId))
       .GroupBy(d => d.ParentId)
       .ToDictionary(g2 => g2.Key, g2 => g2.ToList());
 
-    // Calculate depth
-    var maxDepth = this._CalculateMaxDepth(roots, childrenMap);
-    var levelHeight = context.PlotArea.Height / (maxDepth + 1);
-
-    // Position nodes
-    var nodePositions = new Dictionary<string, PointF>();
-    var leafCount = this._CountLeaves(roots, childrenMap);
-    var nodeWidth = context.PlotArea.Width / Math.Max(leafCount, 1);
+    // Position nodes in virtual grid coordinates (row = depth, col = leaf position)
+    var nodeRects = new Dictionary<string, RectangleF>();
     var currentLeaf = 0;
 
     foreach (var root in roots)
-      currentLeaf = this._PositionNode(root, childrenMap, nodePositions, context.PlotArea, 0, levelHeight, nodeWidth, ref currentLeaf);
+      currentLeaf = this._PositionNodeInGrid(root, childrenMap, nodeRects, canvas, 0, ref currentLeaf);
+
+    // Scale and center to fit viewport (both in and out)
+    AdjustRectangleLayoutToFit(nodeRects, context.PlotArea);
+
+    // Extract center positions
+    var nodePositions = nodeRects.ToDictionary(kvp => kvp.Key,
+      kvp => new PointF(kvp.Value.X + kvp.Value.Width / 2, kvp.Value.Y + kvp.Value.Height / 2));
 
     var colors = GetDefaultColors();
 
@@ -700,44 +747,23 @@ public class TreeDiagramRenderer : DiagramRenderer {
     }
   }
 
-  private int _CalculateMaxDepth(IList<DiagramHierarchyNode> nodes, Dictionary<string, List<DiagramHierarchyNode>> childrenMap) {
-    var maxDepth = 0;
-    foreach (var node in nodes) {
-      var depth = 1;
-      if (childrenMap.TryGetValue(node.Id, out var children))
-        depth += this._CalculateMaxDepth(children, childrenMap);
-      maxDepth = Math.Max(maxDepth, depth);
-    }
-    return maxDepth;
-  }
-
-  private int _CountLeaves(IList<DiagramHierarchyNode> nodes, Dictionary<string, List<DiagramHierarchyNode>> childrenMap) {
-    var count = 0;
-    foreach (var node in nodes) {
-      if (childrenMap.TryGetValue(node.Id, out var children) && children.Count > 0)
-        count += this._CountLeaves(children, childrenMap);
-      else
-        ++count;
-    }
-    return count;
-  }
-
-  private int _PositionNode(DiagramHierarchyNode node, Dictionary<string, List<DiagramHierarchyNode>> childrenMap,
-    Dictionary<string, PointF> positions, RectangleF bounds, int depth, float levelHeight, float nodeWidth, ref int currentLeaf) {
-    var y = bounds.Top + depth * levelHeight + levelHeight / 2;
-
+  private int _PositionNodeInGrid(DiagramHierarchyNode node, Dictionary<string, List<DiagramHierarchyNode>> childrenMap,
+    Dictionary<string, RectangleF> positions, VirtualCanvas canvas, int depth, ref int currentLeaf) {
     if (childrenMap.TryGetValue(node.Id, out var children) && children.Count > 0) {
       var startLeaf = currentLeaf;
       foreach (var child in children)
-        currentLeaf = this._PositionNode(child, childrenMap, positions, bounds, depth + 1, levelHeight, nodeWidth, ref currentLeaf);
+        currentLeaf = this._PositionNodeInGrid(child, childrenMap, positions, canvas, depth + 1, ref currentLeaf);
 
-      // Position at center of children
-      var x = bounds.Left + (startLeaf + (currentLeaf - 1)) / 2f * nodeWidth + nodeWidth / 2;
-      positions[node.Id] = new PointF(x, y);
+      // Position at center of children (average column position)
+      var centerCol = (startLeaf + currentLeaf - 1) / 2f;
+      var x = centerCol * canvas.CellWidth;
+      var y = depth * canvas.CellHeight;
+      positions[node.Id] = new RectangleF(x, y, canvas.CellWidth, canvas.CellHeight);
     } else {
       // Leaf node
-      var x = bounds.Left + currentLeaf * nodeWidth + nodeWidth / 2;
-      positions[node.Id] = new PointF(x, y);
+      var x = currentLeaf * canvas.CellWidth;
+      var y = depth * canvas.CellHeight;
+      positions[node.Id] = new RectangleF(x, y, canvas.CellWidth, canvas.CellHeight);
       ++currentLeaf;
     }
 
@@ -754,7 +780,7 @@ public class DendrogramDiagramRenderer : DiagramRenderer {
 
   /// <inheritdoc />
   public override void Render(DiagramRenderContext context) {
-    // Dendrogram is similar to tree but with rectangular connections
+    // Dendrogram is similar to tree but with rectangular connections and horizontal layout
     var g = context.Graphics;
 
     var hierarchicalData = context.Diagram.HierarchyNodes;
@@ -773,17 +799,33 @@ public class DendrogramDiagramRenderer : DiagramRenderer {
       .GroupBy(d => d.ParentId)
       .ToDictionary(g2 => g2.Key, g2 => g2.ToList());
 
-    // Calculate layout
-    var leafCount = this._CountLeaves(roots, childrenMap);
-    var nodeSpacing = context.PlotArea.Height / Math.Max(leafCount, 1);
-    var maxDepth = this._CalculateMaxDepth(roots, childrenMap);
-    var depthSpacing = context.PlotArea.Width / (maxDepth + 1);
+    // Measure all nodes - leaf nodes include label to the right
+    var nodeRadius = 5f;
+    var nodeSizes = MeasureNodeSizes(
+      g, context.Diagram.Font,
+      hierarchicalData.Select(n => {
+        var isLeaf = !childrenMap.ContainsKey(n.Id) || childrenMap[n.Id].Count == 0;
+        var label = n.Label ?? n.Id;
+        // Leaf nodes: circle + label to right; non-leaf: just circle
+        return (n.Id, isLeaf ? label : "", nodeRadius * 2);
+      }));
 
-    var nodePositions = new Dictionary<string, PointF>();
-    var currentLeaf = 0f;
+    // Create virtual canvas - use max size for uniform cells
+    var canvas = new VirtualCanvas(nodeSizes);
+
+    // Position nodes in virtual grid (col = depth, row = leaf position)
+    var nodeRects = new Dictionary<string, RectangleF>();
+    var currentLeaf = 0;
 
     foreach (var root in roots)
-      this._PositionDendrogramNode(root, childrenMap, nodePositions, context.PlotArea, 0, depthSpacing, nodeSpacing, ref currentLeaf);
+      currentLeaf = this._PositionDendrogramInGrid(root, childrenMap, nodeRects, canvas, 0, ref currentLeaf);
+
+    // Scale and center to fit viewport (both in and out)
+    AdjustRectangleLayoutToFit(nodeRects, context.PlotArea);
+
+    // Extract center positions
+    var nodePositions = nodeRects.ToDictionary(kvp => kvp.Key,
+      kvp => new PointF(kvp.Value.X + kvp.Value.Width / 2, kvp.Value.Y + kvp.Value.Height / 2));
 
     var colors = GetDefaultColors();
 
@@ -831,46 +873,28 @@ public class DendrogramDiagramRenderer : DiagramRenderer {
     }
   }
 
-  private int _CalculateMaxDepth(IList<DiagramHierarchyNode> nodes, Dictionary<string, List<DiagramHierarchyNode>> childrenMap) {
-    var maxDepth = 0;
-    foreach (var node in nodes) {
-      var depth = 1;
-      if (childrenMap.TryGetValue(node.Id, out var children))
-        depth += this._CalculateMaxDepth(children, childrenMap);
-      maxDepth = Math.Max(maxDepth, depth);
-    }
-    return maxDepth;
-  }
-
-  private int _CountLeaves(IList<DiagramHierarchyNode> nodes, Dictionary<string, List<DiagramHierarchyNode>> childrenMap) {
-    var count = 0;
-    foreach (var node in nodes) {
-      if (childrenMap.TryGetValue(node.Id, out var children) && children.Count > 0)
-        count += this._CountLeaves(children, childrenMap);
-      else
-        ++count;
-    }
-    return count;
-  }
-
-  private void _PositionDendrogramNode(DiagramHierarchyNode node, Dictionary<string, List<DiagramHierarchyNode>> childrenMap,
-    Dictionary<string, PointF> positions, RectangleF bounds, int depth, float depthSpacing, float nodeSpacing, ref float currentLeaf) {
-    var x = bounds.Left + depth * depthSpacing + depthSpacing / 2;
-
+  private int _PositionDendrogramInGrid(DiagramHierarchyNode node, Dictionary<string, List<DiagramHierarchyNode>> childrenMap,
+    Dictionary<string, RectangleF> positions, VirtualCanvas canvas, int depth, ref int currentLeaf) {
+    // Dendrogram: X = depth (horizontal), Y = leaf index (vertical)
     if (childrenMap.TryGetValue(node.Id, out var children) && children.Count > 0) {
       var startLeaf = currentLeaf;
       foreach (var child in children)
-        this._PositionDendrogramNode(child, childrenMap, positions, bounds, depth + 1, depthSpacing, nodeSpacing, ref currentLeaf);
+        currentLeaf = this._PositionDendrogramInGrid(child, childrenMap, positions, canvas, depth + 1, ref currentLeaf);
 
-      // Position at center of children (Y-axis)
-      var y = bounds.Top + (startLeaf + currentLeaf - 1) / 2f * nodeSpacing + nodeSpacing / 2;
-      positions[node.Id] = new PointF(x, y);
+      // Position at center of children (average row position)
+      var centerRow = (startLeaf + currentLeaf - 1) / 2f;
+      var x = depth * canvas.CellWidth;
+      var y = centerRow * canvas.CellHeight;
+      positions[node.Id] = new RectangleF(x, y, canvas.CellWidth, canvas.CellHeight);
     } else {
       // Leaf node
-      var y = bounds.Top + currentLeaf * nodeSpacing + nodeSpacing / 2;
-      positions[node.Id] = new PointF(x, y);
-      currentLeaf += 1;
+      var x = depth * canvas.CellWidth;
+      var y = currentLeaf * canvas.CellHeight;
+      positions[node.Id] = new RectangleF(x, y, canvas.CellWidth, canvas.CellHeight);
+      ++currentLeaf;
     }
+
+    return currentLeaf;
   }
 }
 

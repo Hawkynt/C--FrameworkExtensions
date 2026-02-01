@@ -83,13 +83,72 @@ public class DiagramControl : Control {
   private double _animationProgress;
   private DateTime _animationStartTime;
 
+  // Zoom and pan state
+  private float _zoomLevel = 1.0f;
+  private PointF _panOffset = PointF.Empty;
+  private bool _enableZoom = true;
+  private bool _showZoomIndicator;
+  private DiagramCornerPosition _zoomIndicatorPosition = DiagramCornerPosition.BottomRight;
+  private bool _isUserZoomed;
+  private float _minZoom = 0.1f;
+  private float _maxZoom = 10.0f;
+  private float _zoomStep = 0.1f;
+  private bool _isPanning;
+  private Point _lastPanPoint;
+  private bool _isDraggingSlider;
+  private RectangleF _zoomSliderTrackRect;
+  private RectangleF _zoomTextRect;
+  private TextBox _zoomInputBox;
+  private bool _showZoomSlider = true;
+
   private static readonly Dictionary<DiagramType, DiagramRenderer> RendererCache = new();
 
-  // Data collections
+  // Data collections - Base
   private readonly DiagramNodeCollection _nodes;
   private readonly DiagramEdgeCollection _edges;
   private readonly DiagramSankeyLinkCollection _sankeyLinks;
   private readonly DiagramHierarchyNodeCollection _hierarchyNodes;
+
+  // Data collections - UML
+  private readonly DiagramClassNodeCollection _classNodes;
+  private readonly DiagramClassRelationCollection _classRelations;
+  private readonly DiagramLifelineCollection _lifelines;
+  private readonly DiagramMessageCollection _messages;
+  private readonly DiagramActivationCollection _activations;
+  private readonly DiagramActorCollection _actors;
+  private readonly DiagramUseCaseCollection _useCases;
+  private readonly DiagramSwimlaneCollection _swimlanes;
+  private readonly DiagramComponentCollection _components;
+  private readonly DiagramDeploymentNodeCollection _deploymentNodes;
+  private readonly DiagramPackageCollection _packages;
+
+  // Data collections - Database
+  private readonly DiagramEntityCollection _entities;
+  private readonly DiagramRelationshipCollection _relationships;
+  private readonly DiagramDataFlowElementCollection _dataFlowElements;
+
+  // Data collections - Business
+  private readonly DiagramSetCollection _sets;
+  private readonly DiagramSetIntersectionCollection _setIntersections;
+  private readonly DiagramQuadrantCollection _quadrants;
+  private readonly DiagramMatrixItemCollection _matrixItems;
+  private readonly DiagramJourneyStageCollection _journeyStages;
+  private readonly DiagramBPMNElementCollection _bpmnElements;
+  private readonly DiagramKanbanColumnCollection _kanbanColumns;
+  private readonly DiagramKanbanCardCollection _kanbanCards;
+
+  // Data collections - Architecture
+  private readonly DiagramGitCommitCollection _gitCommits;
+  private readonly DiagramGitBranchCollection _gitBranches;
+  private readonly DiagramRequirementCollection _requirements;
+  private readonly DiagramRequirementRelationCollection _requirementRelations;
+
+  // Data collections - Technical
+  private readonly DiagramRackCollection _racks;
+  private readonly DiagramRackDeviceCollection _rackDevices;
+  private readonly DiagramPacketFieldCollection _packetFields;
+  private readonly DiagramByteFieldCollection _byteFields;
+  private readonly DiagramSignalCollection _signals;
 
   #endregion
 
@@ -120,6 +179,16 @@ public class DiagramControl : Control {
   [Description("Occurs when a Sankey link is clicked.")]
   public event EventHandler<DiagramLinkEventArgs> LinkClicked;
 
+  /// <summary>Occurs when any diagram element is clicked.</summary>
+  [Category("Action")]
+  [Description("Occurs when any diagram element is clicked.")]
+  public event EventHandler<DiagramElementEventArgs> ElementClicked;
+
+  /// <summary>Occurs when any diagram element is hovered.</summary>
+  [Category("Action")]
+  [Description("Occurs when any diagram element is hovered.")]
+  public event EventHandler<DiagramElementEventArgs> ElementHovered;
+
   #endregion
 
   #region Constructor
@@ -139,11 +208,52 @@ public class DiagramControl : Control {
     this.Size = new Size(500, 400);
     this._toolTip = new ToolTip();
 
-    // Initialize data collections
+    // Initialize data collections - Base
     this._nodes = new DiagramNodeCollection(this);
     this._edges = new DiagramEdgeCollection(this);
     this._sankeyLinks = new DiagramSankeyLinkCollection(this);
     this._hierarchyNodes = new DiagramHierarchyNodeCollection(this);
+
+    // Initialize data collections - UML
+    this._classNodes = new DiagramClassNodeCollection(this);
+    this._classRelations = new DiagramClassRelationCollection(this);
+    this._lifelines = new DiagramLifelineCollection(this);
+    this._messages = new DiagramMessageCollection(this);
+    this._activations = new DiagramActivationCollection(this);
+    this._actors = new DiagramActorCollection(this);
+    this._useCases = new DiagramUseCaseCollection(this);
+    this._swimlanes = new DiagramSwimlaneCollection(this);
+    this._components = new DiagramComponentCollection(this);
+    this._deploymentNodes = new DiagramDeploymentNodeCollection(this);
+    this._packages = new DiagramPackageCollection(this);
+
+    // Initialize data collections - Database
+    this._entities = new DiagramEntityCollection(this);
+    this._relationships = new DiagramRelationshipCollection(this);
+    this._dataFlowElements = new DiagramDataFlowElementCollection(this);
+
+    // Initialize data collections - Business
+    this._sets = new DiagramSetCollection(this);
+    this._setIntersections = new DiagramSetIntersectionCollection(this);
+    this._quadrants = new DiagramQuadrantCollection(this);
+    this._matrixItems = new DiagramMatrixItemCollection(this);
+    this._journeyStages = new DiagramJourneyStageCollection(this);
+    this._bpmnElements = new DiagramBPMNElementCollection(this);
+    this._kanbanColumns = new DiagramKanbanColumnCollection(this);
+    this._kanbanCards = new DiagramKanbanCardCollection(this);
+
+    // Initialize data collections - Architecture
+    this._gitCommits = new DiagramGitCommitCollection(this);
+    this._gitBranches = new DiagramGitBranchCollection(this);
+    this._requirements = new DiagramRequirementCollection(this);
+    this._requirementRelations = new DiagramRequirementRelationCollection(this);
+
+    // Initialize data collections - Technical
+    this._racks = new DiagramRackCollection(this);
+    this._rackDevices = new DiagramRackDeviceCollection(this);
+    this._packetFields = new DiagramPacketFieldCollection(this);
+    this._byteFields = new DiagramByteFieldCollection(this);
+    this._signals = new DiagramSignalCollection(this);
   }
 
   #endregion
@@ -206,6 +316,212 @@ public class DiagramControl : Control {
   [Browsable(false)]
   [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
   public DiagramNetworkData NetworkData => new(this._nodes, this._edges);
+
+  #region UML Data Collections
+
+  /// <summary>Gets the class nodes collection for class/object diagrams.</summary>
+  [Category("Data")]
+  [Description("Class diagram nodes with fields and methods.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramClassNodeCollection ClassNodes => this._classNodes;
+
+  /// <summary>Gets the class relations collection for class/object diagrams.</summary>
+  [Category("Data")]
+  [Description("Class diagram relationships (inheritance, association, etc.).")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramClassRelationCollection ClassRelations => this._classRelations;
+
+  /// <summary>Gets the lifelines collection for sequence diagrams.</summary>
+  [Category("Data")]
+  [Description("Sequence diagram lifelines (participants).")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramLifelineCollection Lifelines => this._lifelines;
+
+  /// <summary>Gets the messages collection for sequence diagrams.</summary>
+  [Category("Data")]
+  [Description("Sequence diagram messages between lifelines.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramMessageCollection Messages => this._messages;
+
+  /// <summary>Gets the activations collection for sequence diagrams.</summary>
+  [Category("Data")]
+  [Description("Sequence diagram activation boxes on lifelines.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramActivationCollection Activations => this._activations;
+
+  /// <summary>Gets the actors collection for use case diagrams.</summary>
+  [Category("Data")]
+  [Description("Use case diagram actors.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramActorCollection Actors => this._actors;
+
+  /// <summary>Gets the use cases collection for use case diagrams.</summary>
+  [Category("Data")]
+  [Description("Use case diagram use cases.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramUseCaseCollection UseCases => this._useCases;
+
+  /// <summary>Gets the swimlanes collection for activity diagrams.</summary>
+  [Category("Data")]
+  [Description("Activity diagram swimlanes.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramSwimlaneCollection Swimlanes => this._swimlanes;
+
+  /// <summary>Gets the components collection for component diagrams.</summary>
+  [Category("Data")]
+  [Description("Component diagram components with interfaces.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramComponentCollection Components => this._components;
+
+  /// <summary>Gets the deployment nodes collection for deployment diagrams.</summary>
+  [Category("Data")]
+  [Description("Deployment diagram nodes (devices, execution environments).")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramDeploymentNodeCollection DeploymentNodes => this._deploymentNodes;
+
+  /// <summary>Gets the packages collection for package diagrams.</summary>
+  [Category("Data")]
+  [Description("Package diagram packages.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramPackageCollection Packages => this._packages;
+
+  #endregion
+
+  #region Database Data Collections
+
+  /// <summary>Gets the entities collection for ER diagrams.</summary>
+  [Category("Data")]
+  [Description("ER diagram entities.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramEntityCollection Entities => this._entities;
+
+  /// <summary>Gets the relationships collection for ER diagrams.</summary>
+  [Category("Data")]
+  [Description("ER diagram relationships with cardinality.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramRelationshipCollection Relationships => this._relationships;
+
+  /// <summary>Gets the data flow elements collection for DFD diagrams.</summary>
+  [Category("Data")]
+  [Description("Data flow diagram elements (processes, stores, external entities).")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramDataFlowElementCollection DataFlowElements => this._dataFlowElements;
+
+  #endregion
+
+  #region Business Data Collections
+
+  /// <summary>Gets the sets collection for Venn diagrams.</summary>
+  [Category("Data")]
+  [Description("Venn diagram sets.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramSetCollection Sets => this._sets;
+
+  /// <summary>Gets the set intersections collection for Venn diagrams.</summary>
+  [Category("Data")]
+  [Description("Venn diagram set intersections.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramSetIntersectionCollection SetIntersections => this._setIntersections;
+
+  /// <summary>Gets the quadrants collection for matrix/SWOT diagrams.</summary>
+  [Category("Data")]
+  [Description("Matrix/SWOT diagram quadrant definitions.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramQuadrantCollection Quadrants => this._quadrants;
+
+  /// <summary>Gets the matrix items collection for matrix diagrams.</summary>
+  [Category("Data")]
+  [Description("Matrix diagram items positioned in quadrants.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramMatrixItemCollection MatrixItems => this._matrixItems;
+
+  /// <summary>Gets the journey stages collection for journey map diagrams.</summary>
+  [Category("Data")]
+  [Description("Journey map stages with actions and scores.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramJourneyStageCollection JourneyStages => this._journeyStages;
+
+  /// <summary>Gets the BPMN elements collection for BPMN diagrams.</summary>
+  [Category("Data")]
+  [Description("BPMN diagram elements (tasks, gateways, events).")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramBPMNElementCollection BPMNElements => this._bpmnElements;
+
+  /// <summary>Gets the Kanban columns collection for Kanban diagrams.</summary>
+  [Category("Data")]
+  [Description("Kanban board columns with WIP limits.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramKanbanColumnCollection KanbanColumns => this._kanbanColumns;
+
+  /// <summary>Gets the Kanban cards collection for Kanban diagrams.</summary>
+  [Category("Data")]
+  [Description("Kanban board cards.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramKanbanCardCollection KanbanCards => this._kanbanCards;
+
+  #endregion
+
+  #region Architecture Data Collections
+
+  /// <summary>Gets the Git commits collection for Gitgraph diagrams.</summary>
+  [Category("Data")]
+  [Description("Git graph commits.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramGitCommitCollection GitCommits => this._gitCommits;
+
+  /// <summary>Gets the Git branches collection for Gitgraph diagrams.</summary>
+  [Category("Data")]
+  [Description("Git graph branches.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramGitBranchCollection GitBranches => this._gitBranches;
+
+  /// <summary>Gets the requirements collection for Requirement diagrams.</summary>
+  [Category("Data")]
+  [Description("Requirement diagram requirements.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramRequirementCollection Requirements => this._requirements;
+
+  /// <summary>Gets the requirement relations collection for Requirement diagrams.</summary>
+  [Category("Data")]
+  [Description("Requirement diagram relationships.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramRequirementRelationCollection RequirementRelations => this._requirementRelations;
+
+  #endregion
+
+  #region Technical Data Collections
+
+  /// <summary>Gets the racks collection for rack diagrams.</summary>
+  [Category("Data")]
+  [Description("Server rack definitions.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramRackCollection Racks => this._racks;
+
+  /// <summary>Gets the rack devices collection for rack diagrams.</summary>
+  [Category("Data")]
+  [Description("Devices installed in server racks.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramRackDeviceCollection RackDevices => this._rackDevices;
+
+  /// <summary>Gets the packet fields collection for packet diagrams.</summary>
+  [Category("Data")]
+  [Description("Network packet fields.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramPacketFieldCollection PacketFields => this._packetFields;
+
+  /// <summary>Gets the byte fields collection for byte field diagrams.</summary>
+  [Category("Data")]
+  [Description("Binary data structure fields.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramByteFieldCollection ByteFields => this._byteFields;
+
+  /// <summary>Gets the signals collection for waveform/timing diagrams.</summary>
+  [Category("Data")]
+  [Description("Digital waveform signals.")]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+  public DiagramSignalCollection Signals => this._signals;
+
+  #endregion
 
   #endregion
 
@@ -432,6 +748,108 @@ public class DiagramControl : Control {
     }
   }
 
+  #region Zoom Properties
+
+  /// <summary>Gets or sets the current zoom level.</summary>
+  [Category("Zoom")]
+  [Description("The current zoom level (1.0 = 100%).")]
+  [DefaultValue(1.0f)]
+  public float ZoomLevel {
+    get => this._zoomLevel;
+    set {
+      value = Math.Max(this._minZoom, Math.Min(this._maxZoom, value));
+      if (Math.Abs(this._zoomLevel - value) < 0.0001f)
+        return;
+      this._zoomLevel = value;
+      this._isUserZoomed = Math.Abs(value - 1.0f) > 0.0001f;
+      this.Invalidate();
+    }
+  }
+
+  /// <summary>Gets or sets whether zooming is enabled.</summary>
+  [Category("Zoom")]
+  [Description("Whether to enable mouse wheel zooming.")]
+  [DefaultValue(true)]
+  public bool EnableZoom {
+    get => this._enableZoom;
+    set => this._enableZoom = value;
+  }
+
+  /// <summary>Gets or sets whether to show the zoom indicator.</summary>
+  [Category("Zoom")]
+  [Description("Whether to show a zoom level indicator in a corner.")]
+  [DefaultValue(false)]
+  public bool ShowZoomIndicator {
+    get => this._showZoomIndicator;
+    set {
+      this._showZoomIndicator = value;
+      this.Invalidate();
+    }
+  }
+
+  /// <summary>Gets or sets the zoom indicator position.</summary>
+  [Category("Zoom")]
+  [Description("The corner position of the zoom indicator.")]
+  [DefaultValue(DiagramCornerPosition.BottomRight)]
+  public DiagramCornerPosition ZoomIndicatorPosition {
+    get => this._zoomIndicatorPosition;
+    set {
+      this._zoomIndicatorPosition = value;
+      this.Invalidate();
+    }
+  }
+
+  /// <summary>Gets or sets the minimum zoom level.</summary>
+  [Category("Zoom")]
+  [Description("The minimum allowed zoom level.")]
+  [DefaultValue(0.1f)]
+  public float MinZoom {
+    get => this._minZoom;
+    set => this._minZoom = Math.Max(0.01f, value);
+  }
+
+  /// <summary>Gets or sets the maximum zoom level.</summary>
+  [Category("Zoom")]
+  [Description("The maximum allowed zoom level.")]
+  [DefaultValue(10.0f)]
+  public float MaxZoom {
+    get => this._maxZoom;
+    set => this._maxZoom = Math.Max(this._minZoom, value);
+  }
+
+  /// <summary>Gets or sets the zoom step for mouse wheel.</summary>
+  [Category("Zoom")]
+  [Description("The amount to zoom per mouse wheel notch.")]
+  [DefaultValue(0.1f)]
+  public float ZoomStep {
+    get => this._zoomStep;
+    set => this._zoomStep = Math.Max(0.01f, value);
+  }
+
+  /// <summary>Gets the current pan offset.</summary>
+  [Browsable(false)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+  public PointF PanOffset => this._panOffset;
+
+  /// <summary>Gets whether the user has manually zoomed.</summary>
+  [Browsable(false)]
+  [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+  public bool IsUserZoomed => this._isUserZoomed;
+
+  /// <summary>Gets or sets whether to show a slider next to the zoom indicator.</summary>
+  [Category("Zoom")]
+  [Description("Whether to show a zoom slider next to the zoom indicator.")]
+  [DefaultValue(true)]
+  public bool ShowZoomSlider {
+    get => this._showZoomSlider;
+    set {
+      this._showZoomSlider = value;
+      this.Invalidate();
+    }
+  }
+
+  #endregion
+
   #endregion
 
   #region Public Methods
@@ -440,10 +858,53 @@ public class DiagramControl : Control {
   /// Clears all diagram data.
   /// </summary>
   public void Clear() {
+    // Clear base collections
     this._nodes.Clear();
     this._edges.Clear();
     this._sankeyLinks.Clear();
     this._hierarchyNodes.Clear();
+
+    // Clear UML collections
+    this._classNodes.Clear();
+    this._classRelations.Clear();
+    this._lifelines.Clear();
+    this._messages.Clear();
+    this._activations.Clear();
+    this._actors.Clear();
+    this._useCases.Clear();
+    this._swimlanes.Clear();
+    this._components.Clear();
+    this._deploymentNodes.Clear();
+    this._packages.Clear();
+
+    // Clear Database collections
+    this._entities.Clear();
+    this._relationships.Clear();
+    this._dataFlowElements.Clear();
+
+    // Clear Business collections
+    this._sets.Clear();
+    this._setIntersections.Clear();
+    this._quadrants.Clear();
+    this._matrixItems.Clear();
+    this._journeyStages.Clear();
+    this._bpmnElements.Clear();
+    this._kanbanColumns.Clear();
+    this._kanbanCards.Clear();
+
+    // Clear Architecture collections
+    this._gitCommits.Clear();
+    this._gitBranches.Clear();
+    this._requirements.Clear();
+    this._requirementRelations.Clear();
+
+    // Clear Technical collections
+    this._racks.Clear();
+    this._rackDevices.Clear();
+    this._packetFields.Clear();
+    this._byteFields.Clear();
+    this._signals.Clear();
+
     this.Invalidate();
   }
 
@@ -518,6 +979,49 @@ public class DiagramControl : Control {
   public static DiagramRenderer GetRenderer(DiagramType diagramType)
     => RendererCache.TryGetValue(diagramType, out var renderer) ? renderer : null;
 
+  /// <summary>
+  /// Resets zoom to 100% and clears pan offset.
+  /// </summary>
+  public void ResetZoom() {
+    this._zoomLevel = 1.0f;
+    this._panOffset = PointF.Empty;
+    this._isUserZoomed = false;
+    this.Invalidate();
+  }
+
+  /// <summary>
+  /// Zooms to fit all content within the view.
+  /// </summary>
+  public void ZoomToFit() {
+    this._zoomLevel = 1.0f;
+    this._panOffset = PointF.Empty;
+    this._isUserZoomed = false;
+    this.Invalidate();
+  }
+
+  /// <summary>
+  /// Sets zoom level centered on a specific point.
+  /// </summary>
+  public void ZoomAt(float newZoom, PointF center) {
+    newZoom = Math.Max(this._minZoom, Math.Min(this._maxZoom, newZoom));
+
+    // Calculate the point in content coordinates before zoom
+    var contentX = (center.X - this._plotArea.Left - this._panOffset.X) / this._zoomLevel;
+    var contentY = (center.Y - this._plotArea.Top - this._panOffset.Y) / this._zoomLevel;
+
+    // Update zoom
+    this._zoomLevel = newZoom;
+    this._isUserZoomed = Math.Abs(newZoom - 1.0f) > 0.0001f;
+
+    // Calculate new pan offset to keep the same content point under the mouse
+    this._panOffset = new PointF(
+      center.X - this._plotArea.Left - contentX * this._zoomLevel,
+      center.Y - this._plotArea.Top - contentY * this._zoomLevel
+    );
+
+    this.Invalidate();
+  }
+
   #endregion
 
   #region Protected Methods
@@ -533,14 +1037,91 @@ public class DiagramControl : Control {
   }
 
   /// <inheritdoc />
+  protected override void OnMouseWheel(MouseEventArgs e) {
+    base.OnMouseWheel(e);
+
+    if (!this._enableZoom || !this._plotArea.Contains(e.Location))
+      return;
+
+    var delta = e.Delta > 0 ? this._zoomStep : -this._zoomStep;
+    var newZoom = this._zoomLevel + delta * this._zoomLevel; // Proportional zoom
+
+    this.ZoomAt(newZoom, e.Location);
+  }
+
+  /// <inheritdoc />
+  protected override void OnMouseDown(MouseEventArgs e) {
+    base.OnMouseDown(e);
+
+    if (e.Button == MouseButtons.Left) {
+      // Check zoom slider drag start
+      if (this._showZoomIndicator && this._showZoomSlider) {
+        var thumbExtent = new RectangleF(
+          this._zoomSliderTrackRect.Left - 6,
+          this._zoomSliderTrackRect.Top - 10,
+          this._zoomSliderTrackRect.Width + 12,
+          this._zoomSliderTrackRect.Height + 20
+        );
+        if (thumbExtent.Contains(e.Location)) {
+          this._isDraggingSlider = true;
+          this._SetZoomFromSliderPosition(e.Location.X);
+          return;
+        }
+      }
+    }
+
+    if (!this._plotArea.Contains(e.Location))
+      return;
+
+    // Middle mouse button or Left button when zoomed for panning
+    if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Left && this._isUserZoomed)) {
+      this._isPanning = true;
+      this._lastPanPoint = e.Location;
+      this.Cursor = Cursors.SizeAll;
+    }
+  }
+
+  /// <inheritdoc />
   protected override void OnMouseMove(MouseEventArgs e) {
     base.OnMouseMove(e);
+
+    if (this._isDraggingSlider) {
+      this._SetZoomFromSliderPosition(e.Location.X);
+      return;
+    }
+
+    if (this._isPanning) {
+      var dx = e.Location.X - this._lastPanPoint.X;
+      var dy = e.Location.Y - this._lastPanPoint.Y;
+      this._panOffset = new PointF(this._panOffset.X + dx, this._panOffset.Y + dy);
+      this._lastPanPoint = e.Location;
+      this.Invalidate();
+      return;
+    }
+
     this._HandleHover(e.Location);
   }
 
   /// <inheritdoc />
   protected override void OnMouseUp(MouseEventArgs e) {
     base.OnMouseUp(e);
+
+    if (this._isDraggingSlider) {
+      this._isDraggingSlider = false;
+      return;
+    }
+
+    if (this._isPanning) {
+      this._isPanning = false;
+      this.Cursor = Cursors.Default;
+      return;
+    }
+
+    // Handle zoom indicator interaction
+    if (e.Button == MouseButtons.Left && this._showZoomIndicator) {
+      this._HandleZoomIndicatorClick(e.Location);
+    }
+
     this._HandleClick(e.Location, e.Button);
   }
 
@@ -581,6 +1162,12 @@ public class DiagramControl : Control {
   /// <summary>Raises the LinkClicked event.</summary>
   protected virtual void OnLinkClicked(DiagramLinkEventArgs e) => this.LinkClicked?.Invoke(this, e);
 
+  /// <summary>Raises the ElementClicked event.</summary>
+  protected virtual void OnElementClicked(DiagramElementEventArgs e) => this.ElementClicked?.Invoke(this, e);
+
+  /// <summary>Raises the ElementHovered event.</summary>
+  protected virtual void OnElementHovered(DiagramElementEventArgs e) => this.ElementHovered?.Invoke(this, e);
+
   #endregion
 
   #region Private Methods
@@ -602,6 +1189,7 @@ public class DiagramControl : Control {
 
   private DiagramRenderer _CreateDefaultRenderer(DiagramType diagramType) {
     return diagramType switch {
+      // Original 8 types
       DiagramType.Sankey => new Renderers.SankeyDiagramRenderer(),
       DiagramType.Chord => new Renderers.ChordDiagramRenderer(),
       DiagramType.Arc => new Renderers.ArcDiagramRenderer(),
@@ -610,6 +1198,56 @@ public class DiagramControl : Control {
       DiagramType.Dendrogram => new Renderers.DendrogramDiagramRenderer(),
       DiagramType.CirclePacking => new Renderers.CirclePackingDiagramRenderer(),
       DiagramType.FlowChart => new Renderers.FlowChartDiagramRenderer(),
+
+      // Hierarchical/Organizational (reuse HierarchyNodes)
+      DiagramType.OrgChart => new Renderers.OrgChartDiagramRenderer(),
+      DiagramType.MindMap => new Renderers.MindMapDiagramRenderer(),
+      DiagramType.WBS => new Renderers.WBSDiagramRenderer(),
+      DiagramType.Fishbone => new Renderers.FishboneDiagramRenderer(),
+      DiagramType.DecisionTree => new Renderers.DecisionTreeDiagramRenderer(),
+
+      // UML Diagrams
+      DiagramType.ClassDiagram => new Renderers.ClassDiagramRenderer(),
+      DiagramType.SequenceDiagram => new Renderers.SequenceDiagramRenderer(),
+      DiagramType.StateDiagram => new Renderers.StateDiagramRenderer(),
+      DiagramType.UseCaseDiagram => new Renderers.UseCaseDiagramRenderer(),
+      DiagramType.ActivityDiagram => new Renderers.ActivityDiagramRenderer(),
+      DiagramType.ComponentDiagram => new Renderers.ComponentDiagramRenderer(),
+      DiagramType.DeploymentDiagram => new Renderers.DeploymentDiagramRenderer(),
+      DiagramType.ObjectDiagram => new Renderers.ObjectDiagramRenderer(),
+      DiagramType.PackageDiagram => new Renderers.PackageDiagramRenderer(),
+      DiagramType.CommunicationDiagram => new Renderers.CommunicationDiagramRenderer(),
+      DiagramType.TimingDiagram => new Renderers.TimingDiagramRenderer(),
+      DiagramType.InteractionOverview => new Renderers.InteractionOverviewDiagramRenderer(),
+
+      // Database/Data
+      DiagramType.EntityRelationship => new Renderers.EntityRelationshipDiagramRenderer(),
+      DiagramType.DataFlow => new Renderers.DataFlowDiagramRenderer(),
+
+      // Business/Analytical
+      DiagramType.VennDiagram => new Renderers.VennDiagramRenderer(),
+      DiagramType.Matrix => new Renderers.MatrixDiagramRenderer(),
+      DiagramType.SWOT => new Renderers.SWOTDiagramRenderer(),
+      DiagramType.JourneyMap => new Renderers.JourneyMapDiagramRenderer(),
+      DiagramType.BPMN => new Renderers.BPMNDiagramRenderer(),
+      DiagramType.Kanban => new Renderers.KanbanDiagramRenderer(),
+
+      // Architecture/Software
+      DiagramType.C4Context => new Renderers.C4ContextDiagramRenderer(),
+      DiagramType.C4Container => new Renderers.C4ContainerDiagramRenderer(),
+      DiagramType.C4Component => new Renderers.C4ComponentDiagramRenderer(),
+      DiagramType.C4Deployment => new Renderers.C4DeploymentDiagramRenderer(),
+      DiagramType.Gitgraph => new Renderers.GitgraphDiagramRenderer(),
+      DiagramType.Requirement => new Renderers.RequirementDiagramRenderer(),
+
+      // Technical/Infrastructure
+      DiagramType.BlockDiagram => new Renderers.BlockDiagramRenderer(),
+      DiagramType.RackDiagram => new Renderers.RackDiagramRenderer(),
+      DiagramType.NetworkTopology => new Renderers.NetworkTopologyDiagramRenderer(),
+      DiagramType.PacketDiagram => new Renderers.PacketDiagramRenderer(),
+      DiagramType.ByteField => new Renderers.ByteFieldDiagramRenderer(),
+      DiagramType.Waveform => new Renderers.WaveformDiagramRenderer(),
+
       _ => new Renderers.NetworkDiagramRenderer() // Default fallback
     };
   }
@@ -696,25 +1334,258 @@ public class DiagramControl : Control {
       context.Graphics.DrawRectangle(borderPen, this._plotArea.X, this._plotArea.Y, this._plotArea.Width, this._plotArea.Height);
     }
 
-    // Render the diagram with clipping
+    // Render the diagram with clipping and zoom/pan transform
     var renderer = this._GetRenderer();
     if (renderer != null) {
       var previousClip = context.Graphics.Clip;
+      var previousTransform = context.Graphics.Transform;
       context.Graphics.SetClip(this._plotArea);
       try {
+        // Apply zoom and pan transform
+        if (Math.Abs(this._zoomLevel - 1.0f) > 0.0001f || this._panOffset != PointF.Empty) {
+          var transform = new Matrix();
+          transform.Translate(this._plotArea.Left + this._panOffset.X, this._plotArea.Top + this._panOffset.Y);
+          transform.Scale(this._zoomLevel, this._zoomLevel);
+          transform.Translate(-this._plotArea.Left, -this._plotArea.Top);
+          context.Graphics.MultiplyTransform(transform);
+        }
+
         renderer.Render(context);
       } finally {
+        context.Graphics.Transform = previousTransform;
         context.Graphics.Clip = previousClip;
       }
     }
 
-    // Copy hit test rects
-    foreach (var kvp in context.HitTestRects)
-      this._hitTestRects[kvp.Key] = kvp.Value;
+    // Copy hit test rects (transformed for zoom/pan)
+    foreach (var kvp in context.HitTestRects) {
+      var rect = kvp.Value;
+      if (Math.Abs(this._zoomLevel - 1.0f) > 0.0001f || this._panOffset != PointF.Empty) {
+        rect = new RectangleF(
+          (rect.X - this._plotArea.Left) * this._zoomLevel + this._plotArea.Left + this._panOffset.X,
+          (rect.Y - this._plotArea.Top) * this._zoomLevel + this._plotArea.Top + this._panOffset.Y,
+          rect.Width * this._zoomLevel,
+          rect.Height * this._zoomLevel
+        );
+      }
+      this._hitTestRects[kvp.Key] = rect;
+    }
 
     // Draw legend
     if (this._showLegend && this._legendPosition != DiagramLegendPosition.None && this._legendItems.Count > 0)
       this._DrawLegend(context.Graphics, context.TotalBounds, this._legendItems);
+
+    // Draw zoom indicator
+    if (this._showZoomIndicator)
+      this._DrawZoomIndicator(context.Graphics);
+  }
+
+  private void _DrawZoomIndicator(Graphics g) {
+    var zoomText = $"{this._zoomLevel * 100:F0}%";
+    var textSize = g.MeasureString(zoomText, this.Font);
+    var padding = 5f;
+    var sliderWidth = this._showZoomSlider ? 100f : 0f;
+    var buttonSize = 18f;
+    var totalWidth = textSize.Width + padding * 4 + sliderWidth + (this._showZoomSlider ? buttonSize * 2 + padding * 2 : 0);
+    var indicatorHeight = Math.Max(textSize.Height, buttonSize) + padding * 2;
+
+    float x, y;
+    switch (this._zoomIndicatorPosition) {
+      case DiagramCornerPosition.TopLeft:
+        x = this._plotArea.Left + padding;
+        y = this._plotArea.Top + padding;
+        break;
+      case DiagramCornerPosition.TopRight:
+        x = this._plotArea.Right - totalWidth - padding;
+        y = this._plotArea.Top + padding;
+        break;
+      case DiagramCornerPosition.BottomLeft:
+        x = this._plotArea.Left + padding;
+        y = this._plotArea.Bottom - indicatorHeight - padding;
+        break;
+      case DiagramCornerPosition.BottomRight:
+      default:
+        x = this._plotArea.Right - totalWidth - padding;
+        y = this._plotArea.Bottom - indicatorHeight - padding;
+        break;
+    }
+
+    var indicatorRect = new RectangleF(x, y, totalWidth, indicatorHeight);
+
+    // Draw background
+    using (var bgBrush = new SolidBrush(Color.FromArgb(230, 250, 250, 250)))
+      g.FillRectangle(bgBrush, indicatorRect);
+
+    using (var borderPen = new Pen(Color.FromArgb(180, 180, 180)))
+      g.DrawRectangle(borderPen, indicatorRect.X, indicatorRect.Y, indicatorRect.Width, indicatorRect.Height);
+
+    var currentX = x + padding;
+    var centerY = y + indicatorHeight / 2;
+
+    if (this._showZoomSlider) {
+      // Draw minus button
+      var minusRect = new RectangleF(currentX, centerY - buttonSize / 2, buttonSize, buttonSize);
+      this._DrawZoomButton(g, minusRect, "-", Color.FromArgb(220, 220, 220));
+      currentX += buttonSize + padding;
+
+      // Draw slider track
+      var trackHeight = 6f;
+      var trackRect = new RectangleF(currentX, centerY - trackHeight / 2, sliderWidth, trackHeight);
+      this._zoomSliderTrackRect = trackRect;
+
+      using (var trackBrush = new SolidBrush(Color.FromArgb(200, 200, 200)))
+        g.FillRectangle(trackBrush, trackRect);
+
+      // Draw slider thumb position based on zoom level (logarithmic scale)
+      var normalizedZoom = (float)((Math.Log(this._zoomLevel) - Math.Log(this._minZoom)) / (Math.Log(this._maxZoom) - Math.Log(this._minZoom)));
+      normalizedZoom = Math.Max(0, Math.Min(1, normalizedZoom));
+      var thumbX = trackRect.Left + normalizedZoom * (trackRect.Width - 12);
+      var thumbRect = new RectangleF(thumbX, centerY - 8, 12, 16);
+
+      using (var thumbBrush = new SolidBrush(Color.FromArgb(80, 80, 80)))
+        g.FillRectangle(thumbBrush, thumbRect);
+
+      // Draw 100% marker
+      var hundredPctPos = (float)((Math.Log(1.0) - Math.Log(this._minZoom)) / (Math.Log(this._maxZoom) - Math.Log(this._minZoom)));
+      var markerX = trackRect.Left + hundredPctPos * trackRect.Width;
+      using (var markerPen = new Pen(Color.FromArgb(100, 100, 100), 1))
+        g.DrawLine(markerPen, markerX, trackRect.Top - 2, markerX, trackRect.Bottom + 2);
+
+      currentX += sliderWidth + padding;
+
+      // Draw plus button
+      var plusRect = new RectangleF(currentX, centerY - buttonSize / 2, buttonSize, buttonSize);
+      this._DrawZoomButton(g, plusRect, "+", Color.FromArgb(220, 220, 220));
+      currentX += buttonSize + padding;
+    }
+
+    // Draw zoom text (clickable to edit)
+    this._zoomTextRect = new RectangleF(currentX, y + padding, textSize.Width + padding * 2, indicatorHeight - padding * 2);
+
+    using (var textBgBrush = new SolidBrush(Color.White))
+      g.FillRectangle(textBgBrush, this._zoomTextRect);
+
+    using (var textBorderPen = new Pen(Color.FromArgb(180, 180, 180)))
+      g.DrawRectangle(textBorderPen, this._zoomTextRect.X, this._zoomTextRect.Y, this._zoomTextRect.Width, this._zoomTextRect.Height);
+
+    using var textBrush = new SolidBrush(Color.Black);
+    g.DrawString(zoomText, this.Font, textBrush, currentX + padding, centerY - textSize.Height / 2);
+  }
+
+  private void _DrawZoomButton(Graphics g, RectangleF rect, string symbol, Color bgColor) {
+    using (var brush = new SolidBrush(bgColor))
+      g.FillRectangle(brush, rect);
+
+    using (var pen = new Pen(Color.FromArgb(150, 150, 150)))
+      g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
+
+    using var font = new Font(this.Font.FontFamily, this.Font.Size + 2, FontStyle.Bold);
+    var textSize = g.MeasureString(symbol, font);
+    using var brush2 = new SolidBrush(Color.FromArgb(60, 60, 60));
+    g.DrawString(symbol, font, brush2, rect.X + (rect.Width - textSize.Width) / 2, rect.Y + (rect.Height - textSize.Height) / 2);
+  }
+
+  private void _HandleZoomIndicatorClick(Point location) {
+    if (!this._showZoomIndicator)
+      return;
+
+    // Check text area click for manual input
+    if (this._zoomTextRect.Contains(location)) {
+      this._ShowZoomInputBox();
+      return;
+    }
+
+    if (!this._showZoomSlider)
+      return;
+
+    // Check slider track click
+    if (this._zoomSliderTrackRect.Contains(location)) {
+      this._SetZoomFromSliderPosition(location.X);
+      return;
+    }
+
+    // Check minus button
+    var padding = 5f;
+    var buttonSize = 18f;
+    var baseX = this._zoomSliderTrackRect.Left - buttonSize - padding;
+    var baseY = this._zoomSliderTrackRect.Top + this._zoomSliderTrackRect.Height / 2 - buttonSize / 2;
+    var minusRect = new RectangleF(baseX, baseY, buttonSize, buttonSize);
+    if (minusRect.Contains(location)) {
+      this.ZoomLevel = this._zoomLevel / 1.2f;
+      return;
+    }
+
+    // Check plus button
+    var plusX = this._zoomSliderTrackRect.Right + padding;
+    var plusRect = new RectangleF(plusX, baseY, buttonSize, buttonSize);
+    if (plusRect.Contains(location))
+      this.ZoomLevel = this._zoomLevel * 1.2f;
+  }
+
+  private void _SetZoomFromSliderPosition(float mouseX) {
+    var normalized = (mouseX - this._zoomSliderTrackRect.Left) / this._zoomSliderTrackRect.Width;
+    normalized = Math.Max(0, Math.Min(1, normalized));
+    // Logarithmic scale
+    var logZoom = Math.Log(this._minZoom) + normalized * (Math.Log(this._maxZoom) - Math.Log(this._minZoom));
+    this.ZoomLevel = (float)Math.Exp(logZoom);
+  }
+
+  private void _ShowZoomInputBox() {
+    if (this._zoomInputBox != null) {
+      this._zoomInputBox.Focus();
+      return;
+    }
+
+    // Ensure minimum height for text input (at least 20 pixels)
+    var boxHeight = Math.Max(20, (int)this._zoomTextRect.Height);
+    var boxWidth = Math.Max(50, (int)this._zoomTextRect.Width);
+
+    this._zoomInputBox = new TextBox {
+      Text = $"{this._zoomLevel * 100:F0}",
+      Location = new Point((int)this._zoomTextRect.X, (int)this._zoomTextRect.Y - (boxHeight - (int)this._zoomTextRect.Height) / 2),
+      Size = new Size(boxWidth, boxHeight),
+      TextAlign = HorizontalAlignment.Center,
+      BorderStyle = BorderStyle.FixedSingle,
+      Font = this.Font
+    };
+
+    this._zoomInputBox.KeyDown += (s, e) => {
+      if (e.KeyCode == Keys.Enter) {
+        this._ApplyZoomInputAndClose();
+        e.Handled = true;
+        e.SuppressKeyPress = true;
+      } else if (e.KeyCode == Keys.Escape)
+        this._CloseZoomInputBox();
+    };
+
+    this._zoomInputBox.LostFocus += (s, e) => this._ApplyZoomInputAndClose();
+
+    this.Controls.Add(this._zoomInputBox);
+    this._zoomInputBox.BringToFront();
+    this._zoomInputBox.Focus();
+    this._zoomInputBox.SelectAll();
+  }
+
+  private void _ApplyZoomInputAndClose() {
+    if (this._zoomInputBox == null)
+      return;
+
+    if (float.TryParse(this._zoomInputBox.Text.Replace("%", "").Trim(), out var pct))
+      this.ZoomLevel = pct / 100f;
+
+    this._CloseZoomInputBox();
+  }
+
+  private void _CloseZoomInputBox() {
+    var inputBox = this._zoomInputBox;
+    if (inputBox == null)
+      return;
+
+    // Set to null first to prevent re-entrancy from LostFocus during Dispose
+    this._zoomInputBox = null;
+    this.Controls.Remove(inputBox);
+    inputBox.Dispose();
+    this.Invalidate();
   }
 
   private void _DrawTitle(Graphics g) {
@@ -913,6 +1784,10 @@ public class DiagramControl : Control {
     // Check element hit
     foreach (var kvp in this._hitTestRects) {
       if (kvp.Value.Contains(location)) {
+        // Always fire the generic element event
+        this.OnElementClicked(new DiagramElementEventArgs(kvp.Key, kvp.Value));
+
+        // Also fire specific events for known types
         switch (kvp.Key) {
           case DiagramNode node:
             this.OnNodeClicked(new DiagramNodeEventArgs(node));
@@ -923,6 +1798,8 @@ public class DiagramControl : Control {
           case DiagramSankeyLink link:
             this.OnLinkClicked(new DiagramLinkEventArgs(link));
             return;
+          default:
+            return; // Generic element event was already fired
         }
       }
     }
@@ -987,6 +1864,23 @@ public class DiagramLinkEventArgs : EventArgs {
   public DiagramSankeyLink Link { get; }
 
   public DiagramLinkEventArgs(DiagramSankeyLink link) => this.Link = link;
+}
+
+/// <summary>Event arguments for any diagram element events.</summary>
+public class DiagramElementEventArgs : EventArgs {
+  /// <summary>Gets the element that was clicked or hovered.</summary>
+  public object Element { get; }
+
+  /// <summary>Gets the bounds of the element.</summary>
+  public RectangleF Bounds { get; }
+
+  /// <summary>Gets the element type name.</summary>
+  public string ElementTypeName => this.Element?.GetType().Name ?? "Unknown";
+
+  public DiagramElementEventArgs(object element, RectangleF bounds) {
+    this.Element = element;
+    this.Bounds = bounds;
+  }
 }
 
 #endregion

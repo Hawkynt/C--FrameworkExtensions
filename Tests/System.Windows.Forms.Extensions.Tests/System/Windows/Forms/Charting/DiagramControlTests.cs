@@ -127,6 +127,49 @@ public class DiagramControlTests {
   [TestCase(DiagramType.Dendrogram)]
   [TestCase(DiagramType.CirclePacking)]
   [TestCase(DiagramType.FlowChart)]
+  // Hierarchical/Organizational
+  [TestCase(DiagramType.OrgChart)]
+  [TestCase(DiagramType.MindMap)]
+  [TestCase(DiagramType.WBS)]
+  // UML Diagrams
+  [TestCase(DiagramType.ClassDiagram)]
+  [TestCase(DiagramType.SequenceDiagram)]
+  [TestCase(DiagramType.StateDiagram)]
+  [TestCase(DiagramType.UseCaseDiagram)]
+  [TestCase(DiagramType.ActivityDiagram)]
+  [TestCase(DiagramType.ComponentDiagram)]
+  [TestCase(DiagramType.DeploymentDiagram)]
+  [TestCase(DiagramType.ObjectDiagram)]
+  [TestCase(DiagramType.PackageDiagram)]
+  [TestCase(DiagramType.CommunicationDiagram)]
+  [TestCase(DiagramType.TimingDiagram)]
+  [TestCase(DiagramType.InteractionOverview)]
+  // Database/Data
+  [TestCase(DiagramType.EntityRelationship)]
+  [TestCase(DiagramType.DataFlow)]
+  // Analytical/Business
+  [TestCase(DiagramType.VennDiagram)]
+  [TestCase(DiagramType.Fishbone)]
+  [TestCase(DiagramType.DecisionTree)]
+  [TestCase(DiagramType.Matrix)]
+  [TestCase(DiagramType.SWOT)]
+  [TestCase(DiagramType.JourneyMap)]
+  [TestCase(DiagramType.BPMN)]
+  [TestCase(DiagramType.Kanban)]
+  // Architecture/Software
+  [TestCase(DiagramType.C4Context)]
+  [TestCase(DiagramType.C4Container)]
+  [TestCase(DiagramType.C4Component)]
+  [TestCase(DiagramType.C4Deployment)]
+  [TestCase(DiagramType.Gitgraph)]
+  [TestCase(DiagramType.Requirement)]
+  // Technical/Infrastructure
+  [TestCase(DiagramType.BlockDiagram)]
+  [TestCase(DiagramType.RackDiagram)]
+  [TestCase(DiagramType.NetworkTopology)]
+  [TestCase(DiagramType.PacketDiagram)]
+  [TestCase(DiagramType.ByteField)]
+  [TestCase(DiagramType.Waveform)]
   public void Render_WithEmptyData_DoesNotThrow(DiagramType diagramType) {
     this._diagram.DiagramType = diagramType;
 
@@ -536,6 +579,472 @@ public class DiagramControlTests {
     this._diagram.Edges.Add(new DiagramEdge { Source = "decision", Target = "no", Directed = true, Label = "No" });
     this._diagram.Edges.Add(new DiagramEdge { Source = "yes", Target = "end", Directed = true });
     this._diagram.Edges.Add(new DiagramEdge { Source = "no", Target = "end", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region Hierarchical Diagram Tests (OrgChart, MindMap, WBS, Fishbone, DecisionTree)
+
+  [Test]
+  [Category("HappyPath")]
+  [TestCase(DiagramType.OrgChart)]
+  [TestCase(DiagramType.MindMap)]
+  [TestCase(DiagramType.WBS)]
+  [TestCase(DiagramType.Fishbone)]
+  [TestCase(DiagramType.DecisionTree)]
+  public void Render_HierarchicalDiagram_WithData(DiagramType diagramType) {
+    this._diagram.DiagramType = diagramType;
+
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "root", Label = "Root" });
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "A", Label = "Branch A", ParentId = "root" });
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "B", Label = "Branch B", ParentId = "root" });
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "A1", Label = "Leaf A1", ParentId = "A" });
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "A2", Label = "Leaf A2", ParentId = "A" });
+    this._diagram.HierarchyNodes.Add(new DiagramHierarchyNode { Id = "B1", Label = "Leaf B1", ParentId = "B" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region UML Diagram Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_ClassDiagram_WithClasses() {
+    this._diagram.DiagramType = DiagramType.ClassDiagram;
+
+    this._diagram.ClassNodes.Add(new DiagramClassNode {
+      Id = "Person",
+      ClassName = "Person",
+      Stereotype = "class",
+      Fields = { new DiagramClassMember { Name = "name", Type = "string", Visibility = DiagramVisibility.Private } },
+      Methods = { new DiagramClassMember { Name = "GetName", Type = "string", Visibility = DiagramVisibility.Public } }
+    });
+    this._diagram.ClassNodes.Add(new DiagramClassNode {
+      Id = "Employee",
+      ClassName = "Employee",
+      Stereotype = "class"
+    });
+    this._diagram.ClassRelations.Add(new DiagramClassRelation {
+      From = "Employee",
+      To = "Person",
+      RelationType = DiagramRelationType.Inheritance
+    });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_SequenceDiagram_WithMessages() {
+    this._diagram.DiagramType = DiagramType.SequenceDiagram;
+
+    this._diagram.Lifelines.Add(new DiagramLifeline { Id = "client", Name = "Client" });
+    this._diagram.Lifelines.Add(new DiagramLifeline { Id = "server", Name = "Server" });
+    this._diagram.Messages.Add(new DiagramMessage { From = "client", To = "server", Label = "Request", MessageType = DiagramMessageType.Sync, SequenceNumber = 1 });
+    this._diagram.Messages.Add(new DiagramMessage { From = "server", To = "client", Label = "Response", MessageType = DiagramMessageType.Return, SequenceNumber = 2 });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_StateDiagram_WithStates() {
+    this._diagram.DiagramType = DiagramType.StateDiagram;
+
+    this._diagram.Nodes.Add(new DiagramNode("idle", "Idle") { Shape = DiagramNodeShape.RoundedRectangle });
+    this._diagram.Nodes.Add(new DiagramNode("running", "Running") { Shape = DiagramNodeShape.RoundedRectangle });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "idle", Target = "running", Label = "start", Directed = true });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "running", Target = "idle", Label = "stop", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_UseCaseDiagram_WithActorsAndUseCases() {
+    this._diagram.DiagramType = DiagramType.UseCaseDiagram;
+
+    this._diagram.Actors.Add(new DiagramActor { Id = "user", Name = "User" });
+    this._diagram.UseCases.Add(new DiagramUseCase { Id = "login", Name = "Login", SystemBoundary = "System" });
+    this._diagram.UseCases.Add(new DiagramUseCase { Id = "logout", Name = "Logout", SystemBoundary = "System" });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "user", Target = "login" });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "user", Target = "logout" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_ComponentDiagram_WithComponents() {
+    this._diagram.DiagramType = DiagramType.ComponentDiagram;
+
+    this._diagram.Components.Add(new DiagramComponent {
+      Id = "web",
+      Name = "Web UI",
+      ProvidedInterfaces = { "IUserInterface" },
+      RequiredInterfaces = { "IApiService" }
+    });
+    this._diagram.Components.Add(new DiagramComponent {
+      Id = "api",
+      Name = "API Server",
+      ProvidedInterfaces = { "IApiService" }
+    });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "web", Target = "api", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region Database Diagram Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_EntityRelationship_WithEntities() {
+    this._diagram.DiagramType = DiagramType.EntityRelationship;
+
+    this._diagram.Entities.Add(new DiagramEntity {
+      Id = "user",
+      Name = "User",
+      Attributes = {
+        new DiagramEntityAttribute { Name = "Id", DataType = "int", IsPrimaryKey = true },
+        new DiagramEntityAttribute { Name = "Name", DataType = "varchar(100)" }
+      }
+    });
+    this._diagram.Entities.Add(new DiagramEntity {
+      Id = "order",
+      Name = "Order",
+      Attributes = {
+        new DiagramEntityAttribute { Name = "Id", DataType = "int", IsPrimaryKey = true },
+        new DiagramEntityAttribute { Name = "UserId", DataType = "int", IsForeignKey = true }
+      }
+    });
+    this._diagram.Relationships.Add(new DiagramRelationship {
+      From = "user",
+      To = "order",
+      FromCardinality = DiagramCardinality.One,
+      ToCardinality = DiagramCardinality.Many
+    });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_DataFlow_WithElements() {
+    this._diagram.DiagramType = DiagramType.DataFlow;
+
+    this._diagram.DataFlowElements.Add(new DiagramDataFlowElement { Id = "ext", Name = "User", ElementType = DiagramDFDType.ExternalEntity });
+    this._diagram.DataFlowElements.Add(new DiagramDataFlowElement { Id = "proc", Name = "Process Data", ElementType = DiagramDFDType.Process, ProcessNumber = 1 });
+    this._diagram.DataFlowElements.Add(new DiagramDataFlowElement { Id = "store", Name = "Database", ElementType = DiagramDFDType.DataStore });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "ext", Target = "proc", Label = "Input", Directed = true });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "proc", Target = "store", Label = "Save", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region Business Diagram Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_VennDiagram_WithSets() {
+    this._diagram.DiagramType = DiagramType.VennDiagram;
+
+    this._diagram.Sets.Add(new DiagramSet { Id = "A", Label = "Set A", Size = 100 });
+    this._diagram.Sets.Add(new DiagramSet { Id = "B", Label = "Set B", Size = 80 });
+    this._diagram.SetIntersections.Add(new DiagramSetIntersection { SetIds = { "A", "B" }, Label = "A ∩ B", Value = 30 });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_Matrix_WithItems() {
+    this._diagram.DiagramType = DiagramType.Matrix;
+
+    this._diagram.MatrixItems.Add(new DiagramMatrixItem { Id = "A", Label = "Task A", X = 20, Y = 80 });
+    this._diagram.MatrixItems.Add(new DiagramMatrixItem { Id = "B", Label = "Task B", X = 70, Y = 30 });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_SWOT_DoesNotThrow() {
+    this._diagram.DiagramType = DiagramType.SWOT;
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_JourneyMap_WithStages() {
+    this._diagram.DiagramType = DiagramType.JourneyMap;
+
+    this._diagram.JourneyStages.Add(new DiagramJourneyStage {
+      Id = "discover",
+      Label = "Discover",
+      Order = 1,
+      Actions = { new DiagramJourneyAction { Actor = "User", Action = "Search", Score = 1 } }
+    });
+    this._diagram.JourneyStages.Add(new DiagramJourneyStage {
+      Id = "evaluate",
+      Label = "Evaluate",
+      Order = 2,
+      Actions = { new DiagramJourneyAction { Actor = "User", Action = "Compare", Score = 0 } }
+    });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_BPMN_WithElements() {
+    this._diagram.DiagramType = DiagramType.BPMN;
+
+    this._diagram.BPMNElements.Add(new DiagramBPMNElement { Id = "start", Name = "Start", ElementType = DiagramBPMNType.StartEvent });
+    this._diagram.BPMNElements.Add(new DiagramBPMNElement { Id = "task1", Name = "Process Order", ElementType = DiagramBPMNType.Task });
+    this._diagram.BPMNElements.Add(new DiagramBPMNElement { Id = "end", Name = "End", ElementType = DiagramBPMNType.EndEvent });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "start", Target = "task1", Directed = true });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "task1", Target = "end", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_Kanban_WithColumnsAndCards() {
+    this._diagram.DiagramType = DiagramType.Kanban;
+
+    this._diagram.KanbanColumns.Add(new DiagramKanbanColumn { Id = "todo", Name = "To Do", Order = 1, WipLimit = 5 });
+    this._diagram.KanbanColumns.Add(new DiagramKanbanColumn { Id = "doing", Name = "Doing", Order = 2, WipLimit = 3 });
+    this._diagram.KanbanColumns.Add(new DiagramKanbanColumn { Id = "done", Name = "Done", Order = 3 });
+    this._diagram.KanbanCards.Add(new DiagramKanbanCard { Id = "card1", Title = "Task 1", ColumnId = "todo", Order = 1 });
+    this._diagram.KanbanCards.Add(new DiagramKanbanCard { Id = "card2", Title = "Task 2", ColumnId = "doing", Order = 1, Assignee = "John" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region Architecture Diagram Tests
+
+  [Test]
+  [Category("HappyPath")]
+  [TestCase(DiagramType.C4Context)]
+  [TestCase(DiagramType.C4Container)]
+  [TestCase(DiagramType.C4Component)]
+  [TestCase(DiagramType.C4Deployment)]
+  public void Render_C4Diagram_WithData(DiagramType diagramType) {
+    this._diagram.DiagramType = diagramType;
+
+    this._diagram.Nodes.Add(new DiagramNode("system", "My System") { Shape = DiagramNodeShape.RoundedRectangle });
+    this._diagram.Nodes.Add(new DiagramNode("user", "User") { Shape = DiagramNodeShape.Actor });
+    this._diagram.Nodes.Add(new DiagramNode("ext", "External System") { Shape = DiagramNodeShape.RoundedRectangle });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "user", Target = "system", Label = "Uses", Directed = true });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "system", Target = "ext", Label = "Calls", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_Gitgraph_WithCommits() {
+    this._diagram.DiagramType = DiagramType.Gitgraph;
+
+    this._diagram.GitBranches.Add(new DiagramGitBranch { Name = "main", Color = Color.Blue });
+    this._diagram.GitBranches.Add(new DiagramGitBranch { Name = "feature", Color = Color.Green });
+    this._diagram.GitCommits.Add(new DiagramGitCommit { Id = "c1", Message = "Initial", Branch = "main" });
+    this._diagram.GitCommits.Add(new DiagramGitCommit { Id = "c2", Message = "Feature work", Branch = "feature", ParentIds = { "c1" } });
+    this._diagram.GitCommits.Add(new DiagramGitCommit { Id = "c3", Message = "Merge", Branch = "main", ParentIds = { "c1", "c2" }, Type = DiagramGitCommitType.Merge });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_Requirement_WithRelations() {
+    this._diagram.DiagramType = DiagramType.Requirement;
+
+    this._diagram.Requirements.Add(new DiagramRequirement { Id = "req1", Name = "Login", Text = "User can log in", Type = DiagramRequirementType.FunctionalReq });
+    this._diagram.Requirements.Add(new DiagramRequirement { Id = "req2", Name = "Security", Text = "Must use TLS", Type = DiagramRequirementType.PerformanceReq });
+    this._diagram.RequirementRelations.Add(new DiagramRequirementRelation { From = "req1", To = "req2", Type = DiagramRequirementRelationType.Derives });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  #endregion
+
+  #region Technical Diagram Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_BlockDiagram_WithBlocks() {
+    this._diagram.DiagramType = DiagramType.BlockDiagram;
+
+    this._diagram.Nodes.Add(new DiagramNode("input", "Input"));
+    this._diagram.Nodes.Add(new DiagramNode("process", "Process"));
+    this._diagram.Nodes.Add(new DiagramNode("output", "Output"));
+    this._diagram.Edges.Add(new DiagramEdge { Source = "input", Target = "process", Directed = true });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "process", Target = "output", Directed = true });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_RackDiagram_WithDevices() {
+    this._diagram.DiagramType = DiagramType.RackDiagram;
+
+    this._diagram.Racks.Add(new DiagramRack { Id = "rack1", Name = "Server Rack 1", TotalUnits = 42 });
+    this._diagram.RackDevices.Add(new DiagramRackDevice { Id = "server1", Name = "Web Server", RackId = "rack1", StartUnit = 1, UnitHeight = 2, DeviceType = "Server" });
+    this._diagram.RackDevices.Add(new DiagramRackDevice { Id = "switch1", Name = "Switch", RackId = "rack1", StartUnit = 40, UnitHeight = 1, DeviceType = "Switch" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_NetworkTopology_WithNodes() {
+    this._diagram.DiagramType = DiagramType.NetworkTopology;
+
+    this._diagram.Nodes.Add(new DiagramNode("hub", "Hub") { Shape = DiagramNodeShape.Switch });
+    this._diagram.Nodes.Add(new DiagramNode("pc1", "PC 1") { Shape = DiagramNodeShape.Workstation });
+    this._diagram.Nodes.Add(new DiagramNode("pc2", "PC 2") { Shape = DiagramNodeShape.Workstation });
+    this._diagram.Nodes.Add(new DiagramNode("pc3", "PC 3") { Shape = DiagramNodeShape.Workstation });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "hub", Target = "pc1" });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "hub", Target = "pc2" });
+    this._diagram.Edges.Add(new DiagramEdge { Source = "hub", Target = "pc3" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_PacketDiagram_WithFields() {
+    this._diagram.DiagramType = DiagramType.PacketDiagram;
+
+    this._diagram.PacketFields.Add(new DiagramPacketField { Name = "Version", Bits = 4 });
+    this._diagram.PacketFields.Add(new DiagramPacketField { Name = "IHL", Bits = 4 });
+    this._diagram.PacketFields.Add(new DiagramPacketField { Name = "DSCP", Bits = 6 });
+    this._diagram.PacketFields.Add(new DiagramPacketField { Name = "ECN", Bits = 2 });
+    this._diagram.PacketFields.Add(new DiagramPacketField { Name = "Total Length", Bits = 16 });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_ByteField_WithFields() {
+    this._diagram.DiagramType = DiagramType.ByteField;
+
+    this._diagram.ByteFields.Add(new DiagramByteField { StartBit = 0, EndBit = 7, Name = "Byte 0" });
+    this._diagram.ByteFields.Add(new DiagramByteField { StartBit = 8, EndBit = 15, Name = "Byte 1" });
+    this._diagram.ByteFields.Add(new DiagramByteField { StartBit = 16, EndBit = 31, Name = "Word" });
+
+    Assert.DoesNotThrow(() => {
+      using var bitmap = this._diagram.ToImage();
+      Assert.That(bitmap, Is.Not.Null);
+    });
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Render_Waveform_WithSignals() {
+    this._diagram.DiagramType = DiagramType.Waveform;
+
+    this._diagram.Signals.Add(new DiagramSignal {
+      Id = "clk",
+      Name = "Clock",
+      SignalType = DiagramSignalType.Clock,
+      Transitions = {
+        new DiagramSignalTransition { Time = 0, Level = DiagramSignalLevel.Low },
+        new DiagramSignalTransition { Time = 10, Level = DiagramSignalLevel.High },
+        new DiagramSignalTransition { Time = 20, Level = DiagramSignalLevel.Low },
+        new DiagramSignalTransition { Time = 30, Level = DiagramSignalLevel.High }
+      }
+    });
+    this._diagram.Signals.Add(new DiagramSignal {
+      Id = "data",
+      Name = "Data",
+      SignalType = DiagramSignalType.Digital,
+      Transitions = {
+        new DiagramSignalTransition { Time = 0, Level = DiagramSignalLevel.Low },
+        new DiagramSignalTransition { Time = 15, Level = DiagramSignalLevel.High }
+      }
+    });
 
     Assert.DoesNotThrow(() => {
       using var bitmap = this._diagram.ToImage();
