@@ -31,7 +31,7 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// <remarks>
 /// <para>This algorithm progressively splits clusters and refines them using competitive learning.</para>
 /// <para>Unlike K-Means, it uses sequential winner-take-all updates and is initialization-independent.</para>
-/// <para>Reference: Scheunders (1997) - "A comparison of clustering algorithms applied to color image quantization"</para>
+/// <para>Reference: Scheunders (1997) - "A comparison of clustering algorithms applied to color image quantization", Pattern Recognition Letters 18(11):1379-84</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Hierarchical CL", Author = "P. Scheunders", Year = 1997, QualityRating = 8)]
 public struct HierarchicalCompetitiveLearningQuantizer : IQuantizer {

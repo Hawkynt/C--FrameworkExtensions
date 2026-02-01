@@ -32,7 +32,7 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// <para>Uses a genetic algorithm for global optimization to escape local optima, combined with
 /// C-Means refinement for local convergence. Each offspring is refined with a few C-Means iterations.</para>
 /// <para>While computationally expensive, this approach can find better solutions for complex color distributions.</para>
-/// <para>Reference: Scheunders (1997) - "A comparison of clustering algorithms applied to color image quantization"</para>
+/// <para>Reference: Scheunders (1997) - "A comparison of clustering algorithms applied to color image quantization", Pattern Recognition Letters 18(11):1379-84</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Genetic C-Means", Author = "P. Scheunders", Year = 1997, QualityRating = 10)]
 public struct GeneticCMeansQuantizer : IQuantizer {

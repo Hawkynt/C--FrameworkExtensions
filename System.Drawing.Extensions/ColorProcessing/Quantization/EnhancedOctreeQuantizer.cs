@@ -31,8 +31,8 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// <remarks>
 /// <para>Improves upon basic Octree quantization by tracking weighted variance per node,
 /// using adaptive pruning thresholds per level, and reserving colors at level 2 for coverage.</para>
-/// <para>Reference: Bloomberg (2008) - "Color quantization using octrees"</para>
-/// <para>See also: https://leptonica.github.io/leptonica/colorquant.html</para>
+/// <para>Reference: Bloomberg (2008) - "Color quantization using octrees", Leptonica</para>
+/// <para>See also: http://www.leptonica.org/color-quantization.html</para>
 /// </remarks>
 [Quantizer(QuantizationType.Tree, DisplayName = "Enhanced Octree", Author = "D.S. Bloomberg", Year = 2008, QualityRating = 8)]
 public struct EnhancedOctreeQuantizer : IQuantizer {
