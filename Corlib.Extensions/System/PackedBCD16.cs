@@ -26,7 +26,7 @@ namespace System;
 /// Represents a 16-bit packed BCD value storing 4 decimal digits (0-9999).
 /// Each nibble contains one decimal digit (0-9).
 /// </summary>
-public readonly struct PackedBCD16 : IComparable, IComparable<PackedBCD16>, IEquatable<PackedBCD16>, IFormattable, IParsable<PackedBCD16> {
+public readonly struct PackedBCD16 : IComparable, IComparable<PackedBCD16>, IEquatable<PackedBCD16>, IFormattable, ISpanFormattable, IParsable<PackedBCD16>, ISpanParsable<PackedBCD16> {
   /// <summary>
   /// Gets the raw BCD representation.
   /// </summary>
@@ -135,6 +135,19 @@ public readonly struct PackedBCD16 : IComparable, IComparable<PackedBCD16>, IEqu
 
   public string ToString(string? format, IFormatProvider? provider) => this.Value.ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.Value.ToString(provider)
+      : this.Value.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Comparison operators
   public static bool operator ==(PackedBCD16 left, PackedBCD16 right) => left.Equals(right);
   public static bool operator !=(PackedBCD16 left, PackedBCD16 right) => !left.Equals(right);
@@ -192,13 +205,25 @@ public readonly struct PackedBCD16 : IComparable, IComparable<PackedBCD16>, IEqu
   // Conversions
   public static implicit operator PackedBCD16(ushort value) => FromValue(value);
   public static explicit operator ushort(PackedBCD16 value) => (ushort)value.Value;
-  public static explicit operator int(PackedBCD16 value) => value.Value;
+
+  // Implicit widening to larger integer types (value range 0-9999 fits in all)
+  public static implicit operator int(PackedBCD16 value) => value.Value;
+  public static implicit operator uint(PackedBCD16 value) => (uint)value.Value;
+  public static implicit operator long(PackedBCD16 value) => value.Value;
+  public static implicit operator ulong(PackedBCD16 value) => (ulong)value.Value;
 
   // Narrowing to smaller BCD (explicit - may overflow)
   public static explicit operator PackedBCD8(PackedBCD16 value) => PackedBCD8.FromValue(value.Value);
 
-  // Widening to larger BCD type (implicit)
+  // Widening to larger BCD types (implicit)
   public static implicit operator PackedBCD32(PackedBCD16 value) => PackedBCD32.FromValue(value.Value);
+  public static implicit operator PackedBCD64(PackedBCD16 value) => PackedBCD64.FromValue(value.Value);
+
+  // Implicit widening to extended integer types (value range 0-9999 fits in all)
+  public static implicit operator Int96(PackedBCD16 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt96(PackedBCD16 value) => new(0, (ulong)value.Value);
+  public static implicit operator Int128(PackedBCD16 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt128(PackedBCD16 value) => new(0, (ulong)value.Value);
 
   // Parsing
   public static PackedBCD16 Parse(string s) => Parse(s, NumberStyles.Integer, null);
@@ -216,6 +241,20 @@ public readonly struct PackedBCD16 : IComparable, IComparable<PackedBCD16>, IEqu
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out PackedBCD16 result) {
     if (int.TryParse(s, style, provider, out var value) && value is >= 0 and <= 9999) {
+      result = FromValue(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static PackedBCD16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = int.Parse(s, NumberStyles.Integer, provider);
+    return FromValue(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out PackedBCD16 result) {
+    if (int.TryParse(s, NumberStyles.Integer, provider, out var value) && value is >= 0 and <= 9999) {
       result = FromValue(value);
       return true;
     }

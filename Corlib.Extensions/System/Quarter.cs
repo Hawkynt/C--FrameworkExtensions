@@ -26,7 +26,7 @@ namespace System;
 /// Represents an 8-bit IEEE 754 minifloat (1 sign + 5 exponent + 2 mantissa bits).
 /// Bias: 15, range approximately ±57344 to ±0.0000305.
 /// </summary>
-public readonly struct Quarter : IComparable, IComparable<Quarter>, IEquatable<Quarter>, IFormattable, IParsable<Quarter> {
+public readonly struct Quarter : IComparable, IComparable<Quarter>, IEquatable<Quarter>, IFormattable, ISpanFormattable, IParsable<Quarter>, ISpanParsable<Quarter> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 5;
@@ -259,6 +259,19 @@ public readonly struct Quarter : IComparable, IComparable<Quarter>, IEquatable<Q
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToSingle().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToSingle().ToString(provider)
+      : this.ToSingle().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(Quarter left, Quarter right) => left.Equals(right);
   public static bool operator !=(Quarter left, Quarter right) => !left.Equals(right);
@@ -339,8 +352,10 @@ public readonly struct Quarter : IComparable, IComparable<Quarter>, IEquatable<Q
   // Conversions
   public static explicit operator Quarter(float value) => FromSingle(value);
   public static explicit operator Quarter(double value) => FromDouble(value);
-  public static explicit operator float(Quarter value) => value.ToSingle();
-  public static explicit operator double(Quarter value) => value.ToDouble();
+  public static explicit operator Quarter(Half value) => FromSingle((float)value);
+  public static implicit operator float(Quarter value) => value.ToSingle();
+  public static implicit operator double(Quarter value) => value.ToDouble();
+  public static implicit operator Half(Quarter value) => (Half)value.ToSingle();
 
   // Math helpers
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -383,6 +398,20 @@ public readonly struct Quarter : IComparable, IComparable<Quarter>, IEquatable<Q
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Quarter result) {
     if (float.TryParse(s, style, provider, out var value)) {
+      result = FromSingle(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static Quarter Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = float.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromSingle(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Quarter result) {
+    if (float.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromSingle(value);
       return true;
     }

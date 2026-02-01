@@ -27,7 +27,7 @@ namespace System;
 /// BFloat32 is the upper 32 bits of an IEEE 754 double-precision float,
 /// providing the same dynamic range as double with reduced precision.
 /// </summary>
-public readonly struct BFloat32 : IComparable, IComparable<BFloat32>, IEquatable<BFloat32>, IFormattable, IParsable<BFloat32> {
+public readonly struct BFloat32 : IComparable, IComparable<BFloat32>, IEquatable<BFloat32>, IFormattable, ISpanFormattable, IParsable<BFloat32>, ISpanParsable<BFloat32> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 11;
@@ -205,6 +205,19 @@ public readonly struct BFloat32 : IComparable, IComparable<BFloat32>, IEquatable
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(BFloat32 left, BFloat32 right) => left.Equals(right);
   public static bool operator !=(BFloat32 left, BFloat32 right) => !left.Equals(right);
@@ -286,7 +299,7 @@ public readonly struct BFloat32 : IComparable, IComparable<BFloat32>, IEquatable
   public static explicit operator BFloat32(float value) => FromSingle(value);
   public static explicit operator BFloat32(double value) => FromDouble(value);
   public static explicit operator float(BFloat32 value) => value.ToSingle();
-  public static explicit operator double(BFloat32 value) => value.ToDouble();
+  public static implicit operator double(BFloat32 value) => value.ToDouble();
 
   // Math helpers
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -329,6 +342,20 @@ public readonly struct BFloat32 : IComparable, IComparable<BFloat32>, IEquatable
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out BFloat32 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static BFloat32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BFloat32 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

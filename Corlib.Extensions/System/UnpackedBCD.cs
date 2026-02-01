@@ -26,7 +26,7 @@ namespace System;
 /// Represents an 8-bit unpacked BCD value storing 1 decimal digit (0-9).
 /// The entire byte stores a single digit, with the upper nibble typically zero.
 /// </summary>
-public readonly struct UnpackedBCD : IComparable, IComparable<UnpackedBCD>, IEquatable<UnpackedBCD>, IFormattable, IParsable<UnpackedBCD> {
+public readonly struct UnpackedBCD : IComparable, IComparable<UnpackedBCD>, IEquatable<UnpackedBCD>, IFormattable, ISpanFormattable, IParsable<UnpackedBCD>, ISpanParsable<UnpackedBCD> {
   /// <summary>
   /// Gets the raw value (0-9).
   /// </summary>
@@ -96,6 +96,19 @@ public readonly struct UnpackedBCD : IComparable, IComparable<UnpackedBCD>, IEqu
   public string ToString(string? format) => this.RawValue.ToString(format);
 
   public string ToString(string? format, IFormatProvider? provider) => this.RawValue.ToString(format, provider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.RawValue.ToString(provider)
+      : this.RawValue.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   // Comparison operators
   public static bool operator ==(UnpackedBCD left, UnpackedBCD right) => left.Equals(right);
@@ -177,6 +190,20 @@ public readonly struct UnpackedBCD : IComparable, IComparable<UnpackedBCD>, IEqu
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnpackedBCD result) {
     if (int.TryParse(s, style, provider, out var value) && value is >= 0 and <= 9) {
+      result = FromValue(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static UnpackedBCD Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = int.Parse(s, NumberStyles.Integer, provider);
+    return FromValue(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnpackedBCD result) {
+    if (int.TryParse(s, NumberStyles.Integer, provider, out var value) && value is >= 0 and <= 9) {
       result = FromValue(value);
       return true;
     }

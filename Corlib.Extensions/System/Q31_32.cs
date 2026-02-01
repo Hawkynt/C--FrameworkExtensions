@@ -26,7 +26,7 @@ namespace System;
 /// Represents a signed Q31.32 fixed-point number (64-bit: 1 sign + 31 integer + 32 fractional bits).
 /// Range: approximately -2^31 to 2^31-1 with resolution of 1/4294967296.
 /// </summary>
-public readonly struct Q31_32 : IComparable, IComparable<Q31_32>, IEquatable<Q31_32>, IFormattable, IParsable<Q31_32> {
+public readonly struct Q31_32 : IComparable, IComparable<Q31_32>, IEquatable<Q31_32>, IFormattable, ISpanFormattable, IParsable<Q31_32>, ISpanParsable<Q31_32> {
 
   private const int FractionalBits = 32;
   private const long Scale = 1L << FractionalBits; // 4294967296
@@ -95,6 +95,19 @@ public readonly struct Q31_32 : IComparable, IComparable<Q31_32>, IEquatable<Q31
   public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   // Conversion to floating point
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -240,9 +253,9 @@ public readonly struct Q31_32 : IComparable, IComparable<Q31_32>, IEquatable<Q31
   public static explicit operator Q31_32(float value) => FromSingle(value);
   public static explicit operator Q31_32(double value) => FromDouble(value);
 
-  // Conversions to floating point (explicit - representation change)
+  // Conversions to floating point (explicit to float - may lose precision, implicit to double)
   public static explicit operator float(Q31_32 value) => value.ToSingle();
-  public static explicit operator double(Q31_32 value) => value.ToDouble();
+  public static implicit operator double(Q31_32 value) => value.ToDouble();
 
   // Raw value conversion (explicit)
   public static explicit operator Q31_32(long raw) => FromRaw(raw);
@@ -281,6 +294,20 @@ public readonly struct Q31_32 : IComparable, IComparable<Q31_32>, IEquatable<Q31
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Q31_32 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static Q31_32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Q31_32 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

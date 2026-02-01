@@ -27,7 +27,7 @@ namespace System;
 /// BFloat64 uses the exponent width of IEEE 754 quad-precision (binary128)
 /// with a truncated 48-bit mantissa, providing extended dynamic range.
 /// </summary>
-public readonly struct BFloat64 : IComparable, IComparable<BFloat64>, IEquatable<BFloat64>, IFormattable, IParsable<BFloat64> {
+public readonly struct BFloat64 : IComparable, IComparable<BFloat64>, IEquatable<BFloat64>, IFormattable, ISpanFormattable, IParsable<BFloat64>, ISpanParsable<BFloat64> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 15;
@@ -281,6 +281,19 @@ public readonly struct BFloat64 : IComparable, IComparable<BFloat64>, IEquatable
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(BFloat64 left, BFloat64 right) => left.Equals(right);
   public static bool operator !=(BFloat64 left, BFloat64 right) => !left.Equals(right);
@@ -405,6 +418,20 @@ public readonly struct BFloat64 : IComparable, IComparable<BFloat64>, IEquatable
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out BFloat64 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static BFloat64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BFloat64 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

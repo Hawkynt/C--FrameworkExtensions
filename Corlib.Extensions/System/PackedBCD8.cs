@@ -26,7 +26,7 @@ namespace System;
 /// Represents an 8-bit packed BCD value storing 2 decimal digits (0-99).
 /// Each nibble contains one decimal digit (0-9).
 /// </summary>
-public readonly struct PackedBCD8 : IComparable, IComparable<PackedBCD8>, IEquatable<PackedBCD8>, IFormattable, IParsable<PackedBCD8> {
+public readonly struct PackedBCD8 : IComparable, IComparable<PackedBCD8>, IEquatable<PackedBCD8>, IFormattable, ISpanFormattable, IParsable<PackedBCD8>, ISpanParsable<PackedBCD8> {
   /// <summary>
   /// Gets the raw BCD representation.
   /// </summary>
@@ -122,6 +122,19 @@ public readonly struct PackedBCD8 : IComparable, IComparable<PackedBCD8>, IEquat
 
   public string ToString(string? format, IFormatProvider? provider) => this.Value.ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.Value.ToString(provider)
+      : this.Value.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Comparison operators
   public static bool operator ==(PackedBCD8 left, PackedBCD8 right) => left.Equals(right);
   public static bool operator !=(PackedBCD8 left, PackedBCD8 right) => !left.Equals(right);
@@ -179,11 +192,25 @@ public readonly struct PackedBCD8 : IComparable, IComparable<PackedBCD8>, IEquat
   // Conversions
   public static implicit operator PackedBCD8(byte value) => FromValue(value);
   public static explicit operator byte(PackedBCD8 value) => (byte)value.Value;
-  public static explicit operator int(PackedBCD8 value) => value.Value;
+
+  // Implicit widening to larger integer types (value range 0-99 fits in all)
+  public static implicit operator short(PackedBCD8 value) => (short)value.Value;
+  public static implicit operator ushort(PackedBCD8 value) => (ushort)value.Value;
+  public static implicit operator int(PackedBCD8 value) => value.Value;
+  public static implicit operator uint(PackedBCD8 value) => (uint)value.Value;
+  public static implicit operator long(PackedBCD8 value) => value.Value;
+  public static implicit operator ulong(PackedBCD8 value) => (ulong)value.Value;
 
   // Widening to larger BCD types (implicit)
   public static implicit operator PackedBCD16(PackedBCD8 value) => PackedBCD16.FromValue(value.Value);
   public static implicit operator PackedBCD32(PackedBCD8 value) => PackedBCD32.FromValue(value.Value);
+  public static implicit operator PackedBCD64(PackedBCD8 value) => PackedBCD64.FromValue(value.Value);
+
+  // Implicit widening to extended integer types (value range 0-99 fits in all)
+  public static implicit operator Int96(PackedBCD8 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt96(PackedBCD8 value) => new(0, (ulong)value.Value);
+  public static implicit operator Int128(PackedBCD8 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt128(PackedBCD8 value) => new(0, (ulong)value.Value);
 
   // Parsing
   public static PackedBCD8 Parse(string s) => Parse(s, NumberStyles.Integer, null);
@@ -201,6 +228,20 @@ public readonly struct PackedBCD8 : IComparable, IComparable<PackedBCD8>, IEquat
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out PackedBCD8 result) {
     if (int.TryParse(s, style, provider, out var value) && value is >= 0 and <= 99) {
+      result = FromValue(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static PackedBCD8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = int.Parse(s, NumberStyles.Integer, provider);
+    return FromValue(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out PackedBCD8 result) {
+    if (int.TryParse(s, NumberStyles.Integer, provider, out var value) && value is >= 0 and <= 99) {
       result = FromValue(value);
       return true;
     }
