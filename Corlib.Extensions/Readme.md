@@ -1277,7 +1277,6 @@ Extended numeric types for machine learning, scientific computing, and scenarios
 | `BFloat64` | 64-bit | 1+15+48 | 15 bits | 48 bits | 16383 | Extended range (quad exponent) |
 | `Quarter` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | IEEE 754 minifloat |
 | `E4M3` | 8-bit | 1+4+3 | 4 bits | 3 bits | 7 | ML format, no infinity |
-| `E5M2` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | ML format, IEEE 754 conventions |
 | `Int96` | 96-bit | signed | - | - | - | Extended integer range |
 | `UInt96` | 96-bit | unsigned | - | - | - | Extended unsigned integer range |
 
@@ -1310,10 +1309,9 @@ var eps = BFloat16.Epsilon;  // Smallest positive subnormal
 
 #### ML Floating-Point Formats
 
-Specialized 8-bit formats optimized for machine learning workloads, balancing range and precision differently.
+Specialized 8-bit format optimized for machine learning workloads, trading range for precision.
 
 - **`E4M3`** - 8-bit ML format (1+4+3), more precision, no infinity representation
-- **`E5M2`** - 8-bit ML format (1+5+2), more range, IEEE 754 infinity/NaN
 
 ```csharp
 // E4M3 - 4 exponent bits, 3 mantissa bits (more precision, no infinity)
@@ -1321,17 +1319,10 @@ E4M3 e4 = (E4M3)1.25f;
 Console.WriteLine(E4M3.IsFinite(e4));           // true (E4M3 has no infinity)
 Console.WriteLine(E4M3.IsNaN(E4M3.MaxValue));   // false
 
-// E5M2 - 5 exponent bits, 2 mantissa bits (more range, has infinity)
-E5M2 e5 = (E5M2)100.0f;
-Console.WriteLine(E5M2.IsInfinity(E5M2.PositiveInfinity)); // true
-Console.WriteLine(E5M2.IsNaN(E5M2.NaN));                    // true
-
-// Conversions between formats
+// Conversions
 float original = 3.14159f;
 E4M3 e4val = (E4M3)original;
-E5M2 e5val = (E5M2)original;
 float fromE4 = (float)e4val;  // ~3.0 (3 mantissa bits)
-float fromE5 = (float)e5val;  // ~3.0 (2 mantissa bits)
 ```
 
 #### IEEE 754 Minifloat
