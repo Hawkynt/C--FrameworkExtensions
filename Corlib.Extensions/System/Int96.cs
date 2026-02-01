@@ -515,6 +515,8 @@ public readonly struct Int96 : IComparable, IComparable<Int96>, IEquatable<Int96
   public static explicit operator ulong(Int96 value) => value.Lower;
 
   public static explicit operator float(Int96 value) => (float)(double)value;
+  public static explicit operator Half(Int96 value) => (Half)(double)value;
+  public static explicit operator Quarter(Int96 value) => Quarter.FromDouble((double)value);
 
   public static explicit operator double(Int96 value) {
     var isNegative = IsNegative(value);
@@ -538,6 +540,8 @@ public readonly struct Int96 : IComparable, IComparable<Int96>, IEquatable<Int96
   }
 
   public static explicit operator Int96(float value) => (Int96)(double)value;
+  public static explicit operator Int96(Half value) => (Int96)(double)value;
+  public static explicit operator Int96(Quarter value) => (Int96)(double)value.ToDouble();
 
   public static explicit operator Int96(double value) {
     if (double.IsNaN(value) || double.IsInfinity(value))

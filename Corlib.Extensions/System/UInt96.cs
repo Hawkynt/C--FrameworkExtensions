@@ -414,6 +414,8 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
   public static explicit operator ulong(UInt96 value) => value.Lower;
 
   public static explicit operator float(UInt96 value) => (float)(double)value;
+  public static explicit operator Half(UInt96 value) => (Half)(double)value;
+  public static explicit operator Quarter(UInt96 value) => Quarter.FromDouble((double)value);
 
   public static explicit operator double(UInt96 value) => value.Upper * 18446744073709551616.0 + value.Lower;
 
@@ -426,6 +428,8 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
   }
 
   public static explicit operator UInt96(float value) => (UInt96)(double)value;
+  public static explicit operator UInt96(Half value) => (UInt96)(double)value;
+  public static explicit operator UInt96(Quarter value) => (UInt96)(double)value.ToDouble();
 
   public static explicit operator UInt96(double value) {
     if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)
