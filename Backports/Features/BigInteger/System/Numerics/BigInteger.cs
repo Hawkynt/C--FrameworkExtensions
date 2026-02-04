@@ -607,7 +607,16 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     if (result == null && value._sign < 0)
       return MinusOne;
 
-    return new(result == null ? 0 : value._sign, result);
+    if (result == null) {
+      // _TrimLeadingZeros returns null for both all-zeros and magnitude-1 ([1] normalized to null).
+      // Check original newBits to distinguish.
+      for (var i = 0; i < newBits.Length; ++i)
+        if (newBits[i] != 0)
+          return One;
+      return Zero;
+    }
+
+    return new(value._sign, result);
   }
 
   /// <summary>Performs a bitwise AND operation.</summary>
@@ -624,12 +633,17 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
     var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
 
-    var result = new byte[maxLen];
+    // Determine if result should be positive (both non-negative, or result of AND won't have sign bit)
+    var resultPositive = left._sign > 0 && right._sign > 0;
+
+    // Allocate extra byte for sign if both operands are positive
+    var result = new byte[maxLen + (resultPositive ? 1 : 0)];
     for (var i = 0; i < maxLen; ++i) {
       var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
       var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
       result[i] = (byte)(l & r);
     }
+    // The extra byte (if added) is already 0x00, ensuring positive interpretation
 
     return new BigInteger(result);
   }
@@ -654,12 +668,16 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
     var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
 
-    var result = new byte[maxLen];
+    // If both operands are positive, result should be positive
+    var resultPositive = left._sign > 0 && right._sign > 0;
+
+    var result = new byte[maxLen + (resultPositive ? 1 : 0)];
     for (var i = 0; i < maxLen; ++i) {
       var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
       var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
       result[i] = (byte)(l | r);
     }
+    // The extra byte (if added) is already 0x00, ensuring positive interpretation
 
     return new BigInteger(result);
   }
@@ -684,12 +702,16 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     var leftExtend = left._sign < 0 ? (byte)0xFF : (byte)0;
     var rightExtend = right._sign < 0 ? (byte)0xFF : (byte)0;
 
-    var result = new byte[maxLen];
+    // If both operands have same sign, result should be positive (XOR of same signs = positive)
+    var resultPositive = (left._sign > 0) == (right._sign > 0);
+
+    var result = new byte[maxLen + (resultPositive ? 1 : 0)];
     for (var i = 0; i < maxLen; ++i) {
       var l = i < leftBytes.Length ? leftBytes[i] : leftExtend;
       var r = i < rightBytes.Length ? rightBytes[i] : rightExtend;
       result[i] = (byte)(l ^ r);
     }
+    // The extra byte (if added) is already 0x00, ensuring positive interpretation
 
     return new BigInteger(result);
   }
@@ -986,9 +1008,18 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
   public static explicit operator byte(BigInteger value) {
     if (value._sign == 0)
       return 0;
-    if (value._sign < 0 || value._bits is { Length: > 1 })
+    if (value._sign < 0)
       throw new OverflowException();
-    var val = value._bits?[0] ?? 1u;
+
+    var bits = value._bits;
+
+    // Check for overflow: any non-zero bits beyond the first uint
+    if (bits != null)
+      for (var i = 1; i < bits.Length; ++i)
+        if (bits[i] != 0)
+          throw new OverflowException();
+
+    var val = bits?[0] ?? 1u;
     if (val > byte.MaxValue)
       throw new OverflowException();
     return (byte)val;
@@ -1011,9 +1042,18 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
   public static explicit operator ushort(BigInteger value) {
     if (value._sign == 0)
       return 0;
-    if (value._sign < 0 || value._bits is { Length: > 1 })
+    if (value._sign < 0)
       throw new OverflowException();
-    var val = value._bits?[0] ?? 1u;
+
+    var bits = value._bits;
+
+    // Check for overflow: any non-zero bits beyond the first uint
+    if (bits != null)
+      for (var i = 1; i < bits.Length; ++i)
+        if (bits[i] != 0)
+          throw new OverflowException();
+
+    var val = bits?[0] ?? 1u;
     if (val > ushort.MaxValue)
       throw new OverflowException();
     return (ushort)val;
@@ -1022,9 +1062,16 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
   public static explicit operator int(BigInteger value) {
     if (value._sign == 0)
       return 0;
-    if (value._bits is { Length: > 1 })
-      throw new OverflowException();
-    var val = value._bits?[0] ?? 1u;
+
+    var bits = value._bits;
+
+    // Check for overflow: any non-zero bits beyond the first uint
+    if (bits != null)
+      for (var i = 1; i < bits.Length; ++i)
+        if (bits[i] != 0)
+          throw new OverflowException();
+
+    var val = bits?[0] ?? 1u;
     if (value._sign > 0) {
       if (val > int.MaxValue)
         throw new OverflowException();
@@ -1039,24 +1086,41 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
   public static explicit operator uint(BigInteger value) {
     if (value._sign == 0)
       return 0;
-    if (value._sign < 0 || value._bits is { Length: > 1 })
+    if (value._sign < 0)
       throw new OverflowException();
-    return value._bits?[0] ?? 1u;
+
+    // Check if value fits in uint (all bits above 31 must be zero)
+    var bits = value._bits;
+    if (bits == null)
+      return 1u;
+
+    // Check for overflow: any non-zero bits beyond the first uint
+    for (var i = 1; i < bits.Length; ++i)
+      if (bits[i] != 0)
+        throw new OverflowException();
+
+    return bits[0];
   }
 
   public static explicit operator long(BigInteger value) {
     if (value._sign == 0)
       return 0;
 
+    var bits = value._bits;
+
+    // Check for overflow: any non-zero bits beyond the first two uints
+    if (bits != null)
+      for (var i = 2; i < bits.Length; ++i)
+        if (bits[i] != 0)
+          throw new OverflowException();
+
     ulong magnitude;
-    if (value._bits == null)
+    if (bits == null)
       magnitude = 1;
-    else if (value._bits.Length == 1)
-      magnitude = value._bits[0];
-    else if (value._bits.Length == 2)
-      magnitude = value._bits[0] | ((ulong)value._bits[1] << 32);
+    else if (bits.Length == 1)
+      magnitude = bits[0];
     else
-      throw new OverflowException();
+      magnitude = bits[0] | ((ulong)bits[1] << 32);
 
     if (value._sign > 0) {
       if (magnitude > long.MaxValue)
@@ -1075,14 +1139,19 @@ public readonly struct BigInteger : IComparable, IComparable<BigInteger>, IEquat
     if (value._sign < 0)
       throw new OverflowException();
 
-    if (value._bits == null)
+    var bits = value._bits;
+    if (bits == null)
       return 1;
-    if (value._bits.Length == 1)
-      return value._bits[0];
-    if (value._bits.Length == 2)
-      return value._bits[0] | ((ulong)value._bits[1] << 32);
 
-    throw new OverflowException();
+    // Check for overflow: any non-zero bits beyond the first two uints
+    for (var i = 2; i < bits.Length; ++i)
+      if (bits[i] != 0)
+        throw new OverflowException();
+
+    var result = (ulong)bits[0];
+    if (bits.Length > 1)
+      result |= (ulong)bits[1] << 32;
+    return result;
   }
 
   public static explicit operator float(BigInteger value) => (float)(double)value;

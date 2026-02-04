@@ -46,7 +46,7 @@ public static partial class Int32Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 32-bit signed integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static int Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => int.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -68,7 +68,7 @@ public static partial class Int32Polyfills {
     /// <param name="result">When this method returns, contains the 32-bit signed integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out int result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out int result)
       => int.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -96,7 +96,7 @@ public static partial class Int64Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 64-bit signed integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static long Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => long.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -118,7 +118,7 @@ public static partial class Int64Polyfills {
     /// <param name="result">When this method returns, contains the 64-bit signed integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out long result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out long result)
       => long.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -146,7 +146,7 @@ public static partial class DoublePolyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A double-precision floating-point number equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static double Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => double.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -168,7 +168,7 @@ public static partial class DoublePolyfills {
     /// <param name="result">When this method returns, contains the double-precision floating-point equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out double result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out double result)
       => double.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -196,7 +196,7 @@ public static partial class DecimalPolyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A <see cref="decimal"/> equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static decimal Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => decimal.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -218,7 +218,7 @@ public static partial class DecimalPolyfills {
     /// <param name="result">When this method returns, contains the <see cref="decimal"/> equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out decimal result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out decimal result)
       => decimal.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -246,7 +246,7 @@ public static partial class SinglePolyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A single-precision floating-point number equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static float Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => float.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -268,7 +268,7 @@ public static partial class SinglePolyfills {
     /// <param name="result">When this method returns, contains the single-precision floating-point equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out float result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out float result)
       => float.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -296,7 +296,7 @@ public static partial class Int16Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 16-bit signed integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static short Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static short Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => short.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -318,7 +318,7 @@ public static partial class Int16Polyfills {
     /// <param name="result">When this method returns, contains the 16-bit signed integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out short result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out short result)
       => short.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -346,7 +346,7 @@ public static partial class UInt16Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 16-bit unsigned integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static ushort Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => ushort.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -368,7 +368,7 @@ public static partial class UInt16Polyfills {
     /// <param name="result">When this method returns, contains the 16-bit unsigned integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out ushort result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out ushort result)
       => ushort.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -396,7 +396,7 @@ public static partial class UInt32Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 32-bit unsigned integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static uint Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => uint.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -418,7 +418,7 @@ public static partial class UInt32Polyfills {
     /// <param name="result">When this method returns, contains the 32-bit unsigned integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out uint result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out uint result)
       => uint.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -446,7 +446,7 @@ public static partial class UInt64Polyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A 64-bit unsigned integer equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static ulong Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => ulong.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -468,7 +468,7 @@ public static partial class UInt64Polyfills {
     /// <param name="result">When this method returns, contains the 64-bit unsigned integer equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out ulong result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out ulong result)
       => ulong.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -496,7 +496,7 @@ public static partial class BytePolyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A <see cref="byte"/> equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static byte Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static byte Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => byte.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -518,7 +518,7 @@ public static partial class BytePolyfills {
     /// <param name="result">When this method returns, contains the <see cref="byte"/> equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out byte result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out byte result)
       => byte.TryParse(s.ToString(), style, provider, out result);
 
   }
@@ -546,7 +546,7 @@ public static partial class SBytePolyfills {
     /// <param name="provider">An object that supplies culture-specific formatting information.</param>
     /// <returns>A <see cref="sbyte"/> equivalent to the number contained in <paramref name="s"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static sbyte Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider)
+    public static sbyte Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider)
       => sbyte.Parse(s.ToString(), style, provider);
 
     /// <summary>
@@ -568,7 +568,7 @@ public static partial class SBytePolyfills {
     /// <param name="result">When this method returns, contains the <see cref="sbyte"/> equivalent of the number contained in <paramref name="s"/>, if the conversion succeeded.</param>
     /// <returns><see langword="true"/> if <paramref name="s"/> was converted successfully; otherwise, <see langword="false"/>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider provider, out sbyte result)
+    public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out sbyte result)
       => sbyte.TryParse(s.ToString(), style, provider, out result);
 
   }
