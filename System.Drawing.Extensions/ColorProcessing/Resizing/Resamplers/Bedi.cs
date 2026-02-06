@@ -188,11 +188,8 @@ file readonly struct BediKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     return (gx, gy);
   }
 
-  /// <summary>
-  /// BT.709 luminance approximation from color channels.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Luminance(in TWork c) => 0.2126f * c.C1 + 0.7152f * c.C2 + 0.0722f * c.C3;
+  private static float Luminance(in TWork c) => ColorConverter.GetLuminance(c);
 
   /// <summary>
   /// Standard bilinear interpolation.

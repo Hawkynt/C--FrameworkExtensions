@@ -158,17 +158,11 @@ file readonly struct AdvancedAaKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     dest[destY * destStride + destX] = encoder.Encode(result);
   }
 
-  /// <summary>
-  /// Computes Manhattan distance across color channels.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float ManhattanDistance(in TWork a, in TWork b)
-    => MathF.Abs(a.C1 - b.C1) + MathF.Abs(a.C2 - b.C2) + MathF.Abs(a.C3 - b.C3);
+    => MathF.Abs(ColorConverter.GetLuminance(a) - ColorConverter.GetLuminance(b));
 
-  /// <summary>
-  /// Computes channel deviation from center.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float ChannelDeviation(in TWork a, in TWork center)
-    => MathF.Abs(a.C1 - center.C1) + MathF.Abs(a.C2 - center.C2) + MathF.Abs(a.C3 - center.C3) + 0.0001f;
+    => MathF.Abs(ColorConverter.GetLuminance(a) - ColorConverter.GetLuminance(center)) + 0.0001f;
 }
