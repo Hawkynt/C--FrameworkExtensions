@@ -25,7 +25,7 @@ namespace System;
 /// <summary>
 /// Represents a 96-bit unsigned integer.
 /// </summary>
-public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UInt96>, IFormattable, IParsable<UInt96> {
+public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UInt96>, IFormattable, ISpanFormattable, IParsable<UInt96>, ISpanParsable<UInt96> {
   /// <summary>
   /// Gets the lower 64 bits of the 96-bit value.
   /// </summary>
@@ -200,6 +200,17 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
 
   public string ToString(string? format, IFormatProvider? provider) => _ToDecimalString(this);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = _ToDecimalString(this);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   private static string _ToDecimalString(UInt96 value) {
     if (value == Zero)
       return "0";
@@ -238,7 +249,22 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
     if (string.IsNullOrWhiteSpace(s))
       return false;
 
-    s = s!.Trim();
+    return TryParse(s.AsSpan().Trim(), provider, out result);
+  }
+
+  public static UInt96 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    if (!TryParse(s, provider, out var result))
+      throw new FormatException("Input string was not in a correct format.");
+    return result;
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt96 result) {
+    result = Zero;
+    if (s.IsEmpty)
+      return false;
+    s = s.Trim();
+    if (s.IsEmpty)
+      return false;
     var startIndex = 0;
 
     if (s[0] == '+')
@@ -414,6 +440,8 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
   public static explicit operator ulong(UInt96 value) => value.Lower;
 
   public static explicit operator float(UInt96 value) => (float)(double)value;
+  public static explicit operator Half(UInt96 value) => (Half)(double)value;
+  public static explicit operator Quarter(UInt96 value) => Quarter.FromDouble((double)value);
 
   public static explicit operator double(UInt96 value) => value.Upper * 18446744073709551616.0 + value.Lower;
 
@@ -426,6 +454,8 @@ public readonly struct UInt96 : IComparable, IComparable<UInt96>, IEquatable<UIn
   }
 
   public static explicit operator UInt96(float value) => (UInt96)(double)value;
+  public static explicit operator UInt96(Half value) => (UInt96)(double)value;
+  public static explicit operator UInt96(Quarter value) => (UInt96)(double)value.ToDouble();
 
   public static explicit operator UInt96(double value) {
     if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)

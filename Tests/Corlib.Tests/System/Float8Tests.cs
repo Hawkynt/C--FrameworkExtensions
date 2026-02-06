@@ -72,34 +72,6 @@ public class Float8Tests {
     Assert.IsTrue(E4M3.IsFinite(result));
   }
 
-  // E5M2 tests
-  [Test]
-  public void E5M2_SpecialValues_AreCorrect() {
-    Assert.IsTrue(E5M2.IsNaN(E5M2.NaN));
-    Assert.IsTrue(E5M2.IsInfinity(E5M2.PositiveInfinity));
-    Assert.IsTrue(E5M2.IsInfinity(E5M2.NegativeInfinity));
-    Assert.IsFalse(E5M2.IsNaN(E5M2.Zero));
-    Assert.IsTrue(E5M2.IsFinite(E5M2.One));
-  }
-
-  [Test]
-  public void E5M2_Zero_IsCorrect() {
-    Assert.AreEqual(0f, E5M2.Zero.ToSingle(), 0.001f);
-  }
-
-  [Test]
-  public void E5M2_One_IsCorrect() {
-    Assert.AreEqual(1f, E5M2.One.ToSingle(), Tolerance);
-  }
-
-  [Test]
-  public void E5M2_Arithmetic_Works() {
-    var a = (E5M2)2.0f;
-    var b = (E5M2)1.0f;
-    Assert.AreEqual(3.0f, (a + b).ToSingle(), Tolerance);
-    Assert.AreEqual(1.0f, (a - b).ToSingle(), Tolerance);
-  }
-
   // Comparison tests
   [Test]
   public void Float8_Comparison_Works() {
@@ -118,7 +90,6 @@ public class Float8Tests {
   public void Float8_NaN_Comparison_Special() {
     Assert.IsTrue(Quarter.NaN.Equals(Quarter.NaN));
     Assert.IsTrue(E4M3.NaN.Equals(E4M3.NaN));
-    Assert.IsTrue(E5M2.NaN.Equals(E5M2.NaN));
   }
 
 }

@@ -26,7 +26,7 @@ namespace System;
 /// Represents an unsigned UQ16.16 fixed-point number (32-bit: 16 integer + 16 fractional bits).
 /// Range: 0 to approximately 65535.99998 with resolution of 1/65536.
 /// </summary>
-public readonly struct UQ16_16 : IComparable, IComparable<UQ16_16>, IEquatable<UQ16_16>, IFormattable, IParsable<UQ16_16> {
+public readonly struct UQ16_16 : IComparable, IComparable<UQ16_16>, IEquatable<UQ16_16>, IFormattable, ISpanFormattable, IParsable<UQ16_16>, ISpanParsable<UQ16_16> {
 
   private const int FractionalBits = 16;
   private const uint Scale = 1u << FractionalBits; // 65536
@@ -95,6 +95,19 @@ public readonly struct UQ16_16 : IComparable, IComparable<UQ16_16>, IEquatable<U
   public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   // Conversion to floating point
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -189,9 +202,9 @@ public readonly struct UQ16_16 : IComparable, IComparable<UQ16_16>, IEquatable<U
   public static explicit operator UQ16_16(float value) => FromSingle(value);
   public static explicit operator UQ16_16(double value) => FromDouble(value);
 
-  // Conversions to floating point (explicit - representation change)
-  public static explicit operator float(UQ16_16 value) => value.ToSingle();
-  public static explicit operator double(UQ16_16 value) => value.ToDouble();
+  // Conversions to floating point (implicit - widening, no precision loss)
+  public static implicit operator float(UQ16_16 value) => value.ToSingle();
+  public static implicit operator double(UQ16_16 value) => value.ToDouble();
 
   // Raw value conversion (explicit)
   public static explicit operator UQ16_16(uint raw) => FromRaw(raw);
@@ -232,6 +245,20 @@ public readonly struct UQ16_16 : IComparable, IComparable<UQ16_16>, IEquatable<U
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UQ16_16 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static UQ16_16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UQ16_16 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

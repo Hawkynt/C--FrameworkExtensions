@@ -27,7 +27,7 @@ namespace System;
 /// BFloat8 is a truncated version of Float16/Half, providing the same dynamic range
 /// as Half with reduced precision.
 /// </summary>
-public readonly struct BFloat8 : IComparable, IComparable<BFloat8>, IEquatable<BFloat8>, IFormattable, IParsable<BFloat8> {
+public readonly struct BFloat8 : IComparable, IComparable<BFloat8>, IEquatable<BFloat8>, IFormattable, ISpanFormattable, IParsable<BFloat8>, ISpanParsable<BFloat8> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 5;
@@ -223,6 +223,19 @@ public readonly struct BFloat8 : IComparable, IComparable<BFloat8>, IEquatable<B
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToSingle().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToSingle().ToString(provider)
+      : this.ToSingle().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(BFloat8 left, BFloat8 right) => left.Equals(right);
   public static bool operator !=(BFloat8 left, BFloat8 right) => !left.Equals(right);
@@ -304,9 +317,9 @@ public readonly struct BFloat8 : IComparable, IComparable<BFloat8>, IEquatable<B
   public static explicit operator BFloat8(float value) => FromSingle(value);
   public static explicit operator BFloat8(double value) => FromDouble(value);
   public static explicit operator BFloat8(Half value) => FromHalf(value);
-  public static explicit operator float(BFloat8 value) => value.ToSingle();
-  public static explicit operator double(BFloat8 value) => value.ToDouble();
-  public static explicit operator Half(BFloat8 value) => value.ToHalf();
+  public static implicit operator float(BFloat8 value) => value.ToSingle();
+  public static implicit operator double(BFloat8 value) => value.ToDouble();
+  public static implicit operator Half(BFloat8 value) => value.ToHalf();
 
   // Math helpers
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -349,6 +362,20 @@ public readonly struct BFloat8 : IComparable, IComparable<BFloat8>, IEquatable<B
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out BFloat8 result) {
     if (float.TryParse(s, style, provider, out var value)) {
+      result = FromSingle(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static BFloat8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = float.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromSingle(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BFloat8 result) {
+    if (float.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromSingle(value);
       return true;
     }

@@ -26,7 +26,7 @@ namespace System;
 /// Represents an unsigned UQ32.32 fixed-point number (64-bit: 32 integer + 32 fractional bits).
 /// Range: 0 to approximately 4294967295.99999999977 with resolution of 1/4294967296.
 /// </summary>
-public readonly struct UQ32_32 : IComparable, IComparable<UQ32_32>, IEquatable<UQ32_32>, IFormattable, IParsable<UQ32_32> {
+public readonly struct UQ32_32 : IComparable, IComparable<UQ32_32>, IEquatable<UQ32_32>, IFormattable, ISpanFormattable, IParsable<UQ32_32>, ISpanParsable<UQ32_32> {
 
   private const int FractionalBits = 32;
   private const ulong Scale = 1UL << FractionalBits; // 4294967296
@@ -95,6 +95,19 @@ public readonly struct UQ32_32 : IComparable, IComparable<UQ32_32>, IEquatable<U
   public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   // Conversion to floating point
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -221,9 +234,9 @@ public readonly struct UQ32_32 : IComparable, IComparable<UQ32_32>, IEquatable<U
   public static explicit operator UQ32_32(float value) => FromSingle(value);
   public static explicit operator UQ32_32(double value) => FromDouble(value);
 
-  // Conversions to floating point (explicit - representation change)
+  // Conversions to floating point (explicit to float - may lose precision, implicit to double)
   public static explicit operator float(UQ32_32 value) => value.ToSingle();
-  public static explicit operator double(UQ32_32 value) => value.ToDouble();
+  public static implicit operator double(UQ32_32 value) => value.ToDouble();
 
   // Raw value conversion (explicit)
   public static explicit operator UQ32_32(ulong raw) => FromRaw(raw);
@@ -259,6 +272,20 @@ public readonly struct UQ32_32 : IComparable, IComparable<UQ32_32>, IEquatable<U
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UQ32_32 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static UQ32_32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UQ32_32 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

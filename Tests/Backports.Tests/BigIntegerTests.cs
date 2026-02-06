@@ -141,7 +141,8 @@ public class BigIntegerTests {
   [Test]
   [Category("Exception")]
   public void BigInteger_FromNullByteArray_ThrowsArgumentNullException() {
-    Assert.Throws<System.ArgumentNullException>(() => new BigInteger(null!));
+    byte[] nullArray = null;
+    Assert.Throws<System.ArgumentNullException>(() => new BigInteger(nullArray));
   }
 
   #endregion
@@ -481,6 +482,129 @@ public class BigIntegerTests {
     Assert.That((int)(value >> 0), Is.EqualTo(42));
   }
 
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a & b), Is.EqualTo(0b1000));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_WithZero_ReturnsZero() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a & BigInteger.Zero), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_WithLong_ReturnsCorrectResult() {
+    var a = new BigInteger(0b11111111);
+    Assert.That((int)(a & 0b00001111L), Is.EqualTo(0b00001111));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a | b), Is.EqualTo(0b1110));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_WithZero_ReturnsSameValue() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a | BigInteger.Zero), Is.EqualTo(0xFF));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_WithInt_ReturnsCorrectResult() {
+    var a = new BigInteger(0b11110000);
+    Assert.That((int)(a | 0b00001111), Is.EqualTo(0b11111111));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseXor_ReturnsCorrectResult() {
+    var a = new BigInteger(0b1100);
+    var b = new BigInteger(0b1010);
+    Assert.That((int)(a ^ b), Is.EqualTo(0b0110));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseXor_WithSelf_ReturnsZero() {
+    var a = new BigInteger(0xFF);
+    Assert.That((int)(a ^ a), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_ReturnsCorrectResult() {
+    var a = new BigInteger(0);
+    Assert.That((int)(~a), Is.EqualTo(-1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_OfNegativeOne_ReturnsZero() {
+    var a = new BigInteger(-1);
+    Assert.That((int)(~a), Is.EqualTo(0));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseNot_OfPositive_ReturnsNegative() {
+    var a = new BigInteger(5);
+    Assert.That((int)(~a), Is.EqualTo(-6));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseAnd_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(long.MaxValue);
+    var b = new BigInteger(0x00FF00FF00FF00FFL);
+    var result = a & b;
+    Assert.That((long)result, Is.EqualTo(0x00FF00FF00FF00FFL));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseOr_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(0x0F0F0F0F0F0F0F0FL);
+    var b = new BigInteger(unchecked((long)0xF0F0F0F0F0F0F0F0L));
+    var result = a | b;
+    Assert.That(result, Is.EqualTo(BigInteger.MinusOne));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_BitwiseXor_LargeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(0x0F0F0F0F0F0F0F0FL);
+    var b = new BigInteger(-1);
+    var result = a ^ b;
+    Assert.That(result, Is.EqualTo(new BigInteger(unchecked((long)0xF0F0F0F0F0F0F0F0L))));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseAnd_NegativeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(-1);
+    var b = new BigInteger(0xFF);
+    Assert.That((int)(a & b), Is.EqualTo(0xFF));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void BigInteger_BitwiseOr_NegativeValues_ReturnsCorrectResult() {
+    var a = new BigInteger(-256);
+    var b = new BigInteger(0xFF);
+    Assert.That((int)(a | b), Is.EqualTo(-1));
+  }
+
   #endregion
 
   #region Parsing Tests
@@ -693,6 +817,246 @@ public class BigIntegerTests {
     var b = new BigInteger(12346);
     // Note: hash collisions are possible, but unlikely for adjacent values
     Assert.That(a.GetHashCode(), Is.Not.EqualTo(b.GetHashCode()));
+  }
+
+  #endregion
+
+  #region ConfigurableFloatingPoint-like Operations (Sign Bit Handling)
+
+  /// <summary>
+  /// Tests OR operation with sign mask - mimics ConfigurableFloatingPoint's sign bit setting.
+  /// This is the exact pattern used: raw |= signMask where signMask = 1 << 7 for 8-bit.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_OrWithSignMask_8bit_PreservesSignBit() {
+    // Simulate ConfigurableFloatingPoint behavior for 8-bit signed type
+    var signMask = BigInteger.One << 7; // 0x80 = 128
+    var exponentAndMantissa = new BigInteger(0x4F); // Some value without sign bit
+
+    // This is what ConfigurableFloatingPoint does: raw |= signMask
+    var result = exponentAndMantissa | signMask;
+
+    // Expected: 0x4F | 0x80 = 0xCF = 207
+    Assert.That((int)result, Is.EqualTo(0xCF), "OR with sign mask should set bit 7");
+    Assert.That(result.Sign, Is.EqualTo(1), "Result should be positive BigInteger");
+  }
+
+  /// <summary>
+  /// Tests the full cycle: set sign bit, mask to range, convert to byte, read back sign.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_SignMaskCycle_8bit_PreservesSignBit() {
+    // ConfigurableFloatingPoint constants for 8-bit signed
+    var signMask = BigInteger.One << 7; // 0x80
+    var maxRawValue = (BigInteger.One << 8) - 1; // 0xFF = 255
+    var exponentAndMantissa = new BigInteger(0x4F);
+
+    // Step 1: Set sign bit (what FromDouble does for negative values)
+    var raw = exponentAndMantissa | signMask;
+    Assert.That((int)raw, Is.EqualTo(0xCF), "Step 1: OR should give 0xCF");
+
+    // Step 2: Mask to range (constructor does this)
+    var masked = raw & maxRawValue;
+    Assert.That((int)masked, Is.EqualTo(0xCF), "Step 2: AND with 0xFF should preserve 0xCF");
+
+    // Step 3: Convert to byte
+    var byteValue = (byte)masked;
+    Assert.That(byteValue, Is.EqualTo(0xCF), "Step 3: Conversion to byte should give 0xCF");
+
+    // Step 4: Convert back to BigInteger
+    BigInteger backToBigInt = byteValue;
+    Assert.That((int)backToBigInt, Is.EqualTo(0xCF), "Step 4: Back to BigInteger should be 0xCF");
+
+    // Step 5: Extract sign bit (what IsNegative does)
+    var signBit = (backToBigInt >> 7) & 1;
+    Assert.That((int)signBit, Is.EqualTo(1), "Step 5: Sign bit should be 1");
+  }
+
+  /// <summary>
+  /// Tests ToByteArray for value 128 (0x80) - the sign mask value.
+  /// This value needs special handling because 0x80 alone would be negative.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_ToByteArray_128_HasCorrectFormat() {
+    var value = new BigInteger(128);
+    var bytes = value.ToByteArray();
+
+    // 128 = 0x80 needs two bytes: [0x80, 0x00] to be positive
+    // If it were just [0x80], it would be interpreted as -128
+    Assert.That(bytes.Length, Is.EqualTo(2), "128 needs 2 bytes to be positive");
+    Assert.That(bytes[0], Is.EqualTo(0x80), "First byte should be 0x80");
+    Assert.That(bytes[1], Is.EqualTo(0x00), "Second byte should be 0x00 (sign extension)");
+
+    // Verify roundtrip
+    var reconstructed = new BigInteger(bytes);
+    Assert.That(reconstructed, Is.EqualTo(value), "Roundtrip should preserve value");
+    Assert.That(reconstructed.Sign, Is.EqualTo(1), "Reconstructed value should be positive");
+  }
+
+  /// <summary>
+  /// Tests OR operation where result has high bit set.
+  /// The result should remain a positive BigInteger.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_Or_PositiveWithHighBitResult_RemainsPositive() {
+    var a = new BigInteger(0x40); // 64
+    var b = new BigInteger(0x80); // 128
+
+    var result = a | b;
+
+    Assert.That(result.Sign, Is.EqualTo(1), "Result of OR should be positive");
+    Assert.That((int)result, Is.EqualTo(0xC0), "0x40 | 0x80 = 0xC0");
+  }
+
+  /// <summary>
+  /// Tests AND operation with 0xFF mask.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_And_With0xFF_ReturnsCorrectByte() {
+    var value = new BigInteger(0xCF);
+    var mask = new BigInteger(0xFF);
+
+    var result = value & mask;
+
+    Assert.That((int)result, Is.EqualTo(0xCF), "0xCF & 0xFF = 0xCF");
+    Assert.That(result.Sign, Is.EqualTo(1), "Result should be positive");
+  }
+
+  /// <summary>
+  /// Tests explicit conversion to byte for values with high bit set.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_ExplicitToByte_HighBitSet_Works() {
+    var value = new BigInteger(207); // 0xCF
+
+    var byteVal = (byte)value;
+
+    Assert.That(byteVal, Is.EqualTo(207), "Should convert to 207");
+    Assert.That(byteVal, Is.EqualTo(0xCF), "Should be 0xCF");
+  }
+
+  /// <summary>
+  /// Tests right shift to extract high bit.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_RightShift_ExtractsHighBit() {
+    var value = new BigInteger(0xCF); // 11001111 in binary
+
+    var highBit = (value >> 7) & 1;
+
+    Assert.That((int)highBit, Is.EqualTo(1), "Bit 7 of 0xCF should be 1");
+  }
+
+  /// <summary>
+  /// Tests the complete sign bit cycle that ConfigurableFloatingPoint uses.
+  /// This test verifies OR result stays positive even when high bit is set.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_Or_BothPositive_ResultIsPositive() {
+    // Test various combinations that produce high bit in result
+    var testCases = new[] {
+      (0x01, 0x80, 0x81),
+      (0x40, 0x80, 0xC0),
+      (0x7F, 0x80, 0xFF),
+      (0x00, 0x80, 0x80),
+      (0x4F, 0x80, 0xCF),
+    };
+
+    foreach (var (aVal, bVal, expected) in testCases) {
+      var a = new BigInteger(aVal);
+      var b = new BigInteger(bVal);
+      var result = a | b;
+
+      Assert.That(result.Sign, Is.EqualTo(1),
+        $"OR of {aVal:X2} and {bVal:X2} should be positive");
+      Assert.That((int)result, Is.EqualTo(expected),
+        $"0x{aVal:X2} | 0x{bVal:X2} should equal 0x{expected:X2}");
+    }
+  }
+
+  /// <summary>
+  /// Tests AND operation between two positive values with high bits.
+  /// </summary>
+  [Test]
+  [Category("EdgeCase")]
+  public void BigInteger_And_BothPositive_ResultIsPositive() {
+    var testCases = new[] {
+      (0xCF, 0xFF, 0xCF),
+      (0xFF, 0xFF, 0xFF),
+      (0x80, 0xFF, 0x80),
+      (0xC0, 0xF0, 0xC0),
+    };
+
+    foreach (var (aVal, bVal, expected) in testCases) {
+      var a = new BigInteger(aVal);
+      var b = new BigInteger(bVal);
+      var result = a & b;
+
+      Assert.That(result.Sign, Is.EqualTo(1),
+        $"AND of {aVal:X2} and {bVal:X2} should be positive");
+      Assert.That((int)result, Is.EqualTo(expected),
+        $"0x{aVal:X2} & 0x{bVal:X2} should equal 0x{expected:X2}");
+    }
+  }
+
+  /// <summary>
+  /// Full integration test mimicking ConfigurableFloatingPoint<sbyte>.FromDouble(-0.5).
+  /// </summary>
+  [Test]
+  [Category("Integration")]
+  public void BigInteger_ConfigurableFloatingPoint_NegativeValue_FullCycle() {
+    // Simulate a negative floating point value storage
+    // For sbyte storage with 1 sign bit, 4 exponent bits, 3 mantissa bits
+
+    // These would be the computed exponent and mantissa for some negative value
+    var exponent = new BigInteger(6); // example biased exponent
+    var mantissa = new BigInteger(3); // example mantissa
+    var mantissaBits = 3;
+    var signMask = BigInteger.One << 7; // sign bit position for 8-bit
+    var maxRawValue = (BigInteger.One << 8) - 1; // 0xFF
+
+    // Build the raw value (without sign)
+    var raw = (exponent << mantissaBits) | mantissa;
+    Assert.That((int)raw, Is.EqualTo((6 << 3) | 3), "Raw value before sign");
+    Assert.That((int)raw, Is.EqualTo(51), "Raw = 0x33 = 51");
+
+    // Add sign bit for negative value
+    raw |= signMask;
+    Assert.That((int)raw, Is.EqualTo(51 | 128), "Raw value after sign bit");
+    Assert.That((int)raw, Is.EqualTo(179), "Raw = 0xB3 = 179");
+    Assert.That(raw.Sign, Is.EqualTo(1), "BigInteger should still be positive");
+
+    // Mask to storage range
+    var masked = raw & maxRawValue;
+    Assert.That((int)masked, Is.EqualTo(179), "Masked value should be 179");
+
+    // Convert to storage type
+    var stored = (byte)masked;
+    Assert.That(stored, Is.EqualTo(179), "Stored byte should be 179");
+
+    // Read back
+    BigInteger readBack = stored;
+    Assert.That((int)readBack, Is.EqualTo(179), "Read back should be 179");
+
+    // Extract sign bit
+    var signBit = (readBack >> 7) & 1;
+    Assert.That((int)signBit, Is.EqualTo(1), "Sign bit should be 1 (negative)");
+
+    // Extract exponent
+    var readExponent = (readBack >> mantissaBits) & ((BigInteger.One << 4) - 1);
+    Assert.That((int)readExponent, Is.EqualTo(6), "Exponent should be recovered");
+
+    // Extract mantissa
+    var readMantissa = readBack & ((BigInteger.One << mantissaBits) - 1);
+    Assert.That((int)readMantissa, Is.EqualTo(3), "Mantissa should be recovered");
   }
 
   #endregion

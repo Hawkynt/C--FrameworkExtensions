@@ -26,7 +26,7 @@ namespace System;
 /// Represents a signed Q7.8 fixed-point number (16-bit: 1 sign + 7 integer + 8 fractional bits).
 /// Range: -128 to approximately 127.996 with resolution of 1/256.
 /// </summary>
-public readonly struct Q7_8 : IComparable, IComparable<Q7_8>, IEquatable<Q7_8>, IFormattable, IParsable<Q7_8> {
+public readonly struct Q7_8 : IComparable, IComparable<Q7_8>, IEquatable<Q7_8>, IFormattable, ISpanFormattable, IParsable<Q7_8>, ISpanParsable<Q7_8> {
 
   private const int FractionalBits = 8;
   private const int Scale = 1 << FractionalBits; // 256
@@ -95,6 +95,19 @@ public readonly struct Q7_8 : IComparable, IComparable<Q7_8>, IEquatable<Q7_8>, 
   public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToDouble().ToString(provider)
+      : this.ToDouble().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   // Conversion to floating point
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -191,9 +204,9 @@ public readonly struct Q7_8 : IComparable, IComparable<Q7_8>, IEquatable<Q7_8>, 
   public static explicit operator Q7_8(float value) => FromSingle(value);
   public static explicit operator Q7_8(double value) => FromDouble(value);
 
-  // Conversions to floating point (explicit - representation change)
-  public static explicit operator float(Q7_8 value) => value.ToSingle();
-  public static explicit operator double(Q7_8 value) => value.ToDouble();
+  // Conversions to floating point (implicit - widening, no precision loss)
+  public static implicit operator float(Q7_8 value) => value.ToSingle();
+  public static implicit operator double(Q7_8 value) => value.ToDouble();
 
   // Raw value conversion (explicit)
   public static explicit operator Q7_8(short raw) => FromRaw(raw);
@@ -232,6 +245,20 @@ public readonly struct Q7_8 : IComparable, IComparable<Q7_8>, IEquatable<Q7_8>, 
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Q7_8 result) {
     if (double.TryParse(s, style, provider, out var value)) {
+      result = FromDouble(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static Q7_8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromDouble(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Q7_8 result) {
+    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromDouble(value);
       return true;
     }

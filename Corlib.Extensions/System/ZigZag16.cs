@@ -27,7 +27,7 @@ namespace System;
 /// Zigzag encoding maps signed integers to unsigned integers so that numbers with small
 /// absolute values have small encoded values, making them efficient for variable-length encoding.
 /// </summary>
-public readonly struct ZigZag16 : IComparable, IComparable<ZigZag16>, IEquatable<ZigZag16>, IFormattable, IParsable<ZigZag16> {
+public readonly struct ZigZag16 : IComparable, IComparable<ZigZag16>, IEquatable<ZigZag16>, IFormattable, ISpanFormattable, IParsable<ZigZag16>, ISpanParsable<ZigZag16> {
   /// <summary>
   /// Gets the raw zigzag-encoded value.
   /// </summary>
@@ -98,6 +98,19 @@ public readonly struct ZigZag16 : IComparable, IComparable<ZigZag16>, IEquatable
 
   public string ToString(string? format, IFormatProvider? provider) => this.DecodedValue.ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.DecodedValue.ToString(provider)
+      : this.DecodedValue.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(ZigZag16 left, ZigZag16 right) => left.Equals(right);
   public static bool operator !=(ZigZag16 left, ZigZag16 right) => !left.Equals(right);
@@ -117,8 +130,17 @@ public readonly struct ZigZag16 : IComparable, IComparable<ZigZag16>, IEquatable
   public static explicit operator ushort(ZigZag16 value) => value.EncodedValue;
   public static explicit operator ZigZag16(ushort encoded) => FromEncoded(encoded);
 
-  // Widening conversions from smaller ZigZag
-  public static implicit operator ZigZag16(ZigZag8 value) => FromDecoded(value.DecodedValue);
+  // Implicit widening to larger signed types
+  public static implicit operator int(ZigZag16 value) => value.DecodedValue;
+  public static implicit operator long(ZigZag16 value) => value.DecodedValue;
+
+  // Implicit widening to larger ZigZag types
+  public static implicit operator ZigZag32(ZigZag16 value) => ZigZag32.FromDecoded(value.DecodedValue);
+  public static implicit operator ZigZag64(ZigZag16 value) => ZigZag64.FromDecoded(value.DecodedValue);
+
+  // Implicit widening to extended signed types
+  public static implicit operator Int96(ZigZag16 value) => new(value.DecodedValue < 0 ? uint.MaxValue : 0u, (ulong)(long)value.DecodedValue);
+  public static implicit operator Int128(ZigZag16 value) => new(value.DecodedValue < 0 ? ulong.MaxValue : 0ul, (ulong)(long)value.DecodedValue);
 
   // Parsing (parses as decoded signed value)
   public static ZigZag16 Parse(string s) => Parse(s, NumberStyles.Integer, null);
@@ -136,6 +158,20 @@ public readonly struct ZigZag16 : IComparable, IComparable<ZigZag16>, IEquatable
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out ZigZag16 result) {
     if (short.TryParse(s, style, provider, out var value)) {
+      result = value;
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static ZigZag16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = short.Parse(s, NumberStyles.Integer, provider);
+    return value;
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out ZigZag16 result) {
+    if (short.TryParse(s, NumberStyles.Integer, provider, out var value)) {
       result = value;
       return true;
     }

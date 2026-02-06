@@ -367,7 +367,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
   // Explicit conversion from double to Half
   public static explicit operator Half(double value) => (Half)(float)value;
 
-  // Explicit conversion from Half to float
+  // Explicit conversion from Half to float (matches BCL Half behavior)
   public static explicit operator float(Half value) {
     var bits = value._value;
     var sign = (uint)(bits >> 15) & 1;
@@ -405,7 +405,7 @@ public readonly struct Half : IComparable, IComparable<Half>, IEquatable<Half>, 
     return _Int32BitsToSingle(floatBits);
   }
 
-  // Explicit conversion from Half to double
+  // Explicit conversion from Half to double (matches BCL Half behavior)
   public static explicit operator double(Half value) => (float)value;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

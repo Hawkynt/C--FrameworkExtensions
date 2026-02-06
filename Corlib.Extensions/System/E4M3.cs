@@ -28,7 +28,7 @@ namespace System;
 /// Note: In E4M3, the value 0x7F (S=0, E=15, M=7) and 0xFF (S=1, E=15, M=7) represent NaN.
 /// There is no infinity in E4M3 - the maximum exponent with non-NaN mantissa is a finite value.
 /// </summary>
-public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, IFormattable, IParsable<E4M3> {
+public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, IFormattable, ISpanFormattable, IParsable<E4M3>, ISpanParsable<E4M3> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 4;
@@ -243,6 +243,19 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToSingle().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToSingle().ToString(provider)
+      : this.ToSingle().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(E4M3 left, E4M3 right) => left.Equals(right);
   public static bool operator !=(E4M3 left, E4M3 right) => !left.Equals(right);
@@ -323,8 +336,8 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
   // Conversions
   public static explicit operator E4M3(float value) => FromSingle(value);
   public static explicit operator E4M3(double value) => FromDouble(value);
-  public static explicit operator float(E4M3 value) => value.ToSingle();
-  public static explicit operator double(E4M3 value) => value.ToDouble();
+  public static implicit operator float(E4M3 value) => value.ToSingle();
+  public static implicit operator double(E4M3 value) => value.ToDouble();
 
   // Math helpers
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -367,6 +380,20 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out E4M3 result) {
     if (float.TryParse(s, style, provider, out var value)) {
+      result = FromSingle(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static E4M3 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = float.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromSingle(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out E4M3 result) {
+    if (float.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromSingle(value);
       return true;
     }

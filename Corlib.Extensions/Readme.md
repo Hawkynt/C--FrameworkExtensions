@@ -1277,7 +1277,6 @@ Extended numeric types for machine learning, scientific computing, and scenarios
 | `BFloat64` | 64-bit | 1+15+48 | 15 bits | 48 bits | 16383 | Extended range (quad exponent) |
 | `Quarter` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | IEEE 754 minifloat |
 | `E4M3` | 8-bit | 1+4+3 | 4 bits | 3 bits | 7 | ML format, no infinity |
-| `E5M2` | 8-bit | 1+5+2 | 5 bits | 2 bits | 15 | ML format, IEEE 754 conventions |
 | `Int96` | 96-bit | signed | - | - | - | Extended integer range |
 | `UInt96` | 96-bit | unsigned | - | - | - | Extended unsigned integer range |
 
@@ -1310,10 +1309,9 @@ var eps = BFloat16.Epsilon;  // Smallest positive subnormal
 
 #### ML Floating-Point Formats
 
-Specialized 8-bit formats optimized for machine learning workloads, balancing range and precision differently.
+Specialized 8-bit format optimized for machine learning workloads, trading range for precision.
 
 - **`E4M3`** - 8-bit ML format (1+4+3), more precision, no infinity representation
-- **`E5M2`** - 8-bit ML format (1+5+2), more range, IEEE 754 infinity/NaN
 
 ```csharp
 // E4M3 - 4 exponent bits, 3 mantissa bits (more precision, no infinity)
@@ -1321,17 +1319,10 @@ E4M3 e4 = (E4M3)1.25f;
 Console.WriteLine(E4M3.IsFinite(e4));           // true (E4M3 has no infinity)
 Console.WriteLine(E4M3.IsNaN(E4M3.MaxValue));   // false
 
-// E5M2 - 5 exponent bits, 2 mantissa bits (more range, has infinity)
-E5M2 e5 = (E5M2)100.0f;
-Console.WriteLine(E5M2.IsInfinity(E5M2.PositiveInfinity)); // true
-Console.WriteLine(E5M2.IsNaN(E5M2.NaN));                    // true
-
-// Conversions between formats
+// Conversions
 float original = 3.14159f;
 E4M3 e4val = (E4M3)original;
-E5M2 e5val = (E5M2)original;
 float fromE4 = (float)e4val;  // ~3.0 (3 mantissa bits)
-float fromE5 = (float)e5val;  // ~3.0 (2 mantissa bits)
 ```
 
 #### IEEE 754 Minifloat
@@ -1392,6 +1383,146 @@ Int96 ored = a | b;
 long smallValue = (long)new Int96(0, 42);  // 42
 ```
 
+#### Configurable Floating-Point Types
+
+Generic floating-point types with configurable mantissa size. Exponent bits are computed automatically as `TotalBits - sign - mantissaBits`. The storage type determines signedness: signed types have a sign bit, unsigned types use saturating arithmetic.
+
+- **`ConfigurableFloatingPoint<TStorage>`** - Generic floating-point with configurable bit layout
+
+**Storage Types Supported:** `byte`, `sbyte`, `ushort`, `short`, `uint`, `int`, `ulong`, `long`, `UInt96`, `Int96`, `UInt128`, `Int128`
+
+**Key Features:**
+- Storage type signedness determines if sign bit is present
+- Single `mantissaBits` parameter; exponent computed automatically
+- IEEE 754-like special values (NaN, Infinity, Zero)
+- Unsigned types use saturating arithmetic (subtraction saturates to zero)
+- Exact BigInteger-based arithmetic (no precision loss for 64-bit+ storage)
+- Fast path for same-config operations with mantissa <= 52 bits
+- Cross-config arithmetic: left operand's config determines result
+- Cross-type arithmetic with `ConfigurableFixedPoint<TStorage>`
+- `MantissaBitsFromExponent(int exponentBits)` helper for exponent-based thinking
+- `ConvertTo(int mantissaBits)` for config conversion
+
+| Storage | Default Format | Sign | Exponent | Mantissa |
+|---------|---------------|------|----------|----------|
+| `sbyte` | 1+4+3 | Yes | 4 bits | 3 bits |
+| `byte` | 5+3 | No | 5 bits | 3 bits |
+| `short` | 1+5+10 | Yes | 5 bits | 10 bits |
+| `ushort` | 6+10 | No | 6 bits | 10 bits |
+| `int` | 1+8+23 | Yes | 8 bits | 23 bits |
+| `uint` | 9+23 | No | 9 bits | 23 bits |
+| `long` | 1+11+52 | Yes | 11 bits | 52 bits |
+| `ulong` | 12+52 | No | 12 bits | 52 bits |
+| `Int96` | 1+15+80 | Yes | 15 bits | 80 bits |
+| `UInt96` | 16+80 | No | 16 bits | 80 bits |
+| `Int128` | 1+15+112 | Yes | 15 bits | 112 bits |
+| `UInt128` | 16+112 | No | 16 bits | 112 bits |
+
+```csharp
+// Signed 16-bit floating point (like IEEE 754 binary16, 10 mantissa bits)
+var a = ConfigurableFloatingPoint<short>.FromDouble(3.14, 10);
+var b = ConfigurableFloatingPoint<short>.FromDouble(2.0, 10);
+var result = a * b;  // ~6.28
+Console.WriteLine(result.ToDouble());
+
+// Unsigned 8-bit floating point (no negative values)
+var x = ConfigurableFloatingPoint<byte>.FromDouble(5.0, 3);
+var y = ConfigurableFloatingPoint<byte>.FromDouble(10.0, 3);
+var diff = x - y;  // Saturates to zero (unsigned subtraction)
+Console.WriteLine(ConfigurableFloatingPoint<byte>.IsZero(diff));  // true
+
+// Special values (always use default config for the storage type)
+var nan = ConfigurableFloatingPoint<int>.NaN;
+var inf = ConfigurableFloatingPoint<int>.PositiveInfinity;
+var negInf = ConfigurableFloatingPoint<int>.NegativeInfinity;
+Console.WriteLine(ConfigurableFloatingPoint<int>.IsNaN(nan));       // true
+Console.WriteLine(ConfigurableFloatingPoint<int>.IsInfinity(inf)); // true
+
+// Cross-config arithmetic: left operand's config wins
+var wide = ConfigurableFloatingPoint<int>.FromDouble(1.0, 23);
+var narrow = ConfigurableFloatingPoint<int>.FromDouble(2.0, 15);
+var sum = wide + narrow;  // Result has 23 mantissa bits
+
+// Cross-type arithmetic: floating + fixed
+var fp = ConfigurableFloatingPoint<int>.FromDouble(2.5, 23);
+var fixedPt = ConfigurableFixedPoint<int>.FromDouble(1.5, 16);
+var mixed = fp + fixedPt;  // Result is floating-point with fp's config
+
+// Convert between configs
+var converted = wide.ConvertTo(20);  // Now 20 mantissa bits
+
+// Helper for exponent-based thinking
+var m = ConfigurableFloatingPoint<int>.MantissaBitsFromExponent(8);  // 23
+```
+
+#### Configurable Fixed-Point Types
+
+Generic fixed-point types with configurable integer and fractional parts. The storage type determines signedness.
+
+- **`ConfigurableFixedPoint<TStorage>`** - Generic fixed-point with configurable precision
+
+**Storage Types Supported:** `byte`, `sbyte`, `ushort`, `short`, `uint`, `int`, `ulong`, `long`, `UInt96`, `Int96`, `UInt128`, `Int128`
+
+**Key Features:**
+- Storage type signedness determines if negative values are supported
+- Configurable fractional bits via `Configure(fractionalBits)`
+- Unsigned types use saturating arithmetic
+- High-precision arithmetic using `BigInteger` internally
+- Math helpers: `Floor`, `Ceiling`, `Round`, `Truncate`, `FractionalPart`
+- Cross-config arithmetic: left operand's config determines result
+- Cross-type arithmetic with `ConfigurableFloatingPoint<TStorage>`
+- `ConvertTo(int fractionalBits)` for config conversion
+- Exact cross-config comparison (rescales to max precision)
+
+| Storage | Default Format | Sign | Integer | Fractional |
+|---------|---------------|------|---------|------------|
+| `sbyte` | Q3.4 | Yes | 3 bits | 4 bits |
+| `byte` | UQ4.4 | No | 4 bits | 4 bits |
+| `short` | Q7.8 | Yes | 7 bits | 8 bits |
+| `ushort` | UQ8.8 | No | 8 bits | 8 bits |
+| `int` | Q15.16 | Yes | 15 bits | 16 bits |
+| `uint` | UQ16.16 | No | 16 bits | 16 bits |
+| `long` | Q31.32 | Yes | 31 bits | 32 bits |
+| `ulong` | UQ32.32 | No | 32 bits | 32 bits |
+| `Int96` | Q47.48 | Yes | 47 bits | 48 bits |
+| `UInt96` | UQ48.48 | No | 48 bits | 48 bits |
+| `Int128` | Q63.64 | Yes | 63 bits | 64 bits |
+| `UInt128` | UQ64.64 | No | 64 bits | 64 bits |
+
+```csharp
+// Signed 32-bit fixed point (Q15.16)
+var a = ConfigurableFixedPoint<int>.FromDouble(3.75, 16);
+var b = ConfigurableFixedPoint<int>.FromDouble(2.25, 16);
+var sum = a + b;  // 6.0
+var product = a * b;  // 8.4375
+Console.WriteLine(sum.ToDouble());
+
+// Unsigned 16-bit fixed point (no negative values)
+var x = ConfigurableFixedPoint<ushort>.FromDouble(5.0, 8);
+var y = ConfigurableFixedPoint<ushort>.FromDouble(10.0, 8);
+var diff = x - y;  // Saturates to zero
+Console.WriteLine(diff.ToDouble());  // 0.0
+
+// Math operations
+var value = ConfigurableFixedPoint<int>.FromDouble(3.7, 16);
+Console.WriteLine(ConfigurableFixedPoint<int>.Floor(value).ToDouble());    // 3.0
+Console.WriteLine(ConfigurableFixedPoint<int>.Ceiling(value).ToDouble()); // 4.0
+Console.WriteLine(ConfigurableFixedPoint<int>.Round(value).ToDouble());    // 4.0
+
+// Cross-config arithmetic: left operand's config wins
+var highPrec = ConfigurableFixedPoint<int>.FromDouble(1.0, 16);
+var lowPrec = ConfigurableFixedPoint<int>.FromDouble(2.0, 8);
+var crossResult = highPrec + lowPrec;  // Result has 16 fractional bits
+
+// Cross-type arithmetic: fixed + floating
+var fixedVal = ConfigurableFixedPoint<int>.FromDouble(2.5, 16);
+var floatVal = ConfigurableFloatingPoint<int>.FromDouble(1.5, 23);
+var mixedResult = fixedVal + floatVal;  // Result is fixed-point with fixedVal's config
+
+// Convert between configs
+var converted = highPrec.ConvertTo(20);  // Now 20 fractional bits
+```
+
 #### Common Numeric API Surface
 
 All numeric types implement:
@@ -1399,16 +1530,17 @@ All numeric types implement:
 **Interfaces:**
 - `IComparable`, `IComparable<T>` - Comparison support
 - `IEquatable<T>` - Equality support
-- `IFormattable` - String formatting support
-- `IParsable<T>` - Parsing support
+- `IFormattable`, `ISpanFormattable` - String formatting support
+- `IParsable<T>`, `ISpanParsable<T>` - Parsing support (including span-based parsing)
 
 **Properties (floating-point types):**
 - `RawValue` - Raw bit representation
 - `Zero`, `One` - Common values
 - `Epsilon` - Smallest positive subnormal
 - `MaxValue`, `MinValue` - Finite bounds
-- `PositiveInfinity`, `NegativeInfinity` - Infinity values (except E4M3)
-- `NaN` - Not a Number value
+- `PositiveInfinity`, `NegativeInfinity` - Infinity values (always default config; except E4M3)
+- `NaN` - Not a Number value (always default config)
+- `DefaultMantissaBits` - IEEE 754 standard mantissa bits for the storage type
 
 **Static Methods (floating-point types):**
 - `IsNaN(value)` - Check for NaN
@@ -1433,7 +1565,7 @@ All numeric types implement:
 - `+`, `-`, `*`, `/` - Arithmetic (integer types)
 - `&`, `|`, `^`, `~` - Bitwise (integer types)
 - `<<`, `>>` - Shift (integer types)
-- Explicit/implicit conversions to/from standard types
+- Explicit/implicit conversions to/from standard types including `Half` and `Quarter`
 
 ---
 

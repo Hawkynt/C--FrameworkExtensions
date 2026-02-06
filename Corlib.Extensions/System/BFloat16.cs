@@ -27,7 +27,7 @@ namespace System;
 /// BFloat16 is the upper 16 bits of an IEEE 754 single-precision float,
 /// providing the same dynamic range as float32 with reduced precision.
 /// </summary>
-public readonly struct BFloat16 : IComparable, IComparable<BFloat16>, IEquatable<BFloat16>, IFormattable, IParsable<BFloat16> {
+public readonly struct BFloat16 : IComparable, IComparable<BFloat16>, IEquatable<BFloat16>, IFormattable, ISpanFormattable, IParsable<BFloat16>, ISpanParsable<BFloat16> {
 
   private const int SignBits = 1;
   private const int ExponentBits = 8;
@@ -205,6 +205,19 @@ public readonly struct BFloat16 : IComparable, IComparable<BFloat16>, IEquatable
 
   public string ToString(string? format, IFormatProvider? provider) => this.ToSingle().ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.ToSingle().ToString(provider)
+      : this.ToSingle().ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Operators
   public static bool operator ==(BFloat16 left, BFloat16 right) => left.Equals(right);
   public static bool operator !=(BFloat16 left, BFloat16 right) => !left.Equals(right);
@@ -285,12 +298,12 @@ public readonly struct BFloat16 : IComparable, IComparable<BFloat16>, IEquatable
   // Conversions
   public static explicit operator BFloat16(float value) => FromSingle(value);
   public static explicit operator BFloat16(double value) => FromDouble(value);
-  public static explicit operator float(BFloat16 value) => value.ToSingle();
-  public static explicit operator double(BFloat16 value) => value.ToDouble();
+  public static implicit operator float(BFloat16 value) => value.ToSingle();
+  public static implicit operator double(BFloat16 value) => value.ToDouble();
 
   // Conversion from/to other float types
   public static explicit operator BFloat16(Half value) => FromSingle((float)value);
-  public static explicit operator Half(BFloat16 value) => (Half)value.ToSingle();
+  public static implicit operator Half(BFloat16 value) => (Half)value.ToSingle();
 
   // Math helpers
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -333,6 +346,20 @@ public readonly struct BFloat16 : IComparable, IComparable<BFloat16>, IEquatable
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out BFloat16 result) {
     if (float.TryParse(s, style, provider, out var value)) {
+      result = FromSingle(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static BFloat16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = float.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
+    return FromSingle(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BFloat16 result) {
+    if (float.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
       result = FromSingle(value);
       return true;
     }

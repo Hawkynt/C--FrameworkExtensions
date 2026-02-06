@@ -15,7 +15,7 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 /// for rotary encoders, error correction, and other applications where minimizing
 /// bit transitions is important.
 /// </remarks>
-public readonly struct Gray32 : IComparable, IComparable<Gray32>, IEquatable<Gray32>, IFormattable, IParsable<Gray32> {
+public readonly struct Gray32 : IComparable, IComparable<Gray32>, IEquatable<Gray32>, IFormattable, ISpanFormattable, IParsable<Gray32>, ISpanParsable<Gray32> {
   /// <summary>The Gray code value zero.</summary>
   public static readonly Gray32 Zero = new(0);
 
@@ -138,6 +138,30 @@ public readonly struct Gray32 : IComparable, IComparable<Gray32>, IEquatable<Gra
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static implicit operator Gray64(Gray32 value) => Gray64.FromBinary(value.BinaryValue);
 
+  /// <summary>Implicit widening conversion to long.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator long(Gray32 value) => value.BinaryValue;
+
+  /// <summary>Implicit widening conversion to ulong.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator ulong(Gray32 value) => value.BinaryValue;
+
+  /// <summary>Implicit widening conversion to Int96.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator Int96(Gray32 value) => new(0, value.BinaryValue);
+
+  /// <summary>Implicit widening conversion to UInt96.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator UInt96(Gray32 value) => new(0, value.BinaryValue);
+
+  /// <summary>Implicit widening conversion to Int128.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator Int128(Gray32 value) => new(0, value.BinaryValue);
+
+  /// <summary>Implicit widening conversion to UInt128.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static implicit operator UInt128(Gray32 value) => new(0, value.BinaryValue);
+
   #endregion
 
   #region Formatting
@@ -147,6 +171,19 @@ public readonly struct Gray32 : IComparable, IComparable<Gray32>, IEquatable<Gra
   public string ToString(string? format) => this.BinaryValue.ToString(format);
 
   public string ToString(string? format, IFormatProvider? formatProvider) => this.BinaryValue.ToString(format, formatProvider);
+
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.BinaryValue.ToString(provider)
+      : this.BinaryValue.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
 
   #endregion
 
@@ -167,6 +204,20 @@ public readonly struct Gray32 : IComparable, IComparable<Gray32>, IEquatable<Gra
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Gray32 result) {
     if (uint.TryParse(s, style, provider, out var value)) {
+      result = FromBinary(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static Gray32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = uint.Parse(s, NumberStyles.Integer, provider);
+    return FromBinary(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Gray32 result) {
+    if (uint.TryParse(s, NumberStyles.Integer, provider, out var value)) {
       result = FromBinary(value);
       return true;
     }

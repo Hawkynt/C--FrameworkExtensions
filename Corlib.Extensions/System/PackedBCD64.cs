@@ -26,7 +26,7 @@ namespace System;
 /// Represents a 64-bit packed BCD value storing 16 decimal digits (0-9999999999999999).
 /// Each nibble contains one decimal digit (0-9).
 /// </summary>
-public readonly struct PackedBCD64 : IComparable, IComparable<PackedBCD64>, IEquatable<PackedBCD64>, IFormattable, IParsable<PackedBCD64> {
+public readonly struct PackedBCD64 : IComparable, IComparable<PackedBCD64>, IEquatable<PackedBCD64>, IFormattable, ISpanFormattable, IParsable<PackedBCD64>, ISpanParsable<PackedBCD64> {
 
   private const long MaxDecimalValue = 9999999999999999L;
 
@@ -138,6 +138,19 @@ public readonly struct PackedBCD64 : IComparable, IComparable<PackedBCD64>, IEqu
 
   public string ToString(string? format, IFormatProvider? provider) => this.Value.ToString(format, provider);
 
+  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
+    var str = format.IsEmpty
+      ? this.Value.ToString(provider)
+      : this.Value.ToString(format.ToString(), provider);
+    if (str.Length > destination.Length) {
+      charsWritten = 0;
+      return false;
+    }
+    str.AsSpan().CopyTo(destination);
+    charsWritten = str.Length;
+    return true;
+  }
+
   // Comparison operators
   public static bool operator ==(PackedBCD64 left, PackedBCD64 right) => left.Equals(right);
   public static bool operator !=(PackedBCD64 left, PackedBCD64 right) => !left.Equals(right);
@@ -208,10 +221,11 @@ public readonly struct PackedBCD64 : IComparable, IComparable<PackedBCD64>, IEqu
   public static explicit operator PackedBCD16(PackedBCD64 value) => PackedBCD16.FromValue((int)value.Value);
   public static explicit operator PackedBCD32(PackedBCD64 value) => PackedBCD32.FromValue((int)value.Value);
 
-  // Widening from smaller BCD (implicit)
-  public static implicit operator PackedBCD64(PackedBCD8 value) => FromValue(value.Value);
-  public static implicit operator PackedBCD64(PackedBCD16 value) => FromValue(value.Value);
-  public static implicit operator PackedBCD64(PackedBCD32 value) => FromValue(value.Value);
+  // Implicit widening to extended integer types (value range 0-9999999999999999 fits in all)
+  public static implicit operator Int96(PackedBCD64 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt96(PackedBCD64 value) => new(0, (ulong)value.Value);
+  public static implicit operator Int128(PackedBCD64 value) => new(0, (ulong)value.Value);
+  public static implicit operator UInt128(PackedBCD64 value) => new(0, (ulong)value.Value);
 
   // Parsing
   public static PackedBCD64 Parse(string s) => Parse(s, NumberStyles.Integer, null);
@@ -229,6 +243,20 @@ public readonly struct PackedBCD64 : IComparable, IComparable<PackedBCD64>, IEqu
 
   public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out PackedBCD64 result) {
     if (long.TryParse(s, style, provider, out var value) && value >= 0 && value <= MaxDecimalValue) {
+      result = FromValue(value);
+      return true;
+    }
+    result = Zero;
+    return false;
+  }
+
+  public static PackedBCD64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) {
+    var value = long.Parse(s, NumberStyles.Integer, provider);
+    return FromValue(value);
+  }
+
+  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out PackedBCD64 result) {
+    if (long.TryParse(s, NumberStyles.Integer, provider, out var value) && value >= 0 && value <= MaxDecimalValue) {
       result = FromValue(value);
       return true;
     }
