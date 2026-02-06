@@ -56,8 +56,8 @@ public readonly struct Bilateral : IPixelScaler {
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   /// <param name="variant">Quality variant.</param>
   public Bilateral(int scale = 2, BilateralVariant variant = BilateralVariant.Standard) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "Bilateral supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._variant = variant;
   }

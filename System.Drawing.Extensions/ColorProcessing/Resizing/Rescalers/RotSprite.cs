@@ -50,8 +50,8 @@ public readonly struct RotSprite : IPixelScaler {
   /// <param name="scale">The scale factor (2, 3, or 4).</param>
   /// <param name="rotationDegrees">The rotation angle in degrees (0-360).</param>
   public RotSprite(int scale = 2, float rotationDegrees = 0f) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "RotSprite supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._rotationRadians = rotationDegrees * (MathF.PI / 180f);
   }

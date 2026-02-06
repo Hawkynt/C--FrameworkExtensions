@@ -75,8 +75,8 @@ public readonly struct Mlaa : IPixelScaler {
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   /// <param name="variant">The threshold variant to use.</param>
   public Mlaa(int scale = 2, MlaaVariant variant = MlaaVariant.Standard) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "MLAA supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._variant = variant;
   }

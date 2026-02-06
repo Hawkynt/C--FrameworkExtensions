@@ -46,8 +46,9 @@ public readonly struct Clean : IPixelScaler {
   private readonly int _scale;
 
   public Clean(int scale = 2) {
-    if (scale is not (2 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "Clean supports 2x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
+    ArgumentOutOfRangeException.ThrowIfEqual(scale, 3);
     this._scale = scale;
   }
 

@@ -48,8 +48,8 @@ public readonly struct ScaleNxPlus : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2 or 3).</param>
   public ScaleNxPlus(int scale = 2) {
-    if (scale is < 2 or > 3)
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "ScaleNxPlus supports 2x or 3x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 3);
     this._scale = scale;
   }
 

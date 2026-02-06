@@ -55,8 +55,8 @@ public readonly struct Smaa : IPixelScaler {
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   /// <param name="quality">Quality preset (Low, Standard, High, Ultra).</param>
   public Smaa(int scale = 2, SmaaQuality quality = SmaaQuality.Standard) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "SMAA supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._quality = quality;
   }

@@ -55,8 +55,8 @@ public readonly struct Fxaa : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   public Fxaa(int scale = 2) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "FXAA supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
   }
 

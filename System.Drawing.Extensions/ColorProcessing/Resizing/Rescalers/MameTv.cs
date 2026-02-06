@@ -64,8 +64,8 @@ public readonly struct MameTv : IPixelScaler {
   /// <param name="gamma1">Gamma for first darkened scanline (0.0 = black, 1.0 = full).</param>
   /// <param name="gamma2">Gamma for second darkened scanline (3x only).</param>
   public MameTv(int scale = 2, float gamma1 = DefaultGamma1, float gamma2 = DefaultGamma2) {
-    if (scale is not (2 or 3))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "MameTv supports 2x, 3x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 3);
     this._scale = scale;
     this._gamma1 = gamma1;
     this._gamma2 = gamma2;

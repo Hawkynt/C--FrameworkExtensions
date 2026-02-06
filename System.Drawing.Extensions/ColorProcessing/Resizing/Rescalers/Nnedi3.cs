@@ -68,8 +68,8 @@ public readonly struct Nnedi3 : IPixelScaler {
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   /// <param name="quality">Quality preset.</param>
   public Nnedi3(int scale = 2, Nnedi3Quality quality = Nnedi3Quality.Standard) {
-    if (scale is not (2 or 3 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "NNEDI3 supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._quality = quality;
   }

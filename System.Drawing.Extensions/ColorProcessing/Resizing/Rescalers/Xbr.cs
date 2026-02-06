@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
@@ -54,8 +55,8 @@ public readonly struct Xbr : IPixelScaler {
   /// <param name="allowAlphaBlending">Whether to allow alpha blending for smoother results.</param>
   /// <param name="useOriginalImplementation">Whether to use the original implementation variant (only used by 3x).</param>
   public Xbr(int scale = 2, bool allowAlphaBlending = true, bool useOriginalImplementation = false) {
-    if (scale is not (2 or 3 or 4))
-      throw new System.ArgumentOutOfRangeException(nameof(scale), scale, "XBR supports 2x, 3x, 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
     this._allowAlphaBlending = allowAlphaBlending;
     this._useOriginalImplementation = useOriginalImplementation;
