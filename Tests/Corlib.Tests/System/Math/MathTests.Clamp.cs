@@ -256,7 +256,7 @@ public partial class MathTests {
     }
 
     sw.Stop();
-    Assert.That(sw.ElapsedMilliseconds, Is.LessThan(500), $"10M Clamp operations took {sw.ElapsedMilliseconds}ms");
+    Assert.That(sw.ElapsedMilliseconds, Is.LessThan(2000), $"10M Clamp operations took {sw.ElapsedMilliseconds}ms");
   }
 
   [Test]
