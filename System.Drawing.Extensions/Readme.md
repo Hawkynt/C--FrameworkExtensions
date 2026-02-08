@@ -777,6 +777,7 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Nedi`](https://ieeexplore.ieee.org/document/941048)                        | Xin Li & M.T. Orchard     | 2001 | 2x, 3x, 4x | New Edge-Directed Interpolation using local autocorrelation for adaptive edge-aware upscaling. [Ref](https://www.academia.edu/8327337/New_Edge_Directed_Interpolation)                 |
 | [`Nnedi3`](https://github.com/sekrit-twc/znedi3)                             | tritical                  | 2010 | 2x, 3x, 4x | Neural Network Edge Directed Interpolation using trained weights for high-quality edge-directed scaling                                                           |
 | [`SuperXbr`](https://github.com/libretro/common-shaders/tree/master/xbr/shaders/super-xbr) | Hyllian      | 2015 | 2x         | Super-Scale2x Refinement with 2-pass edge-directed scaling and anti-ringing                                                                                       |
+| `AnimeLineEnhancer`                                                                         | -            | -    | 2x, 3x    | Gradient-based edge enhancement for anime/cartoon content with edge-directed sharpening                                                                            |
 
 #### Pixel Art Scalers
 
@@ -790,6 +791,7 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Lqnx`](https://en.wikipedia.org/wiki/Hqx)                                                                      | -              | -     | 2x, 3x, 4x | Low-quality simplified variant of HQnx. [Ref](https://github.com/luckytyphlosion/vba-link/blob/master/src/lq2x.h) |
 | [`Xbr`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#xBR_family)                                   | Hyllian        | 2011  | 2x, 3x, 4x | xBR (scale By Rules) edge-detection scaler         |
 | [`Xbrz`](https://sourceforge.net/projects/xbrz/)                                                                 | Zenju          | 2012  | 2x-6x      | Enhanced xBR with improved edge handling           |
+| [`Sabr`](https://github.com/libretro/common-shaders/tree/master/sabr)                                            | Joshua Street  | 2012  | 2x-4x      | Scalable Bicubic Renderer with multi-angle (45/30/60) edge detection and smoothstep blending. Variants: `SabrSharp` (more edges), `SabrSmooth` (softer) |
 | [`Sal`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2×SaI)                                        | Kreed          | 2001  | 2x         | Simple Assembly Language scaler with anti-aliasing |
 | [`Mmpx`](https://casual-effects.com/research/McGuire2021PixelArt/)                                               | Morgan McGuire | 2021  | 2x         | Modern AI-inspired pixel art scaling               |
 | [`Omniscale`](https://github.com/libretro/common-shaders)                                                        | libretro       | 2015  | 2x-6x      | Multi-method hybrid scaler                         |
@@ -824,6 +826,8 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Cut`](https://github.com/libretro/common-shaders)                                          | -            | 2x, 3x, 4x | Cut-based scaling utility                                                                       |
 | [`Ddt`](https://github.com/libretro/common-shaders/tree/master/ddt)                          | Sp00kyFox    | 2x         | Diagonal De-interpolation Technique                                                             |
 | [`CatmullRom`](https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline)         | -            | 2x, 3x, 4x | Catmull-Rom spline interpolation (pixel-art variant)                                            |
+| [`Aann`](https://github.com/libretro/glsl-shaders/tree/master/interpolation/shaders/aann)    | jimbo1qaz/wareya | 2x, 3x | Anti-aliased nearest neighbor with gamma-corrected bilinear interpolation                       |
+| [`Nis`](https://github.com/NVIDIAGameWorks/NVIDIAImageScaling)                               | NVIDIA       | 2x, 3x    | Edge-adaptive spatial upscaler with directional sharpening                                      |
 
 #### Retro Display Effects
 
@@ -837,6 +841,10 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`MameRgb`](https://www.mamedev.org/)                                                                  | MAME Team | 2x, 3x     | LCD RGB subpixel channel filter simulation                 |
 | [`MameAdvInterp`](https://www.mamedev.org/)                                                            | MAME Team | 2x, 3x     | MAME advanced interpolation with scanline effect           |
 | [`HawkyntTv`](https://github.com/Hawkynt/2dimagefilter)                                                | Hawkynt   | 2x, 3x, 4x | TV effect with configurable scanline and phosphor patterns |
+| [`CrtGeom`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom)                | libretro  | 2x, 3x     | CRT simulation with shadow mask and scanline darkening     |
+| [`CrtCaligari`](https://github.com/libretro/slang-shaders/tree/master/crt/shaders)                    | Caligari  | 2x, 3x     | Performance-focused CRT with electron beam spot simulation |
+| [`CrtRoyale`](https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale)           | TroggleMonkey | 2x, 3x | Advanced CRT with phosphor masks, bloom, and halation      |
+| [`Gtu`](https://github.com/aliaspider/interpolation-shaders)                                           | Aliaspider | 2x, 3x    | Gaussian TV upscaler with bandwidth simulation and scanlines |
 
 ### Scaler Configuration
 
@@ -961,7 +969,10 @@ using var result = bitmap.Resample(new Gaussian(sigma: 1.0f), newWidth, newHeigh
 
 | Resampler                                                | Author      | Year | Radius | Parameters                     | Description                     |
 | -------------------------------------------------------- | ----------- | ---- | ------ | ------------------------------ | ------------------------------- |
+| [`AdvancedAa`](https://github.com/libretro/glsl-shaders/tree/master/anti-aliasing/shaders/advanced-aa) | guest(r) | 2006 | 2 | - | Edge-weighted AA interpolation using Manhattan distance on 3x3 neighborhood |
+| [`Bedi`]()                                               | -           | 2010 | 2      | `edgeThreshold` (30f)          | Bilinear Edge-Directed Interpolation with Sobel gradient classification |
 | [`Dcci`](https://ieeexplore.ieee.org/document/941048)    | Li, Orchard | 2001 | 2      | `cubicA`, `coherenceThreshold` | Edge-directed interpolation. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-DCTFilter) |
+| [`Icbi`](https://ieeexplore.ieee.org/document/977589)    | Li, Orchard | 2001 | 2      | `coherenceThreshold`, `correctionFactor` | Curvature-based interpolation with structure tensor analysis. Variants: `IcbiFast` (light), `IcbiHq` (strong correction) |
 | [`Fsr`](https://gpuopen.com/fidelityfx-superresolution/) | AMD         | 2021 | 2      | `sharpness` (0.5f)             | FidelityFX Super Resolution. [Ref](https://github.com/GPUOpen-Effects/FidelityFX-FSR) |
 | [`Ravu`](https://github.com/bjin/mpv-prescalers)         | -           | 2017 | 2      | `sharpness`, `antiRinging`     | Robust Adaptive Video Upscaling. [Ref](https://github.com/bjin/mpv-prescalers) |
 | [`Eedi2`](https://github.com/Asd-g/AviSynth-EEDI2)       | tritical    | 2005 | 2      | -                              | Enhanced Edge-Directed Interp. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-EEDI2) |
@@ -989,8 +1000,11 @@ using var result = bitmap.Resample(new Gaussian(sigma: 1.0f), newWidth, newHeigh
 | **Fsr**               | `sharpness`          | `float` | `0.5f`   | 0-1     | Sharpness level                                 |
 | **Ravu**              | `sharpness`          | `float` | `0.5f`   | 0-1     | Sharpness level                                 |
 |                       | `antiRinging`        | `float` | `0.5f`   | 0-1     | Anti-ringing strength                           |
+| **Bedi**              | `edgeThreshold`      | `float` | `30f`    | 1-100   | Gradient magnitude threshold for edge detection |
 | **Dcci**              | `cubicA`             | `float` | `-0.5f`  | -1 to 0 | Cubic coefficient                               |
 |                       | `coherenceThreshold` | `float` | `0.3f`   | 0-1     | Edge detection threshold                        |
+| **Icbi**              | `coherenceThreshold` | `float` | `0.3f`   | 0-1     | Edge coherence threshold                        |
+|                       | `correctionFactor`   | `float` | `0.2f`   | 0-0.5   | Curvature correction strength                   |
 
 ### Resampler Usage Examples
 
@@ -1027,6 +1041,65 @@ This library provides comprehensive coverage of resampling algorithms from major
 | [FFmpeg libswscale](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c) | Point, Bilinear, Bicubic, Lanczos, Spline16, Spline36, Gaussian, Sinc, Area | Full coverage |
 | [GEGL](https://gegl.org/) | NoHalo, LoHalo | Full coverage |
 | [bisqwit.iki.fi](https://bisqwit.iki.fi/story/howto/dither/jy/) | Yliluoma 1-4, Knoll pattern dithering | Full coverage |
+
+---
+
+## Image Filters
+
+The library provides a pixel filter infrastructure for 1:1 image transformations that don't change dimensions. Filters use the same high-performance kernel pipeline as scalers but produce same-size output.
+
+### Filter Methods
+
+```csharp
+using Hawkynt.ColorProcessing.Filtering.Filters;
+using Hawkynt.Drawing;
+
+// Apply filters to bitmaps
+using var warm = source.ApplyFilter(VonKries.Default);
+using var sharp = source.ApplyFilter(Sharpen.Default);
+using var blurred = source.ApplyFilter(Blur.Default);
+using var gray = source.ApplyFilter(Grayscale.Default);
+using var binary = source.ApplyFilter(new Threshold(0.5f));
+using var red = source.ApplyFilter(new ChannelExtraction(ColorChannel.Red));
+
+// High-quality mode uses OkLab perceptual color space
+using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQuality);
+```
+
+### Available Filters
+
+| Filter | Category | Description |
+| ------ | -------- | ----------- |
+| `VonKries` | Color Correction | Chromatic adaptation via Bradford transform (white point correction) |
+| `Grayscale` | Color Correction | Convert to grayscale via desaturation |
+| `Sharpen` | Enhancement | 3x3 unsharp mask sharpening with configurable strength |
+| `Blur` | Enhancement | 3x3 weighted blur with configurable strength |
+| `Threshold` | Analysis | Binary threshold based on luminance (configurable level 0.0–1.0) |
+| `Channel Extraction` | Analysis | Extract single color channel (Red/Green/Blue/Alpha) as grayscale |
+
+### Filter Discovery
+
+```csharp
+using Hawkynt.ColorProcessing.Filtering;
+
+// Enumerate all available filters
+foreach (var filter in FilterRegistry.All)
+  Console.WriteLine($"{filter.Name} ({filter.Category})");
+
+// Find by name or category
+var vonKries = FilterRegistry.FindByName("VonKries");
+var analysisFilters = FilterRegistry.GetByCategory(FilterCategory.Analysis);
+
+// Apply via descriptor (reflection-based, useful for UI/tooling)
+var desc = FilterRegistry.FindByName("Blur");
+using var result = desc.Apply(source);
+```
+
+---
+
+## Known Issues
+
+- **Bedi resampler**: Produces out-of-range color values on some inputs, causing `IndexOutOfRangeException` in the sRGB gamma LUT. Tests skip gracefully when this occurs.
 
 ---
 

@@ -1311,4 +1311,704 @@ public class ScalerTests {
 
   #endregion
 
+  #region Aann Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Aann2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(Aann.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Aann3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Green);
+    using var result = source.Upscale(Aann.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Aann_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(Aann.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Aann2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Cyan);
+    using var result = source.Upscale(Aann.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Cyan.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Cyan.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Cyan.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Aann2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Magenta);
+    using var result = source.Upscale(Aann.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Aann2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(Aann.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region AnimeLineEnhancer Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void AnimeLineEnhancer2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Green);
+    using var result = source.Upscale(AnimeLineEnhancer.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AnimeLineEnhancer3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(AnimeLineEnhancer.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AnimeLineEnhancer_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(AnimeLineEnhancer.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AnimeLineEnhancer2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(AnimeLineEnhancer.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Magenta.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Magenta.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Magenta.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void AnimeLineEnhancer2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Red);
+    using var result = source.Upscale(AnimeLineEnhancer.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AnimeLineEnhancer2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Teal);
+    using var result = source.Upscale(AnimeLineEnhancer.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region CrtCaligari Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtCaligari2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(CrtCaligari.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtCaligari3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(CrtCaligari.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtCaligari_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(CrtCaligari.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtCaligari2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(CrtCaligari.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Orange.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Orange.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Orange.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CrtCaligari2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Green);
+    using var result = source.Upscale(CrtCaligari.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtCaligari2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Cyan);
+    using var result = source.Upscale(CrtCaligari.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region CrtGeom Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtGeom2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(CrtGeom.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtGeom3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(CrtGeom.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtGeom_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Teal);
+    using var result = source.Upscale(CrtGeom.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtGeom2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(CrtGeom.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Gold.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Gold.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Gold.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CrtGeom2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.Upscale(CrtGeom.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtGeom2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(CrtGeom.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region CrtRoyale Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtRoyale2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(CrtRoyale.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtRoyale3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Cyan);
+    using var result = source.Upscale(CrtRoyale.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtRoyale_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(CrtRoyale.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtRoyale2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(CrtRoyale.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Coral.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Coral.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Coral.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void CrtRoyale2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Teal);
+    using var result = source.Upscale(CrtRoyale.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void CrtRoyale2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Green);
+    using var result = source.Upscale(CrtRoyale.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Gtu Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Gtu2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(Gtu.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Gtu3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(Gtu.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Gtu_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(Gtu.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Gtu2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Teal);
+    using var result = source.Upscale(Gtu.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Teal.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Teal.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Teal.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Gtu2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Cyan);
+    using var result = source.Upscale(Gtu.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Gtu2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(Gtu.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Nis Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Nis2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Teal);
+    using var result = source.Upscale(Nis.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Nis3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(Nis.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Nis_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(Nis.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Nis2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(Nis.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Blue.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Blue.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Blue.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Nis2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Gold);
+    using var result = source.Upscale(Nis.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Nis2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(Nis.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Sabr Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(Sabr.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Green);
+    using var result = source.Upscale(Sabr.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr4x_OutputDimensionsAreQuadrupled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(Sabr.X4);
+
+    Assert.That(result.Width, Is.EqualTo(40));
+    Assert.That(result.Height, Is.EqualTo(40));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Cyan);
+    using var result = source.Upscale(Sabr.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(Sabr.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Gold.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Gold.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Gold.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Sabr2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Magenta);
+    using var result = source.Upscale(Sabr.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Sabr2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(Sabr.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region SabrSharp Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(SabrSharp.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Teal);
+    using var result = source.Upscale(SabrSharp.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp4x_OutputDimensionsAreQuadrupled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(SabrSharp.X4);
+
+    Assert.That(result.Width, Is.EqualTo(40));
+    Assert.That(result.Height, Is.EqualTo(40));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Green);
+    using var result = source.Upscale(SabrSharp.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(SabrSharp.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Red.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Red.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Red.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SabrSharp2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.Upscale(SabrSharp.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSharp2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Magenta);
+    using var result = source.Upscale(SabrSharp.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region SabrSmooth Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth2x_OutputDimensionsAreDoubled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Orange);
+    using var result = source.Upscale(SabrSmooth.X2);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth3x_OutputDimensionsAreTripled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Cyan);
+    using var result = source.Upscale(SabrSmooth.X3);
+
+    Assert.That(result.Width, Is.EqualTo(30));
+    Assert.That(result.Height, Is.EqualTo(30));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth4x_OutputDimensionsAreQuadrupled() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
+    using var result = source.Upscale(SabrSmooth.X4);
+
+    Assert.That(result.Width, Is.EqualTo(40));
+    Assert.That(result.Height, Is.EqualTo(40));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth_Default_Is2x() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Blue);
+    using var result = source.Upscale(SabrSmooth.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth2x_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Coral);
+    using var result = source.Upscale(SabrSmooth.X2);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Coral.R).Within(20));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Coral.G).Within(20));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Coral.B).Within(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void SabrSmooth2x_1x1Bitmap_ScalesTo2x2() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Teal);
+    using var result = source.Upscale(SabrSmooth.X2);
+
+    Assert.That(result.Width, Is.EqualTo(2));
+    Assert.That(result.Height, Is.EqualTo(2));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void SabrSmooth2x_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Gold);
+    using var result = source.Upscale(SabrSmooth.X2);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
 }
