@@ -2411,6 +2411,213 @@ public class FilterTests {
 
   #endregion
 
+  #region AddNoise Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void AddNoise_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(AddNoise.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void AddNoise_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(AddNoise.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void AddNoise_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(AddNoise.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Despeckle Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Despeckle_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Despeckle.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Despeckle_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(Despeckle.Default);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Green.R).Within(30));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Green.G).Within(30));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Green.B).Within(30));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Despeckle_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Despeckle.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Despeckle_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Despeckle.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region ReduceNoise Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceNoise_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(ReduceNoise.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceNoise_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(ReduceNoise.Default);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Green.R).Within(30));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Green.G).Within(30));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Green.B).Within(30));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void ReduceNoise_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(ReduceNoise.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void ReduceNoise_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(ReduceNoise.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region DustAndScratches Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void DustAndScratches_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(DustAndScratches.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DustAndScratches_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(DustAndScratches.Default);
+
+    using var locker = result.Lock();
+    var centerColor = locker[10, 10];
+
+    Assert.That(centerColor.R, Is.EqualTo(Color.Green.R).Within(30));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Green.G).Within(30));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Green.B).Within(30));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void DustAndScratches_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(DustAndScratches.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DustAndScratches_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(DustAndScratches.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Mezzotint Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Mezzotint_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Mezzotint.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Mezzotint_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Mezzotint.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Mezzotint_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Mezzotint.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
   #region TraceContour Tests
 
   [Test]
@@ -2471,6 +2678,216 @@ public class FilterTests {
   public void AccentedEdges_OutputIsFormat32bppArgb() {
     using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
     using var result = source.ApplyFilter(AccentedEdges.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Clouds Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Clouds_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Clouds.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Clouds_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(Clouds.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Clouds_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Clouds.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Clouds_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Clouds.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region DifferenceClouds Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void DifferenceClouds_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(DifferenceClouds.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DifferenceClouds_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(DifferenceClouds.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void DifferenceClouds_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(DifferenceClouds.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void DifferenceClouds_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(DifferenceClouds.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Fibers Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Fibers_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Fibers.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Fibers_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(Fibers.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Fibers_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Fibers.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Fibers_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Fibers.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Supernova Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Supernova_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Supernova.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Supernova_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(Supernova.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Supernova_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Supernova.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Supernova_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Supernova.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region PlasmaTexture Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void PlasmaTexture_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(PlasmaTexture.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void PlasmaTexture_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(PlasmaTexture.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void PlasmaTexture_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(PlasmaTexture.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void PlasmaTexture_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(PlasmaTexture.Default);
 
     Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
   }
@@ -3185,6 +3602,48 @@ public class FilterTests {
   public void Bulge_OutputIsFormat32bppArgb() {
     using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
     using var result = source.ApplyFilter(Bulge.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  #endregion
+
+  #region Diffuse Tests
+
+  [Test]
+  [Category("HappyPath")]
+  public void Diffuse_Default_OutputDimensionsAreSame() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Red);
+    using var result = source.ApplyFilter(Diffuse.Default);
+
+    Assert.That(result.Width, Is.EqualTo(20));
+    Assert.That(result.Height, Is.EqualTo(20));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Diffuse_SolidColor_ProducesReasonableOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Green);
+    using var result = source.ApplyFilter(Diffuse.Default);
+
+    Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
+  }
+
+  [Test]
+  [Category("EdgeCase")]
+  public void Diffuse_1x1Bitmap_ProducesOutput() {
+    using var source = TestUtilities.CreateSolidBitmap(1, 1, Color.Blue);
+    using var result = source.ApplyFilter(Diffuse.Default);
+
+    Assert.That(result.Width, Is.EqualTo(1));
+    Assert.That(result.Height, Is.EqualTo(1));
+  }
+
+  [Test]
+  [Category("HappyPath")]
+  public void Diffuse_OutputIsFormat32bppArgb() {
+    using var source = TestUtilities.CreateSolidBitmap(20, 20, Color.Magenta);
+    using var result = source.ApplyFilter(Diffuse.Default);
 
     Assert.That(result.PixelFormat, Is.EqualTo(PixelFormat.Format32bppArgb));
   }
