@@ -19,6 +19,7 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
@@ -38,7 +39,7 @@ namespace Hawkynt.Drawing;
 /// Provides extension methods for applying 1:1 pixel filters to Bitmaps.
 /// </summary>
 public static class BitmapFilterExtensions {
-  
+
   /// <param name="this">The source bitmap.</param>
   extension(Bitmap @this) {
     /// <summary>
@@ -50,12 +51,22 @@ public static class BitmapFilterExtensions {
     /// <returns>A new bitmap with the filter applied (same dimensions as source).</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap ApplyFilter<TFilter>(TFilter filter, ScalerQuality quality = ScalerQuality.Fast)
-      where TFilter : struct, IPixelFilter
-      => quality switch {
-        ScalerQuality.Fast => _ApplyFast(@this, filter),
-        ScalerQuality.HighQuality => _ApplyHighQuality(@this, filter),
-        _ => throw new NotSupportedException($"Quality {quality} is not supported.")
-      };
+      where TFilter : struct, IPixelFilter {
+      // Frame-access path for filters with large neighborhoods (uses resampler pipeline)
+      if (filter is IFrameFilter { UsesFrameAccess: true } ff)
+        return _ApplyViaFrame(@this, ff);
+
+      // Standard kernel path (single or multi-pass via 5×5 NeighborWindow)
+      var passCount = filter is IMultiPassFilter mp ? Math.Max(1, mp.PassCount) : 1;
+      var current = _ApplySingle(@this, filter, quality);
+      for (var i = 1; i < passCount; ++i) {
+        var next = _ApplySingle(current, filter, quality);
+        current.Dispose();
+        current = next;
+      }
+
+      return current;
+    }
 
     /// <summary>
     /// Applies a pixel filter to a bitmap using default configuration.
@@ -66,7 +77,29 @@ public static class BitmapFilterExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap ApplyFilter<TFilter>(ScalerQuality quality = ScalerQuality.Fast)
       where TFilter : struct, IPixelFilter
-      => @this.ApplyFilter(default(TFilter), quality);
+      => @this.ApplyFilter(new TFilter(), quality);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Bitmap _ApplySingle<TFilter>(Bitmap source, TFilter filter, ScalerQuality quality)
+    where TFilter : struct, IPixelFilter
+    => quality switch {
+      ScalerQuality.Fast => _ApplyFast(source, filter),
+      ScalerQuality.HighQuality => _ApplyHighQuality(source, filter),
+      _ => throw new NotSupportedException($"Quality {quality} is not supported.")
+    };
+
+  /// <summary>
+  /// Applies a filter using the resampler pipeline for arbitrary-radius frame access.
+  /// </summary>
+  private static Bitmap _ApplyViaFrame(Bitmap source, IFrameFilter filter) {
+    var callback = new FrameFilterCallback<
+      LinearRgbaF, OklabF,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source);
+    return filter.InvokeFrameKernel<
+      LinearRgbaF, OklabF, Bgra8888,
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32, Bitmap>(
+      callback, source.Width, source.Height);
   }
 
   /// <summary>
@@ -114,5 +147,23 @@ public static class BitmapFilterExtensions {
     public Bitmap Invoke<TKernel>(TKernel kernel)
       where TKernel : struct, IScaler<TWork, TKey, Bgra8888, TEncode>
       => BitmapScalerExtensions.Upscale<TWork, TKey, TDecode, TProject, TEncode, TKernel>(source, kernel);
+  }
+
+  /// <summary>
+  /// Callback that receives a concrete resample kernel and routes through the resampler pipeline.
+  /// Used for filters that need arbitrary pixel access beyond the 5×5 neighborhood.
+  /// </summary>
+  private sealed class FrameFilterCallback<TWork, TKey, TDecode, TProject, TEncode>(Bitmap source)
+    : IResampleKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, Bitmap>
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<Bgra8888, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, Bgra8888> {
+
+    public Bitmap Invoke<TKernel>(TKernel kernel)
+      where TKernel : struct, IResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode>
+      => BitmapScalerExtensions.Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+        source, source.Width, source.Height, kernel);
   }
 }

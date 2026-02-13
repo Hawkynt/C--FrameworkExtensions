@@ -44,7 +44,27 @@ public enum FilterCategory {
   /// <summary>
   /// Analysis filters that extract information from images (threshold, channel extraction).
   /// </summary>
-  Analysis
+  Analysis,
+
+  /// <summary>
+  /// Geometric distortion and displacement filters.
+  /// </summary>
+  Distortion,
+
+  /// <summary>
+  /// Noise generation and reduction filters.
+  /// </summary>
+  Noise,
+
+  /// <summary>
+  /// Procedural pattern and texture generation filters.
+  /// </summary>
+  Render,
+
+  /// <summary>
+  /// Mathematical morphology operations (open, close, top-hat).
+  /// </summary>
+  Morphology
 }
 
 /// <summary>

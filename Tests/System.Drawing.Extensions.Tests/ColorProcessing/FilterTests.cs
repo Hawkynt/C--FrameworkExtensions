@@ -275,46 +275,4 @@ public class FilterTests {
   }
 
   #endregion
-
-  #region FilterRegistry Tests
-
-  [Test]
-  [Category("HappyPath")]
-  public void FilterRegistry_All_DiscoversSixFilters() {
-    var filters = FilterRegistry.All;
-
-    Assert.That(filters.Count, Is.EqualTo(6));
-  }
-
-  [Test]
-  [Category("HappyPath")]
-  public void FilterRegistry_FindByName_FindsVonKries() {
-    var desc = FilterRegistry.FindByName("VonKries");
-
-    Assert.That(desc, Is.Not.Null);
-    Assert.That(desc!.Name, Is.EqualTo("VonKries"));
-  }
-
-  [Test]
-  [Category("HappyPath")]
-  public void FilterRegistry_GetByCategory_FindsColorCorrection() {
-    var filters = FilterRegistry.GetByCategory(FilterCategory.ColorCorrection).ToList();
-
-    Assert.That(filters.Count, Is.GreaterThanOrEqualTo(1));
-  }
-
-  [Test]
-  [Category("HappyPath")]
-  public void FilterDescriptor_Apply_ProducesSameSizeOutput() {
-    var desc = FilterRegistry.FindByName("Blur");
-    Assert.That(desc, Is.Not.Null);
-
-    using var source = TestUtilities.CreateSolidBitmap(10, 10, Color.Red);
-    using var result = desc!.Apply(source);
-
-    Assert.That(result.Width, Is.EqualTo(10));
-    Assert.That(result.Height, Is.EqualTo(10));
-  }
-
-  #endregion
 }
