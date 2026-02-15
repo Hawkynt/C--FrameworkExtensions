@@ -132,6 +132,10 @@ public sealed class FilterDescriptor {
     => (TFilter)_CreateDefault();
 
   private object _CreateDefault() {
+    var parameterlessCtor = this.Type.GetConstructor(Type.EmptyTypes);
+    if (parameterlessCtor != null)
+      return parameterlessCtor.Invoke(null);
+
     var ctor = this.Type.GetConstructors().FirstOrDefault();
     if (ctor == null)
       return Activator.CreateInstance(this.Type)!;
