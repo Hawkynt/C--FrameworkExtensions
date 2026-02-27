@@ -14,6 +14,40 @@
 > [!NOTE]
 > Performance is not a primary concern here. This focuses mainly on functionality and ready-to-be-built without making adjustments to code.
 
+## How It Works
+
+The package uses conditional compilation (`#if` directives) and MSBuild target framework detection to decide, per feature, whether to:
+
+1. **Use the native implementation** -- when the target framework already provides the API (e.g., `Span<T>` on .NET Core 2.1+).
+2. **Reference an official Microsoft NuGet package** -- when Microsoft ships a standalone backport (e.g., `System.Memory` for .NET Framework 4.5+).
+3. **Provide a custom polyfill** -- when neither of the above is available (e.g., `Span<T>` on .NET Framework 2.0/3.5).
+
+All polyfills live under the **original namespace** of the type they replace, so consuming code requires no extra `using` directives and compiles identically across all targets.
+
+## Supported Target Frameworks
+
+| Target Framework     | TFM              | Notes                                                              |
+| -------------------- | ---------------- | ------------------------------------------------------------------ |
+| .NET Framework 2.0   | `net20`          | Oldest supported; custom polyfills for most APIs                   |
+| .NET Framework 3.5   | `net35`          | Adds LINQ expressions, DLR                                         |
+| .NET Framework 4.0   | `net40`          | Task/async support via Microsoft.Bcl.Async                         |
+| .NET Framework 4.5   | `net45`          | Official System.Memory, System.Buffers packages used               |
+| .NET Framework 4.6   | `net46`          |                                                                    |
+| .NET Framework 4.6.1 | `net461`         | Official System.Collections.Immutable, Microsoft.Bcl.HashCode used |
+| .NET Framework 4.6.2 | `net462`         |                                                                    |
+| .NET Framework 4.7   | `net47`          |                                                                    |
+| .NET Framework 4.7.1 | `net471`         |                                                                    |
+| .NET Framework 4.7.2 | `net472`         |                                                                    |
+| .NET Framework 4.8   | `net48`          |                                                                    |
+| .NET Standard 2.0    | `netstandard2.0` | Broad compatibility surface                                        |
+| .NET Standard 2.1    | `netstandard2.1` | Adds Span-native APIs                                              |
+| .NET Core 3.1        | `netcoreapp3.1`  |                                                                    |
+| .NET 5.0             | `net5.0`         |                                                                    |
+| .NET 6.0             | `net6.0`         |                                                                    |
+| .NET 7.0             | `net7.0`         |                                                                    |
+| .NET 8.0             | `net8.0`         |                                                                    |
+| .NET 9.0             | `net9.0`         |                                                                    |
+
 ## Architecture
 
 ### Official Package Integration
@@ -45,6 +79,11 @@ __Active Packages:__
 - __System.Numerics.Tensors__ - Provides `Tensor<T>`, `TensorSpan<T>`, `TensorPrimitives` and related tensor types (.NET 9.0+; polyfill for earlier versions)
 - __System.Threading.Tasks.Extensions__ - Provides `ValueTask` (.NET Framework 4.5+, .NET Standard 2.0)
 - __Microsoft.Bcl.HashCode__ - Provides `HashCode` (.NET Framework 4.6.1+, .NET Standard 2.0)
+- __Microsoft.Bcl.AsyncInterfaces__ - Provides `IAsyncEnumerable<T>`, `IAsyncDisposable` and related async interfaces (.NET Framework 4.6.1+, .NET Standard 2.0)
+- __System.Runtime.InteropServices.RuntimeInformation__ - Provides `RuntimeInformation`, `OSPlatform`, `Architecture` (.NET Framework 4.5+)
+- __System.Collections.Immutable__ - Provides `ImmutableArray<T>`, `ImmutableDictionary<TKey,TValue>`, and other immutable collections (.NET Framework 4.6.1+, .NET Standard 2.0)
+- __System.Text.Json__ - Provides `JsonSerializer`, `JsonDocument`, `Utf8JsonReader/Writer` and related JSON types (.NET Framework 4.6.2+, .NET Standard 2.0)
+- __System.IO.Hashing__ - Provides `Crc32`, `Crc64`, `XxHash32`, `XxHash64`, `XxHash128` (.NET Framework 4.6.2+, .NET Standard 2.0)
 
 __Deprecated Packages (still included for compatibility):__
 
@@ -55,6 +94,29 @@ __Deprecated Packages (still included for compatibility):__
 > Microsoft.Bcl and Microsoft.Bcl.Async are officially deprecated but are still included for .NET Framework 4.0 to avoid conflicts with existing projects that may reference these packages.
 
 For target frameworks where these packages are not available (e.g., .NET Framework 2.0/3.5), custom implementations are provided.
+
+## Project Structure
+
+```
+Backports/
+  Backports.csproj          # Multi-targeting project file (net20 through net9.0)
+  Features/                 # Feature directories, each containing one polyfill
+    ActionFunc/             # Action/Func delegate types
+    AggregateException/     # AggregateException for pre-.NET 4.0
+    AsyncEnumerable/        # IAsyncEnumerable/IAsyncEnumerator
+    BigInteger/             # System.Numerics.BigInteger polyfill
+    CollectionsMarshal/     # CollectionsMarshal.AsSpan, GetValueRefOrNullRef, SetCount
+    ExceptionDispatchInfo/  # Exception capture/rethrow preserving stack trace
+    FormattableString/      # C# 6 string interpolation support
+    RuntimeInformation/     # OSPlatform, Architecture, RuntimeInformation
+    SystemTextJson/         # JSON serialization polyfill
+    ...                     # (one directory per feature)
+  System/                   # Shared type definitions and helpers
+  Utilities/                # Internal utilities (method impl options, guards, etc.)
+  build/                    # MSBuild .props/.targets for conditional compilation flags
+```
+
+Each feature directory follows the pattern `Features/<FeatureName>/System/<Namespace>/<TypeName>.cs` and is guarded by a `#if !SUPPORTS_<FEATURE>` conditional compilation directive that is set in the `build/` directory's `.props` files.
 
 ## Features
 
@@ -92,10 +154,16 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Threading
   - [ITimer](https://learn.microsoft.com/dotnet/api/system.threading.itimer)
 
+- System.Threading.Tasks.Sources
+  - [IValueTaskSource](https://learn.microsoft.com/dotnet/api/system.threading.tasks.sources.ivaluetasksource)
+  - [IValueTaskSource](https://learn.microsoft.com/dotnet/api/system.threading.tasks.sources.ivaluetasksource-1)&lt;TResult&gt;
+
 ### Types
 
 - System
+  - [AggregateException](https://learn.microsoft.com/dotnet/api/system.aggregateexception)
   - [DateOnly](https://learn.microsoft.com/dotnet/api/system.dateonly)
+  - [FormattableString](https://learn.microsoft.com/dotnet/api/system.formattablestring)
   - [Half](https://learn.microsoft.com/dotnet/api/system.half)
   - [HashCode](https://learn.microsoft.com/dotnet/api/system.hashcode) (polyfill for frameworks without Microsoft.Bcl.HashCode)
   - [Index](https://learn.microsoft.com/dotnet/api/system.index)
@@ -108,6 +176,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [Span](https://learn.microsoft.com/dotnet/api/system.span-1)&lt;T&gt;
   - [TimeOnly](https://learn.microsoft.com/dotnet/api/system.timeonly)
   - [TimeProvider](https://learn.microsoft.com/dotnet/api/system.timeprovider)
+  - [TimeZoneInfo](https://learn.microsoft.com/dotnet/api/system.timezoneinfo) (minimal stub for frameworks without native support)
   - [Tuple](https://learn.microsoft.com/dotnet/api/system.tuple)&lt;T&gt; (up to 8 types)
   - [UInt128](https://learn.microsoft.com/dotnet/api/system.uint128)
   - [ValueTuple](https://learn.microsoft.com/dotnet/api/system.valuetuple)&lt;T&gt; (up to 8 types)
@@ -246,7 +315,15 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [TypeInfo](https://learn.microsoft.com/dotnet/api/system.reflection.typeinfo)
 
 - System.Runtime.InteropServices
+  - [Architecture](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.architecture)
+  - [CollectionsMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.collectionsmarshal)
   - [MemoryMarshal](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.memorymarshal)
+  - [NativeMemory](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.nativememory)
+  - [OSPlatform](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.osplatform)
+  - [RuntimeInformation](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.runtimeinformation)
+
+- System.Runtime.ExceptionServices
+  - [ExceptionDispatchInfo](https://learn.microsoft.com/dotnet/api/system.runtime.exceptionservices.exceptiondispatchinfo)
 
 - System.Runtime.Intrinsics
   - [Vector64](https://learn.microsoft.com/dotnet/api/system.runtime.intrinsics.vector64)
@@ -290,6 +367,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ManualResetEventSlim](https://learn.microsoft.com/dotnet/api/system.threading.manualreseteventslim)
   - [PeriodicTimer](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer)
   - [ReaderWriterLockSlim](https://learn.microsoft.com/dotnet/api/system.threading.readerwriterlockslim)
+  - [SemaphoreSlim](https://learn.microsoft.com/dotnet/api/system.threading.semaphoreslim)
   - [SpinLock](https://learn.microsoft.com/dotnet/api/system.threading.spinlock)
   - [SpinWait](https://learn.microsoft.com/dotnet/api/system.threading.spinwait)
   - [ThreadLocal](https://learn.microsoft.com/dotnet/api/system.threading.threadlocal-1)&lt;T&gt;
@@ -312,8 +390,51 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask)
   - [ValueTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1)&lt;TResult&gt;
 
-- System
-  - [AggregateException](https://learn.microsoft.com/dotnet/api/system.aggregateexception)
+- System.Threading.Tasks.Sources
+  - [ManualResetValueTaskSourceCore](https://learn.microsoft.com/dotnet/api/system.threading.tasks.sources.manualresetvaluetasksourcecore-1)&lt;TResult&gt;
+  - [ValueTaskSourceOnCompletedFlags](https://learn.microsoft.com/dotnet/api/system.threading.tasks.sources.valuetasksourceoncompletedflags)
+  - [ValueTaskSourceStatus](https://learn.microsoft.com/dotnet/api/system.threading.tasks.sources.valuetasksourcestatus)
+
+- System.Collections.Generic
+  - [ReferenceEqualityComparer](https://learn.microsoft.com/dotnet/api/system.collections.generic.referenceequalitycomparer)
+
+- System.IO
+  - [EnumerationOptions](https://learn.microsoft.com/dotnet/api/system.io.enumerationoptions)
+
+- System.Text
+  - [CompositeFormat](https://learn.microsoft.com/dotnet/api/system.text.compositeformat)
+
+- System.Text.Json (uses official package for net462+/netstandard2.0+/netcoreapp3.0+, polyfill for others)
+  - [JsonDocument](https://learn.microsoft.com/dotnet/api/system.text.json.jsondocument)
+  - [JsonElement](https://learn.microsoft.com/dotnet/api/system.text.json.jsonelement)
+  - [JsonException](https://learn.microsoft.com/dotnet/api/system.text.json.jsonexception)
+  - [JsonNamingPolicy](https://learn.microsoft.com/dotnet/api/system.text.json.jsonnamingpolicy)
+  - [JsonProperty](https://learn.microsoft.com/dotnet/api/system.text.json.jsonproperty)
+  - [JsonSerializer](https://learn.microsoft.com/dotnet/api/system.text.json.jsonserializer)
+  - [JsonSerializerOptions](https://learn.microsoft.com/dotnet/api/system.text.json.jsonserializeroptions)
+  - [JsonTokenType](https://learn.microsoft.com/dotnet/api/system.text.json.jsontokentype)
+  - [JsonValueKind](https://learn.microsoft.com/dotnet/api/system.text.json.jsonvaluekind)
+  - [Utf8JsonReader](https://learn.microsoft.com/dotnet/api/system.text.json.utf8jsonreader)
+  - [Utf8JsonWriter](https://learn.microsoft.com/dotnet/api/system.text.json.utf8jsonwriter)
+
+- System.Text.Json.Serialization
+  - [JsonConverter](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonconverter)
+  - [JsonConverterAttribute](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonconverterattribute)
+  - [JsonIgnoreAttribute](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonignoreattribute)
+  - [JsonIgnoreCondition](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonignorecondition)
+  - [JsonIncludeAttribute](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonincludeattribute)
+  - [JsonPropertyNameAttribute](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonpropertynameattribute)
+  - [JsonRequiredAttribute](https://learn.microsoft.com/dotnet/api/system.text.json.serialization.jsonrequiredattribute)
+
+- System.Net.Http
+  - [HttpContent](https://learn.microsoft.com/dotnet/api/system.net.http.httpcontent) (ReadAsStream polyfill)
+
+- System.Web
+  - [HttpContext](https://learn.microsoft.com/dotnet/api/system.web.httpcontext) (minimal polyfill for .NET Core)
+  - [HttpCookie](https://learn.microsoft.com/dotnet/api/system.web.httpcookie) (minimal polyfill for .NET Core)
+  - [HttpCookieCollection](https://learn.microsoft.com/dotnet/api/system.web.httpcookiecollection) (minimal polyfill for .NET Core)
+  - [HttpRequest](https://learn.microsoft.com/dotnet/api/system.web.httprequest) (minimal polyfill for .NET Core)
+  - [HttpResponse](https://learn.microsoft.com/dotnet/api/system.web.httpresponse) (minimal polyfill for .NET Core)
 
 - System.IO.Hashing
   - [Crc32](https://learn.microsoft.com/dotnet/api/system.io.hashing.crc32)
@@ -491,12 +612,24 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - byte[] [FromHexString](https://learn.microsoft.com/dotnet/api/system.convert.fromhexstring)(ReadOnlySpan&lt;char&gt; chars)
 
 - System.Guid
+  - Guid [CreateVersion7](https://learn.microsoft.com/dotnet/api/system.guid.createversion7#system-guid-createversion7)()
+  - Guid [CreateVersion7](https://learn.microsoft.com/dotnet/api/system.guid.createversion7#system-guid-createversion7%28system-datetimeoffset%29)(DateTimeOffset timestamp)
   - bool [TryParse](https://learn.microsoft.com/dotnet/api/system.guid.tryparse#system-guid-tryparse%28system-readonlyspan%28%28system-char%29%29-system-guid%40%29)(ReadOnlySpan&lt;char&gt; input, out Guid result)
   - Guid [Parse](https://learn.microsoft.com/dotnet/api/system.guid.parse#system-guid-parse%28system-readonlyspan%28%28system-char%29%29%29)(ReadOnlySpan&lt;char&gt; input)
 
 - System.IO.File
   - IEnumerable&lt;string&gt; [ReadLines](https://learn.microsoft.com/dotnet/api/system.io.file.readlines#system-io-file-readlines%28system-string%29)(string path)
   - IEnumerable&lt;string&gt; [ReadLines](https://learn.microsoft.com/dotnet/api/system.io.file.readlines#system-io-file-readlines%28system-string-system-text-encoding%29)(string path, Encoding encoding)
+  - Task&lt;byte[]&gt; [ReadAllBytesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.readallbytesasync)(string path, CancellationToken cancellationToken = default)
+  - Task&lt;string&gt; [ReadAllTextAsync](https://learn.microsoft.com/dotnet/api/system.io.file.readalltextasync)(string path, CancellationToken cancellationToken = default)
+  - Task&lt;string&gt; [ReadAllTextAsync](https://learn.microsoft.com/dotnet/api/system.io.file.readalltextasync)(string path, Encoding encoding, CancellationToken cancellationToken = default)
+  - Task&lt;string[]&gt; [ReadAllLinesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.readalllinesasync)(string path, CancellationToken cancellationToken = default)
+  - Task&lt;string[]&gt; [ReadAllLinesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.readalllinesasync)(string path, Encoding encoding, CancellationToken cancellationToken = default)
+  - Task [WriteAllBytesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.writeallbytesasync)(string path, byte[] bytes, CancellationToken cancellationToken = default)
+  - Task [WriteAllTextAsync](https://learn.microsoft.com/dotnet/api/system.io.file.writealltextasync)(string path, string? contents, CancellationToken cancellationToken = default)
+  - Task [WriteAllTextAsync](https://learn.microsoft.com/dotnet/api/system.io.file.writealltextasync)(string path, string? contents, Encoding encoding, CancellationToken cancellationToken = default)
+  - Task [WriteAllLinesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.writealllinesasync)(string path, IEnumerable&lt;string&gt; contents, CancellationToken cancellationToken = default)
+  - Task [WriteAllLinesAsync](https://learn.microsoft.com/dotnet/api/system.io.file.writealllinesasync)(string path, IEnumerable&lt;string&gt; contents, Encoding encoding, CancellationToken cancellationToken = default)
 
 - System.IO.Path
   - string [Join](https://learn.microsoft.com/dotnet/api/system.io.path.join#system-io-path-join%28system-string-system-string%29)(string path1, string path2)
@@ -665,6 +798,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - long [CopySign](https://learn.microsoft.com/dotnet/api/system.int64.copysign)(long value, long sign)
 
 - System.String
+  - bool [IsNullOrWhiteSpace](https://learn.microsoft.com/dotnet/api/system.string.isnullorwhitespace)(string? value)
   - string [Create](https://learn.microsoft.com/dotnet/api/system.string.create)&lt;TState&gt;(int length, TState state, SpanAction&lt;char, TState&gt; action)
   - string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join%28system-char-system-string%28%29%29)(char separator, params string[] values)
   - string [Join](https://learn.microsoft.com/dotnet/api/system.string.join#system-string-join-1%28system-char-system-collections-generic-ienumerable%28%28-0%29%29%29)&lt;T&gt;(char separator, IEnumerable&lt;T&gt; values)
@@ -740,10 +874,17 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - bool [IsWindowsVersionAtLeast](https://learn.microsoft.com/dotnet/api/system.operatingsystem.iswindowsversionatleast)(int major, int minor = 0, int build = 0, int revision = 0)
 
 - System.Threading.Tasks.Task
+  - Task [CompletedTask](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.completedtask) (static property)
+  - Task [Delay](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.delay)(int millisecondsDelay)
+  - Task [Delay](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.delay)(TimeSpan delay)
+  - Task [Delay](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.delay)(int millisecondsDelay, CancellationToken cancellationToken)
+  - Task [Delay](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.delay)(TimeSpan delay, CancellationToken cancellationToken)
   - Task [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled%28system-threading-cancellationtoken%29)(CancellationToken cancellationToken)
   - Task&lt;TResult&gt; [FromCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromcanceled#system-threading-tasks-task-fromcanceled-1%28system-threading-cancellationtoken%29)&lt;TResult&gt;(CancellationToken cancellationToken)
   - Task [FromException](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromexception#system-threading-tasks-task-fromexception%28system-exception%29)(Exception exception)
   - Task&lt;TResult&gt; [FromException](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.fromexception#system-threading-tasks-task-fromexception-1%28system-exception%29)&lt;TResult&gt;(Exception exception)
+  - IAsyncEnumerable&lt;Task&lt;TResult&gt;&gt; [WhenEach](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.wheneach)&lt;TResult&gt;(params Task&lt;TResult&gt;[] tasks)
+  - YieldAwaitable [Yield](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.yield)()
 
 ### Methods
 
@@ -817,6 +958,8 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Collections.Generic.Dictionary
   - int [EnsureCapacity](https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2.ensurecapacity)&lt;TKey, TValue&gt;(this Dictionary&lt;TKey, TValue&gt; @this, int capacity)
+  - TValue? [GetValueOrDefault](https://learn.microsoft.com/dotnet/api/system.collections.generic.collectionextensions.getvalueordefault)&lt;TKey, TValue&gt;(this IReadOnlyDictionary&lt;TKey, TValue&gt; @this, TKey key)
+  - TValue [GetValueOrDefault](https://learn.microsoft.com/dotnet/api/system.collections.generic.collectionextensions.getvalueordefault)&lt;TKey, TValue&gt;(this IReadOnlyDictionary&lt;TKey, TValue&gt; @this, TKey key, TValue defaultValue)
   - bool [TryAdd](https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2.tryadd)&lt;TKey, TValue&gt;(this Dictionary&lt;TKey, TValue&gt; @this, TKey key, TValue value)
 
 - System.Collections.Generic.HashSet
@@ -866,6 +1009,9 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 - System.Globalization.CompareInfo
   - int [GetHashCode](https://learn.microsoft.com/dotnet/api/system.globalization.compareinfo.gethashcode#system-globalization-compareinfo-gethashcode%28system-string-system-globalization-compareoptions%29)(this CompareInfo @this, string source, CompareOptions options)
 
+- System.Guid
+  - bool [TryWriteBytes](https://learn.microsoft.com/dotnet/api/system.guid.trywritebytes)(this Guid @this, Span&lt;byte&gt; destination)
+
 - System.Enum
   - bool [HasFlag](https://learn.microsoft.com/dotnet/api/system.enum.hasflag)&lt;T&gt;(this T @this, T flag)
   - T[] [GetValues](https://learn.microsoft.com/dotnet/api/system.enum.getvalues)&lt;T&gt;()
@@ -900,6 +1046,10 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - void [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactly)(this Stream @this, byte[] buffer, int offset, int count)
   - void [ReadExactly](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactly)(this Stream @this, Span&lt;byte&gt; buffer)
   - int [ReadAtLeast](https://learn.microsoft.com/dotnet/api/system.io.stream.readatleast)(this Stream @this, Span&lt;byte&gt; buffer, int minimumBytes, bool throwOnEndOfStream = true)
+  - ValueTask&lt;int&gt; [ReadAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.readasync#system-io-stream-readasync%28system-memory%28%28system-byte%29%29-system-threading-cancellationtoken%29)(this Stream @this, Memory&lt;byte&gt; buffer, CancellationToken cancellationToken = default)
+  - ValueTask [WriteAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.writeasync#system-io-stream-writeasync%28system-readonlymemory%28%28system-byte%29%29-system-threading-cancellationtoken%29)(this Stream @this, ReadOnlyMemory&lt;byte&gt; buffer, CancellationToken cancellationToken = default)
+  - ValueTask [ReadExactlyAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactlyasync)(this Stream @this, byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
+  - ValueTask [ReadExactlyAsync](https://learn.microsoft.com/dotnet/api/system.io.stream.readexactlyasync)(this Stream @this, Memory&lt;byte&gt; buffer, CancellationToken cancellationToken = default)
 
 - System.IO.TextWriter
   - void [Write](https://learn.microsoft.com/dotnet/api/system.io.textwriter.write#system-io-textwriter-write%28system-readonlyspan%28%28system-char%29%29%29)(this TextWriter @this, ReadOnlySpan&lt;char&gt; buffer)
@@ -933,6 +1083,11 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Text.StringBuilder
   - StringBuilder [Append](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.append#system-text-stringbuilder-append%28system-readonlyspan%28%28system-char%29%29%29)(this StringBuilder @this, ReadOnlySpan&lt;char&gt; value)
+  - StringBuilder [AppendJoin](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.appendjoin)(this StringBuilder @this, string separator, params object[] values)
+  - StringBuilder [AppendJoin](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.appendjoin)(this StringBuilder @this, string separator, params string[] values)
+  - StringBuilder [AppendJoin](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.appendjoin)(this StringBuilder @this, char separator, params object[] values)
+  - StringBuilder [AppendJoin](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.appendjoin)(this StringBuilder @this, char separator, params string[] values)
+  - ChunkEnumerator [GetChunks](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.getchunks)(this StringBuilder @this)
   - StringBuilder [Insert](https://learn.microsoft.com/dotnet/api/system.text.stringbuilder.insert#system-text-stringbuilder-insert%28system-int32-system-readonlyspan%28%28system-char%29%29%29)(this StringBuilder @this, int index, ReadOnlySpan&lt;char&gt; value)
 
 - System.Linq
@@ -1083,6 +1238,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
   - string [Trim](https://learn.microsoft.com/dotnet/api/system.string.trim#system-string-trim%28system-char%29)(this string @this, char trimChar)
   - string [TrimStart](https://learn.microsoft.com/dotnet/api/system.string.trimstart#system-string-trimstart%28system-char%29)(this string @this, char trimChar)
   - string [TrimEnd](https://learn.microsoft.com/dotnet/api/system.string.trimend#system-string-trimend%28system-char%29)(this string @this, char trimChar)
+  - string [Replace](https://learn.microsoft.com/dotnet/api/system.string.replace#system-string-replace%28system-string-system-string-system-stringcomparison%29)(this string @this, string oldValue, string? newValue, StringComparison comparisonType)
   - string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings)(this string @this)
   - string [ReplaceLineEndings](https://learn.microsoft.com/dotnet/api/system.string.replacelineendings#system-string-replacelineendings%28system-string%29)(this string @this, string replacementText)
   - LineSplitEnumerator [EnumerateLines](https://learn.microsoft.com/dotnet/api/system.string.enumeratelines)(this string @this)
@@ -1160,6 +1316,7 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Threading.CancellationTokenSource
   - bool [TryReset](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.tryreset)(this CancellationTokenSource @this)
+  - Task [CancelAsync](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.cancelasync)(this CancellationTokenSource @this)
   - void [CancelAfter](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.cancelafter#system-threading-cancellationtokensource-cancelafter%28system-int32%29)(this CancellationTokenSource @this, int millisecondsDelay)
   - void [CancelAfter](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.cancelafter#system-threading-cancellationtokensource-cancelafter%28system-timespan%29)(this CancellationTokenSource @this, TimeSpan delay)
 
@@ -1168,6 +1325,43 @@ For target frameworks where these packages are not available (e.g., .NET Framewo
 
 - System.Threading.PeriodicTimer
   - TimeSpan [Period](https://learn.microsoft.com/dotnet/api/system.threading.periodictimer.period) (instance property)
+
+- System.Threading.Tasks.Task
+  - Task [WaitAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.waitasync#system-threading-tasks-task-waitasync%28system-timespan%29)(this Task @this, TimeSpan timeout)
+  - Task [WaitAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.waitasync#system-threading-tasks-task-waitasync%28system-threading-cancellationtoken%29)(this Task @this, CancellationToken cancellationToken)
+  - Task [WaitAsync](https://learn.microsoft.com/dotnet/api/system.threading.tasks.task.waitasync#system-threading-tasks-task-waitasync%28system-timespan-system-threading-cancellationtoken%29)(this Task @this, TimeSpan timeout, CancellationToken cancellationToken)
+
+- System.Threading.Tasks.TaskCompletionSource
+  - bool [TrySetCanceled](https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcompletionsource-1.trysetcanceled#system-threading-tasks-taskcompletionsource-1-trysetcanceled%28system-threading-cancellationtoken%29)&lt;TResult&gt;(this TaskCompletionSource&lt;TResult&gt; @this, CancellationToken cancellationToken)
+
+- System.Diagnostics.Process
+  - Task [WaitForExitAsync](https://learn.microsoft.com/dotnet/api/system.diagnostics.process.waitforexitasync)(this Process @this, CancellationToken cancellationToken = default)
+
+- System.Text.RegularExpressions.Regex
+  - int [Count](https://learn.microsoft.com/dotnet/api/system.text.regularexpressions.regex.count)(this Regex @this, string input)
+  - int [Count](https://learn.microsoft.com/dotnet/api/system.text.regularexpressions.regex.count)(this Regex @this, ReadOnlySpan&lt;char&gt; input)
+  - int [Count](https://learn.microsoft.com/dotnet/api/system.text.regularexpressions.regex.count)(this Regex @this, string input, int startAt)
+
+- System.Collections.Generic.List
+  - void [AddRange](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.addrange)&lt;T&gt;(this List&lt;T&gt; @this, ReadOnlySpan&lt;T&gt; source)
+  - void [InsertRange](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.insertrange)&lt;T&gt;(this List&lt;T&gt; @this, int index, ReadOnlySpan&lt;T&gt; source)
+  - void [CopyTo](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.copyto)&lt;T&gt;(this List&lt;T&gt; @this, Span&lt;T&gt; destination)
+  - List&lt;T&gt; [GetRange](https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.getrange)&lt;T&gt;(this List&lt;T&gt; @this, int index, int count)
+
+- System.Half
+  - Half [Clamp](https://learn.microsoft.com/dotnet/api/system.half.clamp)(Half value, Half min, Half max)
+
+- System.Net.Http.HttpContent
+  - Stream [ReadAsStream](https://learn.microsoft.com/dotnet/api/system.net.http.httpcontent.readasstream)(this HttpContent @this)
+
+- System.Text.Json.JsonNamingPolicy
+  - JsonNamingPolicy [SnakeCaseLower](https://learn.microsoft.com/dotnet/api/system.text.json.jsonnamingpolicy.snakecaselower) (static property)
+  - JsonNamingPolicy [SnakeCaseUpper](https://learn.microsoft.com/dotnet/api/system.text.json.jsonnamingpolicy.snakecaseupper) (static property)
+  - JsonNamingPolicy [KebabCaseLower](https://learn.microsoft.com/dotnet/api/system.text.json.jsonnamingpolicy.kebabcaselower) (static property)
+  - JsonNamingPolicy [KebabCaseUpper](https://learn.microsoft.com/dotnet/api/system.text.json.jsonnamingpolicy.kebabcaseupper) (static property)
+
+- System.StringSplitOptions
+  - StringSplitOptions [TrimEntries](https://learn.microsoft.com/dotnet/api/system.stringsplitoptions) (constant value for frameworks without native support)
 
 ## Installation
 
@@ -1184,6 +1378,37 @@ Install-Package FrameworkExtensions.Backports
 ```ps
 dotnet add package FrameworkExtensions.Backports
 ```
+
+## Build/Test Guidelines
+
+### Building
+
+```sh
+# Build for all target frameworks
+dotnet build Backports/Backports.csproj
+
+# Build for a specific target framework
+dotnet build Backports/Backports.csproj -f net8.0
+```
+
+### Testing
+
+```sh
+# Run all tests
+dotnet test Backports.Tests/Backports.Tests.csproj
+
+# Run tests for a specific framework
+dotnet test Backports.Tests/Backports.Tests.csproj -f net8.0
+
+# Run a specific test category
+dotnet test --filter "Category=Unit"
+```
+
+### Requirements
+
+- .NET SDK 10.0+ (to build for all target frameworks)
+- Visual Studio 2026 or later (recommended for multi-targeting support)
+- NuGet package restore is automatic on build
 
 ## Usage
 
@@ -1489,9 +1714,13 @@ The goal is to make Backports __compiler-complete__ for older targets with the s
 
 ## Known Issues
 
-- __net2.0__ - Hard to write unit tests for as I didn't have an nunit compatible nuget package at hand.
+- __net2.0__ - Unit-tested using Hawkynt's custom nUnit-Runner.
 - __netstandard2.0/2.1 test targets__ - These are API specifications, not runtimes. Tests compile but cannot execute directly; functionality is verified via compatible runtimes (netcoreapp3.1, net5.0+)
 - __.NET SDK 10.0 test platform__ - VSTest 18.x has compatibility issues with older .NET Core runtimes when running from CLI; Visual Studio Test Explorer handles this better
+- __TimeZoneInfo (net2.0)__ - Minimal stub implementation; most operations beyond `Utc` and `Local` throw `NotSupportedException`
+- __ExceptionDispatchInfo (pre-net4.5)__ - Stack trace is not fully preserved on re-throw due to framework limitations
+- __System.Text.Json polyfill__ - Subset of the full API; complex serialization scenarios may require the official NuGet package on supported frameworks
+- __HttpContent.ReadAsStream__ - Only available on .NET Core targets (not .NET Framework) as it requires the built-in System.Net.Http
 
 ## Contributing
 

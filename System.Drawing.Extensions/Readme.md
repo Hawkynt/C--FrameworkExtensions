@@ -7,7 +7,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Drawing)](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing/)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
-Extension methods for System.Drawing types (bitmaps, images, colors, graphics).
+Extension methods for System.Drawing types (bitmaps, images, colors, graphics) with a comprehensive image processing pipeline including pixel art scalers, resamplers, ditherers, quantizers, and color spaces.
 
 ---
 
@@ -64,6 +64,26 @@ using var fast = original.ReduceColors(
 indexed.Save("indexed.gif");
 ```
 
+#### Pixel Art Scaling
+
+- **`Upscale(IPixelScaler)`** - Scale bitmap using a fixed-factor pixel art scaler
+
+```csharp
+using var source = new Bitmap("sprite.png");
+using var scaled2x = source.Upscale(Eagle.X2);
+using var hq4x = source.Upscale(Hqnx.X4);
+```
+
+#### Resampling
+
+- **`Resample<TResampler>(width, height)`** - Resample bitmap to arbitrary size using a resampler
+- **`Resample(IResampler, width, height)`** - Resample with parameterized resampler instance
+
+```csharp
+using var photo = bitmap.Resample<Lanczos3>(newWidth, newHeight);
+using var sharp = bitmap.Resample(new Bicubic(-0.75f), newWidth, newHeight);
+```
+
 ---
 
 ### Image Extensions (`Image`)
@@ -112,7 +132,7 @@ indexed.Save("indexed.gif");
 - **`Hwb`** / **`HwbNormalized`** - Convert to HWB (Hue, Whiteness, Blackness)
 - **`Cmyk`** / **`CmykNormalized`** - Convert to CMYK (Cyan, Magenta, Yellow, Key)
 - **`Xyz`** / **`XyzNormalized`** - Convert to CIE XYZ tristimulus values
-- **`Lab`** / **`LabNormalized`** - Convert to CIE L*a*b* perceptual color space
+- **`Lab`** / **`LabNormalized`** - Convert to CIE L\*a\*b\* perceptual color space
 - **`Yuv`** / **`YuvNormalized`** - Convert to YUV (Luma + chrominance)
 - **`YCbCr`** / **`YCbCrNormalized`** - Convert to YCbCr digital video encoding
 - **`Din99`** / **`Din99Normalized`** - Convert to DIN99 (DIN 6176) perceptual space
@@ -203,28 +223,61 @@ Each locker provides:
 - Direct pointer access to pixel data via `BitmapData`
 - Indexed pixel access via `this[x, y]`
 - Fast `GetPixelBgra8888()` and `SetPixelBgra8888()` methods
+- Drawing primitives: lines, rectangles, circles, ellipses, crosses
+- `CopyFrom`/`BlendWith` operations for bitmap compositing
+- Grid-based tile copying for sprite sheets and tile maps
 - Automatic disposal via `IDisposable`
 
 ---
 
-## Color Spaces (`System.Drawing.ColorSpaces`)
+## Color Spaces
 
 A comprehensive color space conversion and comparison library with zero-cost generic abstractions.
 
-### Color Space Types
+### Standard Color Space Types
 
-| Type                        | Components | Description                        |
-| --------------------------- | ---------- | ---------------------------------- |
-| `Cmyk` / `CmykNormalized`   | C, M, Y, K | Subtractive printing model         |
-| `Din99` / `Din99Normalized` | L, a, b    | DIN 6176 perceptual space          |
-| `Hsl` / `HslNormalized`     | H, S, L    | Hue, Saturation, Lightness         |
-| `Hsv` / `HsvNormalized`     | H, S, V    | Hue, Saturation, Value             |
-| `Hwb` / `HwbNormalized`     | H, W, B    | Hue, Whiteness, Blackness          |
-| `Lab` / `LabNormalized`     | L, a, b    | CIE L*a*b\* perceptual color space |
-| `Rgb` / `RgbNormalized`     | R, G, B    | Standard RGB color model           |
-| `Xyz` / `XyzNormalized`     | X, Y, Z    | CIE XYZ tristimulus values         |
-| `YCbCr` / `YCbCrNormalized` | Y, Cb, Cr  | Digital video color encoding       |
-| `Yuv` / `YuvNormalized`     | Y, U, V    | Luma + chrominance (PAL/NTSC)      |
+| Type                        | Components | Category    | Description                          |
+| --------------------------- | ---------- | ----------- | ------------------------------------ |
+| `Cmyk` / `CmykNormalized`   | C, M, Y, K | Subtractive | Subtractive printing model           |
+| `Din99` / `Din99Normalized` | L, a, b    | Perceptual  | DIN 6176 perceptual space            |
+| `Hsl` / `HslNormalized`     | H, S, L    | Cylindrical | Hue, Saturation, Lightness           |
+| `Hsv` / `HsvNormalized`     | H, S, V    | Cylindrical | Hue, Saturation, Value               |
+| `Hwb` / `HwbNormalized`     | H, W, B    | Cylindrical | Hue, Whiteness, Blackness            |
+| `Lab` / `LabNormalized`     | L, a, b    | Perceptual  | CIE L\*a\*b\* perceptual color space |
+| `Rgb` / `RgbNormalized`     | R, G, B    | Standard    | Standard RGB color model             |
+| `Xyz` / `XyzNormalized`     | X, Y, Z    | HDR         | CIE XYZ tristimulus values           |
+| `YCbCr` / `YCbCrNormalized` | Y, Cb, Cr  | YUV         | Digital video color encoding         |
+| `Yuv` / `YuvNormalized`     | Y, U, V    | YUV         | Luma + chrominance (PAL/NTSC)        |
+
+### Extended Color Space Types
+
+Internal processing color spaces used in the generic color pipeline:
+
+| Type           | Components | Category    | Description                                          |
+| -------------- | ---------- | ----------- | ---------------------------------------------------- |
+| `LchF`         | L, C, h    | Cylindrical | CIE LCh (cylindrical Lab) with hue angle             |
+| `OklabF`       | L, a, b    | Perceptual  | Oklab perceptually uniform color space               |
+| `OklchF`       | L, C, h    | Perceptual  | OkLCh cylindrical form of Oklab                      |
+| `HunterLabF`   | L, a, b    | Perceptual  | Hunter Lab color space                               |
+| `LuvF`         | L, u, v    | Perceptual  | CIE L\*u\*v\* color space                            |
+| `ICtCpF`       | I, Ct, Cp  | HDR         | ICtCp perceptual HDR color space                     |
+| `JzAzBzF`      | Jz, Az, Bz | HDR         | JzAzBz perceptual HDR color space                    |
+| `JzCzhzF`      | Jz, Cz, hz | HDR         | JzCzhz cylindrical form of JzAzBz                    |
+| `AcesCgF`      | R, G, B    | Wide Gamut  | ACEScg linear working space for VFX/animation        |
+| `AdobeRgbF`    | R, G, B    | Wide Gamut  | Adobe RGB (1998) wide gamut for print (50% coverage) |
+| `DisplayP3F`   | R, G, B    | Wide Gamut  | Display P3 (Apple devices, wider than sRGB)          |
+| `ProPhotoRgbF` | R, G, B    | Wide Gamut  | ProPhoto RGB ultra-wide gamut for photography        |
+
+### Working Color Spaces
+
+Internal processing types used by the quantization and dithering pipeline:
+
+| Type          | Components    | Description                                          |
+| ------------- | ------------- | ---------------------------------------------------- |
+| `LinearRgbaF` | R, G, B, A    | Linear RGB with alpha (float, non-premultiplied)     |
+| `LinearRgbF`  | R, G, B       | Linear RGB without alpha (float)                     |
+| `CmykaF`      | C, M, Y, K, A | CMYK with alpha (float)                              |
+| `OklabaF`     | L, a, b, A    | OkLab with alpha for perceptually uniform operations |
 
 ### Distance Calculators (`Hawkynt.ColorProcessing.Metrics`)
 
@@ -362,82 +415,82 @@ Quantizers reduce the number of colors in an image to generate optimized palette
 
 Adaptive quantizers analyze the image to generate an optimal palette for each specific image.
 
-| Quantizer                                                                                                        | Author                | Year | Type       | Reference                                                                                       |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------- | ---- | ---------- | ----------------------------------------------------------------------------------------------- |
-| [`PngQuantQuantizer`](https://pngquant.org/)                                                                     | Kornel Lesiński       | 2009 | Hybrid     | [pngquant algorithm](https://pngquant.org/)                                                     |
-| [`WuQuantizer`](http://www.ece.mcmaster.ca/~xwu/cq.c)                                                            | Xiaolin Wu            | 1991 | Variance   | [Graphics Gems II](https://dl.acm.org/doi/book/10.5555/90767)                                   |
-| [`MedianCutQuantizer`](https://dl.acm.org/doi/10.1145/965145.801294)                                             | Paul Heckbert         | 1982 | Splitting  | [SIGGRAPH '82](https://dl.acm.org/doi/10.1145/965145.801294)                                    |
-| [`OctreeQuantizer`](https://www.cubic.org/docs/octree.htm)                                                       | Gervautz, Purgathofer | 1988 | Tree       | [Graphics Gems](https://dl.acm.org/doi/book/10.5555/90767)                                      |
-| [`NeuquantQuantizer`](https://scientificgems.wordpress.com/stuff/neuquant-fast-high-quality-image-quantization/) | Anthony Dekker        | 1994 | Neural     | [Network: Computing](https://doi.org/10.1088/0954-898X_5_3_003)                                 |
-| [`KMeansQuantizer`](https://en.wikipedia.org/wiki/K-means_clustering)                                            | J. MacQueen           | 1967 | Clustering | [K-means++](https://dl.acm.org/doi/10.5555/1283383.1283494)                                     |
-| [`BisectingKMeansQuantizer`](https://www.cs.cmu.edu/~dunja/KDDpapers/Steinbach_IR.pdf)                            | M. Steinbach et al.   | 2000 | Clustering | [Bisecting K-Means](https://www.cs.cmu.edu/~dunja/KDDpapers/Steinbach_IR.pdf)                   |
-| [`IncrementalKMeansQuantizer`](https://en.wikipedia.org/wiki/Online_machine_learning)                            | -                     | -    | Clustering | [Online K-Means](https://dl.acm.org/doi/10.1145/2020408.2020576)                                |
-| [`GaussianMixtureQuantizer`](https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model)                 | Various               | 1977 | Clustering | [EM Algorithm](https://www.jstor.org/stable/2984875)                                            |
-| [`ColorQuantizationNetworkQuantizer`](https://en.wikipedia.org/wiki/Learning_vector_quantization)                | Various               | 1992 | Neural     | [LVQ](https://link.springer.com/chapter/10.1007/978-3-642-97610-0_6)                            |
-| [`AduQuantizer`](https://en.wikipedia.org/wiki/Competitive_learning)                                             | -                     | -    | Clustering | [Competitive learning](https://en.wikipedia.org/wiki/Competitive_learning)                      |
-| [`VarianceBasedQuantizer`](https://en.wikipedia.org/wiki/Variance)                                               | -                     | -    | Variance   | [Weighted variance optimization](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c) |
-| [`VarianceCutQuantizer`](https://en.wikipedia.org/wiki/Variance)                                                 | -                     | -    | Variance   | [Maximum variance splitting](https://github.com/kornelski/pngquant/blob/main/lib/mediancut.c)   |
-| [`BinarySplittingQuantizer`](https://en.wikipedia.org/wiki/Principal_component_analysis)                         | -                     | -    | Splitting  | [Principal axis splitting](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c) |
-| [`SpatialColorQuantizer`](https://en.wikipedia.org/wiki/Simulated_annealing)                                     | -                     | -    | Spatial    | [Simulated annealing](https://doi.org/10.1126/science.220.4598.671)                             |
-| [`FuzzyCMeansQuantizer`](https://en.wikipedia.org/wiki/Fuzzy_clustering#Fuzzy_C-means_clustering)                | J.C. Bezdek           | 1981 | Clustering | [Pattern Recognition](https://doi.org/10.1007/978-1-4757-0450-1). [Ref](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/cluster/_kmeans.py) |
-| [`PopularityQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Popularity_algorithm)                   | -                     | -    | Histogram  | [Most frequent colors](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c) |
-| [`UniformQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Uniform_quantization)                      | -                     | -    | Fixed      | [Uniform RGB grid](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)  |
-| [`HierarchicalCompetitiveLearningQuantizer`](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) | P. Scheunders         | 1997 | Clustering | [Hierarchical CL](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) - initialization-independent progressive splitting |
-| [`GeneticCMeansQuantizer`](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165)                   | P. Scheunders         | 1997 | Clustering | [Genetic Algorithm + C-Means](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) - global optimization avoids local optima |
-| [`EnhancedOctreeQuantizer`](http://www.leptonica.org/papers/colorquant.pdf)                                           | D.S. Bloomberg        | 2008 | Tree       | [Enhanced Octree](http://www.leptonica.org/color-quantization.html) - variance tracking, adaptive thresholds |
-| [`OctreeSomQuantizer`](https://doi.org/10.14311/NNW.2015.25.006)                                                  | Park, Kim, Cha        | 2015 | Neural     | [Octree-SOM](https://doi.org/10.14311/NNW.2015.25.006) - two-rate learning reduces color loss |
-| [`HuffmanQuantizer`](https://en.wikipedia.org/wiki/Huffman_coding)                                                | -                     | -    | Clustering | Huffman-inspired bottom-up merging - preserves dominant colors exactly |
+| Quantizer                                                                                                             | Author                | Year | Type       | Reference                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------- | ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`PngQuantQuantizer`](https://pngquant.org/)                                                                          | Kornel Lesinski       | 2009 | Hybrid     | [pngquant algorithm](https://pngquant.org/)                                                                                                                |
+| [`WuQuantizer`](http://www.ece.mcmaster.ca/~xwu/cq.c)                                                                 | Xiaolin Wu            | 1991 | Variance   | [Graphics Gems II](https://dl.acm.org/doi/book/10.5555/90767)                                                                                              |
+| [`MedianCutQuantizer`](https://dl.acm.org/doi/10.1145/965145.801294)                                                  | Paul Heckbert         | 1982 | Splitting  | [SIGGRAPH '82](https://dl.acm.org/doi/10.1145/965145.801294)                                                                                               |
+| [`OctreeQuantizer`](https://www.cubic.org/docs/octree.htm)                                                            | Gervautz, Purgathofer | 1988 | Tree       | [Graphics Gems](https://dl.acm.org/doi/book/10.5555/90767)                                                                                                 |
+| [`NeuquantQuantizer`](https://scientificgems.wordpress.com/stuff/neuquant-fast-high-quality-image-quantization/)      | Anthony Dekker        | 1994 | Neural     | [Network: Computing](https://doi.org/10.1088/0954-898X_5_3_003)                                                                                            |
+| [`KMeansQuantizer`](https://en.wikipedia.org/wiki/K-means_clustering)                                                 | J. MacQueen           | 1967 | Clustering | [K-means++](https://dl.acm.org/doi/10.5555/1283383.1283494)                                                                                                |
+| [`BisectingKMeansQuantizer`](https://www.cs.cmu.edu/~dunja/KDDpapers/Steinbach_IR.pdf)                                | M. Steinbach et al.   | 2000 | Clustering | [Bisecting K-Means](https://www.cs.cmu.edu/~dunja/KDDpapers/Steinbach_IR.pdf)                                                                              |
+| [`IncrementalKMeansQuantizer`](https://en.wikipedia.org/wiki/Online_machine_learning)                                 | -                     | -    | Clustering | [Online K-Means](https://dl.acm.org/doi/10.1145/2020408.2020576)                                                                                           |
+| [`GaussianMixtureQuantizer`](https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model)                      | Various               | 1977 | Clustering | [EM Algorithm](https://www.jstor.org/stable/2984875)                                                                                                       |
+| [`ColorQuantizationNetworkQuantizer`](https://en.wikipedia.org/wiki/Learning_vector_quantization)                     | Various               | 1992 | Neural     | [LVQ](https://link.springer.com/chapter/10.1007/978-3-642-97610-0_6)                                                                                       |
+| [`AduQuantizer`](https://en.wikipedia.org/wiki/Competitive_learning)                                                  | -                     | -    | Clustering | [Competitive learning](https://en.wikipedia.org/wiki/Competitive_learning)                                                                                 |
+| [`VarianceBasedQuantizer`](https://en.wikipedia.org/wiki/Variance)                                                    | -                     | -    | Variance   | [Weighted variance optimization](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)                                               |
+| [`VarianceCutQuantizer`](https://en.wikipedia.org/wiki/Variance)                                                      | -                     | -    | Variance   | [Maximum variance splitting](https://github.com/kornelski/pngquant/blob/main/lib/mediancut.c)                                                              |
+| [`BinarySplittingQuantizer`](https://en.wikipedia.org/wiki/Principal_component_analysis)                              | -                     | -    | Splitting  | [Principal axis splitting](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)                                                     |
+| [`SpatialColorQuantizer`](https://en.wikipedia.org/wiki/Simulated_annealing)                                          | -                     | -    | Spatial    | [Simulated annealing](https://doi.org/10.1126/science.220.4598.671)                                                                                        |
+| [`FuzzyCMeansQuantizer`](https://en.wikipedia.org/wiki/Fuzzy_clustering#Fuzzy_C-means_clustering)                     | J.C. Bezdek           | 1981 | Clustering | [Pattern Recognition](https://doi.org/10.1007/978-1-4757-0450-1). [Ref](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/cluster/_kmeans.py) |
+| [`PopularityQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Popularity_algorithm)                        | -                     | -    | Histogram  | [Most frequent colors](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)                                                         |
+| [`UniformQuantizer`](https://en.wikipedia.org/wiki/Color_quantization#Uniform_quantization)                           | -                     | -    | Fixed      | [Uniform RGB grid](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)                                                             |
+| [`HierarchicalCompetitiveLearningQuantizer`](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) | P. Scheunders         | 1997 | Clustering | [Hierarchical CL](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) - initialization-independent progressive splitting              |
+| [`GeneticCMeansQuantizer`](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165)                   | P. Scheunders         | 1997 | Clustering | [Genetic Algorithm + C-Means](https://www.sciencedirect.com/science/article/abs/pii/S0167865597001165) - global optimization avoids local optima           |
+| [`EnhancedOctreeQuantizer`](http://www.leptonica.org/papers/colorquant.pdf)                                           | D.S. Bloomberg        | 2008 | Tree       | [Enhanced Octree](http://www.leptonica.org/color-quantization.html) - variance tracking, adaptive thresholds                                               |
+| [`OctreeSomQuantizer`](https://doi.org/10.14311/NNW.2015.25.006)                                                      | Park, Kim, Cha        | 2015 | Neural     | [Octree-SOM](https://doi.org/10.14311/NNW.2015.25.006) - two-rate learning reduces color loss                                                              |
+| [`HuffmanQuantizer`](https://en.wikipedia.org/wiki/Huffman_coding)                                                    | -                     | -    | Clustering | Huffman-inspired bottom-up merging - preserves dominant colors exactly                                                                                     |
 
 #### Quantizer Parameters
 
-| Quantizer                           | Parameter               | Type    | Default   | Range        | Description                                      |
-| ----------------------------------- | ----------------------- | ------- | --------- | ------------ | ------------------------------------------------ |
-| **PngQuantQuantizer**               | `MedianCutIterations`   | `int`   | `3`       | 1-10         | Median Cut passes with weight adjustment         |
-|                                     | `KMeansIterations`      | `int`   | `10`      | 1-100        | K-means/Voronoi refinement iterations            |
-|                                     | `ConvergenceThreshold`  | `float` | `0.0001f` | 0.00001-0.01 | K-means convergence threshold                    |
-|                                     | `ErrorBoostFactor`      | `float` | `2.0f`    | 1-5          | Weight boost for underrepresented colors         |
-| **KMeansQuantizer**                 | `MaxIterations`         | `int`   | `100`     | 10-1000      | Maximum clustering iterations                    |
-|                                     | `ConvergenceThreshold`  | `float` | `0.001f`  | 0.0001-0.1   | Stop when centroids move less than this          |
-| **BisectingKMeansQuantizer**        | `MaxIterationsPerSplit` | `int`   | `10`      | 1-50         | K-means iterations per bisection                 |
-|                                     | `BisectionTrials`       | `int`   | `3`       | 1-10         | Trials per split (keeps best result)             |
-|                                     | `ConvergenceThreshold`  | `float` | `0.001f`  | 0.0001-0.1   | Stop when centroids move less than this          |
-| **IncrementalKMeansQuantizer**      | `RefinementPasses`      | `int`   | `3`       | 0-10         | Additional refinement passes after initial       |
-| **GaussianMixtureQuantizer**        | `MaxIterations`         | `int`   | `50`      | 10-500       | Maximum EM iterations                            |
-|                                     | `ConvergenceThreshold`  | `float` | `0.0001f` | 0.00001-0.01 | Log-likelihood convergence threshold             |
-|                                     | `MinVariance`           | `float` | `0.0001f` | 0.00001-0.01 | Minimum variance (prevents singular matrices)    |
-|                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
-| **ColorQuantizationNetworkQuantizer** | `MaxEpochs`           | `int`   | `100`     | 10-500       | Training epochs                                  |
-|                                     | `InitialLearningRate`   | `float` | `0.3f`    | 0.01-1.0     | Initial learning rate                            |
-|                                     | `ConscienceFactor`      | `float` | `0.1f`    | 0-1          | Balanced neuron usage factor                     |
-|                                     | `UseFrequencySensitive` | `bool`  | `true`    | -            | Enable frequency-sensitive learning              |
-|                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
-| **AduQuantizer**                    | `IterationCount`        | `int`   | `10`      | 1-100        | Competitive learning iterations                  |
-| **NeuquantQuantizer**               | `MaxIterations`         | `int`   | `100`     | 1-1000       | Network training iterations                      |
-|                                     | `InitialAlpha`          | `float` | `0.1f`    | 0.01-1.0     | Initial learning rate                            |
-| **SpatialColorQuantizer**           | `MaxIterations`         | `int`   | `100`     | 10-500       | Annealing iterations                             |
-|                                     | `SpatialWeight`         | `float` | `0.5f`    | 0-1          | Weight for spatial coherence                     |
-|                                     | `InitialTemperature`    | `float` | `1.0f`    | 0.1-10       | Starting annealing temperature                   |
-| **FuzzyCMeansQuantizer**            | `MaxIterations`         | `int`   | `100`     | 10-500       | Clustering iterations                            |
-|                                     | `Fuzziness`             | `float` | `2.0f`    | 1.1-5        | Cluster overlap (higher = softer)                |
-|                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
-| **HierarchicalCompetitiveLearningQuantizer** | `EpochsPerSplit` | `int`   | `5`       | 1-20         | CL training epochs after each cluster split      |
-|                                     | `InitialLearningRate`   | `float` | `0.1f`    | 0.01-0.5     | Initial learning rate for CL                     |
-|                                     | `MaxSampleSize`         | `int`   | `8192`    | 1000-100000  | Maximum histogram entries to process             |
-| **GeneticCMeansQuantizer**          | `PopulationSize`        | `int`   | `20`      | 10-100       | Number of candidate palettes                     |
-|                                     | `Generations`           | `int`   | `50`      | 10-500       | Number of generations to evolve                  |
-|                                     | `TournamentSize`        | `int`   | `3`       | 2-10         | Tournament selection size                        |
-|                                     | `MutationSigma`         | `float` | `10.0f`   | 1-50         | Gaussian mutation standard deviation             |
-|                                     | `EliteCount`            | `int`   | `2`       | 0-10         | Elite individuals preserved each generation      |
-|                                     | `CMeansIterationsPerOffspring` | `int` | `3`   | 1-10         | C-Means iterations per offspring                 |
-|                                     | `MaxSampleSize`         | `int`   | `10000`   | 1000-100000  | Maximum histogram entries to process             |
-| **EnhancedOctreeQuantizer**         | `MaxLevel`              | `int`   | `5`       | 3-7          | Tree depth (2^level max leaves)                  |
-|                                     | `ReservedLevel2Colors`  | `int`   | `64`      | 0-128        | Colors reserved at level 2 for coverage          |
-| **OctreeSomQuantizer**              | `MaxEpochs`             | `int`   | `50`      | 10-200       | SOM training epochs                              |
-|                                     | `WinnerLearningRate`    | `float` | `0.1f`    | 0.01-0.5     | Learning rate for BMU                            |
-|                                     | `NeighborLearningRate`  | `float` | `0.001f`  | 0.0001-0.01  | Learning rate for neighbors (1% of winner)       |
-|                                     | `MaxSampleSize`         | `int`   | `8192`    | 1000-100000  | Maximum histogram entries to process             |
-| **HuffmanQuantizer**                | `CandidatesToExamine`   | `int`   | `20`      | 5-100        | Top candidates for merge selection               |
-|                                     | `SimilarityWeight`      | `float` | `10000.0f`| 100-100000   | Balance frequency vs. similarity in merge        |
+| Quantizer                                    | Parameter                      | Type    | Default    | Range        | Description                                   |
+| -------------------------------------------- | ------------------------------ | ------- | ---------- | ------------ | --------------------------------------------- |
+| **PngQuantQuantizer**                        | `MedianCutIterations`          | `int`   | `3`        | 1-10         | Median Cut passes with weight adjustment      |
+|                                              | `KMeansIterations`             | `int`   | `10`       | 1-100        | K-means/Voronoi refinement iterations         |
+|                                              | `ConvergenceThreshold`         | `float` | `0.0001f`  | 0.00001-0.01 | K-means convergence threshold                 |
+|                                              | `ErrorBoostFactor`             | `float` | `2.0f`     | 1-5          | Weight boost for underrepresented colors      |
+| **KMeansQuantizer**                          | `MaxIterations`                | `int`   | `100`      | 10-1000      | Maximum clustering iterations                 |
+|                                              | `ConvergenceThreshold`         | `float` | `0.001f`   | 0.0001-0.1   | Stop when centroids move less than this       |
+| **BisectingKMeansQuantizer**                 | `MaxIterationsPerSplit`        | `int`   | `10`       | 1-50         | K-means iterations per bisection              |
+|                                              | `BisectionTrials`              | `int`   | `3`        | 1-10         | Trials per split (keeps best result)          |
+|                                              | `ConvergenceThreshold`         | `float` | `0.001f`   | 0.0001-0.1   | Stop when centroids move less than this       |
+| **IncrementalKMeansQuantizer**               | `RefinementPasses`             | `int`   | `3`        | 0-10         | Additional refinement passes after initial    |
+| **GaussianMixtureQuantizer**                 | `MaxIterations`                | `int`   | `50`       | 10-500       | Maximum EM iterations                         |
+|                                              | `ConvergenceThreshold`         | `float` | `0.0001f`  | 0.00001-0.01 | Log-likelihood convergence threshold          |
+|                                              | `MinVariance`                  | `float` | `0.0001f`  | 0.00001-0.01 | Minimum variance (prevents singular matrices) |
+|                                              | `MaxSampleSize`                | `int`   | `10000`    | 1000-100000  | Maximum histogram entries to process          |
+| **ColorQuantizationNetworkQuantizer**        | `MaxEpochs`                    | `int`   | `100`      | 10-500       | Training epochs                               |
+|                                              | `InitialLearningRate`          | `float` | `0.3f`     | 0.01-1.0     | Initial learning rate                         |
+|                                              | `ConscienceFactor`             | `float` | `0.1f`     | 0-1          | Balanced neuron usage factor                  |
+|                                              | `UseFrequencySensitive`        | `bool`  | `true`     | -            | Enable frequency-sensitive learning           |
+|                                              | `MaxSampleSize`                | `int`   | `10000`    | 1000-100000  | Maximum histogram entries to process          |
+| **AduQuantizer**                             | `IterationCount`               | `int`   | `10`       | 1-100        | Competitive learning iterations               |
+| **NeuquantQuantizer**                        | `MaxIterations`                | `int`   | `100`      | 1-1000       | Network training iterations                   |
+|                                              | `InitialAlpha`                 | `float` | `0.1f`     | 0.01-1.0     | Initial learning rate                         |
+| **SpatialColorQuantizer**                    | `MaxIterations`                | `int`   | `100`      | 10-500       | Annealing iterations                          |
+|                                              | `SpatialWeight`                | `float` | `0.5f`     | 0-1          | Weight for spatial coherence                  |
+|                                              | `InitialTemperature`           | `float` | `1.0f`     | 0.1-10       | Starting annealing temperature                |
+| **FuzzyCMeansQuantizer**                     | `MaxIterations`                | `int`   | `100`      | 10-500       | Clustering iterations                         |
+|                                              | `Fuzziness`                    | `float` | `2.0f`     | 1.1-5        | Cluster overlap (higher = softer)             |
+|                                              | `MaxSampleSize`                | `int`   | `10000`    | 1000-100000  | Maximum histogram entries to process          |
+| **HierarchicalCompetitiveLearningQuantizer** | `EpochsPerSplit`               | `int`   | `5`        | 1-20         | CL training epochs after each cluster split   |
+|                                              | `InitialLearningRate`          | `float` | `0.1f`     | 0.01-0.5     | Initial learning rate for CL                  |
+|                                              | `MaxSampleSize`                | `int`   | `8192`     | 1000-100000  | Maximum histogram entries to process          |
+| **GeneticCMeansQuantizer**                   | `PopulationSize`               | `int`   | `20`       | 10-100       | Number of candidate palettes                  |
+|                                              | `Generations`                  | `int`   | `50`       | 10-500       | Number of generations to evolve               |
+|                                              | `TournamentSize`               | `int`   | `3`        | 2-10         | Tournament selection size                     |
+|                                              | `MutationSigma`                | `float` | `10.0f`    | 1-50         | Gaussian mutation standard deviation          |
+|                                              | `EliteCount`                   | `int`   | `2`        | 0-10         | Elite individuals preserved each generation   |
+|                                              | `CMeansIterationsPerOffspring` | `int`   | `3`        | 1-10         | C-Means iterations per offspring              |
+|                                              | `MaxSampleSize`                | `int`   | `10000`    | 1000-100000  | Maximum histogram entries to process          |
+| **EnhancedOctreeQuantizer**                  | `MaxLevel`                     | `int`   | `5`        | 3-7          | Tree depth (2^level max leaves)               |
+|                                              | `ReservedLevel2Colors`         | `int`   | `64`       | 0-128        | Colors reserved at level 2 for coverage       |
+| **OctreeSomQuantizer**                       | `MaxEpochs`                    | `int`   | `50`       | 10-200       | SOM training epochs                           |
+|                                              | `WinnerLearningRate`           | `float` | `0.1f`     | 0.01-0.5     | Learning rate for BMU                         |
+|                                              | `NeighborLearningRate`         | `float` | `0.001f`   | 0.0001-0.01  | Learning rate for neighbors (1% of winner)    |
+|                                              | `MaxSampleSize`                | `int`   | `8192`     | 1000-100000  | Maximum histogram entries to process          |
+| **HuffmanQuantizer**                         | `CandidatesToExamine`          | `int`   | `20`       | 5-100        | Top candidates for merge selection            |
+|                                              | `SimilarityWeight`             | `float` | `10000.0f` | 100-100000   | Balance frequency vs. similarity in merge     |
 
 ### Quantizer Wrappers
 
@@ -445,28 +498,28 @@ Wrappers that enhance other quantizers by applying additional preprocessing or p
 
 #### Preprocessing Wrappers
 
-| Wrapper                                                                              | Description                                                                                                                              |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [`PcaQuantizerWrapper`](https://en.wikipedia.org/wiki/Principal_component_analysis)  | Transforms colors to PCA-aligned space before quantization. [Ref](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/decomposition/_pca.py) |
-| [`BitReductionWrapper`](https://en.wikipedia.org/wiki/Bit_manipulation)              | Reduces color precision by masking off LSBs, creating posterized/retro effects and faster quantization                                   |
+| Wrapper                                                                             | Description                                                                                                                                             |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`PcaQuantizerWrapper`](https://en.wikipedia.org/wiki/Principal_component_analysis) | Transforms colors to PCA-aligned space before quantization. [Ref](https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/decomposition/_pca.py) |
+| [`BitReductionWrapper`](https://en.wikipedia.org/wiki/Bit_manipulation)             | Reduces color precision by masking off LSBs, creating posterized/retro effects and faster quantization                                                  |
 
 #### Postprocessing Wrappers
 
-| Wrapper                                                                              | Description                                                                                                                              |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [`KMeansRefinementWrapper`](https://en.wikipedia.org/wiki/K-means_clustering)        | Refines any quantizer's output using iterative K-means-style clustering. [Ref](https://github.com/ImageMagick/ImageMagick)               |
-| [`AcoRefinementWrapper`](https://en.wikipedia.org/wiki/Ant_colony_optimization)      | Refines palette using Ant Colony Optimization for escaping local optima. [Ref](https://doi.org/10.1109/4235.585892)                      |
+| Wrapper                                                                         | Description                                                                                                                |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [`KMeansRefinementWrapper`](https://en.wikipedia.org/wiki/K-means_clustering)   | Refines any quantizer's output using iterative K-means-style clustering. [Ref](https://github.com/ImageMagick/ImageMagick) |
+| [`AcoRefinementWrapper`](https://en.wikipedia.org/wiki/Ant_colony_optimization) | Refines palette using Ant Colony Optimization for escaping local optima. [Ref](https://doi.org/10.1109/4235.585892)        |
 
 #### Wrapper Parameters
 
-| Wrapper                    | Parameter          | Type     | Default | Range    | Description                                   |
-| -------------------------- | ------------------ | -------- | ------- | -------- | --------------------------------------------- |
-| **BitReductionWrapper**    | `bitsToRemove`     | `int`    | `1`     | 1-7      | LSBs to mask off per component (1=128 levels) |
-| **KMeansRefinementWrapper** | `iterations`      | `int`    | `10`    | 1-100    | K-means refinement iterations                 |
-| **AcoRefinementWrapper**   | `antCount`         | `int`    | `20`    | 1-100    | Number of ants exploring solutions            |
-|                            | `iterations`       | `int`    | `50`    | 1-500    | ACO iterations                                |
-|                            | `evaporationRate`  | `double` | `0.1`   | 0.0-1.0  | Pheromone evaporation rate                    |
-|                            | `seed`             | `int?`   | `null`  | -        | Random seed for reproducibility               |
+| Wrapper                     | Parameter         | Type     | Default | Range   | Description                                   |
+| --------------------------- | ----------------- | -------- | ------- | ------- | --------------------------------------------- |
+| **BitReductionWrapper**     | `bitsToRemove`    | `int`    | `1`     | 1-7     | LSBs to mask off per component (1=128 levels) |
+| **KMeansRefinementWrapper** | `iterations`      | `int`    | `10`    | 1-100   | K-means refinement iterations                 |
+| **AcoRefinementWrapper**    | `antCount`        | `int`    | `20`    | 1-100   | Number of ants exploring solutions            |
+|                             | `iterations`      | `int`    | `50`    | 1-500   | ACO iterations                                |
+|                             | `evaporationRate` | `double` | `0.1`   | 0.0-1.0 | Pheromone evaporation rate                    |
+|                             | `seed`            | `int?`   | `null`  | -       | Random seed for reproducibility               |
 
 ```csharp
 // Wrap a quantizer with PCA preprocessing
@@ -486,7 +539,7 @@ var acoRefined = new AcoRefinementWrapper<OctreeQuantizer>(
 // Reduce color precision for retro/posterized effects (4 bits removed = 16 levels per channel)
 var posterized = new BitReductionWrapper<MedianCutQuantizer>(new MedianCutQuantizer(), bitsToRemove: 4);
 
-// Chain wrappers for combined effects: BitReduction → KMeans → PCA → Octree
+// Chain wrappers for combined effects: BitReduction -> KMeans -> PCA -> Octree
 var chained = new BitReductionWrapper<KMeansRefinementWrapper<PcaQuantizerWrapper<OctreeQuantizer>>>(
   new KMeansRefinementWrapper<PcaQuantizerWrapper<OctreeQuantizer>>(
     new PcaQuantizerWrapper<OctreeQuantizer>(new OctreeQuantizer()),
@@ -499,16 +552,16 @@ var chained = new BitReductionWrapper<KMeansRefinementWrapper<PcaQuantizerWrappe
 
 Fixed palette quantizers use predefined color palettes for specific platforms or standards.
 
-| Quantizer                                                                              | Colors | Use Case     | Description                      |
-| -------------------------------------------------------------------------------------- | ------ | ------------ | -------------------------------- |
-| [`WebSafeQuantizer`](https://en.wikipedia.org/wiki/Web_colors#Web-safe_colors)         | 216    | Web graphics | [Browser-safe web palette](https://www.color-hex.com/216-web-safe-colors/) |
-| [`Ega16Quantizer`](https://en.wikipedia.org/wiki/Enhanced_Graphics_Adapter#Color_palette) | 16  | Retro DOS    | [IBM EGA 16-color palette](https://moddingwiki.shikadi.net/wiki/EGA_Palette) |
-| [`Vga256Quantizer`](https://en.wikipedia.org/wiki/VGA#Color_palette)                   | 256    | Retro DOS    | [VGA default 256-color palette](https://moddingwiki.shikadi.net/wiki/VGA_Palette) |
-| [`Cga4Quantizer`](https://en.wikipedia.org/wiki/Color_Graphics_Adapter#Color_palette) | 4      | Retro DOS    | [6 CGA palettes](https://moddingwiki.shikadi.net/wiki/CGA_Palette): Palette0 (Green/Red/Brown), Palette1 (Cyan/Magenta/White), Mode5 (Cyan/Red/White) - each with Low/High intensity |
-| [`Mac8BitQuantizer`](https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_graphics#Apple) | 256 | Retro Mac | [Classic Macintosh system palette](https://lospec.com/palette-list/macintosh-8-bit-system-palette) |
-| `MonochromeQuantizer`                                                                  | 2      | B&W          | Black and white only             |
-| [`GrayscaleQuantizer`](https://en.wikipedia.org/wiki/Grayscale)                        | 2-256  | Grayscale    | [Grayscale ramp](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c) |
-| `CustomPaletteQuantizer`                                                               | Any    | Custom       | User-defined palette             |
+| Quantizer                                                                                          | Colors | Use Case     | Description                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------- | ------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`WebSafeQuantizer`](https://en.wikipedia.org/wiki/Web_colors#Web-safe_colors)                     | 216    | Web graphics | [Browser-safe web palette](https://www.color-hex.com/216-web-safe-colors/)                                                                                                           |
+| [`Ega16Quantizer`](https://en.wikipedia.org/wiki/Enhanced_Graphics_Adapter#Color_palette)          | 16     | Retro DOS    | [IBM EGA 16-color palette](https://moddingwiki.shikadi.net/wiki/EGA_Palette)                                                                                                         |
+| [`Vga256Quantizer`](https://en.wikipedia.org/wiki/VGA#Color_palette)                               | 256    | Retro DOS    | [VGA default 256-color palette](https://moddingwiki.shikadi.net/wiki/VGA_Palette)                                                                                                    |
+| [`Cga4Quantizer`](https://en.wikipedia.org/wiki/Color_Graphics_Adapter#Color_palette)              | 4      | Retro DOS    | [6 CGA palettes](https://moddingwiki.shikadi.net/wiki/CGA_Palette): Palette0 (Green/Red/Brown), Palette1 (Cyan/Magenta/White), Mode5 (Cyan/Red/White) - each with Low/High intensity |
+| [`Mac8BitQuantizer`](https://en.wikipedia.org/wiki/List_of_8-bit_computer_hardware_graphics#Apple) | 256    | Retro Mac    | [Classic Macintosh system palette](https://lospec.com/palette-list/macintosh-8-bit-system-palette)                                                                                   |
+| `MonochromeQuantizer`                                                                              | 2      | B&W          | Black and white only                                                                                                                                                                 |
+| [`GrayscaleQuantizer`](https://en.wikipedia.org/wiki/Grayscale)                                    | 2-256  | Grayscale    | [Grayscale ramp](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/quantize.c)                                                                                         |
+| `CustomPaletteQuantizer`                                                                           | Any    | Custom       | User-defined palette                                                                                                                                                                 |
 
 ### Quantizer Usage
 
@@ -540,7 +593,7 @@ using var pngResult = bitmap.ReduceColors(pngQuant, ErrorDiffusion.FloydSteinber
 
 ### K-Means Color Metrics
 
-The `KMeansQuantizer` supports any `IColorMetric<Bgra8888>` for clustering. See [Color Metrics](#distance-calculators-systemdrawingcolorspacesdistances) for all available metrics.
+The `KMeansQuantizer` supports any `IColorMetric<Bgra8888>` for clustering. See [Color Metrics](#distance-calculators-hawkyntcolorprocessingmetrics) for all available metrics.
 
 ```csharp
 // Default K-Means (squared Euclidean - fastest)
@@ -564,47 +617,47 @@ Error diffusion dithering distributes quantization error to neighboring pixels f
 
 ### Error-Diffusion Ditherers
 
-| Ditherer                                                                              | Author                               | Year | Neighbors | Reference                                                                                                                                           |
-| ------------------------------------------------------------------------------------- | ------------------------------------ | ---- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Atkinson`](https://en.wikipedia.org/wiki/Atkinson_dithering)                        | Bill Atkinson                        | 1984 | 6         | [Apple MacPaint](https://en.wikipedia.org/wiki/MacPaint), 75% error diffusion. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`JarvisJudiceNinke`](<https://doi.org/10.1016/S0146-664X%2876%2980003-2>)                | J.F. Jarvis, C.N. Judice, W.H. Ninke | 1976 | 12        | [CGIP vol. 5](https://doi.org/10.1016/S0146-664X%2876%2980003-2). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`Pigeon`](https://hbfs.wordpress.com/2013/12/31/dithering/)                          | Steven Pigeon                        | 2013 | 7         | [Blog post with analysis](https://hbfs.wordpress.com/2013/12/31/dithering/). [Ref](https://github.com/stevenpigeon/DitherBenchmark) |
-| [`ShiauFan`](https://patents.google.com/patent/US5353127A)                            | J.N. Shiau, Z. Fan                   | 1993 | 4         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`ShiauFan2`](https://patents.google.com/patent/US5353127A)                           | J.N. Shiau, Z. Fan                   | 1993 | 5         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`StevensonArce`](https://opg.optica.org/josaa/abstract.cfm?uri=josaa-2-7-1009)       | R.L. Stevenson, G.R. Arce            | 1985 | 12        | [JOSA A vol. 2](https://opg.optica.org/josaa/abstract.cfm?uri=josaa-2-7-1009). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`Stucki`](https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html) | P. Stucki                            | 1981 | 12        | [IBM Research RZ1060](https://en.wikipedia.org/wiki/Error_diffusion). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| [`Burkes`](https://en.wikipedia.org/wiki/Error_diffusion)                             | D. Burkes                            | 1988 | 7         | CIS Graphics Support Forum, LIB 15. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c) |
-| `Diagonal`                                                                            | -                                    | -    | 1         | Single diagonal neighbor                                                                                                                            |
-| `Diamond`                                                                             | -                                    | -    | 8         | Symmetric diamond pattern                                                                                                                           |
-| `DoubleDown`                                                                          | -                                    | -    | 3         | Two rows down                                                                                                                                       |
-| `Down`                                                                                | -                                    | -    | 1         | Single pixel below                                                                                                                                  |
-| `EqualFloydSteinberg`                                                                 | -                                    | -    | 4         | Equal weight distribution variant                                                                                                                   |
-| `FalseFloydSteinberg`                                                                 | -                                    | -    | 3         | Simplified 3-neighbor variant                                                                                                                       |
-| [`Fan93`](https://doi.org/10.1117/12.59413)                                           | Z. Fan                               | 1992 | 4         | [SPIE'92](https://doi.org/10.1117/12.59413), "A Simple Modification of Error Diffusion Weights"                                                     |
-| [`FloydSteinberg`](https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering)   | R.W. Floyd, L. Steinberg             | 1976 | 4         | [Proc. SID vol. 17](https://steveomohundro.com/wp-content/uploads/2009/03/omohundro90_floyd_steinberg_dithering.pdf), "An Adaptive Algorithm for Spatial Greyscale"                                               |
-| `HorizontalDiamond`                                                                   | -                                    | -    | 6         | Diamond with horizontal bias                                                                                                                        |
-| [`Sierra`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)            | Frankie Sierra                       | 1989 | 10        | Three-line filter, [King's Quest](https://en.wikipedia.org/wiki/King%27s_Quest) era                                                                 |
-| [`SierraLite`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)        | Frankie Sierra                       | 1990 | 3         | Filter Lite - minimal variant                                                                                                                       |
-| `Simple`                                                                              | -                                    | -    | 1         | Single neighbor diffusion                                                                                                                           |
-| `TwoD`                                                                                | -                                    | -    | 2         | Simple 2-neighbor                                                                                                                                   |
-| [`TwoRowSierra`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)      | Frankie Sierra                       | 1990 | 7         | Two-row variant                                                                                                                                     |
-| `VerticalDiamond`                                                                     | -                                    | -    | 8         | Diamond with vertical bias                                                                                                                          |
+| Ditherer                                                                                      | Author                               | Year | Neighbors | Reference                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------- | ------------------------------------ | ---- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Atkinson`](https://en.wikipedia.org/wiki/Atkinson_dithering)                                | Bill Atkinson                        | 1984 | 6         | [Apple MacPaint](https://en.wikipedia.org/wiki/MacPaint), 75% error diffusion. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)   |
+| [`JarvisJudiceNinke`](<https://doi.org/10.1016/S0146-664X%2876%2980003-2>)                    | J.F. Jarvis, C.N. Judice, W.H. Ninke | 1976 | 12        | [CGIP vol. 5](https://doi.org/10.1016/S0146-664X%2876%2980003-2). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)                |
+| [`Pigeon`](https://hbfs.wordpress.com/2013/12/31/dithering/)                                  | Steven Pigeon                        | 2013 | 7         | [Blog post with analysis](https://hbfs.wordpress.com/2013/12/31/dithering/). [Ref](https://github.com/stevenpigeon/DitherBenchmark)                                 |
+| [`ShiauFan`](https://patents.google.com/patent/US5353127A)                                    | J.N. Shiau, Z. Fan                   | 1993 | 4         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)             |
+| [`ShiauFan2`](https://patents.google.com/patent/US5353127A)                                   | J.N. Shiau, Z. Fan                   | 1993 | 5         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)             |
+| [`StevensonArce`](https://opg.optica.org/josaa/abstract.cfm?uri=josaa-2-7-1009)               | R.L. Stevenson, G.R. Arce            | 1985 | 12        | [JOSA A vol. 2](https://opg.optica.org/josaa/abstract.cfm?uri=josaa-2-7-1009). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)   |
+| [`Stucki`](https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html) | P. Stucki                            | 1981 | 12        | [IBM Research RZ1060](https://en.wikipedia.org/wiki/Error_diffusion). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)            |
+| [`Burkes`](https://en.wikipedia.org/wiki/Error_diffusion)                                     | D. Burkes                            | 1988 | 7         | CIS Graphics Support Forum, LIB 15. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)                                              |
+| `Diagonal`                                                                                    | -                                    | -    | 1         | Single diagonal neighbor                                                                                                                                            |
+| `Diamond`                                                                                     | -                                    | -    | 8         | Symmetric diamond pattern                                                                                                                                           |
+| `DoubleDown`                                                                                  | -                                    | -    | 3         | Two rows down                                                                                                                                                       |
+| `Down`                                                                                        | -                                    | -    | 1         | Single pixel below                                                                                                                                                  |
+| `EqualFloydSteinberg`                                                                         | -                                    | -    | 4         | Equal weight distribution variant                                                                                                                                   |
+| `FalseFloydSteinberg`                                                                         | -                                    | -    | 3         | Simplified 3-neighbor variant                                                                                                                                       |
+| [`Fan93`](https://doi.org/10.1117/12.59413)                                                   | Z. Fan                               | 1992 | 4         | [SPIE'92](https://doi.org/10.1117/12.59413), "A Simple Modification of Error Diffusion Weights"                                                                     |
+| [`FloydSteinberg`](https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering)           | R.W. Floyd, L. Steinberg             | 1976 | 4         | [Proc. SID vol. 17](https://steveomohundro.com/wp-content/uploads/2009/03/omohundro90_floyd_steinberg_dithering.pdf), "An Adaptive Algorithm for Spatial Greyscale" |
+| `HorizontalDiamond`                                                                           | -                                    | -    | 6         | Diamond with horizontal bias                                                                                                                                        |
+| [`Sierra`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)                    | Frankie Sierra                       | 1989 | 10        | Three-line filter, [King's Quest](https://en.wikipedia.org/wiki/King%27s_Quest) era                                                                                 |
+| [`SierraLite`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)                | Frankie Sierra                       | 1990 | 3         | Filter Lite - minimal variant                                                                                                                                       |
+| `Simple`                                                                                      | -                                    | -    | 1         | Single neighbor diffusion                                                                                                                                           |
+| `TwoD`                                                                                        | -                                    | -    | 2         | Simple 2-neighbor                                                                                                                                                   |
+| [`TwoRowSierra`](https://en.wikipedia.org/wiki/Error_diffusion#Sierra_dithering)              | Frankie Sierra                       | 1990 | 7         | Two-row variant                                                                                                                                                     |
+| `VerticalDiamond`                                                                             | -                                    | -    | 8         | Diamond with vertical bias                                                                                                                                          |
 
 ### Ordered Dithering
 
 Ordered dithering uses threshold matrices to determine pixel output. Unlike error diffusion, pixels can be processed independently (parallelizable).
 
-| Ditherer                                                        | Author      | Year | Size  | Description                                                                 |
-| --------------------------------------------------------------- | ----------- | ---- | ----- | --------------------------------------------------------------------------- |
-| [`Bayer2x2`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 2×2   | Smallest [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) threshold matrix   |
-| [`Bayer4x4`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 4×4   | Standard [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) threshold matrix   |
-| [`Bayer8x8`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 8×8   | Large [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) matrix (256 levels)   |
-| [`Bayer16x16`](https://en.wikipedia.org/wiki/Ordered_dithering) | Bryce Bayer | 1973 | 16×16 | Very large [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) matrix           |
-| [`ClusterDot4x4`](https://en.wikipedia.org/wiki/Halftone)       | -           | -    | 4×4   | Clustered dot pattern for smoother appearance                               |
-| [`ClusterDot8x8`](https://en.wikipedia.org/wiki/Halftone)       | -           | -    | 8×8   | Larger cluster dot pattern                                                  |
-| `Diagonal4x4`                                                   | -           | -    | 4×4   | Diagonal line pattern                                                       |
-| [`Halftone4x4`](https://en.wikipedia.org/wiki/Halftone)         | -           | -    | 4×4   | Simulates [halftone](https://en.wikipedia.org/wiki/Halftone) printing       |
-| [`Halftone8x8`](https://en.wikipedia.org/wiki/Halftone)         | -           | -    | 8×8   | Larger halftone pattern                                                     |
+| Ditherer                                                        | Author      | Year | Size  | Description                                                                                                      |
+| --------------------------------------------------------------- | ----------- | ---- | ----- | ---------------------------------------------------------------------------------------------------------------- |
+| [`Bayer2x2`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 2x2   | Smallest [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) threshold matrix |
+| [`Bayer4x4`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 4x4   | Standard [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) threshold matrix |
+| [`Bayer8x8`](https://en.wikipedia.org/wiki/Ordered_dithering)   | Bryce Bayer | 1973 | 8x8   | Large [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) matrix (256 levels) |
+| [`Bayer16x16`](https://en.wikipedia.org/wiki/Ordered_dithering) | Bryce Bayer | 1973 | 16x16 | Very large [Bayer](https://en.wikipedia.org/wiki/Ordered_dithering#Pre-calculated_threshold_maps) matrix         |
+| [`ClusterDot4x4`](https://en.wikipedia.org/wiki/Halftone)       | -           | -    | 4x4   | Clustered dot pattern for smoother appearance                                                                    |
+| [`ClusterDot8x8`](https://en.wikipedia.org/wiki/Halftone)       | -           | -    | 8x8   | Larger cluster dot pattern                                                                                       |
+| `Diagonal4x4`                                                   | -           | -    | 4x4   | Diagonal line pattern                                                                                            |
+| [`Halftone4x4`](https://en.wikipedia.org/wiki/Halftone)         | -           | -    | 4x4   | Simulates [halftone](https://en.wikipedia.org/wiki/Halftone) printing                                            |
+| [`Halftone8x8`](https://en.wikipedia.org/wiki/Halftone)         | -           | -    | 8x8   | Larger halftone pattern                                                                                          |
 
 ```csharp
 // Ordered dithering with Bayer matrix
@@ -618,14 +671,14 @@ var reduced = OrderedDitherer.Bayer4x4.WithStrength(0.5f);
 
 Noise dithering adds random or pseudo-random thresholds before quantization. Can be processed in parallel.
 
-| Ditherer                                                                            | Description                                                        |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [`WhiteNoise`](https://en.wikipedia.org/wiki/White_noise)                           | Uniform random threshold with equal energy at all frequencies      |
-| [`BlueNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Blue_noise)             | Spatially-filtered noise with reduced low-frequency content        |
-| [`PinkNoise`](https://en.wikipedia.org/wiki/Pink_noise)                             | 1/f noise, equal energy per octave, more natural-looking           |
-| [`BrownNoise`](https://en.wikipedia.org/wiki/Brownian_noise)                        | 1/f² noise (Brownian motion), strong low-frequency, smooth organic |
-| [`VioletNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Violet_noise)         | f noise, high-frequency emphasis, sharp textured appearance        |
-| [`GreyNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Gray_noise)             | Perceptually uniform noise adjusted for human vision response      |
+| Ditherer                                                                                                                                   | Description                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [`WhiteNoise`](https://en.wikipedia.org/wiki/White_noise)                                                                                  | Uniform random threshold with equal energy at all frequencies                                   |
+| [`BlueNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Blue_noise)                                                                    | Spatially-filtered noise with reduced low-frequency content                                     |
+| [`PinkNoise`](https://en.wikipedia.org/wiki/Pink_noise)                                                                                    | 1/f noise, equal energy per octave, more natural-looking                                        |
+| [`BrownNoise`](https://en.wikipedia.org/wiki/Brownian_noise)                                                                               | 1/f^2 noise (Brownian motion), strong low-frequency, smooth organic                             |
+| [`VioletNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Violet_noise)                                                                | f noise, high-frequency emphasis, sharp textured appearance                                     |
+| [`GreyNoise`](https://en.wikipedia.org/wiki/Colors_of_noise#Gray_noise)                                                                    | Perceptually uniform noise adjusted for human vision response                                   |
 | [`InterleavedGradientNoise`](https://blog.demofox.org/2022/01/01/interleaved-gradient-noise-a-different-kind-of-low-discrepancy-sequence/) | Deterministic pseudo-random noise for temporal AA. [Ref](https://www.shadertoy.com/view/4djSRW) |
 
 ```csharp
@@ -646,24 +699,24 @@ var custom = NoiseDitherer.WhiteNoise.WithStrength(0.8f).WithSeed(12345);
 
 High-quality ditherers for specialized applications with superior visual quality.
 
-| Ditherer                                                                               | Author              | Year  | Type          | Description                                                                                        |
-| -------------------------------------------------------------------------------------- | ------------------- | ----- | ------------- | -------------------------------------------------------------------------------------------------- |
-| [`Yliluoma1`](https://bisqwit.iki.fi/story/howto/dither/jy/)                           | Joel Yliluoma       | 2011  | Pattern       | Position-dependent mixing patterns; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%201Algorithm1)  |
-| [`Yliluoma2`](https://bisqwit.iki.fi/story/howto/dither/jy/)                           | Joel Yliluoma       | 2011  | Pattern       | Improved Yliluoma with candidate counting; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%202Algorithm2)  |
-| [`Yliluoma3`](https://bisqwit.iki.fi/story/howto/dither/jy/)                           | Joel Yliluoma       | 2011  | Pattern       | Threshold-based mixing; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%203Algorithm3)  |
-| [`Yliluoma4`](https://bisqwit.iki.fi/story/howto/dither/jy/)                           | Joel Yliluoma       | 2011  | Pattern       | Balanced mixing strategy; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%204Algorithm4)  |
-| [`DbsDitherer`](https://doi.org/10.1145/127719.122734)                                 | Mitchel et al.      | 1987  | Iterative     | [Direct Binary Search](https://doi.org/10.1145/127719.122734) optimization            |
-| [`Riemersma`](https://www.compuphase.com/riemer.htm)                                   | Thiadmer Riemersma  | 1998  | Space-filling | [Hilbert](https://en.wikipedia.org/wiki/Hilbert_curve)/[Peano](https://en.wikipedia.org/wiki/Peano_curve) curve error diffusion |
-| [`Ostromoukhov`](https://perso.liris.cnrs.fr/victor.ostromoukhov/)                     | Victor Ostromoukhov | 2001  | Adaptive      | [Variable-coefficient error diffusion](https://doi.org/10.1145/383259.383326)                      |
-| [`Knoll`](https://bisqwit.iki.fi/story/howto/dither/jy/#KnollDithering)                | Thomas Knoll        | 1990s | Pattern       | [Adobe Photoshop](https://en.wikipedia.org/wiki/Adobe_Photoshop) pattern dithering                 |
-| `NClosestDitherer`                                                                     | -                   | -     | Pattern       | N-closest palette color mixing                                                                     |
-| `NConvexDitherer`                                                                      | -                   | -     | Pattern       | Convex combination of palette colors                                                               |
-| [`VoidAndClusterDitherer`](https://doi.org/10.1117/12.152707)                          | Robert Ulichney     | 1993  | Ordered       | [Blue noise](https://en.wikipedia.org/wiki/Colors_of_noise#Blue_noise) via void-and-cluster method |
-| [`BarycentricDitherer`](https://en.wikipedia.org/wiki/Barycentric_coordinate_system)   | -                   | -     | Ordered       | Triangle-based 3-color interpolation with Bayer pattern                                            |
-| [`TinDitherer`](https://en.wikipedia.org/wiki/Triangulated_irregular_network)          | -                   | -     | Ordered       | Tetrahedral 4-color interpolation with Bayer pattern                                               |
-| [`NaturalNeighbourDitherer`](https://en.wikipedia.org/wiki/Natural_neighbor_interpolation) | -               | -     | Ordered       | [Voronoi](https://en.wikipedia.org/wiki/Voronoi_diagram)-based area-weighted color interpolation   |
-| [`AverageDitherer`](https://www.graphicsacademy.com/what_dithera.php)                  | -                   | -     | Custom        | Uses local region averages as thresholds                                                           |
-| `DizzyDitherer`                                                                        | -                   | -     | ErrorDiffusion| Spiral-based error distribution reducing directional artifacts                                     |
+| Ditherer                                                                                   | Author              | Year  | Type           | Description                                                                                                                     |
+| ------------------------------------------------------------------------------------------ | ------------------- | ----- | -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [`Yliluoma1`](https://bisqwit.iki.fi/story/howto/dither/jy/)                               | Joel Yliluoma       | 2011  | Pattern        | Position-dependent mixing patterns; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%201Algorithm1)           |
+| [`Yliluoma2`](https://bisqwit.iki.fi/story/howto/dither/jy/)                               | Joel Yliluoma       | 2011  | Pattern        | Improved Yliluoma with candidate counting; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%202Algorithm2)    |
+| [`Yliluoma3`](https://bisqwit.iki.fi/story/howto/dither/jy/)                               | Joel Yliluoma       | 2011  | Pattern        | Threshold-based mixing; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%203Algorithm3)                       |
+| [`Yliluoma4`](https://bisqwit.iki.fi/story/howto/dither/jy/)                               | Joel Yliluoma       | 2011  | Pattern        | Balanced mixing strategy; [ref impl](https://bisqwit.iki.fi/story/howto/dither/jy/#_Appendix%204Algorithm4)                     |
+| [`DbsDitherer`](https://doi.org/10.1145/127719.122734)                                     | Mitchel et al.      | 1987  | Iterative      | [Direct Binary Search](https://doi.org/10.1145/127719.122734) optimization                                                      |
+| [`Riemersma`](https://www.compuphase.com/riemer.htm)                                       | Thiadmer Riemersma  | 1998  | Space-filling  | [Hilbert](https://en.wikipedia.org/wiki/Hilbert_curve)/[Peano](https://en.wikipedia.org/wiki/Peano_curve) curve error diffusion |
+| [`Ostromoukhov`](https://perso.liris.cnrs.fr/victor.ostromoukhov/)                         | Victor Ostromoukhov | 2001  | Adaptive       | [Variable-coefficient error diffusion](https://doi.org/10.1145/383259.383326)                                                   |
+| [`Knoll`](https://bisqwit.iki.fi/story/howto/dither/jy/#KnollDithering)                    | Thomas Knoll        | 1990s | Pattern        | [Adobe Photoshop](https://en.wikipedia.org/wiki/Adobe_Photoshop) pattern dithering                                              |
+| `NClosestDitherer`                                                                         | -                   | -     | Pattern        | N-closest palette color mixing                                                                                                  |
+| `NConvexDitherer`                                                                          | -                   | -     | Pattern        | Convex combination of palette colors                                                                                            |
+| [`VoidAndClusterDitherer`](https://doi.org/10.1117/12.152707)                              | Robert Ulichney     | 1993  | Ordered        | [Blue noise](https://en.wikipedia.org/wiki/Colors_of_noise#Blue_noise) via void-and-cluster method                              |
+| [`BarycentricDitherer`](https://en.wikipedia.org/wiki/Barycentric_coordinate_system)       | -                   | -     | Ordered        | Triangle-based 3-color interpolation with Bayer pattern                                                                         |
+| [`TinDitherer`](https://en.wikipedia.org/wiki/Triangulated_irregular_network)              | -                   | -     | Ordered        | Tetrahedral 4-color interpolation with Bayer pattern                                                                            |
+| [`NaturalNeighbourDitherer`](https://en.wikipedia.org/wiki/Natural_neighbor_interpolation) | -                   | -     | Ordered        | [Voronoi](https://en.wikipedia.org/wiki/Voronoi_diagram)-based area-weighted color interpolation                                |
+| [`AverageDitherer`](https://www.graphicsacademy.com/what_dithera.php)                      | -                   | -     | Custom         | Uses local region averages as thresholds                                                                                        |
+| `DizzyDitherer`                                                                            | -                   | -     | ErrorDiffusion | Spiral-based error distribution reducing directional artifacts                                                                  |
 
 ### Adaptive Ditherers
 
@@ -705,11 +758,11 @@ var custom = ErrorDiffusion.JarvisJudiceNinke.Serpentine.WithStrength(0.9f);
 
 The [Riemersma ditherer](https://www.compuphase.com/riemer.htm) uses space-filling curves to traverse the image, maintaining spatial locality for better error diffusion. [Interactive visualization](https://www.mathematik.ch/anwendungenmath/fractal/hilbert/)
 
-| Curve Type                                                       | Subdivision | Order Range | Coverage per Order |
-| ---------------------------------------------------------------- | ----------- | ----------- | ------------------ |
-| [Hilbert](https://en.wikipedia.org/wiki/Hilbert_curve)           | 2×2         | 1-7         | 2ⁿ × 2ⁿ pixels     |
-| [Peano](https://en.wikipedia.org/wiki/Peano_curve)               | 3×3         | 1-5         | 3ⁿ × 3ⁿ pixels     |
-| Linear                                                           | -           | -           | Serpentine scan    |
+| Curve Type                                             | Subdivision | Order Range | Coverage per Order |
+| ------------------------------------------------------ | ----------- | ----------- | ------------------ |
+| [Hilbert](https://en.wikipedia.org/wiki/Hilbert_curve) | 2x2         | 1-7         | 2ⁿ x 2ⁿ pixels   |
+| [Peano](https://en.wikipedia.org/wiki/Peano_curve)     | 3x3         | 1-5         | 3ⁿ x 3ⁿ pixels   |
+| Linear                                                 | -           | -           | Serpentine scan    |
 
 ```csharp
 // Pre-configured instances
@@ -726,8 +779,8 @@ var customHilbert = new RiemersmaDitherer(16, SpaceFillingCurve.Hilbert);
 var customPeano = new RiemersmaDitherer(16, SpaceFillingCurve.Peano);
 
 // Specify exact curve order (auto-calculated if omitted)
-var hilbertOrder4 = new RiemersmaDitherer(16, SpaceFillingCurve.Hilbert, 4);  // 16×16 coverage
-var peanoOrder3 = new RiemersmaDitherer(16, SpaceFillingCurve.Peano, 3);      // 27×27 coverage
+var hilbertOrder4 = new RiemersmaDitherer(16, SpaceFillingCurve.Hilbert, 4);  // 16x16 coverage
+var peanoOrder3 = new RiemersmaDitherer(16, SpaceFillingCurve.Peano, 3);      // 27x27 coverage
 ```
 
 ---
@@ -757,86 +810,103 @@ using var bilateral = source.Upscale(Bilateral.X2);
 
 #### Anti-Aliasing
 
-| Scaler                                                                                             | Author                | Year | Scales     | Description                                                                                                                                                                                                 |
-| -------------------------------------------------------------------------------------------------- | --------------------- | ---- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Smaa`](https://www.iryoku.com/smaa/)                                                             | Jorge Jimenez et al.  | 2012 | 2x, 3x, 4x | Subpixel Morphological Anti-Aliasing - detects edges using luma gradients and applies weighted pixel blending. Presets: `X2`, `X3`, `X4` with `.Low`, `.Medium`, `.High`, `.Ultra` quality variants.        |
-| [`Fxaa`](https://en.wikipedia.org/wiki/Fast_approximate_anti-aliasing)                             | Timothy Lottes/NVIDIA | 2009 | 2x, 3x, 4x | Fast Approximate Anti-Aliasing using luma-based edge detection. [Ref](https://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf)                                               |
-| [`Mlaa`](https://en.wikipedia.org/wiki/Morphological_antialiasing)                                 | Alexander Reshetov    | 2009 | 2x, 3x, 4x | Morphological Anti-Aliasing using pattern detection (L, Z, U shapes). [Ref](https://software.intel.com/content/www/us/en/develop/articles/morphological-antialiasing.html)                                  |
-| [`ReverseAa`](https://github.com/libretro/common-shaders/tree/master/anti-aliasing/shaders/reverse-aa) | Christoph Feck / Hyllian | 2011 | 2x     | Reverse anti-aliasing using gradient-based tilt computation for smooth edges                                                                                                                                 |
+| Scaler                                                                                                 | Author                   | Year | Scales     | Description                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------ | ------------------------ | ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Smaa`](https://www.iryoku.com/smaa/)                                                                 | Jorge Jimenez et al.     | 2012 | 2x, 3x, 4x | Subpixel Morphological Anti-Aliasing - detects edges using luma gradients and applies weighted pixel blending. Presets: `X2`, `X3`, `X4` with `.Low`, `.Medium`, `.High`, `.Ultra` quality variants. |
+| [`Fxaa`](https://en.wikipedia.org/wiki/Fast_approximate_anti-aliasing)                                 | Timothy Lottes/NVIDIA    | 2009 | 2x, 3x, 4x | Fast Approximate Anti-Aliasing using luma-based edge detection. [Ref](https://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf)                                         |
+| [`Mlaa`](https://en.wikipedia.org/wiki/Morphological_antialiasing)                                     | Alexander Reshetov       | 2009 | 2x, 3x, 4x | Morphological Anti-Aliasing using pattern detection (L, Z, U shapes). [Ref](https://software.intel.com/content/www/us/en/develop/articles/morphological-antialiasing.html)                           |
+| [`ReverseAa`](https://github.com/libretro/common-shaders/tree/master/anti-aliasing/shaders/reverse-aa) | Christoph Feck / Hyllian | 2011 | 2x         | Reverse anti-aliasing using gradient-based tilt computation for smooth edges                                                                                                                         |
 
 #### Edge-Preserving Filters
 
-| Scaler                                                                                                     | Author            | Year | Scales     | Description                                                                                                                                                             |
-| ---------------------------------------------------------------------------------------------------------- | ----------------- | ---- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Bilateral`](https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html) | Tomasi & Manduchi | 1998 | 2x, 3x, 4x | Edge-preserving smoothing filter combining spatial and range weighting. Presets: `X2`, `X3`, `X4` with `.Soft` (σs=2.0, σr=0.3) and `.Sharp` (σs=1.0, σr=0.1) variants. |
+| Scaler                                                                                                     | Author            | Year | Scales     | Description                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------- | ----------------- | ---- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Bilateral`](https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html) | Tomasi & Manduchi | 1998 | 2x, 3x, 4x | Edge-preserving smoothing filter combining spatial and range weighting. Presets: `X2`, `X3`, `X4` with `.Soft` (sigma_s=2.0, sigma_r=0.3) and `.Sharp` (sigma_s=1.0, sigma_r=0.1) variants. |
 
 #### Edge-Directed Interpolation
 
-| Scaler                                                                        | Author                    | Year | Scales     | Description                                                                                                                                                       |
-| ----------------------------------------------------------------------------- | ------------------------- | ---- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`Nedi`](https://ieeexplore.ieee.org/document/941048)                        | Xin Li & M.T. Orchard     | 2001 | 2x, 3x, 4x | New Edge-Directed Interpolation using local autocorrelation for adaptive edge-aware upscaling. [Ref](https://www.academia.edu/8327337/New_Edge_Directed_Interpolation)                 |
-| [`Nnedi3`](https://github.com/sekrit-twc/znedi3)                             | tritical                  | 2010 | 2x, 3x, 4x | Neural Network Edge Directed Interpolation using trained weights for high-quality edge-directed scaling                                                           |
-| [`SuperXbr`](https://github.com/libretro/common-shaders/tree/master/xbr/shaders/super-xbr) | Hyllian      | 2015 | 2x         | Super-Scale2x Refinement with 2-pass edge-directed scaling and anti-ringing                                                                                       |
+| Scaler                                                                                     | Author                | Year | Scales     | Description                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------ | --------------------- | ---- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`Nedi`](https://ieeexplore.ieee.org/document/941048)                                      | Xin Li & M.T. Orchard | 2001 | 2x, 3x, 4x | New Edge-Directed Interpolation using local autocorrelation for adaptive edge-aware upscaling. [Ref](https://www.academia.edu/8327337/New_Edge_Directed_Interpolation) |
+| [`Nnedi3`](https://github.com/sekrit-twc/znedi3)                                           | tritical              | 2010 | 2x, 3x, 4x | Neural Network Edge Directed Interpolation using trained weights for high-quality edge-directed scaling                                                                |
+| [`SuperXbr`](https://github.com/libretro/common-shaders/tree/master/xbr/shaders/super-xbr) | Hyllian               | 2015 | 2x         | Super-Scale2x Refinement with 2-pass edge-directed scaling and anti-ringing                                                                                            |
 
 #### Pixel Art Scalers
 
-| Scaler                                                                                                           | Author         | Year  | Scales     | Description                                        |
-| ---------------------------------------------------------------------------------------------------------------- | -------------- | ----- | ---------- | -------------------------------------------------- |
-| [`Eagle`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle)                                      | -              | 1990s | 2x, 3x     | Classic pixel doubling with corner detection       |
-| [`SuperEagle`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2×SaI)                                 | Kreed          | 2001  | 2x         | Enhanced Eagle with better diagonal handling       |
-| [`Super2xSaI`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2×SaI)                                 | Kreed          | 1999  | 2x         | 2x Scale and Interpolation engine                  |
-| [`Epx` / `Scale2x`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX/Scale2x/AdvMAME2x)            | Andrea Mazzoleni | 2001  | 2x, 3x     | Edge-preserving pixel expansion                    |
-| [`Hqnx`](https://en.wikipedia.org/wiki/Hqx)                                                                      | Maxim Stepin   | 2003  | 2x, 3x, 4x | High-quality magnification using YUV comparisons   |
-| [`Lqnx`](https://en.wikipedia.org/wiki/Hqx)                                                                      | -              | -     | 2x, 3x, 4x | Low-quality simplified variant of HQnx. [Ref](https://github.com/luckytyphlosion/vba-link/blob/master/src/lq2x.h) |
-| [`Xbr`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#xBR_family)                                   | Hyllian        | 2011  | 2x, 3x, 4x | xBR (scale By Rules) edge-detection scaler         |
-| [`Xbrz`](https://sourceforge.net/projects/xbrz/)                                                                 | Zenju          | 2012  | 2x-6x      | Enhanced xBR with improved edge handling           |
-| [`Sal`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2×SaI)                                        | Kreed          | 2001  | 2x         | Simple Assembly Language scaler with anti-aliasing |
-| [`Mmpx`](https://casual-effects.com/research/McGuire2021PixelArt/)                                               | Morgan McGuire | 2021  | 2x         | Modern AI-inspired pixel art scaling               |
-| [`Omniscale`](https://github.com/libretro/common-shaders)                                                        | libretro       | 2015  | 2x-6x      | Multi-method hybrid scaler                         |
-| [`RotSprite`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite)                              | Xenowhirl      | 2007  | 2x-4x      | Rotation-aware pixel art scaling                   |
-| [`Clean`](https://github.com/libretro/common-shaders)                                                            | -              | -     | 2x, 3x     | Clean edge pixel art scaler                        |
-| [`TriplePoint`](https://github.com/Hawkynt/2dimagefilter)                                                        | Hawkynt        | 2011  | 2x, 3x     | 3x scaler using diagonal color analysis            |
-| [`ScaleNxSfx`](https://github.com/libretro/common-shaders/tree/master/scalenx)                                   | Sp00kyFox      | 2013  | 2x, 3x     | ScaleNx with effects (corner blending)             |
-| [`ScaleNxPlus`](https://github.com/Hawkynt/2dimagefilter)                                                        | Hawkynt        | 2011  | 2x, 3x     | Enhanced ScaleNx with better diagonals             |
-| [`ScaleHq`](https://github.com/Hawkynt/2dimagefilter)                                                            | Hawkynt        | 2011  | 2x, 3x     | HQ-style pixel art scaler                          |
-| [`EpxB`](https://www.snes9x.com/)                                                                                | SNES9x Team    | 2003  | 2x         | Enhanced EPX with complex edge detection           |
-| [`EpxC`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX/Scale2x/AdvMAME2x)                       | -              | -     | 2x         | EPX variant with additional edge cases. [Ref](https://github.com/libretro/common-shaders) |
-| [`Des`](https://www.reddit.com/r/emulation/wiki/index/)                                                          | FNES Team      | 2000  | 1x         | Diagonal Edge Scaling filter (pre-processing)      |
-| [`Des2`](https://www.reddit.com/r/emulation/wiki/index/)                                                         | FNES Team      | 2000  | 2x         | DES with 2x scaling using edge-directed scaling    |
-| [`ScaleFx`](https://github.com/libretro/slang-shaders/tree/master/edge-smoothing/scalefx)                        | Sp00kyFox      | 2014  | 3x         | Scale3x with enhanced edge detection               |
+| Scaler                                                                                                | Author           | Year  | Scales     | Description                                                                                                       |
+| ----------------------------------------------------------------------------------------------------- | ---------------- | ----- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`Eagle`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#Eagle)                           | -                | 1990s | 2x, 3x     | Classic pixel doubling with corner detection                                                                      |
+| [`SuperEagle`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2xSaI)                      | Kreed            | 2001  | 2x         | Enhanced Eagle with better diagonal handling                                                                      |
+| [`Super2xSaI`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2xSaI)                      | Kreed            | 1999  | 2x         | 2x Scale and Interpolation engine                                                                                 |
+| [`Epx` / `Scale2x`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX/Scale2x/AdvMAME2x) | Andrea Mazzoleni | 2001  | 2x, 3x     | Edge-preserving pixel expansion                                                                                   |
+| [`Hqnx`](https://en.wikipedia.org/wiki/Hqx)                                                           | Maxim Stepin     | 2003  | 2x, 3x, 4x | High-quality magnification using YUV comparisons                                                                  |
+| [`Lqnx`](https://en.wikipedia.org/wiki/Hqx)                                                           | -                | -     | 2x, 3x, 4x | Low-quality simplified variant of HQnx. [Ref](https://github.com/luckytyphlosion/vba-link/blob/master/src/lq2x.h) |
+| [`Xbr`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#xBR_family)                        | Hyllian          | 2011  | 2x, 3x, 4x | xBR (scale By Rules) edge-detection scaler                                                                        |
+| [`Xbrz`](https://sourceforge.net/projects/xbrz/)                                                      | Zenju            | 2012  | 2x-6x      | Enhanced xBR with improved edge handling                                                                          |
+| [`Sal`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2xSaI)                             | Kreed            | 2001  | 2x         | Simple Assembly Language scaler with anti-aliasing                                                                |
+| [`Mmpx`](https://casual-effects.com/research/McGuire2021PixelArt/)                                    | Morgan McGuire   | 2021  | 2x         | Modern AI-inspired pixel art scaling                                                                              |
+| [`Omniscale`](https://github.com/libretro/common-shaders)                                             | libretro         | 2015  | 2x-6x      | Multi-method hybrid scaler                                                                                        |
+| [`RotSprite`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite)                   | Xenowhirl        | 2007  | 2x-4x      | Rotation-aware pixel art scaling                                                                                  |
+| [`Clean`](https://github.com/libretro/common-shaders)                                                 | -                | -     | 2x, 3x     | Clean edge pixel art scaler                                                                                       |
+| [`TriplePoint`](https://github.com/Hawkynt/2dimagefilter)                                             | Hawkynt          | 2011  | 2x, 3x     | 3x scaler using diagonal color analysis                                                                           |
+| [`ScaleNxSfx`](https://github.com/libretro/common-shaders/tree/master/scalenx)                        | Sp00kyFox        | 2013  | 2x, 3x     | ScaleNx with effects (corner blending)                                                                            |
+| [`ScaleNxPlus`](https://github.com/Hawkynt/2dimagefilter)                                             | Hawkynt          | 2011  | 2x, 3x     | Enhanced ScaleNx with better diagonals                                                                            |
+| [`ScaleHq`](https://github.com/Hawkynt/2dimagefilter)                                                 | Hawkynt          | 2011  | 2x, 3x     | HQ-style pixel art scaler                                                                                         |
+| [`EpxB`](https://www.snes9x.com/)                                                                     | SNES9x Team      | 2003  | 2x         | Enhanced EPX with complex edge detection                                                                          |
+| [`EpxC`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX/Scale2x/AdvMAME2x)            | -                | -     | 2x         | EPX variant with additional edge cases. [Ref](https://github.com/libretro/common-shaders)                         |
+| [`Des`](https://www.reddit.com/r/emulation/wiki/index/)                                               | FNES Team        | 2000  | 1x         | Diagonal Edge Scaling filter (pre-processing)                                                                     |
+| [`Des2`](https://www.reddit.com/r/emulation/wiki/index/)                                              | FNES Team        | 2000  | 2x         | DES with 2x scaling using edge-directed scaling                                                                   |
+| [`Scl2x`](https://www.reddit.com/r/emulation/wiki/index/)                                             | FNES Team        | 2000  | 2x         | Simple corner-based line scaling                                                                                  |
+| [`ScaleFx`](https://github.com/libretro/slang-shaders/tree/master/edge-smoothing/scalefx)             | Sp00kyFox        | 2014  | 3x         | Scale3x with enhanced edge detection                                                                              |
+| [`Edge`](https://wiki.scummvm.org/index.php/Scalers)                                                  | ScummVM Team     | 2001  | 2x, 3x, 4x | Simple edge enhancement for smoother diagonals                                                                    |
+| [`TwoXpm`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms)                                | Pablo Medina     | -     | 2x         | High-quality 2x pixel-art scaler with edge morphing                                                               |
+| [`Saa5050`](https://en.wikipedia.org/wiki/Mullard_SAA5050)                                            | Mullard          | 1980  | 2x3        | Teletext character smoothing (original hardware IC)                                                               |
 
 #### Simple & Utility Scalers
 
-| Scaler                                                                                       | Author       | Scales     | Description                                                                                     |
-| -------------------------------------------------------------------------------------------- | ------------ | ---------- | ----------------------------------------------------------------------------------------------- |
-| [`NearestNeighbor`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation)            | -            | Nx         | Simple pixel duplication                                                                        |
-| [`Bilinear`](https://en.wikipedia.org/wiki/Bilinear_interpolation)                           | -            | Nx         | Linear interpolation                                                                            |
-| [`Bicubic`](https://en.wikipedia.org/wiki/Bicubic_interpolation)                             | -            | Nx         | Cubic spline interpolation                                                                      |
-| [`Lanczos`](https://en.wikipedia.org/wiki/Lanczos_resampling)                                | -            | Nx         | Sinc-windowed interpolation                                                                     |
-| [`Normal`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation)                     | -            | 2x, 3x, 4x | [Fixed-factor pixel duplication](https://github.com/libretro/common-shaders)                    |
-| [`Pixellate`](https://en.wikipedia.org/wiki/Pixelization)                                    | -            | Nx         | [Pixelation/mosaic effect](https://github.com/libretro/common-shaders/tree/master/misc)         |
-| [`BilinearPlus`](https://vba-m.com/)                                                         | VBA Team     | 2x         | VBA weighted bilinear interpolation (5:2:1 weighting)                                           |
-| [`SharpBilinear`](https://github.com/libretro/common-shaders/blob/master/interpolation/shaders/sharp-bilinear.cg) | LibRetro | 2x, 3x, 4x | Integer prescaling + bilinear for crisp pixels                                          |
-| [`Quilez`](https://iquilezles.org/articles/texture/)                                         | Inigo Quilez | 2x, 3x, 4x | Quintic smoothstep interpolation for smooth gradients. [Ref](https://www.shadertoy.com/view/MllBWf) |
-| [`NearestNeighborPlus`](https://github.com/libretro/common-shaders/tree/master/interpolation) | -           | 2x, 3x, 4x | Enhanced nearest neighbor with edge detection                                                   |
-| [`Soft`](https://github.com/libretro/common-shaders/tree/master/interpolation)               | -            | 2x, 3x, 4x | Soft interpolation with gentle blending                                                         |
-| [`SoftSmart`](https://github.com/libretro/common-shaders/tree/master/interpolation)          | -            | 2x, 3x, 4x | Smart soft interpolation with adaptive blending                                                 |
-| [`Cut`](https://github.com/libretro/common-shaders)                                          | -            | 2x, 3x, 4x | Cut-based scaling utility                                                                       |
-| [`Ddt`](https://github.com/libretro/common-shaders/tree/master/ddt)                          | Sp00kyFox    | 2x         | Diagonal De-interpolation Technique                                                             |
-| [`CatmullRom`](https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline)         | -            | 2x, 3x, 4x | Catmull-Rom spline interpolation (pixel-art variant)                                            |
+| Scaler                                                                                                            | Author       | Scales     | Description                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------- | ------------ | ---------- | --------------------------------------------------------------------------------------------------- |
+| [`NearestNeighbor`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation)                                 | -            | Nx         | Simple pixel duplication                                                                            |
+| [`Bilinear`](https://en.wikipedia.org/wiki/Bilinear_interpolation)                                                | -            | Nx         | Linear interpolation                                                                                |
+| [`Bicubic`](https://en.wikipedia.org/wiki/Bicubic_interpolation)                                                  | -            | Nx         | Cubic spline interpolation                                                                          |
+| [`Lanczos`](https://en.wikipedia.org/wiki/Lanczos_resampling)                                                     | -            | Nx         | Sinc-windowed interpolation                                                                         |
+| [`Normal`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation)                                          | -            | 2x, 3x, 4x | [Fixed-factor pixel duplication](https://github.com/libretro/common-shaders)                        |
+| [`Pixellate`](https://en.wikipedia.org/wiki/Pixelization)                                                         | -            | Nx         | [Pixelation/mosaic effect](https://github.com/libretro/common-shaders/tree/master/misc)             |
+| [`BilinearPlus`](https://vba-m.com/)                                                                              | VBA Team     | 2x         | VBA weighted bilinear interpolation (5:2:1 weighting)                                               |
+| [`SharpBilinear`](https://github.com/libretro/common-shaders/blob/master/interpolation/shaders/sharp-bilinear.cg) | LibRetro     | 2x, 3x, 4x | Integer prescaling + bilinear for crisp pixels                                                      |
+| [`Quilez`](https://iquilezles.org/articles/texture/)                                                              | Inigo Quilez | 2x, 3x, 4x | Quintic smoothstep interpolation for smooth gradients. [Ref](https://www.shadertoy.com/view/MllBWf) |
+| [`NearestNeighborPlus`](https://github.com/libretro/common-shaders/tree/master/interpolation)                     | -            | 2x, 3x, 4x | Enhanced nearest neighbor with edge detection                                                       |
+| [`Soft`](https://github.com/libretro/common-shaders/tree/master/interpolation)                                    | -            | 2x, 3x, 4x | Soft interpolation with gentle blending                                                             |
+| [`SoftSmart`](https://github.com/libretro/common-shaders/tree/master/interpolation)                               | -            | 2x, 3x, 4x | Smart soft interpolation with adaptive blending                                                     |
+| [`Cut`](https://github.com/libretro/common-shaders)                                                               | -            | 2x, 3x, 4x | Cut-based scaling utility                                                                           |
+| [`Ddt`](https://github.com/libretro/common-shaders/tree/master/ddt)                                               | Sp00kyFox    | 2x         | Diagonal De-interpolation Technique                                                                 |
+| [`CatmullRom`](https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline)                              | -            | 2x, 3x, 4x | Catmull-Rom spline interpolation (pixel-art variant)                                                |
 
 #### Retro Display Effects
 
-| Scaler                                                                                                 | Author    | Scales     | Description                                                |
-| ------------------------------------------------------------------------------------------------------ | --------- | ---------- | ---------------------------------------------------------- |
-| [`DotMatrix`](https://wiki.scummvm.org/index.php?title=Graphics_filtering)                             | ScummVM   | 2x, 3x, 4x | Dot-matrix display simulation with brightness falloff      |
-| [`LcdGrid`](https://en.wikipedia.org/wiki/Subpixel_rendering)                                          | -         | 2x, 3x, 4x | LCD subpixel grid simulation                               |
-| [`ScanlineHorizontal`](https://en.wikipedia.org/wiki/Scan_line)                                        | Hawkynt   | 2x1        | CRT vertical scanline effect                               |
-| [`ScanlineVertical`](https://en.wikipedia.org/wiki/Scan_line)                                          | Hawkynt   | 1x2        | CRT horizontal scanline effect                             |
-| [`Tv2x` / `Tv3x` / `Tv4x`](https://wiki.scummvm.org/index.php?title=Graphics_filtering)                | -         | 2x, 3x, 4x | TV scanline simulation                                     |
-| [`MameRgb`](https://www.mamedev.org/)                                                                  | MAME Team | 2x, 3x     | LCD RGB subpixel channel filter simulation                 |
-| [`MameAdvInterp`](https://www.mamedev.org/)                                                            | MAME Team | 2x, 3x     | MAME advanced interpolation with scanline effect           |
-| [`HawkyntTv`](https://github.com/Hawkynt/2dimagefilter)                                                | Hawkynt   | 2x, 3x, 4x | TV effect with configurable scanline and phosphor patterns |
+| Scaler                                                                                         | Author         | Scales     | Description                                                 |
+| ---------------------------------------------------------------------------------------------- | -------------- | ---------- | ----------------------------------------------------------- |
+| [`DotMatrix`](https://wiki.scummvm.org/index.php?title=Graphics_filtering)                     | ScummVM        | 2x, 3x, 4x | Dot-matrix display simulation with brightness falloff       |
+| [`LcdGrid`](https://en.wikipedia.org/wiki/Subpixel_rendering)                                  | -              | 2x, 3x, 4x | LCD subpixel grid simulation                                |
+| [`ScanlineHorizontal`](https://en.wikipedia.org/wiki/Scan_line)                                | Hawkynt        | 2x1        | CRT vertical scanline effect                                |
+| [`ScanlineVertical`](https://en.wikipedia.org/wiki/Scan_line)                                  | Hawkynt        | 1x2        | CRT horizontal scanline effect                              |
+| [`Tv2x` / `Tv3x` / `Tv4x`](https://wiki.scummvm.org/index.php?title=Graphics_filtering)        | -              | 2x, 3x, 4x | TV scanline simulation                                      |
+| [`MameRgb`](https://www.mamedev.org/)                                                          | MAME Team      | 2x, 3x     | LCD RGB subpixel channel filter simulation                  |
+| [`MameAdvInterp`](https://www.mamedev.org/)                                                    | MAME Team      | 2x, 3x     | MAME advanced interpolation with scanline effect            |
+| [`HawkyntTv`](https://github.com/Hawkynt/2dimagefilter)                                        | Hawkynt        | 2x, 3x, 4x | TV effect with configurable scanline and phosphor patterns  |
+| [`CrtEasymode`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-easymode) | -              | 2x, 3x, 4x | Lightweight CRT simulation with scanlines and phosphor mask |
+| [`CrtHyllian`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-hyllian)   | Hyllian        | 2x, 3x, 4x | Sharp CRT scanlines with phosphor simulation                |
+| [`CrtLottes`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-lottes)     | Timothy Lottes | 2x, 3x, 4x | CRT simulation with bloom and phosphor mask                 |
+| [`ZfastCrt`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/zfast-crt)       | -              | 2x, 3x, 4x | Performance-optimized CRT simulation                        |
+| [`GameBoyShader`](https://github.com/libretro/slang-shaders/tree/master/handheld)              | -              | 2x, 3x, 4x | Game Boy Color LCD simulation with pixel grid               |
+| [`LcdGhosting`](https://github.com/libretro/slang-shaders/tree/master/handheld)                | -              | 2x, 3x, 4x | LCD response time blur simulation                           |
+| [`Ntsc`](https://en.wikipedia.org/wiki/NTSC)                                                   | blargg         | 2x         | NTSC composite video color bleeding simulation              |
+
+### Downscaling
+
+| Scaler         | Scales             | Description                                                     |
+| -------------- | ------------------ | --------------------------------------------------------------- |
+| `BoxDownscale` | 1/2, 1/3, 1/4, 1/5 | Box filter downscaling by averaging NxN blocks of source pixels |
 
 ### Scaler Configuration
 
@@ -848,8 +918,8 @@ using var low = source.Upscale(Smaa.X2.Low);
 using var ultra = source.Upscale(Smaa.X2.Ultra);
 
 // Bilateral filter parameters
-using var soft = source.Upscale(Bilateral.X2.Soft);    // σs=2.0, σr=0.3
-using var sharp = source.Upscale(Bilateral.X2.Sharp);  // σs=1.0, σr=0.1
+using var soft = source.Upscale(Bilateral.X2.Soft);    // sigma_s=2.0, sigma_r=0.3
+using var sharp = source.Upscale(Bilateral.X2.Sharp);  // sigma_s=1.0, sigma_r=0.1
 using var custom = source.Upscale(new Bilateral(3, 1.5f, 0.2f));
 
 // Scanline brightness
@@ -878,119 +948,143 @@ using var result = bitmap.Resample(new Gaussian(sigma: 1.0f), newWidth, newHeigh
 
 ### Basic Filters
 
-| Resampler                                                                          | Radius | Description                   |
-| ---------------------------------------------------------------------------------- | ------ | ----------------------------- |
-| [`NearestNeighbor`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation)  | 1      | Point sampling, fastest. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Bilinear`](https://en.wikipedia.org/wiki/Bilinear_interpolation)                 | 1      | 2×2 weighted average. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Box`](https://en.wikipedia.org/wiki/Box_blur)                                    | 1+     | Simple averaging. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Hermite`](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)                    | 1      | Smooth cubic polynomial. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Cosine`](https://paulbourke.net/miscellaneous/interpolation/)                    | 1      | Cosine-weighted interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Smoothstep`](https://en.wikipedia.org/wiki/Smoothstep)                           | 1      | Hermite polynomial S-curve interpolation. [Ref](https://www.shadertoy.com/view/MsS3zK) |
+| Resampler                                                                         | Radius | Description                                                                                                    |
+| --------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
+| [`NearestNeighbor`](https://en.wikipedia.org/wiki/Nearest-neighbor_interpolation) | 1      | Point sampling, fastest. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)       |
+| [`Bilinear`](https://en.wikipedia.org/wiki/Bilinear_interpolation)                | 1      | 2x2 weighted average. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)          |
+| [`Box`](https://en.wikipedia.org/wiki/Box_blur)                                   | 1+     | Simple averaging. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)              |
+| [`Hermite`](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)                   | 1      | Smooth cubic polynomial. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)       |
+| [`Cosine`](https://paulbourke.net/miscellaneous/interpolation/)                   | 1      | Cosine-weighted interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`Smoothstep`](https://en.wikipedia.org/wiki/Smoothstep)                          | 1      | Hermite polynomial S-curve interpolation. [Ref](https://www.shadertoy.com/view/MsS3zK)                         |
 
 ### Cubic Family
 
-| Resampler                                                                                                        | Author              | Year | Radius | Parameters           | Reference                 |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------- | ---- | ------ | -------------------- | ------------------------- |
-| [`Bicubic`](https://en.wikipedia.org/wiki/Bicubic_interpolation)                                                 | Robert Keys         | 1981 | 2      | `a` (-0.5f)          | Keys coefficient. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`MitchellNetravali`](https://www.cs.utexas.edu/~fussell/courses/cs384g-fall2013/lectures/mitchell/Mitchell.pdf) | Mitchell, Netravali | 1988 | 2      | `b` (1/3), `c` (1/3) | Balanced cubic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`CatmullRom`](https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull–Rom_spline)                            | Catmull, Rom        | 1974 | 2      | None                 | Sharp spline (B=0, C=0.5). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Robidoux`](http://www.imagemagick.org/Usage/filter/#robidoux)                                                  | Nicolas Robidoux    | 2011 | 2      | None                 | Optimized for photos. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`RobidouxSharp`](http://www.imagemagick.org/Usage/filter/#robidoux)                                             | Nicolas Robidoux    | 2011 | 2      | None                 | Sharper variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`RobidouxSoft`](http://www.imagemagick.org/Usage/filter/#robidoux)                                              | Nicolas Robidoux    | 2011 | 2      | None                 | Smoother variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| Resampler                                                                                                        | Author              | Year | Radius | Parameters           | Reference                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------- | ---- | ------ | -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`Bicubic`](https://en.wikipedia.org/wiki/Bicubic_interpolation)                                                 | Robert Keys         | 1981 | 2      | `a` (-0.5f)          | Keys coefficient. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)          |
+| [`MitchellNetravali`](https://www.cs.utexas.edu/~fussell/courses/cs384g-fall2013/lectures/mitchell/Mitchell.pdf) | Mitchell, Netravali | 1988 | 2      | `b` (1/3), `c` (1/3) | Balanced cubic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)            |
+| [`CatmullRom`](https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull-Rom_spline)                            | Catmull, Rom        | 1974 | 2      | None                 | Sharp spline (B=0, C=0.5). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`Robidoux`](http://www.imagemagick.org/Usage/filter/#robidoux)                                                  | Nicolas Robidoux    | 2011 | 2      | None                 | Optimized for photos. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)      |
+| [`RobidouxSharp`](http://www.imagemagick.org/Usage/filter/#robidoux)                                             | Nicolas Robidoux    | 2011 | 2      | None                 | Sharper variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)           |
+| [`RobidouxSoft`](http://www.imagemagick.org/Usage/filter/#robidoux)                                              | Nicolas Robidoux    | 2011 | 2      | None                 | Smoother variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)          |
 
 ### Lanczos Family
 
-| Resampler                                                       | Radius | Sharpness | Ringing     | Best For             |
-| --------------------------------------------------------------- | ------ | --------- | ----------- | -------------------- |
-| [`Lanczos2`](https://en.wikipedia.org/wiki/Lanczos_resampling)  | 2      | Good      | Low         | General use. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Lanczos3`](https://en.wikipedia.org/wiki/Lanczos_resampling)  | 3      | Very good | Moderate    | Photos (recommended). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Lanczos4`](https://en.wikipedia.org/wiki/Lanczos_resampling)  | 4      | Excellent | Higher      | Maximum sharpness. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Lanczos5`](https://en.wikipedia.org/wiki/Lanczos_resampling)  | 5      | Maximum   | Significant | Special cases. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Jinc`](https://en.wikipedia.org/wiki/Sombrero_function)       | 3+     | Excellent | Moderate    | 2D (uses Bessel J₁). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| Resampler                                                      | Radius | Sharpness | Ringing     | Best For                                                                                              |
+| -------------------------------------------------------------- | ------ | --------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| [`Lanczos2`](https://en.wikipedia.org/wiki/Lanczos_resampling) | 2      | Good      | Low         | General use. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)          |
+| [`Lanczos3`](https://en.wikipedia.org/wiki/Lanczos_resampling) | 3      | Very good | Moderate    | Photos (recommended). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`Lanczos4`](https://en.wikipedia.org/wiki/Lanczos_resampling) | 4      | Excellent | Higher      | Maximum sharpness. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)    |
+| [`Lanczos5`](https://en.wikipedia.org/wiki/Lanczos_resampling) | 5      | Maximum   | Significant | Special cases. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)        |
+| [`Jinc`](https://en.wikipedia.org/wiki/Sombrero_function)      | 3+     | Excellent | Moderate    | 2D (uses Bessel J1). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)  |
 
 ### B-Spline & O-MOMS
 
-| Resampler                                                     | Degree | Radius | Prefilter | Description     |
-| ------------------------------------------------------------- | ------ | ------ | --------- | --------------- |
-| [`BSpline`](https://en.wikipedia.org/wiki/B-spline)           | 3      | 2      | Required  | Cubic B-spline. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BSpline2`](https://en.wikipedia.org/wiki/B-spline)          | 2      | 2      | Required  | Quadratic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BSpline4`](https://en.wikipedia.org/wiki/B-spline)          | 4      | 3      | Required  | Quartic (Parzen). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BSpline5`](https://en.wikipedia.org/wiki/B-spline)          | 5      | 3      | Required  | Quintic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BSpline7`](https://en.wikipedia.org/wiki/B-spline)          | 7      | 4      | Required  | Septic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`OMoms3`](https://bigwww.epfl.ch/publications/blu9901.html)  | 3      | 2      | Required  | Optimal cubic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/) |
-| [`OMoms5`](https://bigwww.epfl.ch/publications/blu9901.html)  | 5      | 3      | Required  | Optimal quintic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/) |
-| [`OMoms7`](https://bigwww.epfl.ch/publications/blu9901.html)  | 7      | 4      | Required  | Optimal septic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/) |
+| Resampler                                                    | Degree | Radius | Prefilter | Description                                                                                       |
+| ------------------------------------------------------------ | ------ | ------ | --------- | ------------------------------------------------------------------------------------------------- |
+| [`BSpline`](https://en.wikipedia.org/wiki/B-spline)          | 3      | 2      | Required  | Cubic B-spline. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)   |
+| [`BSpline2`](https://en.wikipedia.org/wiki/B-spline)         | 2      | 2      | Required  | Quadratic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)        |
+| [`BSpline4`](https://en.wikipedia.org/wiki/B-spline)         | 4      | 3      | Required  | Quartic (Parzen). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`BSpline5`](https://en.wikipedia.org/wiki/B-spline)         | 5      | 3      | Required  | Quintic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)          |
+| [`BSpline7`](https://en.wikipedia.org/wiki/B-spline)         | 7      | 4      | Required  | Septic. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)           |
+| [`OMoms3`](https://bigwww.epfl.ch/publications/blu9901.html) | 3      | 2      | Required  | Optimal cubic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/)                              |
+| [`OMoms5`](https://bigwww.epfl.ch/publications/blu9901.html) | 5      | 3      | Required  | Optimal quintic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/)                            |
+| [`OMoms7`](https://bigwww.epfl.ch/publications/blu9901.html) | 7      | 4      | Required  | Optimal septic. [Ref](https://bigwww.epfl.ch/thevenaz/interpolation/)                             |
 
 ### Spline & Window Filters
 
-| Resampler                                                                          | Radius | Used By     | Description                   |
-| ---------------------------------------------------------------------------------- | ------ | ----------- | ----------------------------- |
-| [`Spline16`](http://www.ipol.im/pub/art/2011/g_lmii/)                              | 2      | VLC         | 4-tap spline. [Ref](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c) |
-| [`Spline36`](http://www.ipol.im/pub/art/2011/g_lmii/)                              | 3      | FFmpeg      | 6-tap spline. [Ref](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c) |
-| [`Spline64`](http://www.ipol.im/pub/art/2011/g_lmii/)                              | 4      | ImageMagick | 8-tap spline. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Blackman`](https://en.wikipedia.org/wiki/Window_function#Blackman_window)        | 3+     | -           | Very low sidelobes. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Kaiser`](https://en.wikipedia.org/wiki/Kaiser_window)                            | 3+     | -           | Adjustable via beta parameter. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Hann`](https://en.wikipedia.org/wiki/Hann_function)                              | 3+     | -           | Raised cosine. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Hamming`](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows) | 3+     | -           | Modified Hann. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Welch`](https://en.wikipedia.org/wiki/Window_function#Welch_window)              | 3+     | -           | Parabolic window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Bartlett`](https://en.wikipedia.org/wiki/Window_function#Triangular_window)      | 3+     | -           | Triangular window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Bohman`](https://en.wikipedia.org/wiki/Window_function#Bohman_window)            | 3+     | -           | Cosine-convolved window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Nuttal`](https://en.wikipedia.org/wiki/Window_function#Nuttall_window)           | 3+     | -           | 4-term Blackman-Harris variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BlackmanNuttal`](https://en.wikipedia.org/wiki/Window_function#Nuttall_window)   | 3+     | -           | Blackman-Nuttal hybrid. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BlackmanHarris`](https://en.wikipedia.org/wiki/Window_function#Blackman-Harris_window) | 3+ | -           | 4-term Blackman-Harris. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`FlatTop`](https://en.wikipedia.org/wiki/Window_function#Flat_top_window)         | 3+     | -           | Very flat passband. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Tukey`](https://en.wikipedia.org/wiki/Window_function#Tukey_window)              | 3+     | -           | Tapered cosine window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Poisson`](https://en.wikipedia.org/wiki/Window_function#Poisson_window)          | 3+     | -           | Exponential decay window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`BartlettHann`](https://en.wikipedia.org/wiki/Window_function#Bartlett-Hann_window) | 3+   | -           | Bartlett-Hann hybrid. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Cauchy`](https://en.wikipedia.org/wiki/Cauchy_distribution)                      | 3+     | -           | Cauchy/Lorentz distribution window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Schaum2`](https://bigwww.epfl.ch/publications/thevenaz9901.pdf)                          | 2      | -           | Quadratic Schaum interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Schaum3`](https://bigwww.epfl.ch/publications/thevenaz9901.pdf)                          | 3      | -           | Cubic Schaum interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| Resampler                                                                                | Radius | Used By     | Description                                                                                                         |
+| ---------------------------------------------------------------------------------------- | ------ | ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`Spline16`](http://www.ipol.im/pub/art/2011/g_lmii/)                                    | 2      | VLC         | 4-tap spline. [Ref](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c)                                |
+| [`Spline36`](http://www.ipol.im/pub/art/2011/g_lmii/)                                    | 3      | FFmpeg      | 6-tap spline. [Ref](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c)                                |
+| [`Spline64`](http://www.ipol.im/pub/art/2011/g_lmii/)                                    | 4      | ImageMagick | 8-tap spline. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                       |
+| [`Blackman`](https://en.wikipedia.org/wiki/Window_function#Blackman_window)              | 3+     | -           | Very low sidelobes. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                 |
+| [`Kaiser`](https://en.wikipedia.org/wiki/Kaiser_window)                                  | 3+     | -           | Adjustable via beta parameter. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)      |
+| [`Hann`](https://en.wikipedia.org/wiki/Hann_function)                                    | 3+     | -           | Raised cosine. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                      |
+| [`Hamming`](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows)      | 3+     | -           | Modified Hann. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                      |
+| [`Welch`](https://en.wikipedia.org/wiki/Window_function#Welch_window)                    | 3+     | -           | Parabolic window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                   |
+| [`Bartlett`](https://en.wikipedia.org/wiki/Window_function#Triangular_window)            | 3+     | -           | Triangular window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                  |
+| [`Bohman`](https://en.wikipedia.org/wiki/Window_function#Bohman_window)                  | 3+     | -           | Cosine-convolved window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)            |
+| [`Nuttal`](https://en.wikipedia.org/wiki/Window_function#Nuttall_window)                 | 3+     | -           | 4-term Blackman-Harris variant. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)     |
+| [`BlackmanNuttal`](https://en.wikipedia.org/wiki/Window_function#Nuttall_window)         | 3+     | -           | Blackman-Nuttal hybrid. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)             |
+| [`BlackmanHarris`](https://en.wikipedia.org/wiki/Window_function#Blackman-Harris_window) | 3+     | -           | 4-term Blackman-Harris. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)             |
+| [`FlatTop`](https://en.wikipedia.org/wiki/Window_function#Flat_top_window)               | 3+     | -           | Very flat passband. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)                 |
+| [`Tukey`](https://en.wikipedia.org/wiki/Window_function#Tukey_window)                    | 3+     | -           | Tapered cosine window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)              |
+| [`Poisson`](https://en.wikipedia.org/wiki/Window_function#Poisson_window)                | 3+     | -           | Exponential decay window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)           |
+| [`BartlettHann`](https://en.wikipedia.org/wiki/Window_function#Bartlett-Hann_window)     | 3+     | -           | Bartlett-Hann hybrid. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)               |
+| [`Cauchy`](https://en.wikipedia.org/wiki/Cauchy_distribution)                            | 3+     | -           | Cauchy/Lorentz distribution window. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`Schaum2`](https://bigwww.epfl.ch/publications/thevenaz9901.pdf)                        | 2      | -           | Quadratic Schaum interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)     |
+| [`Schaum3`](https://bigwww.epfl.ch/publications/thevenaz9901.pdf)                        | 3      | -           | Cubic Schaum interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)         |
 
 ### Lagrange Polynomial Interpolation
 
-| Resampler                                                       | Degree | Radius | Description     |
-| --------------------------------------------------------------- | ------ | ------ | --------------- |
-| [`Lagrange3`](https://en.wikipedia.org/wiki/Lagrange_polynomial) | 3      | 2      | Cubic (4-point). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| Resampler                                                        | Degree | Radius | Description                                                                                        |
+| ---------------------------------------------------------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
+| [`Lagrange3`](https://en.wikipedia.org/wiki/Lagrange_polynomial) | 3      | 2      | Cubic (4-point). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)   |
 | [`Lagrange5`](https://en.wikipedia.org/wiki/Lagrange_polynomial) | 5      | 3      | Quintic (6-point). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`Lagrange7`](https://en.wikipedia.org/wiki/Lagrange_polynomial) | 7      | 4      | Septic (8-point). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
+| [`Lagrange7`](https://en.wikipedia.org/wiki/Lagrange_polynomial) | 7      | 4      | Septic (8-point). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)  |
 
 > **Note:** Lagrange interpolation passes exactly through all sample points, making it suitable for applications
 > requiring exact value preservation. No prefiltering is required.
 
 ### Edge-Directed & Modern Upscalers
 
-| Resampler                                                | Author      | Year | Radius | Parameters                     | Description                     |
-| -------------------------------------------------------- | ----------- | ---- | ------ | ------------------------------ | ------------------------------- |
-| [`Dcci`](https://ieeexplore.ieee.org/document/941048)    | Li, Orchard | 2001 | 2      | `cubicA`, `coherenceThreshold` | Edge-directed interpolation. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-DCTFilter) |
-| [`Fsr`](https://gpuopen.com/fidelityfx-superresolution/) | AMD         | 2021 | 2      | `sharpness` (0.5f)             | FidelityFX Super Resolution. [Ref](https://github.com/GPUOpen-Effects/FidelityFX-FSR) |
-| [`Ravu`](https://github.com/bjin/mpv-prescalers)         | -           | 2017 | 2      | `sharpness`, `antiRinging`     | Robust Adaptive Video Upscaling. [Ref](https://github.com/bjin/mpv-prescalers) |
-| [`Eedi2`](https://github.com/Asd-g/AviSynth-EEDI2)       | tritical    | 2005 | 2      | -                              | Enhanced Edge-Directed Interp. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-EEDI2) |
-| [`KrigBilateral`](https://en.wikipedia.org/wiki/Kriging) | -           | -    | 3      | `sigma`, `radius`              | Kriging-based bilateral upscaling. [Ref](https://github.com/igv/KrigBilateral) |
+| Resampler                                                                                              | Author           | Year | Radius | Parameters                               | Description                                                                                                  |
+| ------------------------------------------------------------------------------------------------------ | ---------------- | ---- | ------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| [`Dcci`](https://ieeexplore.ieee.org/document/941048)                                                  | Li, Orchard      | 2001 | 2      | `cubicA`, `coherenceThreshold`           | Edge-directed interpolation. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-DCTFilter)      |
+| [`Fsr`](https://gpuopen.com/fidelityfx-superresolution/)                                               | AMD              | 2021 | 2      | `sharpness` (0.5f)                       | FidelityFX Super Resolution. [Ref](https://github.com/GPUOpen-Effects/FidelityFX-FSR)                        |
+| [`Ravu`](https://github.com/bjin/mpv-prescalers)                                                       | -                | 2017 | 2      | `sharpness`, `antiRinging`               | Robust Adaptive Video Upscaling. [Ref](https://github.com/bjin/mpv-prescalers)                               |
+| [`Eedi2`](https://github.com/Asd-g/AviSynth-EEDI2)                                                     | tritical         | 2005 | 2      | -                                        | Enhanced Edge-Directed Interp. [Ref](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-EEDI2)        |
+| [`KrigBilateral`](https://en.wikipedia.org/wiki/Kriging)                                               | -                | -    | 3      | `sigma`, `radius`                        | Kriging-based bilateral upscaling. [Ref](https://github.com/igv/KrigBilateral)                               |
+| [`KopfLischinski`](https://johanneskopf.de/publications/pixelart/)                                     | Kopf, Lischinski | 2011 | 2      | -                                        | Depixelizing pixel art (SIGGRAPH 2011). [Ref](https://johanneskopf.de/publications/pixelart/paper/pixel.pdf) |
+| [`Icbi`](https://ieeexplore.ieee.org/document/977589)                                                  | Li, Orchard      | 2001 | 2      | `coherenceThreshold`, `correctionFactor` | Curvature-based interpolation with structure tensor analysis                                                 |
+| [`Bedi`](https://en.wikipedia.org/wiki/Bilinear_interpolation)                                         | -                | 2010 | 2      | `edgeThreshold` (30f)                    | Bilinear edge-directed interpolation with Sobel gradient classification                                      |
+| [`AdvancedAa`](https://github.com/libretro/glsl-shaders/tree/master/anti-aliasing/shaders/advanced-aa) | guest(r)         | 2006 | 2      | -                                        | Edge-weighted anti-aliasing interpolation                                                                    |
+
+### Content-Aware Resizers
+
+| Resampler                                                   | Author         | Year | Description                                                       |
+| ----------------------------------------------------------- | -------------- | ---- | ----------------------------------------------------------------- |
+| [`SeamCarving`](https://en.wikipedia.org/wiki/Seam_carving) | Avidan, Shamir | 2007 | Content-aware resizing by inserting/removing minimum-energy seams |
+
+SeamCarving supports three energy calculation modes via `SeamCarvingEnergyMode`:
+- `Gradient` - Simple gradient magnitude using absolute color differences (fastest)
+- `Sobel` - Sobel operator for gradient magnitude (balanced)
+- `Forward` - Forward energy considers insertion cost (best quality, slowest)
+
+```csharp
+// Content-aware resize (removes/adds low-energy seams)
+using var result = bitmap.Resample(new SeamCarving(SeamCarvingEnergyMode.Sobel), newWidth, newHeight);
+```
 
 ### Specialized Filters
 
-| Resampler                                                                      | Author           | Radius | Parameters               | Description                 |
-| ------------------------------------------------------------------------------ | ---------------- | ------ | ------------------------ | --------------------------- |
-| [`Gaussian`](https://en.wikipedia.org/wiki/Gaussian_blur)                      | Gauss            | 2+     | `sigma` (0.5f), `radius` | Gaussian blur/interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) |
-| [`NoHalo`](https://gegl.org/operations/gegl-scale-ratio.html)                  | Nicolas Robidoux | 3      | None                     | Minimizes halo artifacts. [Ref](https://gitlab.gnome.org/GNOME/gegl/-/blob/master/operations/common/nohalo.c) |
-| [`LoHalo`](https://gegl.org/operations/gegl-scale-ratio.html)                  | Nicolas Robidoux | 3      | None                     | Low-halo variant. [Ref](https://gitlab.gnome.org/GNOME/gegl/-/blob/master/operations/common/lohalo.c) |
-| [`MagicKernelSharp`](https://johncostella.com/magic/mks.pdf)                          | John Costella    | 2      | `sharpness`              | 4-tap max sharpness kernel. [Ref](https://johncostella.com/magic/mks.pdf) |
+| Resampler                                                     | Author           | Radius | Parameters               | Description                                                                                                   |
+| ------------------------------------------------------------- | ---------------- | ------ | ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| [`Gaussian`](https://en.wikipedia.org/wiki/Gaussian_blur)     | Gauss            | 2+     | `sigma` (0.5f), `radius` | Gaussian blur/interpolation. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c)  |
+| [`NoHalo`](https://gegl.org/operations/gegl-scale-ratio.html) | Nicolas Robidoux | 3      | None                     | Minimizes halo artifacts. [Ref](https://gitlab.gnome.org/GNOME/gegl/-/blob/master/operations/common/nohalo.c) |
+| [`LoHalo`](https://gegl.org/operations/gegl-scale-ratio.html) | Nicolas Robidoux | 3      | None                     | Low-halo variant. [Ref](https://gitlab.gnome.org/GNOME/gegl/-/blob/master/operations/common/lohalo.c)         |
+| [`MagicKernelSharp`](https://johncostella.com/magic/mks.pdf)  | John Costella    | 2      | `sharpness`              | 4-tap max sharpness kernel. [Ref](https://johncostella.com/magic/mks.pdf)                                     |
 
 ### Resampler Parameters
 
-| Resampler             | Parameter            | Type    | Default  | Range   | Description                                     |
-| --------------------- | -------------------- | ------- | -------- | ------- | ----------------------------------------------- |
-| **Bicubic**           | `a`                  | `float` | `-0.5f`  | -1 to 0 | Keys coefficient (-0.5=standard, -0.75=sharper) |
-| **MitchellNetravali** | `b`                  | `float` | `0.333f` | 0-1     | Blur parameter                                  |
-|                       | `c`                  | `float` | `0.333f` | 0-1     | Ringing parameter                               |
-| **Kaiser**            | `radius`             | `int`   | `3`      | 1-10    | Filter radius                                   |
-|                       | `beta`               | `float` | `8.6f`   | 0-20    | Shape parameter                                 |
-| **Gaussian**          | `sigma`              | `float` | `0.5f`   | 0.1-5   | Standard deviation                              |
-| **Fsr**               | `sharpness`          | `float` | `0.5f`   | 0-1     | Sharpness level                                 |
-| **Ravu**              | `sharpness`          | `float` | `0.5f`   | 0-1     | Sharpness level                                 |
-|                       | `antiRinging`        | `float` | `0.5f`   | 0-1     | Anti-ringing strength                           |
-| **Dcci**              | `cubicA`             | `float` | `-0.5f`  | -1 to 0 | Cubic coefficient                               |
-|                       | `coherenceThreshold` | `float` | `0.3f`   | 0-1     | Edge detection threshold                        |
+| Resampler             | Parameter            | Type    | Default    | Range   | Description                                     |
+| --------------------- | -------------------- | ------- | ---------- | ------- | ----------------------------------------------- |
+| **Bicubic**           | `a`                  | `float` | `-0.5f`    | -1 to 0 | Keys coefficient (-0.5=standard, -0.75=sharper) |
+| **MitchellNetravali** | `b`                  | `float` | `0.333f`   | 0-1     | Blur parameter                                  |
+|                       | `c`                  | `float` | `0.333f`   | 0-1     | Ringing parameter                               |
+| **Kaiser**            | `radius`             | `int`   | `3`        | 1-10    | Filter radius                                   |
+|                       | `beta`               | `float` | `8.6f`     | 0-20    | Shape parameter                                 |
+| **Gaussian**          | `sigma`              | `float` | `0.5f`     | 0.1-5   | Standard deviation                              |
+| **Fsr**               | `sharpness`          | `float` | `0.5f`     | 0-1     | Sharpness level                                 |
+| **Ravu**              | `sharpness`          | `float` | `0.5f`     | 0-1     | Sharpness level                                 |
+|                       | `antiRinging`        | `float` | `0.5f`     | 0-1     | Anti-ringing strength                           |
+| **Dcci**              | `cubicA`             | `float` | `-0.5f`    | -1 to 0 | Cubic coefficient                               |
+|                       | `coherenceThreshold` | `float` | `0.3f`     | 0-1     | Edge detection threshold                        |
+| **Icbi**              | `coherenceThreshold` | `float` | `0.3f`     | 0-1     | Edge coherence threshold                        |
+|                       | `correctionFactor`   | `float` | `0.2f`     | 0-1     | Curvature correction strength                   |
+| **Bedi**              | `edgeThreshold`      | `float` | `30f`      | 0-255   | Edge detection threshold (lower = more edges)   |
+| **SeamCarving**       | `energyMode`         | `enum`  | `Gradient` | -       | Energy calculation mode                         |
 
 ### Resampler Usage Examples
 
@@ -1015,18 +1109,82 @@ using var nohalo = bitmap.Resample<NoHalo>(newWidth, newHeight);
 
 // Smooth Gaussian
 using var smooth = bitmap.Resample(new Gaussian(1.0f), newWidth, newHeight);
+
+// Depixelize pixel art
+using var depixelized = bitmap.Resample<KopfLischinski>(newWidth, newHeight);
+
+// Content-aware resize
+using var contentAware = bitmap.Resample(new SeamCarving(SeamCarvingEnergyMode.Forward), newWidth, newHeight);
 ```
 
 ### Algorithm Coverage
 
 This library provides comprehensive coverage of resampling algorithms from major image processing libraries:
 
-| Source Library | Algorithms Covered | Notes |
-| -------------- | ------------------ | ----- |
+| Source Library                                                                          | Algorithms Covered                                                                                                                                                                                 | Notes         |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | [ImageMagick](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/resize.c) | Point, Box, Triangle, Hermite, Cubic, Catrom, Mitchell, Lanczos, Spline, Gaussian, Kaiser, Blackman, Hann, Hamming, Jinc, Robidoux variants, Parzen (BSpline4), Lagrange, and all window functions | Full coverage |
-| [FFmpeg libswscale](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c) | Point, Bilinear, Bicubic, Lanczos, Spline16, Spline36, Gaussian, Sinc, Area | Full coverage |
-| [GEGL](https://gegl.org/) | NoHalo, LoHalo | Full coverage |
-| [bisqwit.iki.fi](https://bisqwit.iki.fi/story/howto/dither/jy/) | Yliluoma 1-4, Knoll pattern dithering | Full coverage |
+| [FFmpeg libswscale](https://github.com/FFmpeg/FFmpeg/blob/master/libswscale/utils.c)    | Point, Bilinear, Bicubic, Lanczos, Spline16, Spline36, Gaussian, Sinc, Area                                                                                                                        | Full coverage |
+| [GEGL](https://gegl.org/)                                                               | NoHalo, LoHalo                                                                                                                                                                                     | Full coverage |
+| [bisqwit.iki.fi](https://bisqwit.iki.fi/story/howto/dither/jy/)                         | Yliluoma 1-4, Knoll pattern dithering                                                                                                                                                              | Full coverage |
+
+---
+
+## Runtime Discovery
+
+The library provides registry classes for runtime enumeration of all available algorithms. These are useful for building UIs, benchmarking, or dynamically selecting algorithms.
+
+### ScalerRegistry
+
+Discovers all pixel art scalers and resamplers at runtime.
+
+```csharp
+using Hawkynt.ColorProcessing.Resizing;
+
+// List all available scalers
+foreach (var scaler in ScalerRegistry.PixelScalers)
+  Console.WriteLine($"{scaler.Name} ({scaler.Scale})");
+
+// List all resamplers
+foreach (var resampler in ScalerRegistry.Resamplers)
+  Console.WriteLine($"{resampler.Name}");
+```
+
+### QuantizerRegistry
+
+Discovers all quantization algorithms at runtime.
+
+```csharp
+using Hawkynt.ColorProcessing.Quantization;
+
+// List all available quantizers
+foreach (var quantizer in QuantizerRegistry.All)
+  Console.WriteLine($"{quantizer.Name} ({quantizer.Type})");
+
+// Find by name
+var octree = QuantizerRegistry.FindByName("Octree");
+
+// Create an instance
+var instance = QuantizerRegistry.All.First(q => q.Name == "Octree").CreateDefault();
+```
+
+### DithererRegistry
+
+Discovers all dithering algorithms and presets at runtime.
+
+```csharp
+using Hawkynt.ColorProcessing.Dithering;
+
+// List all available ditherers
+foreach (var ditherer in DithererRegistry.All)
+  Console.WriteLine($"{ditherer.Name} ({ditherer.Type})");
+
+// Find specific ditherer
+var floydSteinberg = DithererRegistry.FindByName("ErrorDiffusion_FloydSteinberg");
+
+// Filter by type
+var errorDiffusion = DithererRegistry.GetByType(DitheringType.ErrorDiffusion);
+```
 
 ---
 
@@ -1035,6 +1193,14 @@ This library provides comprehensive coverage of resampling algorithms from major
 ```bash
 dotnet add package FrameworkExtensions.System.Drawing
 ```
+
+### Supported Target Frameworks
+
+| Framework      | Version                      |
+| -------------- | ---------------------------- |
+| .NET Framework | 3.5, 4.0, 4.5, 4.8           |
+| .NET Core      | 3.1                          |
+| .NET           | 6.0, 7.0, 8.0, 9.0 (Windows) |
 
 ---
 
