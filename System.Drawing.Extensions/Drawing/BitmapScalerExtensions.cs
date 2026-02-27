@@ -84,7 +84,7 @@ public static class BitmapScalerExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Upscale<TScaler>(ScalerQuality quality = ScalerQuality.Fast)
       where TScaler : struct, IPixelScaler
-      => _UpscaleGeneric(@this, default(TScaler), quality);
+      => _UpscaleGeneric(@this, new TScaler(), quality);
 
     /// <summary>
     /// Upscales a bitmap to a target resolution using repeated scaler applications.
@@ -128,7 +128,7 @@ public static class BitmapScalerExtensions {
       int targetHeight,
       ScalerQuality quality = ScalerQuality.Fast
     ) where TScaler : struct, IPixelScaler
-      => _UpscaleToTarget(@this, default(TScaler), targetWidth, targetHeight, quality);
+      => _UpscaleToTarget(@this, new TScaler(), targetWidth, targetHeight, quality);
 
     /// <summary>
     /// Upscales a bitmap with full control over color pipeline and comparison types.
@@ -589,7 +589,7 @@ public static class BitmapScalerExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler
-    => source.Resample(default(TResampler), targetWidth, targetHeight);
+    => source.Resample(new TResampler(), targetWidth, targetHeight);
 
   /// <summary>
   /// Resamples a bitmap to target dimensions using a resampler with default configuration.
@@ -709,7 +709,7 @@ public static class BitmapScalerExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __EdgeAwareResamplerTag<TResampler> _ = default)
     where TResampler : struct, IEdgeAwareResampler
-    => source.Resample(default(TResampler), targetWidth, targetHeight);
+    => source.Resample(new TResampler(), targetWidth, targetHeight);
 
   /// <summary>
   /// Resamples a bitmap using an edge-aware algorithm with default configuration.
@@ -868,7 +868,7 @@ public static class BitmapScalerExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ContentAwareResamplerTag<TResampler> _ = default)
     where TResampler : struct, IContentAwareResampler
-    => source.Resample(default(TResampler), targetWidth, targetHeight);
+    => source.Resample(new TResampler(), targetWidth, targetHeight);
 
   /// <summary>
   /// Resamples a bitmap using content-aware algorithm with default configuration.

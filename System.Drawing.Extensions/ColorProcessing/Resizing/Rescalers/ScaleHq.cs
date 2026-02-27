@@ -52,8 +52,9 @@ public readonly struct ScaleHq : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2 or 4).</param>
   public ScaleHq(int scale = 2) {
-    if (scale is not (2 or 4))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "ScaleHQ supports 2x or 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
+    ArgumentOutOfRangeException.ThrowIfEqual(scale, 3);
     this._scale = scale;
   }
 

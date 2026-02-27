@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Hawkynt.ColorProcessing.Resizing;
@@ -50,11 +51,11 @@ namespace Hawkynt.ColorProcessing.Resizing;
 public static class ScalerRegistry {
 
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _all = new(
-    () => (IReadOnlyList<ScalerDescriptor>)DiscoverScalers());
+    () => new ReadOnlyList<ScalerDescriptor>(DiscoverScalers()));
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _pixelScalers = new(
-    () => (IReadOnlyList<ScalerDescriptor>)_all.Value.Where(d => d.IsPixelScaler).ToList());
+    () => new ReadOnlyList<ScalerDescriptor>(_all.Value.Where(d => d.IsPixelScaler).ToList()));
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _resamplers = new(
-    () => (IReadOnlyList<ScalerDescriptor>)_all.Value.Where(d => d.IsResampler).ToList());
+    () => new ReadOnlyList<ScalerDescriptor>(_all.Value.Where(d => d.IsResampler).ToList()));
 
   /// <summary>
   /// Gets all registered scalers (both pixel-art scalers and resamplers).

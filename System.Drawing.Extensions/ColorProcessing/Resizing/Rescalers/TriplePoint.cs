@@ -46,8 +46,8 @@ public readonly struct TriplePoint : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2 or 3).</param>
   public TriplePoint(int scale = 2) {
-    if (scale is < 2 or > 3)
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "TriplePoint supports 2x or 3x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 3);
     this._scale = scale;
   }
 

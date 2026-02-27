@@ -138,27 +138,32 @@ file readonly struct BediKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     var (gradX, gradY) = ComputeSobelGradients(frame, x0, y0);
     var gradMagnitude = MathF.Sqrt(gradX * gradX + gradY * gradY);
 
-    var lowThreshold = edgeThreshold * 0.5f;
-    var highThreshold = edgeThreshold * 1.5f;
-
     TWork result;
-    if (gradMagnitude < lowThreshold) {
-      // Smooth region: pure bilinear
+    if (edgeThreshold <= 0f) {
+      // No edge detection: pure bilinear
       result = BilinearInterpolate(c00, c10, c01, c11, fx, fy);
-    } else if (gradMagnitude > highThreshold) {
-      // Edge region: pure edge-directed
-      result = EdgeDirectedInterpolate(c00, c10, c01, c11, fx, fy, gradX, gradY);
     } else {
-      // Transition region: smoothstep blend
-      var bilinear = BilinearInterpolate(c00, c10, c01, c11, fx, fy);
-      var edgeDirected = EdgeDirectedInterpolate(c00, c10, c01, c11, fx, fy, gradX, gradY);
-      var blend = (gradMagnitude - lowThreshold) / edgeThreshold;
-      blend = blend * blend * (3f - 2f * blend); // smoothstep
+      var lowThreshold = edgeThreshold * 0.5f;
+      var highThreshold = edgeThreshold * 1.5f;
 
-      Accum4F<TWork> acc = default;
-      acc.AddMul(bilinear, 1f - blend);
-      acc.AddMul(edgeDirected, blend);
-      result = acc.Result;
+      if (gradMagnitude < lowThreshold) {
+        // Smooth region: pure bilinear
+        result = BilinearInterpolate(c00, c10, c01, c11, fx, fy);
+      } else if (gradMagnitude > highThreshold) {
+        // Edge region: pure edge-directed
+        result = EdgeDirectedInterpolate(c00, c10, c01, c11, fx, fy, gradX, gradY);
+      } else {
+        // Transition region: smoothstep blend
+        var bilinear = BilinearInterpolate(c00, c10, c01, c11, fx, fy);
+        var edgeDirected = EdgeDirectedInterpolate(c00, c10, c01, c11, fx, fy, gradX, gradY);
+        var blend = (gradMagnitude - lowThreshold) / edgeThreshold;
+        blend = blend * blend * (3f - 2f * blend); // smoothstep
+
+        Accum4F<TWork> acc = default;
+        acc.AddMul(bilinear, 1f - blend);
+        acc.AddMul(edgeDirected, blend);
+        result = acc.Result;
+      }
     }
 
     dest[destY * destStride + destX] = encoder.Encode(result);
@@ -188,11 +193,8 @@ file readonly struct BediKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     return (gx, gy);
   }
 
-  /// <summary>
-  /// BT.709 luminance approximation from color channels.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Luminance(in TWork c) => 0.2126f * c.C1 + 0.7152f * c.C2 + 0.0722f * c.C3;
+  private static float Luminance(in TWork c) => ColorConverter.GetLuminance(c);
 
   /// <summary>
   /// Standard bilinear interpolation.

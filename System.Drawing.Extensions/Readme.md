@@ -36,6 +36,13 @@ Extension methods for System.Drawing types (bitmaps, images, colors, graphics) w
 - **`Rotated(float angle, Point? center = null)`** - Create rotated copy of bitmap
 - **`RotateInplace(float angle, Point? center = null)`** - Rotate bitmap in-place
 - **`RotateTo(Bitmap target, float angle, Point? center = null)`** - Rotate to target bitmap
+- **`FlipHorizontal()`** - Mirror left-to-right, returns new bitmap
+- **`FlipVertical()`** - Mirror top-to-bottom, returns new bitmap
+- **`MirrorAlongAxis(PointF p1, PointF p2)`** - Mirror pixels across an arbitrary line defined by two points (bilinear interpolation)
+- **`ZoomToPoint(PointF center, float factor)`** - Crop/zoom centered on a specific point with given magnification factor
+- **`Straighten(float angle)`** - Deskew by rotating then cropping to the largest inscribed axis-aligned rectangle
+- **`Skew(float angleX, float angleY)`** - Shear/skew transformation with horizontal and vertical shear angles
+- **`AutoRotate()`** - Read EXIF orientation tag (0x0112) and apply the correct rotation/flip to normalize the image
 
 #### Color Quantization & Dithering
 
@@ -830,6 +837,7 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Nedi`](https://ieeexplore.ieee.org/document/941048)                                      | Xin Li & M.T. Orchard | 2001 | 2x, 3x, 4x | New Edge-Directed Interpolation using local autocorrelation for adaptive edge-aware upscaling. [Ref](https://www.academia.edu/8327337/New_Edge_Directed_Interpolation) |
 | [`Nnedi3`](https://github.com/sekrit-twc/znedi3)                                           | tritical              | 2010 | 2x, 3x, 4x | Neural Network Edge Directed Interpolation using trained weights for high-quality edge-directed scaling                                                                |
 | [`SuperXbr`](https://github.com/libretro/common-shaders/tree/master/xbr/shaders/super-xbr) | Hyllian               | 2015 | 2x         | Super-Scale2x Refinement with 2-pass edge-directed scaling and anti-ringing                                                                                            |
+| `AnimeLineEnhancer`                                                                        | -                     | -    | 2x, 3x    | Gradient-based edge enhancement for anime/cartoon content with edge-directed sharpening                                                               |
 
 #### Pixel Art Scalers
 
@@ -844,6 +852,7 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Xbr`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#xBR_family)                        | Hyllian          | 2011  | 2x, 3x, 4x | xBR (scale By Rules) edge-detection scaler                                                                        |
 | [`Xbrz`](https://sourceforge.net/projects/xbrz/)                                                      | Zenju            | 2012  | 2x-6x      | Enhanced xBR with improved edge handling                                                                          |
 | [`Sal`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#2xSaI)                             | Kreed            | 2001  | 2x         | Simple Assembly Language scaler with anti-aliasing                                                                |
+| [`Sabr`](https://github.com/libretro/common-shaders/tree/master/sabr)                       | Joshua Street    | 2012  | 2x-4x      | Scalable Bicubic Renderer with multi-angle (45/30/60) edge detection and smoothstep blending. Variants: `SabrSharp` (more edges), `SabrSmooth` (softer) |
 | [`Mmpx`](https://casual-effects.com/research/McGuire2021PixelArt/)                                    | Morgan McGuire   | 2021  | 2x         | Modern AI-inspired pixel art scaling                                                                              |
 | [`Omniscale`](https://github.com/libretro/common-shaders)                                             | libretro         | 2015  | 2x-6x      | Multi-method hybrid scaler                                                                                        |
 | [`RotSprite`](https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#RotSprite)                   | Xenowhirl        | 2007  | 2x-4x      | Rotation-aware pixel art scaling                                                                                  |
@@ -881,6 +890,8 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`Cut`](https://github.com/libretro/common-shaders)                                                               | -            | 2x, 3x, 4x | Cut-based scaling utility                                                                           |
 | [`Ddt`](https://github.com/libretro/common-shaders/tree/master/ddt)                                               | Sp00kyFox    | 2x         | Diagonal De-interpolation Technique                                                                 |
 | [`CatmullRom`](https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline)                              | -            | 2x, 3x, 4x | Catmull-Rom spline interpolation (pixel-art variant)                                                |
+| [`Aann`](https://github.com/libretro/glsl-shaders/tree/master/interpolation/shaders/aann)    | jimbo1qaz/wareya | 2x, 3x     | Anti-aliased nearest neighbor with gamma-corrected bilinear interpolation                                                                               |
+| [`Nis`](https://github.com/NVIDIAGameWorks/NVIDIAImageScaling)                               | NVIDIA           | 2x, 3x     | Edge-adaptive spatial upscaler with directional sharpening                                                                                              |
 
 #### Retro Display Effects
 
@@ -901,6 +912,10 @@ using var bilateral = source.Upscale(Bilateral.X2);
 | [`GameBoyShader`](https://github.com/libretro/slang-shaders/tree/master/handheld)              | -              | 2x, 3x, 4x | Game Boy Color LCD simulation with pixel grid               |
 | [`LcdGhosting`](https://github.com/libretro/slang-shaders/tree/master/handheld)                | -              | 2x, 3x, 4x | LCD response time blur simulation                           |
 | [`Ntsc`](https://en.wikipedia.org/wiki/NTSC)                                                   | blargg         | 2x         | NTSC composite video color bleeding simulation              |
+| [`CrtGeom`](https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom)      | libretro       | 2x, 3x     | CRT simulation with shadow mask and scanline darkening                                                                                                  |
+| [`CrtCaligari`](https://github.com/libretro/slang-shaders/tree/master/crt/shaders)          | Caligari       | 2x, 3x     | Performance-focused CRT with electron beam spot simulation                                                                                              |
+| [`CrtRoyale`](https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale)  | TroggleMonkey  | 2x, 3x     | Advanced CRT with phosphor masks, bloom, and halation                                                                                                   |
+| [`Gtu`](https://github.com/aliaspider/interpolation-shaders)                                 | Aliaspider     | 2x, 3x     | Gaussian TV upscaler with bandwidth simulation and scanlines                                                                                            |
 
 ### Downscaling
 
@@ -1185,6 +1200,451 @@ var floydSteinberg = DithererRegistry.FindByName("ErrorDiffusion_FloydSteinberg"
 // Filter by type
 var errorDiffusion = DithererRegistry.GetByType(DitheringType.ErrorDiffusion);
 ```
+
+---
+
+## Image Filters
+
+The library provides a pixel filter infrastructure for 1:1 image transformations that don't change dimensions. Filters use the same high-performance kernel pipeline as scalers but produce same-size output.
+
+### Filter Methods
+
+```csharp
+using Hawkynt.ColorProcessing.Filtering.Filters;
+using Hawkynt.Drawing;
+
+// Color corrections
+using var bright = source.ApplyFilter(new Brightness(0.2f));
+using var adjusted = source.ApplyFilter(new BrightnessContrast(0.1f, 0.3f));
+using var warm = source.ApplyFilter(new ColorTemperature(0.5f));
+using var corrected = source.ApplyFilter(new Gamma(2.2f));
+using var inverted = source.ApplyFilter(Invert.Default);
+using var vintage = source.ApplyFilter(new Sepia(0.8f));
+using var poster = source.ApplyFilter(new Posterize(4));
+
+// HSL adjustments
+using var saturated = source.ApplyFilter(new HueSaturation(0f, 0.3f, 0f));
+using var vibrant = source.ApplyFilter(new Vibrance(0.5f));
+
+// Enhancement
+using var sharp = source.ApplyFilter(Sharpen.Default);
+using var blurred = source.ApplyFilter(GaussianBlur.Default);
+using var blurred5x5 = source.ApplyFilter(new GaussianBlur(2, 2));
+using var blurredLarge = source.ApplyFilter(new GaussianBlur(10, 10));
+using var denoised = source.ApplyFilter(MedianFilter.Default);
+using var denoisedLarge = source.ApplyFilter(new MedianFilter(5));
+using var sharpened = source.ApplyFilter(new UnsharpMask(1.5f, 0.05f));
+using var sharpenedLarge = source.ApplyFilter(new UnsharpMask(1.5f, 0.05f, 5, 5));
+using var smoothed = source.ApplyFilter(new BilateralFilter(3, 3f, 0.1f));
+using var dilated = source.ApplyFilter(new Dilate(3));
+using var eroded = source.ApplyFilter(new Erode(3));
+
+// Edge detection & analysis
+using var edges = source.ApplyFilter(SobelEdge.Default);
+using var binary = source.ApplyFilter(new Threshold(0.5f));
+using var red = source.ApplyFilter(new ChannelExtraction(ColorChannel.Red));
+using var morphEdges = source.ApplyFilter(new MorphologicalGradient(2));
+
+// Artistic
+using var duo = source.ApplyFilter(Duotone.Default);
+using var falseCol = source.ApplyFilter(FalseColor.Default);
+using var boxBlurred = source.ApplyFilter(new BoxBlur(5, 5));
+using var painterly = source.ApplyFilter(new Kuwahara(3));
+using var vignetted = source.ApplyFilter(new Vignette(0.5f, 0.75f));
+using var chromatic = source.ApplyFilter(new ChromaticAberration(2f));
+using var nightVis = source.ApplyFilter(NightVision.Default);
+using var thermal = source.ApplyFilter(new Thermal(0.8f));
+using var oilPaint = source.ApplyFilter(new OilPainting(3, 20));
+using var sketch = source.ApplyFilter(new PencilSketch(0.8f, 1));
+using var waterCol = source.ApplyFilter(new Watercolor(2, 6));
+using var pixelated = source.ApplyFilter(new Pixelate(8));
+using var halftoned = source.ApplyFilter(new Halftone(6, 45f));
+using var selective = source.ApplyFilter(new SelectiveDesaturation(0f, 30f, 1f));
+using var bloomed = source.ApplyFilter(new Bloom(0.7f, 1f, 3));
+using var glowing = source.ApplyFilter(new GlowingEdges(0.8f, 2f));
+using var cartoon = source.ApplyFilter(new Cartoon(6, 0.1f, 1));
+using var neon = source.ApplyFilter(new Neon(1f, 2f));
+
+// Distortion
+using var twirled = source.ApplyFilter(new Twirl(45f, 0.5f));
+using var rippled = source.ApplyFilter(new Ripple(5f, 20f, 0f));
+using var spherized = source.ApplyFilter(new Spherize(0.5f));
+using var frosted = source.ApplyFilter(FrostedGlass.Default);
+using var waved = source.ApplyFilter(new Wave(5f, 30f, 5f, 30f));
+
+// Noise
+using var noisy = source.ApplyFilter(new AddNoise(0.1f));
+using var despeckled = source.ApplyFilter(Despeckle.Default);
+using var denoised2 = source.ApplyFilter(new ReduceNoise(0.5f, 2));
+
+// High-quality mode uses OkLab perceptual color space
+using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQuality);
+```
+
+### Available Filters
+
+#### Color Correction
+
+| Filter | Description |
+| ------ | ----------- |
+| `BleachBypass` | Film look: desaturated, high-contrast, muted colors simulating skipped bleach step |
+| `Brightness` | Adjust brightness by adding offset to RGB channels |
+| `BrightnessContrast` | Combined brightness and contrast adjustment |
+| `ChannelMixer` | Recombine R/G/B channels with arbitrary 3x3 coefficient matrix |
+| `ColorBalance` | Adjust color balance independently in shadows, midtones, and highlights (9 parameters) |
+| `ColorTemperature` | Adjust color temperature (warm/cool shift) |
+| `ColorTint` | Adjust green-magenta color tint |
+| `Contrast` | Adjust contrast by scaling around midpoint |
+| `CrossProcess` | Simulates cross-processed film (E6 in C41 chemistry) with shifted curves and boosted saturation |
+| `Exposure` | Adjust exposure in stops (power-of-two scaling) |
+| `Gamma` | Apply gamma correction curve |
+| `Grayscale` | Convert to grayscale via luminance |
+| `HDRToneMap` | Reinhard tone mapping operator for compressing high dynamic range |
+| `HueSaturation` | Adjust hue, saturation, and lightness in HSL space |
+| `Invert` | Invert all color channels |
+| `Levels` | Input/output level remapping with midtone gamma |
+| `Posterize` | Reduce color levels per channel |
+| `SelectiveDesaturation` | Desaturates all colors except a chosen hue range (grayscale with conditional coloring) |
+| `Sepia` | Apply sepia tone using standard color matrix |
+| `Solarize` | Invert channels above threshold |
+| `Vibrance` | Smart saturation boost targeting desaturated pixels |
+| `VonKries` | Chromatic adaptation via Bradford transform (white point correction) |
+| `AutoLevels` | Local auto-levels contrast stretching based on neighborhood min/max (always uses frame access) |
+| `Equalize` | Local histogram equalization mapping via CDF in neighborhood (always uses frame access) |
+| `SigmoidContrast` | S-curve sigmoid contrast adjustment per channel (always uses frame access) |
+
+#### Enhancement
+
+| Filter | Description |
+| ------ | ----------- |
+| `BilateralFilter` | Edge-preserving bilateral smoothing (spatial + range Gaussian weighting; always uses frame access) |
+| `Blur` | 3x3 weighted blur |
+| `Clarity` | Local contrast enhancement targeting midtones (always uses frame access) |
+| `Dehaze` | Remove atmospheric haze by estimating and subtracting minimum channel (always uses frame access) |
+| `Dilate` | Morphological dilation (max luminance) with configurable radius (uses frame access for radius > 2) |
+| `Emboss` | 3x3 emboss convolution with gray bias |
+| `Erode` | Morphological erosion (min luminance) with configurable radius (uses frame access for radius > 2) |
+| `GaussianBlur` | Gaussian blur with arbitrary kernel size (radiusX/radiusY; uses frame access for radius > 2) |
+| `HighPass` | High-pass filter with arbitrary blur radius (original minus low-pass + 0.5 bias; uses frame access for radius > 2) |
+| `MedianFilter` | Median filter for noise reduction with configurable radius (uses frame access for radius > 2) |
+| `MotionBlur` | Directional motion blur along a configurable angle and length (always uses frame access) |
+| `RadialBlur` | Radial blur emanating from a configurable center point (always uses frame access) |
+| `Sharpen` | 3x3 unsharp mask sharpening |
+| `SpinBlur` | Circular/rotational blur around a configurable center point (always uses frame access) |
+| `SurfaceBlur` | Edge-preserving blur that only averages neighbors within a color threshold (always uses frame access) |
+| `UnsharpMask` | Unsharp mask sharpening with threshold and arbitrary blur radius (uses frame access for radius > 2) |
+| `ZoomBlur` | Zoom/radial blur along the direction from center through each pixel (always uses frame access) |
+| `BokehBlur` | Polygonal disc-shaped blur with bright spot emphasis (always uses frame access) |
+| `SmartBlur` | Edge-preserving blur with hard color difference threshold (always uses frame access) |
+| `SmartSharpen` | Deconvolution-style sharpening with edge magnitude threshold (always uses frame access) |
+
+#### Analysis
+
+| Filter | Description |
+| ------ | ----------- |
+| `AccentedEdges` | Sobel edges with brightness and smoothness modulation (always uses frame access) |
+| `Channel Extraction` | Extract single color channel as grayscale |
+| `LaplacianEdge` | Laplacian edge detection |
+| `MorphologicalGradient` | Edge detection via morphological gradient (dilate - erode; uses frame access for radius > 2) |
+| `PrewittEdge` | Prewitt edge detection (equal-weight gradient) |
+| `SobelEdge` | Sobel edge detection (gradient magnitude) |
+| `Threshold` | Binary threshold based on luminance |
+| `TraceContour` | Contour tracing that outputs white where gradient crosses a threshold (always uses frame access) |
+| `CannyEdge` | Canny edge detection with double threshold hysteresis (always uses frame access) |
+| `FindEdges` | Simple Sobel edge detection showing white edges on black background (always uses frame access) |
+
+#### Artistic
+
+| Filter | Description |
+| ------ | ----------- |
+| `Bloom` | Glow around bright areas with threshold and radial glow (always uses frame access) |
+| `BoxBlur` | Uniform box blur with configurable kernel size (radiusX/radiusY; uses frame access for radius > 2) |
+| `Cartoon` | Color quantization with edge darkening for cartoon/cel-shaded appearance (always uses frame access) |
+| `ChromaticAberration` | Simulates lens chromatic aberration with radial RGB channel shifting (always uses frame access) |
+| `ColoredPencil` | Colored pencil sketch preserving hue via HSL edge modulation (always uses frame access) |
+| `ColorHalftone` | Per-CMYK-channel halftone dots at different screen angles (always uses frame access) |
+| `Crosshatch` | Multi-angle line hatching where line density varies with luminance (always uses frame access) |
+| `Crystallize` | Grid-based Voronoi cell tessellation with seed-point coloring (always uses frame access) |
+| `Cutout` | Simplified paper-cutout effect via smoothing and posterization (always uses frame access) |
+| `DiffuseGlow` | Bright area glow with optional grain for dreamy effect (always uses frame access) |
+| `DryBrush` | Simplified oil-painting with configurable brush size and levels (always uses frame access) |
+| `Duotone` | Map luminance to shadow/highlight color gradient |
+| `Engrave` | Engraving-style line density that varies with luminance (always uses frame access) |
+| `FalseColor` | Map luminance to three-stop color gradient |
+| `Fragment` | Average of multiple rotated/offset copies for ghosting effect (always uses frame access) |
+| `GlowingEdges` | Neon-colored edges on dark background (always uses frame access) |
+| `Grain` | Deterministic photographic film grain based on position hash (always uses frame access) |
+| `Halftone` | Print-style circular dot pattern simulating newspaper printing (always uses frame access) |
+| `InkOutlines` | Multiply original color by edge-darkness factor for ink outline appearance (always uses frame access) |
+| `Kuwahara` | Painterly filter using quadrant variance analysis (always uses frame access) |
+| `LensFlare` | Procedural lens flare with radial glow and ray pattern (always uses frame access) |
+| `LightingEffects` | Phong-like directional shading using luminance as height map (always uses frame access) |
+| `Mosaic` | Tile mosaic with dark grout lines between blocks (always uses frame access) |
+| `Neon` | Neon glow edges with color spread and additive blending (always uses frame access) |
+| `NightVision` | Green monochrome with amplified brightness simulating night-vision goggles |
+| `OilPainting` | Quantized luminance-binned color averaging for painterly effect (always uses frame access) |
+| `OldPhoto` | Combined vintage: sepia tone + reduced contrast + warm color shift |
+| `PaletteKnife` | Directional smoothing following gradient for palette knife strokes (always uses frame access) |
+| `PencilSketch` | Edge detection inverted and blended with grayscale for sketch appearance (always uses frame access) |
+| `Pixelate` | Mosaic effect replacing blocks of pixels with their average color (always uses frame access) |
+| `Pointillize` | Circular dot pattern on paper background simulating pointillism (always uses frame access) |
+| `PosterEdges` | Color posterization combined with edge darkening (always uses frame access) |
+| `Relief` | 3D relief effect with directional light source from luminance heightmap |
+| `StainedGlass` | Voronoi cell tessellation with dark borders between cells (always uses frame access) |
+| `Thermal` | False-color thermal/infrared mapping via 5-stop color ramp |
+| `TiltShift` | Position-dependent selective blur with sharp focus band (always uses frame access) |
+| `Vignette` | Radial vignette darkening effect (always uses frame access) |
+| `Watercolor` | Watercolor painting simulation with color quantization and soft edges (always uses frame access) |
+| `AngledStrokes` | Directional brush strokes at configurable angle (always uses frame access) |
+| `BasRelief` | Bas-relief sculptural shading from directional edges (always uses frame access) |
+| `ChalkAndCharcoal` | Chalk and charcoal sketch effect on gray paper (always uses frame access) |
+| `Charcoal` | Charcoal sketch using edge detection and threshold (always uses frame access) |
+| `ConteCrayon` | Conte crayon with foreground/background color mapping (always uses frame access) |
+| `Craquelure` | Surface crack texture overlay with noise displacement (always uses frame access) |
+| `DarkStrokes` | Dark stroke painting emphasizing shadows (always uses frame access) |
+| `Facet` | Weighted median color by similarity in neighborhood (always uses frame access) |
+| `Fresco` | Fresco painting with textured surface noise (always uses frame access) |
+| `GlassTile` | Glass tile distortion with lens bulge effect per tile (always uses frame access) |
+| `GraphicPen` | Graphic pen with directional edge strokes (always uses frame access) |
+| `HalftonePattern` | Ordered dither halftone pattern (dot/line/cross types) (always uses frame access) |
+| `NotePaper` | Note paper sketch with emboss relief and grain (always uses frame access) |
+| `Patchwork` | Patchwork quilt effect with emboss-style relief edges (always uses frame access) |
+| `Photocopy` | Photocopy effect with adjustable detail and darkness (always uses frame access) |
+| `PlasticWrap` | Plastic wrap effect with specular highlights from edges (always uses frame access) |
+| `Reticulation` | Film grain reticulation modulated by luminance (always uses frame access) |
+| `RoughPastels` | Rough pastel strokes with canvas texture overlay (always uses frame access) |
+| `SmudgeStick` | Smudge stick painting with highlight brightening (always uses frame access) |
+| `SoftGlow` | Soft glow via screen blend of blurred highlights (always uses frame access) |
+| `Spatter` | Paint spatter with hash-based displacement and smoothing (always uses frame access) |
+| `Sponge` | Sponge texture with high-contrast luminance bins (always uses frame access) |
+| `Stamp` | Rubber stamp effect with luminance threshold (always uses frame access) |
+| `Texturizer` | Procedural texture overlay (brick/burlap/canvas/sandstone) with relief (always uses frame access) |
+| `Tiles` | Offset tile blocks with random displacement and dark gaps (always uses frame access) |
+| `TornEdges` | Stamp effect with noisy displaced edges (always uses frame access) |
+| `Underpainting` | Underpainting with large brush oil-painting and texture (always uses frame access) |
+| `WaterPaper` | Water paper texture with directional blur and fiber grain (always uses frame access) |
+
+#### Distortion
+
+| Filter | Description |
+| ------ | ----------- |
+| `FrostedGlass` | Random pixel displacement via positional hash for frosted glass effect (always uses frame access) |
+| `LensDistortion` | Brown-Conrady barrel/pincushion lens distortion model (always uses frame access) |
+| `Pinch` | Radial compress/expand within configurable radius (always uses frame access) |
+| `PolarCoordinates` | Convert between rectangular and polar coordinate systems (always uses frame access) |
+| `Ripple` | Sinusoidal displacement perpendicular to a configurable angle (always uses frame access) |
+| `Spherize` | Spherical refraction distortion (always uses frame access) |
+| `Spread` | Random neighbor displacement for scatter effect (always uses frame access) |
+| `Turbulence` | Fractal noise displacement using value noise with octave summation (always uses frame access) |
+| `Twirl` | Spiral rotation decreasing from center to edge (always uses frame access) |
+| `Wave` | Independent X/Y sinusoidal displacement with configurable amplitude and wavelength (always uses frame access) |
+| `Wind` | Directional pixel streaks at bright edges simulating wind (always uses frame access) |
+| `Bulge` | Radial bulge/pinch power-law distortion from center (always uses frame access) |
+| `Dents` | Noise-based surface dent displacement distortion (always uses frame access) |
+| `OceanRipple` | Dual-axis sinusoidal ocean ripple distortion (always uses frame access) |
+| `Offset` | Wrap-around pixel offset displacement (always uses frame access) |
+| `Shear` | Linear horizontal or vertical shear displacement (always uses frame access) |
+| `ZigZag` | Radial zigzag sinusoidal displacement from center (always uses frame access) |
+
+#### Noise
+
+| Filter | Description |
+| ------ | ----------- |
+| `AddNoise` | Deterministic positional hash noise, monochromatic or per-channel (always uses frame access) |
+| `Despeckle` | Hybrid median filter combining horizontal, vertical, and diagonal medians (always uses frame access) |
+| `DustAndScratches` | Replace outlier pixels with neighborhood median (always uses frame access) |
+| `Mezzotint` | Random dot pattern where density matches luminance (always uses frame access) |
+| `ReduceNoise` | Non-local means approximation weighting neighbors by color similarity (always uses frame access) |
+| `Diffuse` | Random positional hash displacement noise (always uses frame access) |
+
+#### Render
+
+| Filter | Description |
+| ------ | ----------- |
+| `Clouds` | Procedural multi-octave value noise clouds blended with source (always uses frame access) |
+| `DifferenceClouds` | Difference blend of procedural noise with source image (always uses frame access) |
+| `Fibers` | Vertical fiber texture with noise modulation blended with source (always uses frame access) |
+| `PlasmaTexture` | Multi-octave plasma noise with per-channel phase offset (always uses frame access) |
+| `Supernova` | Radial starburst light rays with spoke pattern added to source (always uses frame access) |
+
+#### Morphology
+
+| Filter | Description |
+| ------ | ----------- |
+| `BottomHat` | Black bottom-hat: closing minus original highlights dark details (always uses frame access) |
+| `Closing` | Morphological closing: dilation then erosion (always uses frame access) |
+| `Opening` | Morphological opening: erosion then dilation (always uses frame access) |
+| `TopHat` | White top-hat: original minus opening highlights bright details (always uses frame access) |
+
+### Filter Discovery
+
+```csharp
+using Hawkynt.ColorProcessing.Filtering;
+
+// Enumerate all available filters
+foreach (var filter in FilterRegistry.All)
+  Console.WriteLine($"{filter.Name} ({filter.Category})");
+
+// Find by name or category
+var vonKries = FilterRegistry.FindByName("VonKries");
+var analysisFilters = FilterRegistry.GetByCategory(FilterCategory.Analysis);
+
+// Apply via descriptor (reflection-based, useful for UI/tooling)
+var desc = FilterRegistry.FindByName("Blur");
+using var result = desc.Apply(source);
+```
+
+---
+
+## Blend Modes
+
+The library provides 27 blend modes for compositing bitmaps, covering all standard categories from image editing applications. Blend modes operate on normalized [0,1] float channel values and support alpha compositing with adjustable strength.
+
+### Usage
+
+```csharp
+using Hawkynt.ColorProcessing.Blending.BlendModes;
+using Hawkynt.Drawing;
+
+using var background = new Bitmap("base.png");
+using var overlay = new Bitmap("overlay.png");
+
+// Blend with specific mode — returns new bitmap
+using var multiplied = background.BlendWith<Multiply>(overlay);
+using var screened = background.BlendWith<Screen>(overlay, 0.5f);  // 50% strength
+
+// In-place blending — modifies background directly
+background.BlendInto<Overlay>(overlay);
+
+// Blend filter result with adjustable opacity
+using var softGlow = source.BlendWith(new GaussianBlur(3, 3), 0.4f);  // Normal blend
+using var sharpened = source.BlendWith<Screen, UnsharpMask>(new UnsharpMask(1.5f, 0.05f), 0.7f);
+
+// HSL component modes
+using var recolored = background.BlendWith<HueBlend>(overlay);
+using var luminosity = background.BlendWith<LuminosityBlend>(overlay);
+```
+
+### Available Blend Modes
+
+#### Normal
+
+| Mode | Description |
+| ---- | ----------- |
+| `Normal` | Replaces background with foreground |
+
+#### Darken
+
+| Mode | Description |
+| ---- | ----------- |
+| `Multiply` | Multiplies channels, darkening the image |
+| `ColorBurn` | Darkens by dividing inverted background by foreground |
+| `Darken` | Takes the darker of two channels |
+| `LinearBurn` | Adds channels and subtracts 1, darkening the image |
+
+#### Lighten
+
+| Mode | Description |
+| ---- | ----------- |
+| `Screen` | Inverts, multiplies, and inverts again, lightening the image |
+| `ColorDodge` | Brightens by dividing background by inverted foreground |
+| `Lighten` | Takes the lighter of two channels |
+| `Add` | Adds channels, clamping at 1 |
+| `LinearDodge` | Adds channels, clamping at 1 (alias of Add) |
+
+#### Contrast
+
+| Mode | Description |
+| ---- | ----------- |
+| `Overlay` | Combines Multiply and Screen based on background luminance |
+| `SoftLight` | Soft contrast adjustment using W3C formula |
+| `HardLight` | Overlay with foreground and background swapped |
+| `VividLight` | Combines Color Burn and Color Dodge based on foreground |
+| `LinearLight` | Combines Linear Burn and Linear Dodge based on foreground |
+| `PinLight` | Replaces dark or light halves based on foreground |
+| `HardMix` | Posterizes to black or white based on channel sum |
+
+#### Inversion
+
+| Mode | Description |
+| ---- | ----------- |
+| `Difference` | Absolute difference between channels |
+| `Exclusion` | Similar to Difference but with lower contrast |
+| `Subtract` | Subtracts foreground from background, clamping at 0 |
+| `Divide` | Divides background by foreground |
+
+#### Component (HSL-based)
+
+| Mode | Description |
+| ---- | ----------- |
+| `HueBlend` | Takes hue from foreground, saturation and lightness from background |
+| `SaturationBlend` | Takes saturation from foreground, hue and lightness from background |
+| `ColorBlend` | Takes hue and saturation from foreground, lightness from background |
+| `LuminosityBlend` | Takes lightness from foreground, hue and saturation from background |
+
+#### Other
+
+| Mode | Description |
+| ---- | ----------- |
+| `GrainExtract` | Extracts film grain texture from the image |
+| `GrainMerge` | Merges film grain texture back into the image |
+
+### Blend Mode Discovery
+
+```csharp
+using Hawkynt.ColorProcessing.Blending;
+
+// Enumerate all available blend modes
+foreach (var mode in BlendModeRegistry.All)
+  Console.WriteLine($"{mode.Name} ({mode.Category})");
+
+// Find by name or category
+var multiply = BlendModeRegistry.FindByName("Multiply");
+var darkenModes = BlendModeRegistry.GetByCategory(BlendModeCategory.Darken);
+```
+
+---
+
+## Frequency Domain
+
+The library provides FFT (Fast Fourier Transform) and DCT (Discrete Cosine Transform) operations for frequency-domain image analysis and manipulation.
+
+### Types
+
+| Type | Description |
+| ---- | ----------- |
+| `Complex` | Lightweight complex number (`float Real, float Imaginary`) with arithmetic operators, magnitude, phase, conjugate, and polar conversion |
+| `Fft1D` | 1D FFT using Cooley-Tukey radix-2 algorithm (in-place, power-of-2 length) |
+| `Fft2D` | 2D FFT via row-wise then column-wise 1D FFT |
+| `Dct1D` | 1D Discrete Cosine Transform (Type-II forward, Type-III inverse) |
+| `Dct2D` | 2D DCT via row-wise then column-wise 1D DCT |
+
+### Bitmap Extension Methods
+
+```csharp
+using Hawkynt.ColorProcessing.FrequencyDomain;
+using Hawkynt.Drawing;
+
+// FFT operations
+var spectrum = source.ToFrequencyDomain();           // Bitmap → Complex[,] (grayscale FFT)
+using var reconstructed = BitmapFrequencyDomainExtensions
+    .FromFrequencyDomain(spectrum, width, height);   // Complex[,] → Bitmap
+
+// Spectrum visualization
+using var magnitude = source.GetMagnitudeSpectrum(); // Log-scaled magnitude (zero-freq centered)
+using var phase = source.GetPhaseSpectrum();         // Phase spectrum visualization
+
+// DCT operations
+var coefficients = source.ToDctDomain();             // Bitmap → float[,] (grayscale DCT)
+using var fromDct = BitmapFrequencyDomainExtensions
+    .FromDctDomain(coefficients, width, height);     // float[,] → Bitmap
+```
+
+---
+
+## Known Issues
+
+- **Bedi resampler**: Produces out-of-range color values on some inputs, causing `IndexOutOfRangeException` in the sRGB gamma LUT. Tests skip gracefully when this occurs.
 
 ---
 

@@ -1234,15 +1234,11 @@ public class ResamplerTests {
   [Category("HappyPath")]
   public void Bedi_ProducesValidOutput() {
     using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Red);
-    try {
-      using var result = source.Resample<Bedi>(16, 16);
+    using var result = source.Resample<Bedi>(16, 16);
 
-      Assert.That(result, Is.Not.Null);
-      Assert.That(result.Width, Is.EqualTo(16));
-      Assert.That(result.Height, Is.EqualTo(16));
-    } catch (IndexOutOfRangeException) {
-      Assert.Ignore("Bedi resampler produces out-of-range color values on some inputs");
-    }
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(16));
+    Assert.That(result.Height, Is.EqualTo(16));
   }
 
   [Test]
@@ -1250,33 +1246,25 @@ public class ResamplerTests {
   [Category("KnownAnswer")]
   public void Bedi_PreservesColor() {
     using var source = TestUtilities.CreateSolidBitmap(8, 8, Color.Teal);
-    try {
-      using var result = source.Resample<Bedi>(16, 16);
+    using var result = source.Resample<Bedi>(16, 16);
 
-      using var locker = result.Lock();
-      var centerColor = locker[8, 8];
+    using var locker = result.Lock();
+    var centerColor = locker[8, 8];
 
-      Assert.That(centerColor.R, Is.EqualTo(Color.Teal.R).Within(5));
-      Assert.That(centerColor.G, Is.EqualTo(Color.Teal.G).Within(5));
-      Assert.That(centerColor.B, Is.EqualTo(Color.Teal.B).Within(5));
-    } catch (IndexOutOfRangeException) {
-      Assert.Ignore("Bedi resampler produces out-of-range color values on some inputs");
-    }
+    Assert.That(centerColor.R, Is.EqualTo(Color.Teal.R).Within(5));
+    Assert.That(centerColor.G, Is.EqualTo(Color.Teal.G).Within(5));
+    Assert.That(centerColor.B, Is.EqualTo(Color.Teal.B).Within(5));
   }
 
   [Test]
   [Category("HappyPath")]
   public void Bedi_Downscaling_ProducesValidOutput() {
     using var source = TestUtilities.CreateSolidBitmap(16, 16, Color.Teal);
-    try {
-      using var result = source.Resample<Bedi>(8, 8);
+    using var result = source.Resample<Bedi>(8, 8);
 
-      Assert.That(result, Is.Not.Null);
-      Assert.That(result.Width, Is.EqualTo(8));
-      Assert.That(result.Height, Is.EqualTo(8));
-    } catch (IndexOutOfRangeException) {
-      Assert.Ignore("Bedi resampler produces out-of-range color values on some inputs");
-    }
+    Assert.That(result, Is.Not.Null);
+    Assert.That(result.Width, Is.EqualTo(8));
+    Assert.That(result.Height, Is.EqualTo(8));
   }
 
   [Test]

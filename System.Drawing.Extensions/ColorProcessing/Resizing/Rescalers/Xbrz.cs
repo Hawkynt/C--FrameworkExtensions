@@ -52,8 +52,8 @@ public readonly struct Xbrz : IPixelScaler {
   /// </summary>
   /// <param name="scale">The scale factor (2, 3, 4, 5, or 6).</param>
   public Xbrz(int scale = 2) {
-    if (scale is not (2 or 3 or 4 or 5 or 6))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "xBRZ supports 2x, 3x, 4x, 5x, 6x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 6);
     this._scale = scale;
   }
 

@@ -71,6 +71,14 @@ public static class ColorConverter {
         : ColorMatrices.BT601_R * rgba.R + ColorMatrices.BT601_G * rgba.G + ColorMatrices.BT601_B * rgba.B;
     }
 
+    // Fast path for Bgra8888
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      ref readonly var bgra = ref Unsafe.As<TWork, Bgra8888>(ref Unsafe.AsRef(in color));
+      return highQuality
+        ? _GetOklabLuminance(bgra.RNormalized, bgra.GNormalized, bgra.BNormalized)
+        : ColorMatrices.BT601_R * bgra.RNormalized + ColorMatrices.BT601_G * bgra.GNormalized + ColorMatrices.BT601_B * bgra.BNormalized;
+    }
+
     // Fallback via interface
     return _GetLuminanceFallback(color, highQuality);
   }

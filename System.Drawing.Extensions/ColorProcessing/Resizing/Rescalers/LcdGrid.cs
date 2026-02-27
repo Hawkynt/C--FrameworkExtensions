@@ -48,8 +48,8 @@ public readonly struct LcdGrid : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2, 3, or 4).</param>
   public LcdGrid(int scale = 3) {
-    if (scale is < 2 or > 4)
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "LcdGrid supports 2x, 3x, or 4x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
     this._scale = scale;
   }
 

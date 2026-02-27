@@ -57,8 +57,8 @@ public readonly struct HawkyntTv : IPixelScaler {
   /// </summary>
   /// <param name="scale">Scale factor (2 or 3).</param>
   public HawkyntTv(int scale = 2) {
-    if (scale is not (2 or 3))
-      throw new ArgumentOutOfRangeException(nameof(scale), scale, "HawkyntTv supports 2x, 3x scaling");
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 3);
     this._scale = scale;
   }
 
