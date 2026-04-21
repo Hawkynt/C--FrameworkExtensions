@@ -26,6 +26,24 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
+/// Selects how the noise value drives the per-pixel palette decision.
+/// </summary>
+public enum NoiseMode {
+  /// <summary>
+  /// Noise picks between nearest and second-nearest palette colors based on a threshold
+  /// derived from how far the source sits between them. Default; avoids clamping-at-edges
+  /// and preserves palette fidelity. (Classic blue-noise-style dithering.)
+  /// </summary>
+  ThresholdSelection = 0,
+  /// <summary>
+  /// Noise is added to the source color before nearest-neighbor lookup, producing
+  /// a more "random grain" look similar to analog film noise. Simpler algorithm, often
+  /// preferred for posterization effects and retro aesthetics.
+  /// </summary>
+  AdditivePerturb,
+}
+
+/// <summary>
 /// Defines the type of noise used for dithering.
 /// </summary>
 public enum NoiseType {
@@ -65,15 +83,21 @@ public readonly struct NoiseDitherer : IDitherer {
   /// <summary>Random seed for reproducible results.</summary>
   public int Seed { get; }
 
+  /// <summary>How the noise value is applied to palette selection.</summary>
+  public NoiseMode Mode { get; }
+
   #endregion
 
   #region fluent API
 
   /// <summary>Returns this ditherer with specified strength.</summary>
-  public NoiseDitherer WithStrength(float strength) => new(this.NoiseType, strength, this.Seed);
+  public NoiseDitherer WithStrength(float strength) => new(this.NoiseType, strength, this.Seed, this.Mode);
 
   /// <summary>Returns this ditherer with specified seed for reproducible results.</summary>
-  public NoiseDitherer WithSeed(int seed) => new(this.NoiseType, this.Strength, seed);
+  public NoiseDitherer WithSeed(int seed) => new(this.NoiseType, this.Strength, seed, this.Mode);
+
+  /// <summary>Returns this ditherer with the specified noise-application mode.</summary>
+  public NoiseDitherer WithMode(NoiseMode mode) => new(this.NoiseType, this.Strength, this.Seed, mode);
 
   #endregion
 
@@ -85,10 +109,12 @@ public readonly struct NoiseDitherer : IDitherer {
   /// <param name="noiseType">Type of noise pattern.</param>
   /// <param name="strength">Dithering strength (0-1). Default is 1.</param>
   /// <param name="seed">Random seed. Default is 42 for reproducibility.</param>
-  public NoiseDitherer(NoiseType noiseType = NoiseType.White, float strength = 1f, int seed = 42) {
+  /// <param name="mode">How noise drives the palette decision. Default is threshold-based selection.</param>
+  public NoiseDitherer(NoiseType noiseType = NoiseType.White, float strength = 1f, int seed = 42, NoiseMode mode = NoiseMode.ThresholdSelection) {
     this.NoiseType = noiseType;
     this.Strength = Math.Max(0, Math.Min(1, strength));
     this.Seed = seed;
+    this.Mode = mode;
   }
 
   #endregion
@@ -116,6 +142,35 @@ public readonly struct NoiseDitherer : IDitherer {
     where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
     // Switch happens ONCE here, not per-pixel - each noise type uses specialized code path
+    if (this.Mode == NoiseMode.AdditivePerturb) {
+      switch (this.NoiseType) {
+        case NoiseType.Blue:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(), this.Strength);
+          return;
+        case NoiseType.Pink:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          return;
+        case NoiseType.Brown:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          return;
+        case NoiseType.Violet:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          return;
+        case NoiseType.Grey:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          return;
+        default:
+          _DitherAdditive<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          return;
+      }
+    }
+
     switch (this.NoiseType) {
       case NoiseType.White:
         _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
@@ -145,6 +200,45 @@ public readonly struct NoiseDitherer : IDitherer {
         _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
           source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
         break;
+    }
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void _DitherAdditive<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
+    TPixel* source,
+    byte* indices,
+    int width,
+    int height,
+    int sourceStride,
+    int targetStride,
+    int startY,
+    in TDecode decoder,
+    in TMetric metric,
+    TWork[] palette,
+    TNoiseGen noiseGen,
+    float strength)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TMetric : struct, IColorMetric<TWork>
+    where TNoiseGen : struct, INoiseGenerator {
+
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
+
+    for (var y = startY; y < endY; ++y)
+    for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
+      var color = decoder.Decode(source[sourceIdx]);
+      var (c1, c2, c3, a) = color.ToNormalized();
+
+      // Perturb each channel by (noise * strength). Noise generator returns [-0.5, 0.5].
+      var noise = noiseGen.GetThreshold(x, y) * strength;
+      var n1 = UNorm32.FromFloatClamped(c1.ToFloat() + noise);
+      var n2 = UNorm32.FromFloatClamped(c2.ToFloat() + noise);
+      var n3 = UNorm32.FromFloatClamped(c3.ToFloat() + noise);
+
+      var perturbed = ColorFactory.FromNormalized_4<TWork>(n1, n2, n3, a);
+      indices[targetIdx] = (byte)lookup.FindNearest(perturbed, out _);
     }
   }
 
@@ -264,6 +358,24 @@ public readonly struct NoiseDitherer : IDitherer {
 
   /// <summary>Grey noise dithering: perceptually uniform noise adjusted for human vision.</summary>
   public static NoiseDitherer GreyNoise { get; } = new(NoiseType.Grey);
+
+  /// <summary>White-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer WhiteNoiseAdditive { get; } = new(NoiseType.White, 0.5f, 42, NoiseMode.AdditivePerturb);
+
+  /// <summary>Blue-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer BlueNoiseAdditive { get; } = new(NoiseType.Blue, 0.5f, 42, NoiseMode.AdditivePerturb);
+
+  /// <summary>Pink-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer PinkNoiseAdditive { get; } = new(NoiseType.Pink, 0.5f, 42, NoiseMode.AdditivePerturb);
+
+  /// <summary>Brown-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer BrownNoiseAdditive { get; } = new(NoiseType.Brown, 0.5f, 42, NoiseMode.AdditivePerturb);
+
+  /// <summary>Violet-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer VioletNoiseAdditive { get; } = new(NoiseType.Violet, 0.5f, 42, NoiseMode.AdditivePerturb);
+
+  /// <summary>Grey-noise additive dithering: source color perturbed then nearest-neighbor lookup.</summary>
+  public static NoiseDitherer GreyNoiseAdditive { get; } = new(NoiseType.Grey, 0.5f, 42, NoiseMode.AdditivePerturb);
 
   #endregion
 
