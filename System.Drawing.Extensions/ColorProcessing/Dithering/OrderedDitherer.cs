@@ -197,35 +197,9 @@ public readonly struct OrderedDitherer : IDitherer {
   /// <summary>
   /// Generates a Bayer threshold matrix of the specified size.
   /// </summary>
-  /// <param name="size">Matrix size (must be power of 2).</param>
-  public static float[,] GenerateBayer(int size) {
-    var matrix = new float[size, size];
-
-    for (var y = 0; y < size; ++y)
-    for (var x = 0; x < size; ++x)
-      matrix[y, x] = BayerValue(x, y, size);
-
-    return matrix;
-  }
-
-  /// <summary>
-  /// Calculates the Bayer matrix value at position (x, y) for a given matrix size.
-  /// Uses the recursive definition of the Bayer matrix.
-  /// </summary>
-  private static float BayerValue(int x, int y, int size) {
-    var value = 0;
-    var mask = size >> 1;
-
-    while (mask > 0) {
-      value <<= 2;
-      var xBit = (x & mask) != 0 ? 1 : 0;
-      var yBit = (y & mask) != 0 ? 1 : 0;
-      value |= (xBit ^ yBit) | (yBit << 1);
-      mask >>= 1;
-    }
-
-    return value;
-  }
+  /// <param name="size">Matrix size (must be a positive power of two).</param>
+  /// <remarks>Delegates to <see cref="BayerMatrix.Generate"/>; kept for API continuity.</remarks>
+  public static float[,] GenerateBayer(int size) => BayerMatrix.Generate(size);
 
   #endregion
 
