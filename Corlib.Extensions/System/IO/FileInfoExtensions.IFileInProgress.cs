@@ -58,7 +58,7 @@ static partial class FileInfoExtensions {
     void AppendAllLines(IEnumerable<string> lines, Encoding encoding);
     void AppendAllText(string text);
     void AppendAllText(string text, Encoding encoding);
-    FileStream Open(FileAccess access);
+    Stream Open(FileAccess access);
     byte[] ReadAllBytes();
     void WriteAllBytes(byte[] data);
     IEnumerable<byte> ReadBytes();

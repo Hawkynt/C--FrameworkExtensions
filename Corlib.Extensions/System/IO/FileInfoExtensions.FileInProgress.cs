@@ -48,13 +48,15 @@ static partial class FileInfoExtensions {
     private bool _isDisposed;
     private bool _isLockReleased;
     private bool _isTempReleased;
+    private int _openStreamCount;
 
     /// <summary>
     ///   A stream wrapper that ignores Close/Dispose calls, allowing StreamReader/StreamWriter
     ///   to be disposed without closing the underlying stream. This provides cross-framework
     ///   compatibility for frameworks that don't support the leaveOpen parameter.
     /// </summary>
-    private sealed class NonClosingStreamWrapper(Stream inner) : Stream {
+    private sealed class NonClosingStreamWrapper(Stream inner, Action? onDispose = null) : Stream {
+      private int _disposed;
       public override bool CanRead => inner.CanRead;
       public override bool CanSeek => inner.CanSeek;
       public override bool CanWrite => inner.CanWrite;
@@ -65,7 +67,17 @@ static partial class FileInfoExtensions {
       public override long Seek(long offset, SeekOrigin origin) => inner.Seek(offset, origin);
       public override void SetLength(long value) => inner.SetLength(value);
       public override void Write(byte[] buffer, int offset, int count) => inner.Write(buffer, offset, count);
-      protected override void Dispose(bool disposing) { /* intentionally empty - don't close inner stream */ }
+      protected override void Dispose(bool disposing) {
+        // Intentionally don't close inner stream (owned by FileInProgress).
+        // Flush on dispose so BinaryWriter/StreamWriter callers commit their data
+        // before FileInProgress.Dispose() runs the atomic replace.
+        if (Threading.Interlocked.Exchange(ref this._disposed, 1) != 0)
+          return;
+        if (!disposing)
+          return;
+        try { inner.Flush(); } catch { /* swallow on dispose */ }
+        onDispose?.Invoke();
+      }
     }
 
     /// <summary>
@@ -153,6 +165,7 @@ static partial class FileInfoExtensions {
         // For lock modes, write through the locked stream to avoid race conditions
         if (this._lockStream != null && !this._isLockReleased) {
           this._WriteThrough();
+          this.OriginalFile.Refresh();
           return;
         }
 
@@ -169,6 +182,7 @@ static partial class FileInfoExtensions {
         if (!this.OriginalFile.Exists) {
           // Original was deleted - atomically move temp to target location
           _AtomicMove(this._TemporaryFile, this.OriginalFile);
+          this.OriginalFile.Refresh();
           return;
         }
 
@@ -183,6 +197,7 @@ static partial class FileInfoExtensions {
 
         // Atomically replace original with temp contents
         _AtomicReplace(this.OriginalFile, this._TemporaryFile);
+        this.OriginalFile.Refresh();
       } finally {
         this._ReleaseTempStream();
         this._ReleaseLock();
@@ -438,8 +453,36 @@ static partial class FileInfoExtensions {
     }
 
     /// <inheritdoc />
-    public FileStream Open(FileAccess access)
-      => throw new InvalidOperationException("Cannot open additional handles on the work-in-progress file. Use the provided read/write methods instead.");
+    public Stream Open(FileAccess access) {
+      if (this._isDisposed)
+        throw new ObjectDisposedException(nameof(FileInProgress));
+
+      // Only one exposed stream at a time — the underlying temp stream is a single
+      // shared resource with no internal locking, so concurrent handles would race.
+      if (Threading.Interlocked.CompareExchange(ref this._openStreamCount, 1, 0) != 0)
+        throw new InvalidOperationException("A stream is already open on this work-in-progress file. Dispose it before opening another.");
+
+      switch (access) {
+        case FileAccess.Read:
+          this._tempStream.Seek(0, SeekOrigin.Begin);
+          break;
+        case FileAccess.Write:
+          this._tempStream.Seek(0, SeekOrigin.Begin);
+          this._tempStream.SetLength(0);
+          break;
+        case FileAccess.ReadWrite:
+          this._tempStream.Seek(0, SeekOrigin.Begin);
+          break;
+        default:
+          Threading.Interlocked.Exchange(ref this._openStreamCount, 0);
+          throw new ArgumentOutOfRangeException(nameof(access), access, null);
+      }
+
+      return new NonClosingStreamWrapper(
+        this._tempStream,
+        onDispose: () => Threading.Interlocked.Exchange(ref this._openStreamCount, 0)
+      );
+    }
 
 
     /// <inheritdoc />
