@@ -20,10 +20,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Quantization;
+
+/// <summary>
+/// Color-distance metric used by <see cref="AduQuantizer"/> when selecting winning
+/// and neighbor palette units during competitive learning.
+/// </summary>
+public enum AduMetric {
+  /// <summary>Classic 3-channel Euclidean squared distance (default).</summary>
+  Euclidean = 0,
+  /// <summary>Sum of absolute per-channel differences.</summary>
+  Manhattan,
+  /// <summary>Maximum of absolute per-channel differences.</summary>
+  Chebyshev,
+}
 
 /// <summary>
 /// Implements Adaptive Distributing Units (ADU) quantization.
@@ -37,6 +52,10 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// ADU is related to self-organizing maps but uses a simpler topology-free
 /// approach suitable for color quantization.
 /// </para>
+/// <para>
+/// The <see cref="Metric"/> property selects the color-distance function driving
+/// winner selection. Default is <see cref="AduMetric.Euclidean"/> for backward compat.
+/// </para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "ADU", QualityRating = 6)]
 public struct AduQuantizer : IQuantizer {
@@ -49,19 +68,38 @@ public struct AduQuantizer : IQuantizer {
   /// </summary>
   public int IterationCount { get; set; } = 10;
 
+  /// <summary>
+  /// Gets or sets the color-distance metric used for winner/neighbor selection.
+  /// </summary>
+  public AduMetric Metric { get; set; } = AduMetric.Euclidean;
+
   public AduQuantizer() { }
 
-  /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.IterationCount);
+  public AduQuantizer(int iterationCount, AduMetric metric = AduMetric.Euclidean) {
+    this.IterationCount = iterationCount;
+    this.Metric = metric;
+  }
 
-  internal sealed class Kernel<TWork>(int iterationCount) : IQuantizer<TWork>
-    where TWork : unmanaged, IColorSpace4<TWork> {
+  /// <inheritdoc />
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => this.Metric switch {
+    AduMetric.Manhattan => new Kernel<TWork, ManhattanAduDistance>(this.IterationCount),
+    AduMetric.Chebyshev => new Kernel<TWork, ChebyshevAduDistance>(this.IterationCount),
+    _ => new Kernel<TWork, EuclideanAduDistance>(this.IterationCount),
+  };
+
+  internal sealed class Kernel<TWork, TDistance>(int iterationCount) : IQuantizer<TWork>
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TDistance : struct, IAduDistance {
 
     /// <inheritdoc />
     public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount)
       => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, this._ReduceColorsTo);
 
     private IEnumerable<TWork> _ReduceColorsTo(int colorCount, IEnumerable<(TWork color, uint count)> histogram) {
+      // TDistance is a struct parameter — the JIT specialises this method per
+      // concrete struct, so the Distance call below inlines to the underlying
+      // per-metric formula with zero dispatch overhead.
+      var distance = default(TDistance);
       var colorsWithCounts = histogram.ToArray();
 
       // Initialize units (palette colors) with most frequent colors
@@ -110,9 +148,9 @@ public struct AduQuantizer : IQuantizer {
 
           // Find winning unit (closest palette color)
           var winningUnitIndex = 0;
-          var minDistance = _DistanceSquared(input.c1, input.c2, input.c3, palette[0].c1, palette[0].c2, palette[0].c3);
+          var minDistance = distance.Distance(input.c1, input.c2, input.c3, palette[0].c1, palette[0].c2, palette[0].c3);
           for (var i = 1; i < palette.Count; ++i) {
-            var current = _DistanceSquared(input.c1, input.c2, input.c3, palette[i].c1, palette[i].c2, palette[i].c3);
+            var current = distance.Distance(input.c1, input.c2, input.c3, palette[i].c1, palette[i].c2, palette[i].c3);
             if (current >= minDistance)
               continue;
 
@@ -140,7 +178,7 @@ public struct AduQuantizer : IQuantizer {
               continue;
 
             var neighbor = palette[i];
-            var neighborDistance = _DistanceSquared(winner.c1, winner.c2, winner.c3, neighbor.c1, neighbor.c2, neighbor.c3);
+            var neighborDistance = distance.Distance(winner.c1, winner.c2, winner.c3, neighbor.c1, neighbor.c2, neighbor.c3);
 
             if (neighborDistance >= minDistance * 2)
               continue;
@@ -167,18 +205,49 @@ public struct AduQuantizer : IQuantizer {
       ));
     }
 
-    private static double _DistanceSquared(float c1a, float c2a, float c3a, float c1b, float c2b, float c3b) {
-      var d1 = c1a - c1b;
-      var d2 = c2a - c2b;
-      var d3 = c3a - c3b;
-      return d1 * d1 + d2 * d2 + d3 * d3;
-    }
-
     private static void _Shuffle<T>(T[] array, Random random) {
       for (var i = array.Length - 1; i > 0; --i) {
         var j = random.Next(i + 1);
         (array[i], array[j]) = (array[j], array[i]);
       }
     }
+  }
+}
+
+/// <summary>
+/// Zero-cost distance dispatch for <see cref="AduQuantizer.Kernel{TWork, TDistance}"/>.
+/// Implementors are <see langword="struct"/>s with <c>[MethodImpl(AggressiveInlining)]</c>
+/// so the JIT inlines the formula at every call site; no virtual dispatch, no enum switch.
+/// </summary>
+internal interface IAduDistance {
+  double Distance(float c1a, float c2a, float c3a, float c1b, float c2b, float c3b);
+}
+
+/// <summary>Squared Euclidean distance in RGB (or any 3-channel) space.</summary>
+internal readonly struct EuclideanAduDistance : IAduDistance {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Distance(float c1a, float c2a, float c3a, float c1b, float c2b, float c3b) {
+    var d1 = c1a - c1b;
+    var d2 = c2a - c2b;
+    var d3 = c3a - c3b;
+    return d1 * d1 + d2 * d2 + d3 * d3;
+  }
+}
+
+/// <summary>Manhattan (L1) distance in RGB (or any 3-channel) space.</summary>
+internal readonly struct ManhattanAduDistance : IAduDistance {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Distance(float c1a, float c2a, float c3a, float c1b, float c2b, float c3b)
+    => Math.Abs(c1a - c1b) + Math.Abs(c2a - c2b) + Math.Abs(c3a - c3b);
+}
+
+/// <summary>Chebyshev (L∞) distance in RGB (or any 3-channel) space.</summary>
+internal readonly struct ChebyshevAduDistance : IAduDistance {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public double Distance(float c1a, float c2a, float c3a, float c1b, float c2b, float c3b) {
+    var a1 = Math.Abs(c1a - c1b);
+    var a2 = Math.Abs(c2a - c2b);
+    var a3 = Math.Abs(c3a - c3b);
+    return Math.Max(a1, Math.Max(a2, a3));
   }
 }
