@@ -42,7 +42,12 @@ public interface IQuantizer {
   /// Creates a quantizer worker for the specified color space.
   /// </summary>
   /// <returns>A quantizer worker operating in the specified color space.</returns>
-  internal IQuantizer<TWork> CreateKernel<TWork>() where TWork : unmanaged, IColorSpace4<TWork>;
+  /// <remarks>
+  /// Public entry point for histogram-based palette generation from outside this assembly.
+  /// Callers typically use <see cref="Storage.Bgra8888"/> as <typeparamref name="TWork"/>
+  /// when operating in 8-bit-per-channel sRGB storage space.
+  /// </remarks>
+  public IQuantizer<TWork> CreateKernel<TWork>() where TWork : unmanaged, IColorSpace4<TWork>;
 
 }
 
@@ -63,7 +68,7 @@ public interface IQuantizer {
 /// <item><description>Color analysis and clustering</description></item>
 /// </list>
 /// </remarks>
-internal interface IQuantizer<TWork>
+public interface IQuantizer<TWork>
   where TWork : unmanaged, IColorSpace4<TWork> {
 
   /// <summary>

@@ -22,12 +22,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Hawkynt.ColorProcessing.Metrics;
 
-namespace Hawkynt.ColorProcessing.Internal;
+namespace Hawkynt.ColorProcessing;
 
 /// <summary>
-/// Internal helper for filling palette entries when quantizers produce fewer colors than requested.
+/// Fills remaining palette slots when a quantizer produces fewer colors than requested.
 /// </summary>
-internal static class PaletteFiller {
+/// <remarks>
+/// When <c>allowFillingColors</c> is <see langword="true"/>, padding order is
+/// Black, White, Transparent, then RGB+CMY+Grey primaries at shade factors
+/// {1.0, 0.75, 0.5, 0.25, 0.1}, then a deterministic hash-based fallback.
+/// When <see langword="false"/>, unused slots become fully transparent.
+/// </remarks>
+public static class PaletteFiller {
 
   /// <summary>
   /// Creates a final palette array from proposed colors, filling remaining slots if allowed.
