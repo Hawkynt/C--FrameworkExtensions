@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Based on the SNES9x emulator's EPXC implementation.</para>
 /// </remarks>
 [ScalerInfo("EPX-C", Year = 2000, Url = "https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX",
-  Description = "SNES9x enhanced EPX with weighted blending", Category = ScalerCategory.PixelArt)]
-public readonly struct EpxC : IPixelScaler {
+  Description = "SNES9x enhanced EPX with weighted blending", Category = ScalerCategory.Rescaler)]
+public readonly struct EpxC : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

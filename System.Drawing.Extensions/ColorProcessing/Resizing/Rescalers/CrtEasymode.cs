@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Easymode",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-easymode",
   Description = "Lightweight CRT simulation with scanlines and phosphor mask", Category = ScalerCategory.Resampler)]
-public readonly struct CrtEasymode : IPixelScaler {
+public readonly struct CrtEasymode : IRescaler {
   private readonly int _scale;
 
   /// <summary>

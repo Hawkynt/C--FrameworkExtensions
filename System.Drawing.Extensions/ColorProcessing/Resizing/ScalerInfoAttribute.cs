@@ -22,29 +22,62 @@ using System;
 namespace Hawkynt.ColorProcessing.Resizing;
 
 /// <summary>
-/// Categorizes the type of scaling algorithm.
+/// Categorizes a resizing algorithm by the fidelity axis: how faithfully the output reflects
+/// the source, and what scaling grammar applies.
 /// </summary>
+/// <remarks>
+/// <para>
+/// The overall activity (changing output dimensions) is called <b>resizing</b>; the verb pair
+/// is <b>upsize</b>/<b>downsize</b>. Within resizing, this library distinguishes three kinds of
+/// algorithm by their source-fidelity contract:
+/// </para>
+/// <list type="bullet">
+///   <item>
+///     <description>
+///     <b>Rescaler</b> — verb pair <b>upscale</b>/<b>downscale</b>. Fixed integer scale factor,
+///     pattern-matched against source pixel neighbourhoods. Examples: HQ2/3/4x, XBR, XBRz, Eagle,
+///     Scale2x (Epx), SuperXbr, NNEDI3. Output pixels are chosen from a pre-tabulated decision
+///     tree keyed on the surrounding pixels; no new content is invented.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///     <b>Resampler</b> — verb pair <b>upsample</b>/<b>downsample</b>. Arbitrary target dimensions,
+///     source-faithful. Every output pixel is derived from real source samples via deterministic
+///     math: kernel convolution (Lanczos, Bicubic, Mitchell-Netravali, B-splines, OMoms, Jinc,
+///     Gaussian, …), vector tracing (Kopf-Lischinski), content-aware edge direction (DCCI,
+///     EEDI2), or content shuffling (seam carving). No hallucination.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///     <b>Regenerator</b> — no verb pair; always both up AND down. Arbitrary target dimensions,
+///     regenerative. The output is synthesised (not interpolated) by a learned model that can
+///     invent plausible detail not present in the source — at the cost of hallucinations that
+///     may diverge from the source. Examples: AI super-resolution, diffusion-based upscalers.
+///     </description>
+///   </item>
+/// </list>
+/// </remarks>
 public enum ScalerCategory {
 
   /// <summary>
-  /// Pixel-art specific scalers that preserve hard edges and use discrete scale factors.
+  /// Pattern-matched fixed integer scale (upscale/downscale): HQ, XBR, XBRz, Eagle, Scale2x, SuperXbr, NNEDI3, …
   /// </summary>
-  PixelArt,
+  Rescaler,
 
   /// <summary>
-  /// General-purpose resamplers that support continuous scale factors.
+  /// Deterministic, source-faithful arbitrary-scale (upsample/downsample): kernel convolution
+  /// (Lanczos, Bicubic, Mitchell-Netravali, …), vector tracing (Kopf-Lischinski), edge-directed
+  /// interpolation (DCCI, EEDI2), seam carving.
   /// </summary>
   Resampler,
 
   /// <summary>
-  /// Neural network or AI-based upscaling algorithms.
+  /// Regenerative (learned/neural) arbitrary-scale. Synthesises pixels via a model — may
+  /// hallucinate detail that diverges from the source. AI super-resolution, diffusion upscalers.
   /// </summary>
-  Neural,
-
-  /// <summary>
-  /// Content-aware scaling algorithms that analyze image content.
-  /// </summary>
-  ContentAware
+  Regenerator
 }
 
 /// <summary>
@@ -85,7 +118,7 @@ public sealed class ScalerInfoAttribute : Attribute {
   /// <summary>
   /// Gets or sets the category of the scaler.
   /// </summary>
-  public ScalerCategory Category { get; init; } = ScalerCategory.PixelArt;
+  public ScalerCategory Category { get; init; } = ScalerCategory.Rescaler;
 
   /// <summary>
   /// Initializes a new instance of the <see cref="ScalerInfoAttribute"/> class.

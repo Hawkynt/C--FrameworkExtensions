@@ -46,7 +46,14 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// </code>
 /// </example>
 /// </remarks>
-public static class DithererRegistry {
+public static partial class DithererRegistry {
+
+  /// <summary>
+  /// Implemented by the source generator at compile time. See
+  /// <c>ScalerRegistry._CollectFromSourceGenerator</c> for the contract.
+  /// </summary>
+  static partial void _CollectFromSourceGenerator(List<DithererDescriptor> into);
+
 
   private static readonly Lazy<DithererDescriptor[]> _all = new(DiscoverDitherers);
 
@@ -80,8 +87,13 @@ public static class DithererRegistry {
     => All.Where(d => d.Type == type);
 
   private static DithererDescriptor[] DiscoverDitherers() {
-    var assembly = typeof(DithererRegistry).Assembly;
     var descriptors = new List<DithererDescriptor>();
+
+    _CollectFromSourceGenerator(descriptors);
+    if (descriptors.Count > 0)
+      return descriptors.OrderBy(d => d.Name).ToArray();
+
+    var assembly = typeof(DithererRegistry).Assembly;
 
     foreach (var type in assembly.GetTypes()) {
       if (!typeof(IDitherer).IsAssignableFrom(type) || type.IsInterface || type.IsAbstract)
@@ -177,6 +189,19 @@ public sealed class DithererDescriptor {
   public int Year { get; }
 
   private readonly Func<IDitherer> _factory;
+
+  /// <summary>
+  /// Compile-time factory used by the source generator. See <c>ScalerDescriptor.__CreateFromGenerator</c> for rationale.
+  /// </summary>
+  internal static DithererDescriptor __CreateFromGenerator(
+    Type declaringType,
+    string name,
+    string? author,
+    string? description,
+    DitheringType type,
+    int year,
+    Func<IDitherer> factory)
+    => new(declaringType, name, author, description, type, year, factory);
 
   internal DithererDescriptor(
     Type declaringType,

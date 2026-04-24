@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From SNES9x emulator, modified by Hawkynt for threshold support.</para>
 /// </remarks>
 [ScalerInfo("EPX-B", Author = "SNES9x Team", Year = 2003,
-  Description = "Enhanced EPX with complex edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct EpxB : IPixelScaler {
+  Description = "Enhanced EPX with complex edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct EpxB : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

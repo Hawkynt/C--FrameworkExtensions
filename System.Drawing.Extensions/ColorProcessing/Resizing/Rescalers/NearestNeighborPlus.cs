@@ -37,8 +37,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>A good compromise between pure nearest-neighbor and more complex scalers like Scale2x.</para>
 /// </remarks>
 [ScalerInfo("NN+", Author = "Unknown",
-  Description = "Enhanced nearest-neighbor with diagonal smoothing", Category = ScalerCategory.PixelArt)]
-public readonly struct NearestNeighborPlus : IPixelScaler {
+  Description = "Enhanced nearest-neighbor with diagonal smoothing", Category = ScalerCategory.Rescaler)]
+public readonly struct NearestNeighborPlus : IRescaler {
   private readonly int _scale;
 
   /// <summary>

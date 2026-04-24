@@ -45,7 +45,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </list>
 /// </remarks>
 [ScalerInfo("Bilateral", Description = "Edge-preserving smoothing filter", Category = ScalerCategory.Resampler)]
-public readonly struct Bilateral : IPixelScaler {
+public readonly struct Bilateral : IRescaler {
 
   private readonly int _scale;
   private readonly BilateralVariant _variant;

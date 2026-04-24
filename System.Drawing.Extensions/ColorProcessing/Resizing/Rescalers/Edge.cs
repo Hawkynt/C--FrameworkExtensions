@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("Edge", Author = "ScummVM Team", Year = 2001,
   Url = "https://wiki.scummvm.org/index.php/Scalers",
-  Description = "Simple edge enhancement for smoother diagonals", Category = ScalerCategory.PixelArt)]
-public readonly struct Edge : IPixelScaler {
+  Description = "Simple edge enhancement for smoother diagonals", Category = ScalerCategory.Rescaler)]
+public readonly struct Edge : IRescaler {
   private readonly int _scale;
 
   /// <summary>

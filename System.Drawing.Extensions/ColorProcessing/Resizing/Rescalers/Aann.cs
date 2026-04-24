@@ -41,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("AANN", Author = "jimbo1qaz/wareya",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/interpolation/shaders/aann",
   Description = "Anti-aliased nearest neighbor with gamma-corrected bilinear interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct Aann : IPixelScaler {
+public readonly struct Aann : IRescaler {
   private readonly int _scale;
 
   /// <summary>

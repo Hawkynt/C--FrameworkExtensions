@@ -40,9 +40,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: https://torcado.com/cleanEdge/</para>
 /// </remarks>
 [ScalerInfo("Clean", Author = "torcado", Year = 2022,
-  Description = "Clean edge-aware pixel art scaling", Category = ScalerCategory.PixelArt,
+  Description = "Clean edge-aware pixel art scaling", Category = ScalerCategory.Rescaler,
   Url = "https://torcado.com/cleanEdge/")]
-public readonly struct Clean : IPixelScaler {
+public readonly struct Clean : IRescaler {
   private readonly int _scale;
 
   public Clean(int scale = 2) {

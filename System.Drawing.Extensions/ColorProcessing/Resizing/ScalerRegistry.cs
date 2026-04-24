@@ -39,21 +39,30 @@ namespace Hawkynt.ColorProcessing.Resizing;
 ///   Console.WriteLine($"{scaler.Name} by {scaler.Author} ({scaler.Category})");
 ///
 /// // Find a specific scaler
-/// var xbr = ScalerRegistry.PixelScalers.FirstOrDefault(s => s.Name.Contains("XBR"));
+/// var xbr = ScalerRegistry.Rescalers.FirstOrDefault(s => s.Name.Contains("XBR"));
 ///
 /// // Create an instance
-/// var instance = ScalerRegistry.PixelScalers
+/// var instance = ScalerRegistry.Rescalers
 ///   .First(s => s.Name == "HQ")
 ///   .CreateDefault();
 /// </code>
 /// </example>
 /// </remarks>
-public static class ScalerRegistry {
+public static partial class ScalerRegistry {
+
+  /// <summary>
+  /// Implemented by the source generator to populate <paramref name="into"/> with descriptors
+  /// built at compile time. When the generator is unavailable (old TFM, analyzer disabled,
+  /// etc.), the partial is not implemented and <paramref name="into"/> stays empty — the
+  /// reflection fallback then takes over.
+  /// </summary>
+  static partial void _CollectFromSourceGenerator(List<ScalerDescriptor> into);
+
 
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _all = new(
     () => new ReadOnlyList<ScalerDescriptor>(DiscoverScalers()));
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _pixelScalers = new(
-    () => new ReadOnlyList<ScalerDescriptor>(_all.Value.Where(d => d.IsPixelScaler).ToList()));
+    () => new ReadOnlyList<ScalerDescriptor>(_all.Value.Where(d => d.IsRescaler).ToList()));
   private static readonly Lazy<IReadOnlyList<ScalerDescriptor>> _resamplers = new(
     () => new ReadOnlyList<ScalerDescriptor>(_all.Value.Where(d => d.IsResampler).ToList()));
 
@@ -65,7 +74,7 @@ public static class ScalerRegistry {
   /// <summary>
   /// Gets all registered pixel-art scalers.
   /// </summary>
-  public static IReadOnlyList<ScalerDescriptor> PixelScalers => _pixelScalers.Value;
+  public static IReadOnlyList<ScalerDescriptor> Rescalers => _pixelScalers.Value;
 
   /// <summary>
   /// Gets all registered resamplers.
@@ -110,7 +119,7 @@ public static class ScalerRegistry {
   /// <param name="scale">The scale factor to check.</param>
   /// <returns>All pixel-art scalers supporting the scale.</returns>
   public static IEnumerable<ScalerDescriptor> GetPixelScalersByScale(ScaleFactor scale)
-    => PixelScalers.Where(d => d.SupportedScales.Contains(scale));
+    => Rescalers.Where(d => d.SupportedScales.Contains(scale));
 
   /// <summary>
   /// Gets all pixel-art scalers that support the specified scale factor.
@@ -130,21 +139,33 @@ public static class ScalerRegistry {
     => All.FirstOrDefault(d => d.Type == typeof(TScaler));
 
   private static List<ScalerDescriptor> DiscoverScalers() {
-    var assembly = typeof(ScalerRegistry).Assembly;
     var descriptors = new List<ScalerDescriptor>();
 
-    foreach (var type in assembly.GetTypes()) {
-      if (!type.IsValueType || type.IsAbstract)
-        continue;
+    // Primary source: compile-time descriptors emitted by the source generator.
+    // Trim/AOT-safe: all types and ctors are referenced statically in the generated partial.
+    _CollectFromSourceGenerator(descriptors);
 
-      if (!typeof(IPixelScaler).IsAssignableFrom(type) && !typeof(IResampler).IsAssignableFrom(type))
-        continue;
+    // Fallback: reflection scan for old TFMs / scenarios where the generator did not run.
+    // A type already contributed by the generator is skipped (dedupe on concrete type).
+    if (descriptors.Count == 0) {
+      var assembly = typeof(ScalerRegistry).Assembly;
+      foreach (var type in assembly.GetTypes()) {
+        if (!type.IsValueType || type.IsAbstract)
+          continue;
 
-      var descriptor = ScalerDescriptor.FromType(type);
-      if (descriptor != null)
-        descriptors.Add(descriptor);
+        if (!typeof(IRescaler).IsAssignableFrom(type) && !typeof(IResampler).IsAssignableFrom(type))
+          continue;
+
+        var descriptor = ScalerDescriptor.FromType(type);
+        if (descriptor != null)
+          descriptors.Add(descriptor);
+      }
     }
 
-    return descriptors.OrderBy(d => d.Name).ToList();
+    return descriptors
+      .GroupBy(d => d.Type)
+      .Select(g => g.First())
+      .OrderBy(d => d.Name)
+      .ToList();
   }
 }

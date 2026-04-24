@@ -41,9 +41,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: https://sourceforge.net/projects/xbrz</para>
 /// </remarks>
 [ScalerInfo("xBRZ", Author = "Zenju", Year = 2012,
-  Description = "xBRZ with improved edge detection and blending", Category = ScalerCategory.PixelArt,
+  Description = "xBRZ with improved edge detection and blending", Category = ScalerCategory.Rescaler,
   Url = "https://sourceforge.net/projects/xbrz")]
-public readonly struct Xbrz : IPixelScaler {
+public readonly struct Xbrz : IRescaler {
 
   private readonly int _scale;
 

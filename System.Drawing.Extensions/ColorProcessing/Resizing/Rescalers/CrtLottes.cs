@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Lottes", Author = "Timothy Lottes",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-lottes",
   Description = "CRT simulation with bloom and phosphor mask", Category = ScalerCategory.Resampler)]
-public readonly struct CrtLottes : IPixelScaler {
+public readonly struct CrtLottes : IRescaler {
   private readonly int _scale;
 
   /// <summary>

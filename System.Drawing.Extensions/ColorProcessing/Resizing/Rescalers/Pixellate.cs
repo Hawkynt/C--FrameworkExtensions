@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("Pixellate", Author = "LibRetro Community",
   Url = "https://github.com/libretro/common-shaders/blob/master/retro/shaders/pixellate.cg",
-  Description = "Sharp nearest-neighbor with crisp pixel snapping", Category = ScalerCategory.PixelArt)]
-public readonly struct Pixellate : IPixelScaler {
+  Description = "Sharp nearest-neighbor with crisp pixel snapping", Category = ScalerCategory.Rescaler)]
+public readonly struct Pixellate : IRescaler {
   private readonly int _scale;
 
   /// <summary>

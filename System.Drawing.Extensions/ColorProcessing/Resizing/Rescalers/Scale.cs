@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </para>
 /// </remarks>
 [ScalerInfo("Scale", Author = "Andrea Mazzoleni", Year = 2001, Url = "https://www.scale2x.it/algorithm",
-  Description = "Edge-aware 2x/3x scaling from the AdvanceMAME project", Category = ScalerCategory.PixelArt)]
-public readonly struct Scale : IPixelScaler {
+  Description = "Edge-aware 2x/3x scaling from the AdvanceMAME project", Category = ScalerCategory.Rescaler)]
+public readonly struct Scale : IRescaler {
 
   public enum Mode {
     X2,X3

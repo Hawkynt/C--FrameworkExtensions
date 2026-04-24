@@ -37,8 +37,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Similar to EPX/Scale2x but with blending instead of binary decisions.</para>
 /// </remarks>
 [ScalerInfo("TriplePoint",
-  Description = "3-point interpolation for smooth edges", Category = ScalerCategory.PixelArt)]
-public readonly struct TriplePoint : IPixelScaler {
+  Description = "3-point interpolation for smooth edges", Category = ScalerCategory.Rescaler)]
+public readonly struct TriplePoint : IRescaler {
   private readonly int _scale;
 
   /// <summary>

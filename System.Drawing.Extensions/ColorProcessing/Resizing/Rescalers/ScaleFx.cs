@@ -40,9 +40,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: https://github.com/libretro/common-shaders/tree/master/scalefx</para>
 /// </remarks>
 [ScalerInfo("ScaleFX 3x", Author = "Sp00kyFox", Year = 2016,
-  Description = "ScaleFX 3x edge interpolation", Category = ScalerCategory.PixelArt,
+  Description = "ScaleFX 3x edge interpolation", Category = ScalerCategory.Rescaler,
   Url = "https://github.com/libretro/common-shaders/tree/master/scalefx")]
-public readonly struct ScaleFx3x : IPixelScaler {
+public readonly struct ScaleFx3x : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(3, 3);

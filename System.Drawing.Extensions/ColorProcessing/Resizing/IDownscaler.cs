@@ -30,7 +30,7 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// into single output pixels using averaging or other techniques.
 /// </para>
 /// <para>
-/// Unlike <see cref="IPixelScaler"/> which upscales, downscalers work
+/// Unlike <see cref="IRescaler"/> which upscales, downscalers work
 /// by reading NxN blocks of source pixels and producing single output pixels.
 /// Each concrete downscaler type should provide static members:
 /// <list type="bullet">

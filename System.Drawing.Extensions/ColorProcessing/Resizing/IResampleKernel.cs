@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Drawing;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 
@@ -98,6 +99,52 @@ public interface IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
   /// </para>
   /// </remarks>
   unsafe void Resample(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX,
+    int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder
+  );
+}
+
+/// <summary>
+/// Optional extension interface implemented by resampler kernels that can provide an OOB-free
+/// fast path for the destination-image interior. When a kernel implements this, the pipeline
+/// splits the destination into 4 edge bands + 1 safe interior and dispatches the interior to
+/// <see cref="ResampleUnchecked"/> — zero per-pixel OOB branch, ready for SIMD.
+/// </summary>
+/// <remarks>
+/// Separable convolution kernels (Bicubic, Bilinear, Lanczos, Mitchell-Netravali, B-splines,
+/// Lagrange, Schaum, OMoms, Splines, windowed-sinc, Jinc, Gaussian, Box, Hermite, Cosine,
+/// Smoothstep, NearestNeighbor) are natural candidates. Non-separable / content-adaptive
+/// resamplers (DCCI, EEDI2, Kopf-Lischinski, Ravu, etc.) and per-pixel filters should not
+/// implement this; the pipeline falls back to <see cref="IResampleKernel{TPixel,TWork,TKey,TDecode,TProject,TEncode}.Resample"/>.
+/// </remarks>
+public interface IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  where TPixel : unmanaged, IStorageSpace
+  where TWork : unmanaged, IColorSpace4F<TWork>
+  where TKey : unmanaged, IColorSpace
+  where TDecode : struct, IDecode<TPixel, TWork>
+  where TProject : struct, IProject<TWork, TKey>
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  /// <summary>
+  /// Destination-pixel rectangle where every kernel sample falls inside the source image.
+  /// Empty rectangle = no safe interior (kernel larger than source); pipeline falls back to
+  /// the bounds-checked path for every pixel. Typically computed via
+  /// <c>ResampleKernelHelpers.ComputeSafeDestinationRegion</c>.
+  /// </summary>
+  Rectangle GetSafeDestinationRegion();
+
+  /// <summary>
+  /// Same as <see cref="IResampleKernel{TPixel,TWork,TKey,TDecode,TProject,TEncode}.Resample"/>
+  /// but the caller guarantees every sample sits inside the source image. Kernel implementations
+  /// use <see cref="NeighborFrame{TPixel,TWork,TKey,TDecode,TProject}.GetUnchecked"/> for every
+  /// sample — no bounds check, no mode dispatch, no canvas fallback.
+  /// </summary>
+  unsafe void ResampleUnchecked(
     NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
     int destX,
     int destY,

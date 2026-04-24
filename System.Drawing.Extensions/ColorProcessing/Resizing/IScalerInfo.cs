@@ -24,7 +24,7 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// </summary>
 /// <remarks>
 /// Provides the fundamental <see cref="Scale"/> property that defines
-/// the scaling factor. Extended by <see cref="IPixelScaler"/> for
+/// the scaling factor. Extended by <see cref="IRescaler"/> for
 /// discrete pixel-art scalers and <see cref="IResampler"/> for
 /// continuous-scale resamplers.
 /// </remarks>

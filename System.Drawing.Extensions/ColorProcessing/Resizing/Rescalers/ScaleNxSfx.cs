@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("ScaleNxSFX", Author = "Sp00kyFox",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/scalenx",
-  Description = "Enhanced ScaleNx with artifact prevention", Category = ScalerCategory.PixelArt)]
-public readonly struct ScaleNxSfx : IPixelScaler {
+  Description = "Enhanced ScaleNx with artifact prevention", Category = ScalerCategory.Rescaler)]
+public readonly struct ScaleNxSfx : IRescaler {
   private readonly int _scale;
 
   /// <summary>

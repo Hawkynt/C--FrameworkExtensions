@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("ScaleNxPlus", Author = "guest(r)", Year = 2007,
   Url = "https://github.com/libretro/common-shaders/tree/master/scalenx",
-  Description = "ScaleNx with subpixel bilinear interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct ScaleNxPlus : IPixelScaler {
+  Description = "ScaleNx with subpixel bilinear interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct ScaleNxPlus : IRescaler {
   private readonly int _scale;
 
   /// <summary>

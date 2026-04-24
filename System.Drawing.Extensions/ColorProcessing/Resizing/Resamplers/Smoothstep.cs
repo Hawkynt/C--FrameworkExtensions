@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -50,7 +55,7 @@ public enum SmoothstepMode {
 /// <para>Smoothest mode uses 7th-degree polynomial for C² continuity.</para>
 /// </remarks>
 [ScalerInfo("Smoothstep", Description = "2x2 Hermite polynomial interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct Smoothstep : IResampler {
+public readonly struct Smoothstep : IKernelResampler, IResamplerWithSafePath {
 
   private readonly SmoothstepMode _mode;
 
@@ -73,6 +78,20 @@ public readonly struct Smoothstep : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) {
+    var d = MathF.Abs(distance);
+    if (d >= 1f) return 0f;
+    if (this._mode == SmoothstepMode.Standard) {
+      // 1 - smoothstep(d) = 1 - d²(3 - 2d)
+      return 1f - d * d * (3f - 2f * d);
+    }
+    // 1 - smootheststep(d); smootheststep(d) = d⁴(d(d(-20d+70)-84)+35)
+    var d2 = d * d;
+    var d4 = d2 * d2;
+    return 1f - d4 * (d * (d * (-20f * d + 70f) - 84f) + 35f);
+  }
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -103,11 +122,35 @@ public readonly struct Smoothstep : IResampler {
   /// Gets the smoothest configuration (7th-degree polynomial).
   /// </summary>
   public static Smoothstep Smoothest => new(SmoothstepMode.Smoothest);
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    if (this._mode == SmoothstepMode.Standard) {
+      var kernel = new SmoothstepKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+        source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
+      return BitmapScalerExtensions.InvokeSafePathResampler<
+        SmoothstepKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+      >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+    } else {
+      var kernel = new SmoothestKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+        source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
+      return BitmapScalerExtensions.InvokeSafePathResampler<
+        SmoothestKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+      >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+    }
+  }
 }
 
 file readonly struct SmoothstepKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -150,31 +193,63 @@ file readonly struct SmoothstepKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     var sx = fx * fx * (-2f * fx + 3f);
     var sy = fy * fy * (-2f * fy + 3f);
 
-    // Sample 2x2 neighborhood
-    var c00 = frame[x0, y0].Work;
-    var c10 = frame[x0 + 1, y0].Work;
-    var c01 = frame[x0, y0 + 1].Work;
-    var c11 = frame[x0 + 1, y0 + 1].Work;
-
     // Bilinear interpolation with smoothstep weights
     var w00 = (1f - sx) * (1f - sy);
     var w10 = sx * (1f - sy);
     var w01 = (1f - sx) * sy;
     var w11 = sx * sy;
 
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
-    acc.AddMul(c00, w00);
-    acc.AddMul(c10, w10);
-    acc.AddMul(c01, w01);
-    acc.AddMul(c11, w11);
+    acc.AddMul(frame[x0, y0].Work, w00);
+    acc.AddMul(frame[x0 + 1, y0].Work, w10);
+    acc.AddMul(frame[x0, y0 + 1].Work, w01);
+    acc.AddMul(frame[x0 + 1, y0 + 1].Work, w11);
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+    var sx = fx * fx * (-2f * fx + 3f);
+    var sy = fy * fy * (-2f * fy + 3f);
+    var w00 = (1f - sx) * (1f - sy);
+    var w10 = sx * (1f - sy);
+    var w01 = (1f - sx) * sy;
+    var w11 = sx * sy;
+
+    Accum4F<TWork> acc = default;
+    acc.AddMul(frame.GetUnchecked(x0, y0).Work, w00);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0).Work, w10);
+    acc.AddMul(frame.GetUnchecked(x0, y0 + 1).Work, w01);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0 + 1).Work, w11);
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: 0, kxMaxExcl: 2, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: 0, kyMaxExcl: 2, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 }
 
 file readonly struct SmoothestKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -217,26 +292,58 @@ file readonly struct SmoothestKernel<TPixel, TWork, TKey, TDecode, TProject, TEn
     var sx = SmoothestStep(fx);
     var sy = SmoothestStep(fy);
 
-    // Sample 2x2 neighborhood
-    var c00 = frame[x0, y0].Work;
-    var c10 = frame[x0 + 1, y0].Work;
-    var c01 = frame[x0, y0 + 1].Work;
-    var c11 = frame[x0 + 1, y0 + 1].Work;
-
     // Bilinear interpolation with smootheststep weights
     var w00 = (1f - sx) * (1f - sy);
     var w10 = sx * (1f - sy);
     var w01 = (1f - sx) * sy;
     var w11 = sx * sy;
 
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
-    acc.AddMul(c00, w00);
-    acc.AddMul(c10, w10);
-    acc.AddMul(c01, w01);
-    acc.AddMul(c11, w11);
+    acc.AddMul(frame[x0, y0].Work, w00);
+    acc.AddMul(frame[x0 + 1, y0].Work, w10);
+    acc.AddMul(frame[x0, y0 + 1].Work, w01);
+    acc.AddMul(frame[x0 + 1, y0 + 1].Work, w11);
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+    var sx = SmoothestStep(fx);
+    var sy = SmoothestStep(fy);
+    var w00 = (1f - sx) * (1f - sy);
+    var w10 = sx * (1f - sy);
+    var w01 = (1f - sx) * sy;
+    var w11 = sx * sy;
+
+    Accum4F<TWork> acc = default;
+    acc.AddMul(frame.GetUnchecked(x0, y0).Work, w00);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0).Work, w10);
+    acc.AddMul(frame.GetUnchecked(x0, y0 + 1).Work, w01);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0 + 1).Work, w11);
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: 0, kxMaxExcl: 2, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: 0, kyMaxExcl: 2, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// 7th-degree polynomial smootheststep.

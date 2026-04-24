@@ -38,8 +38,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("DotMatrix", Author = "ScummVM Team",
   Url = "https://wiki.scummvm.org/index.php/Scalers",
-  Description = "Dot-matrix display simulation", Category = ScalerCategory.PixelArt)]
-public readonly struct DotMatrix : IPixelScaler {
+  Description = "Dot-matrix display simulation", Category = ScalerCategory.Rescaler)]
+public readonly struct DotMatrix : IRescaler {
   private readonly int _scale;
 
   /// <summary>

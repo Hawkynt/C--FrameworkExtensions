@@ -64,10 +64,10 @@ public sealed class ColorQuantizerAdapter : IColorQuantizer {
   /// </summary>
   public bool AllowFillingColors { get; }
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<Color> usedColors)
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors)
     => this.ReduceColorsTo(numberOfColors, usedColors.Select(c => (c, 1u)));
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
     if (numberOfColors == 0)
       return [];
 

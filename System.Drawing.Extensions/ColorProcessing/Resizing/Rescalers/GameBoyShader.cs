@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("GameBoy Shader",
   Url = "https://github.com/libretro/slang-shaders/tree/master/handheld",
   Description = "Game Boy Color LCD simulation with pixel grid", Category = ScalerCategory.Resampler)]
-public readonly struct GameBoyShader : IPixelScaler {
+public readonly struct GameBoyShader : IRescaler {
   private readonly int _scale;
 
   /// <summary>

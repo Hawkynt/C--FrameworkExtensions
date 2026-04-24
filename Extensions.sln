@@ -79,6 +79,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backports.Tests", "Tests\Ba
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Extensions.Tests", "Tests\System.Drawing.Extensions.Tests\System.Drawing.Extensions.Tests.csproj", "{CF59BB06-722B-4CAD-B014-47EF0AA813B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Drawing.Extensions.SourceGenerators", "System.Drawing.Extensions.SourceGenerators\System.Drawing.Extensions.SourceGenerators.csproj", "{4DEF1C36-771A-480F-A896-F56F17AE1733}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -257,6 +259,18 @@ Global
 		{CF59BB06-722B-4CAD-B014-47EF0AA813B7}.Release|x64.Build.0 = Release|x64
 		{CF59BB06-722B-4CAD-B014-47EF0AA813B7}.Release|x86.ActiveCfg = Release|x86
 		{CF59BB06-722B-4CAD-B014-47EF0AA813B7}.Release|x86.Build.0 = Release|x86
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|x64.Build.0 = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Debug|x86.Build.0 = Debug|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|x64.ActiveCfg = Release|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|x64.Build.0 = Release|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|x86.ActiveCfg = Release|Any CPU
+		{4DEF1C36-771A-480F-A896-F56F17AE1733}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

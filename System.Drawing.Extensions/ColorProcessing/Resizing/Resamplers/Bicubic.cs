@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -36,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Bicubic", Author = "Robert Keys", Year = 1981,
   Description = "4x4 cubic polynomial interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct Bicubic : IResampler {
+public readonly struct Bicubic : IKernelResampler, IResamplerWithSafePath {
 
   private readonly float _a;
 
@@ -61,6 +66,17 @@ public readonly struct Bicubic : IResampler {
   public PrefilterInfo? Prefilter => null;
 
   /// <inheritdoc />
+  public float EvaluateWeight(float distance) {
+    var x = MathF.Abs(distance);
+    var a = this._a;
+    if (x < 1f)
+      return ((a + 2f) * x - (a + 3f)) * x * x + 1f;
+    if (x < 2f)
+      return a * (((x - 5f) * x + 8f) * x - 4f);
+    return 0f;
+  }
+
+  /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
     IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
     int sourceWidth,
@@ -81,11 +97,38 @@ public readonly struct Bicubic : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Bicubic Default => new();
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// Instantiates the concrete <c>BicubicKernel</c> specialisation — which implements
+  /// <see cref="IResampleKernelWithSafePath{TPixel,TWork,TKey,TDecode,TProject,TEncode}"/> —
+  /// and forwards to <see cref="BitmapScalerExtensions.InvokeSafePathResampler"/>. The JIT
+  /// specialises the generic call so the safe-interior path dispatches statically; no
+  /// reflection, no boxing inside the hot loop.
+  /// </remarks>
+  public Bitmap ResampleWithSafePath(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    OutOfBoundsMode horizontalMode,
+    OutOfBoundsMode verticalMode,
+    Color canvasColor,
+    bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new BicubicKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, this._a, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      BicubicKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
 }
 
 file readonly struct BicubicKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float a, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -132,20 +175,61 @@ file readonly struct BicubicKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
       wy[i] = CubicWeight(fy - (i - 1), a);
     }
 
-    // Accumulate weighted colors from 4x4 kernel
+    // Edge path: bounds-checked indexer for every sample. The ScalerPipeline only routes
+    // destination pixels here that sit on the edge band; the safe interior goes through
+    // ResampleUnchecked (below) — no per-pixel OOB branch at all.
     Accum4F<TWork> acc = default;
     for (var ky = 0; ky < 4; ++ky)
     for (var kx = 0; kx < 4; ++kx) {
       var weight = wx[kx] * wy[ky];
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[x0 + kx - 1, y0 + ky - 1].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[x0 + kx - 1, y0 + ky - 1].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+
+    var wx = stackalloc float[4];
+    var wy = stackalloc float[4];
+    for (var i = 0; i < 4; ++i) {
+      wx[i] = CubicWeight(fx - (i - 1), a);
+      wy[i] = CubicWeight(fy - (i - 1), a);
+    }
+
+    // Safe-interior path: caller guarantees the entire [x0-1, x0+3) × [y0-1, y0+3) window
+    // is in-bounds. Each sample is a single MOV; inner loop is tight enough that a follow-up
+    // can SIMD-fuse the 4×4 accumulate via Vector256/Vector512 when TPixel == TWork == Bgra8888.
+    Accum4F<TWork> acc = default;
+    for (var ky = 0; ky < 4; ++ky)
+    for (var kx = 0; kx < 4; ++kx) {
+      var weight = wx[kx] * wy[ky];
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(x0 + kx - 1, y0 + ky - 1).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public System.Drawing.Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -1, kxMaxExcl: 3, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -1, kyMaxExcl: 3, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// Computes the cubic weight for a given distance.

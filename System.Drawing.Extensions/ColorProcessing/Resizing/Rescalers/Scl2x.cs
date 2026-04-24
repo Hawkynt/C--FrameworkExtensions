@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From FNES emulator.</para>
 /// </remarks>
 [ScalerInfo("2xSCL", Author = "FNES Team", Year = 2000,
-  Description = "Simple corner-based line scaling", Category = ScalerCategory.PixelArt)]
-public readonly struct Scl2x : IPixelScaler {
+  Description = "Simple corner-based line scaling", Category = ScalerCategory.Rescaler)]
+public readonly struct Scl2x : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);
@@ -148,8 +148,8 @@ file readonly struct Scl2xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>
 /// <para>From FNES emulator.</para>
 /// </remarks>
 [ScalerInfo("Super 2xSCL", Author = "FNES Team", Year = 2000,
-  Description = "Enhanced 2xSCL with color mixing", Category = ScalerCategory.PixelArt)]
-public readonly struct Scl2xSuper : IPixelScaler {
+  Description = "Enhanced 2xSCL with color mixing", Category = ScalerCategory.Rescaler)]
+public readonly struct Scl2xSuper : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);
@@ -260,8 +260,8 @@ file readonly struct Scl2xSuperKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
 /// <para>From FNES emulator.</para>
 /// </remarks>
 [ScalerInfo("Ultra 2xSCL", Author = "FNES Team", Year = 2000,
-  Description = "Enhanced 2xSCL with unsharp mask", Category = ScalerCategory.PixelArt)]
-public readonly struct Scl2xUltra : IPixelScaler {
+  Description = "Enhanced 2xSCL with unsharp mask", Category = ScalerCategory.Rescaler)]
+public readonly struct Scl2xUltra : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

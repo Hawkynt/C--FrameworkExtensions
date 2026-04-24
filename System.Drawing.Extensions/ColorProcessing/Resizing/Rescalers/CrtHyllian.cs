@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Hyllian", Author = "Hyllian",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-hyllian",
   Description = "Sharp CRT scanlines with phosphor simulation", Category = ScalerCategory.Resampler)]
-public readonly struct CrtHyllian : IPixelScaler {
+public readonly struct CrtHyllian : IRescaler {
   private readonly int _scale;
 
   /// <summary>

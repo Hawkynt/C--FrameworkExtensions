@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -37,7 +42,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Spline16", Year = 1990,
   Description = "4-tap spline interpolation filter", Category = ScalerCategory.Resampler)]
-public readonly struct Spline16 : IResampler {
+public readonly struct Spline16 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -47,6 +52,9 @@ public readonly struct Spline16 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SplineMath.Spline16Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,6 +77,14 @@ public readonly struct Spline16 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Spline16 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SplineSafePath.Dispatch(SplineType.Spline16, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -84,7 +100,7 @@ public readonly struct Spline16 : IResampler {
 /// </remarks>
 [ScalerInfo("Spline36", Year = 1990,
   Description = "6-tap spline interpolation filter, sharper than Spline16", Category = ScalerCategory.Resampler)]
-public readonly struct Spline36 : IResampler {
+public readonly struct Spline36 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -94,6 +110,9 @@ public readonly struct Spline36 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SplineMath.Spline36Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -116,6 +135,14 @@ public readonly struct Spline36 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Spline36 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SplineSafePath.Dispatch(SplineType.Spline36, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -131,7 +158,7 @@ public readonly struct Spline36 : IResampler {
 /// </remarks>
 [ScalerInfo("Spline64", Year = 1990,
   Description = "8-tap spline interpolation filter, sharpest spline variant", Category = ScalerCategory.Resampler)]
-public readonly struct Spline64 : IResampler {
+public readonly struct Spline64 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -141,6 +168,9 @@ public readonly struct Spline64 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SplineMath.Spline64Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -163,6 +193,14 @@ public readonly struct Spline64 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Spline64 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SplineSafePath.Dispatch(SplineType.Spline64, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -177,7 +215,7 @@ file enum SplineType {
 
 file readonly struct SplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, SplineType splineType, bool useCenteredGrid = true)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -224,19 +262,52 @@ file readonly struct SplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
 
     var r = this.Radius;
 
-    // Accumulate weighted colors
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     for (var ky = -r + 1; ky <= r; ++ky)
     for (var kx = -r + 1; kx <= r; ++kx) {
       var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+    var r = this.Radius;
+
+    Accum4F<TWork> acc = default;
+    for (var ky = -r + 1; ky <= r; ++ky)
+    for (var kx = -r + 1; kx <= r; ++kx) {
+      var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion() {
+    var r = this.Radius;
+    return ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -r + 1, kxMaxExcl: r + 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -r + 1, kyMaxExcl: r + 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
   }
 
   /// <summary>
@@ -250,11 +321,35 @@ file readonly struct SplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
     _ => 0f
   };
 
-  /// <summary>
-  /// Spline16 weight function (radius 2, 4 taps).
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Spline16Weight(float x) {
+  private static float Spline16Weight(float x) => SplineMath.Spline16Weight(x);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float Spline36Weight(float x) => SplineMath.Spline36Weight(x);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float Spline64Weight(float x) => SplineMath.Spline64Weight(x);
+}
+
+file static class _SplineSafePath {
+  public static Bitmap Dispatch(SplineType type, Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new SplineKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, type, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      SplineKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
+}
+
+internal static class SplineMath {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Spline16Weight(float x) {
     x = MathF.Abs(x);
     if (x < 1f)
       return ((x - 9f / 5f) * x - 1f / 5f) * x + 1f;
@@ -265,11 +360,8 @@ file readonly struct SplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
     return 0f;
   }
 
-  /// <summary>
-  /// Spline36 weight function (radius 3, 6 taps).
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Spline36Weight(float x) {
+  public static float Spline36Weight(float x) {
     x = MathF.Abs(x);
     if (x < 1f)
       return ((13f / 11f * x - 453f / 209f) * x - 3f / 209f) * x + 1f;
@@ -284,11 +376,8 @@ file readonly struct SplineKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
     return 0f;
   }
 
-  /// <summary>
-  /// Spline64 weight function (radius 4, 8 taps).
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Spline64Weight(float x) {
+  public static float Spline64Weight(float x) {
     x = MathF.Abs(x);
     if (x < 1f)
       return ((49f / 41f * x - 6387f / 2911f) * x - 3f / 2911f) * x + 1f;

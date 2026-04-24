@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </para>
 /// </remarks>
 [ScalerInfo("Eagle 3x", Author = "Hawkynt", Year = 2008,
-  Description = "3x extension of the classic Eagle algorithm with edge interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct Eagle3x : IPixelScaler {
+  Description = "3x extension of the classic Eagle algorithm with edge interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct Eagle3x : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(3, 3);
@@ -193,8 +193,8 @@ file readonly struct Eagle3xKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncod
 /// <para>Can look blockier but is faster and sometimes preferable for certain art styles.</para>
 /// </remarks>
 [ScalerInfo("Eagle 3x B", Author = "Hawkynt", Year = 2008,
-  Description = "Simplified Eagle 3x with corner-only interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct Eagle3xB : IPixelScaler {
+  Description = "Simplified Eagle 3x with corner-only interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct Eagle3xB : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(3, 3);

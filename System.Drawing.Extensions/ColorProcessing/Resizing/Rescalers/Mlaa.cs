@@ -54,8 +54,8 @@ public enum MlaaVariant : byte {
 /// <para>Algorithm by Alexander Reshetov (Intel), 2009.</para>
 /// </remarks>
 [ScalerInfo("MLAA", Author = "Alexander Reshetov", Year = 2009,
-  Description = "Morphological Anti-Aliasing", Category = ScalerCategory.PixelArt)]
-public readonly struct Mlaa : IPixelScaler {
+  Description = "Morphological Anti-Aliasing", Category = ScalerCategory.Rescaler)]
+public readonly struct Mlaa : IRescaler {
 
   private readonly int _scale;
   private readonly MlaaVariant _variant;

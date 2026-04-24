@@ -44,8 +44,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>One of the earliest pixel-art scalers, developed in 1997.</para>
 /// </remarks>
 [ScalerInfo("Eagle", Year = 1997,
-  Description = "Early pixel-art scaler using simple corner detection", Category = ScalerCategory.PixelArt)]
-public readonly struct Eagle : IPixelScaler {
+  Description = "Early pixel-art scaler using simple corner detection", Category = ScalerCategory.Rescaler)]
+public readonly struct Eagle : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

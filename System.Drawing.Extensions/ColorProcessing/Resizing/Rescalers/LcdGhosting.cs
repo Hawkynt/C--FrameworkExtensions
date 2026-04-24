@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("LCD Ghosting",
   Url = "https://github.com/libretro/slang-shaders/tree/master/handheld",
   Description = "LCD response time blur simulation", Category = ScalerCategory.Resampler)]
-public readonly struct LcdGhosting : IPixelScaler {
+public readonly struct LcdGhosting : IRescaler {
   private readonly int _scale;
 
   /// <summary>

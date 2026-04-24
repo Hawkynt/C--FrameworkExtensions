@@ -40,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("LcdGrid",
   Url = "https://github.com/libretro/slang-shaders/tree/master/handheld",
   Description = "LCD subpixel grid simulation", Category = ScalerCategory.Resampler)]
-public readonly struct LcdGrid : IPixelScaler {
+public readonly struct LcdGrid : IRescaler {
   private readonly int _scale;
 
   /// <summary>

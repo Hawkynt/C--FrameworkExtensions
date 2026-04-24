@@ -40,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("GTU",
   Url = "https://github.com/aliaspider/interpolation-shaders",
   Description = "Gaussian TV upscaler with bandwidth simulation and scanlines", Category = ScalerCategory.Resampler)]
-public readonly struct Gtu : IPixelScaler {
+public readonly struct Gtu : IRescaler {
   private readonly int _scale;
 
   /// <summary>

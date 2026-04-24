@@ -36,8 +36,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>High-quality pixel-perfect 2x scaling with edge morphing for clean diagonal edges.</para>
 /// </remarks>
 [ScalerInfo("2xPM", Author = "Pablo Medina",
-  Description = "High-quality 2x pixel-art scaler with edge morphing", Category = ScalerCategory.PixelArt)]
-public readonly struct TwoXpm : IPixelScaler {
+  Description = "High-quality 2x pixel-art scaler with edge morphing", Category = ScalerCategory.Rescaler)]
+public readonly struct TwoXpm : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

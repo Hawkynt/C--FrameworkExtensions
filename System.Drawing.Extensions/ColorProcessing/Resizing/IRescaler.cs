@@ -42,7 +42,7 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// </list>
 /// </para>
 /// </remarks>
-public interface IPixelScaler : IScalerInfo {
+public interface IRescaler : IScalerInfo {
 
   /// <summary>
   /// Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch.

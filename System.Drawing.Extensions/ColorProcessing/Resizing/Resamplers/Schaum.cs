@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -38,7 +43,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Schaum2",
   Description = "Quadratic Schaum interpolation kernel", Category = ScalerCategory.Resampler)]
-public readonly struct Schaum2 : IResampler {
+public readonly struct Schaum2 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -48,6 +53,9 @@ public readonly struct Schaum2 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SchaumMath.Schaum2Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -70,6 +78,14 @@ public readonly struct Schaum2 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Schaum2 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SchaumSafePath.Dispatch(SchaumType.Schaum2, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -86,7 +102,7 @@ public readonly struct Schaum2 : IResampler {
 /// </remarks>
 [ScalerInfo("Schaum3",
   Description = "Cubic Schaum interpolation kernel", Category = ScalerCategory.Resampler)]
-public readonly struct Schaum3 : IResampler {
+public readonly struct Schaum3 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -96,6 +112,9 @@ public readonly struct Schaum3 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SchaumMath.Schaum3Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -118,6 +137,14 @@ public readonly struct Schaum3 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Schaum3 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SchaumSafePath.Dispatch(SchaumType.Schaum3, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -131,7 +158,7 @@ file enum SchaumType {
 
 file readonly struct SchaumKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, SchaumType schaumType, bool useCenteredGrid = true)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -170,20 +197,50 @@ file readonly struct SchaumKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
     var fx = srcXf - srcXi;
     var fy = srcYf - srcYi;
 
-    // Accumulate weighted colors from kernel
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     for (var ky = -1; ky <= 2; ++ky)
     for (var kx = -1; kx <= 2; ++kx) {
       var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+
+    Accum4F<TWork> acc = default;
+    for (var ky = -1; ky <= 2; ++ky)
+    for (var kx = -1; kx <= 2; ++kx) {
+      var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -1, kxMaxExcl: 3, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -1, kyMaxExcl: 3, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// Computes the Schaum weight for a given distance.
@@ -202,24 +259,47 @@ file readonly struct SchaumKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
   /// Has discontinuities at x=0.5 and x=1.5.
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Schaum2Weight(float x) {
-    x = MathF.Abs(x);
-    if (x < 0.5f)
-      return 1f - x * x;
-    if (x == 0.5f)
-      return 0.5625f; // Discontinuity value
-    if (x < 1.5f)
-      return (x - 3f) * x / 2f + 1f;
-    if (x == 1.5f)
-      return -0.0625f; // Discontinuity value
-    return 0f;
-  }
+  private static float Schaum2Weight(float x) => SchaumMath.Schaum2Weight(x);
 
   /// <summary>
   /// Schaum3 (cubic) weight function.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Schaum3Weight(float x) {
+  private static float Schaum3Weight(float x) => SchaumMath.Schaum3Weight(x);
+}
+
+file static class _SchaumSafePath {
+  public static Bitmap Dispatch(SchaumType type, Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new SchaumKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, type, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      SchaumKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
+}
+
+internal static class SchaumMath {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Schaum2Weight(float x) {
+    x = MathF.Abs(x);
+    if (x < 0.5f)
+      return 1f - x * x;
+    if (x == 0.5f)
+      return 0.5625f;
+    if (x < 1.5f)
+      return (x - 3f) * x / 2f + 1f;
+    if (x == 1.5f)
+      return -0.0625f;
+    return 0f;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Schaum3Weight(float x) {
     x = MathF.Abs(x);
     if (x <= 1f)
       return ((x - 2f) * x - 1f) * x / 2f + 1f;

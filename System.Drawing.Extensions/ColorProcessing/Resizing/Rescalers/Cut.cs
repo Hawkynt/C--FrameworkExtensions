@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("CUT", Author = "Swordfish90",
   Url = "https://github.com/Swordfish90/cheap-upscaling-triangulation",
-  Description = "Cheap Upscaling Triangulation for pixel art", Category = ScalerCategory.PixelArt)]
-public readonly struct Cut : IPixelScaler {
+  Description = "Cheap Upscaling Triangulation for pixel art", Category = ScalerCategory.Rescaler)]
+public readonly struct Cut : IRescaler {
   private readonly int _scale;
 
   /// <summary>

@@ -47,7 +47,14 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// </code>
 /// </example>
 /// </remarks>
-public static class QuantizerRegistry {
+public static partial class QuantizerRegistry {
+
+  /// <summary>
+  /// Implemented by the source generator at compile time. See
+  /// <c>ScalerRegistry._CollectFromSourceGenerator</c> for the contract.
+  /// </summary>
+  static partial void _CollectFromSourceGenerator(List<QuantizerDescriptor> into);
+
 
   private static readonly Lazy<QuantizerDescriptor[]> _all = new(DiscoverQuantizers);
 
@@ -81,8 +88,13 @@ public static class QuantizerRegistry {
     => All.Where(q => q.Type == type);
 
   private static QuantizerDescriptor[] DiscoverQuantizers() {
-    var assembly = typeof(QuantizerRegistry).Assembly;
     var descriptors = new List<QuantizerDescriptor>();
+
+    _CollectFromSourceGenerator(descriptors);
+    if (descriptors.Count > 0)
+      return descriptors.OrderBy(q => q.Name).ToArray();
+
+    var assembly = typeof(QuantizerRegistry).Assembly;
 
     foreach (var type in assembly.GetTypes()) {
       if (!typeof(IQuantizer).IsAssignableFrom(type) || type.IsInterface || type.IsAbstract)
@@ -178,6 +190,19 @@ public sealed class QuantizerDescriptor {
   public int QualityRating { get; }
 
   private readonly Func<IQuantizer> _factory;
+
+  /// <summary>
+  /// Compile-time factory used by the source generator. See <c>ScalerDescriptor.__CreateFromGenerator</c> for rationale.
+  /// </summary>
+  internal static QuantizerDescriptor __CreateFromGenerator(
+    Type declaringType,
+    string name,
+    string? author,
+    QuantizationType type,
+    int year,
+    int qualityRating,
+    Func<IQuantizer> factory)
+    => new(declaringType, name, author, type, year, qualityRating, factory);
 
   internal QuantizerDescriptor(
     Type declaringType,

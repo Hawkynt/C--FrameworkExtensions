@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("4xSoft Smart", Author = "guest(r)", Year = 2016,
   Description = "Soft scaling with adaptive edge enhancement", Category = ScalerCategory.Resampler)]
-public readonly struct SoftSmart : IPixelScaler {
+public readonly struct SoftSmart : IRescaler {
   private readonly int _scale;
 
   /// <summary>

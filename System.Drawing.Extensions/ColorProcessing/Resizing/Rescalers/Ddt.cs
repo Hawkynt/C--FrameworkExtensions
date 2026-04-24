@@ -52,8 +52,8 @@ public enum DdtVariant {
 /// </remarks>
 [ScalerInfo("DDT", Author = "Hyllian", Year = 2011,
   Url = "https://github.com/libretro/common-shaders/tree/master/ddt",
-  Description = "Data Dependent Triangulation pixel scaling", Category = ScalerCategory.PixelArt)]
-public readonly struct Ddt : IPixelScaler {
+  Description = "Data Dependent Triangulation pixel scaling", Category = ScalerCategory.Rescaler)]
+public readonly struct Ddt : IRescaler {
   private readonly DdtVariant _variant;
 
   /// <summary>

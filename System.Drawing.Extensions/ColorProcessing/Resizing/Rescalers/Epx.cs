@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Developed by Eric Johnston at LucasArts in 1992 for porting SCUMM engine games to Macintosh.</para>
 /// </remarks>
 [ScalerInfo("EPX", Author = "Eric Johnston", Year = 1992, Url = "https://en.wikipedia.org/wiki/Pixel-art_scaling_algorithms#EPX",
-  Description = "Eric's Pixel Expansion, developed at LucasArts for SCUMM engine games on Macintosh", Category = ScalerCategory.PixelArt)]
-public readonly struct Epx : IPixelScaler {
+  Description = "Eric's Pixel Expansion, developed at LucasArts for SCUMM engine games on Macintosh", Category = ScalerCategory.Rescaler)]
+public readonly struct Epx : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -38,7 +43,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Jinc", Year = 1990,
   Description = "2D Bessel-based resampler using J₁(πx)/(πx)", Category = ScalerCategory.Resampler)]
-public readonly struct Jinc : IResampler {
+public readonly struct Jinc : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -66,6 +71,17 @@ public readonly struct Jinc : IResampler {
   public PrefilterInfo? Prefilter => null;
 
   /// <inheritdoc />
+  /// <remarks>
+  /// Jinc is radially symmetric (not separable); this returns the radial profile
+  /// jinc(|x|) suitable for plotting a 1-D cross-section of the kernel.
+  /// </remarks>
+  public float EvaluateWeight(float distance) {
+    var r = MathF.Abs(distance);
+    var radius = this.Radius;
+    return r < radius ? JincMath.Jinc(r) : 0f;
+  }
+
+  /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
     IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
     int sourceWidth,
@@ -86,6 +102,14 @@ public readonly struct Jinc : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Jinc Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _JincSafePath.Dispatch(this.Radius, JincType.Jinc, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -102,7 +126,7 @@ public readonly struct Jinc : IResampler {
 /// </remarks>
 [ScalerInfo("EWA Lanczos", Year = 2000,
   Description = "Elliptical Weighted Average with Lanczos-windowed Jinc", Category = ScalerCategory.Resampler)]
-public readonly struct EwaLanczos : IResampler {
+public readonly struct EwaLanczos : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -130,6 +154,17 @@ public readonly struct EwaLanczos : IResampler {
   public PrefilterInfo? Prefilter => null;
 
   /// <inheritdoc />
+  /// <remarks>
+  /// EWA Lanczos is radially symmetric; this returns the 1-D radial profile
+  /// jinc(|x|) * jinc(|x|/radius) for charting.
+  /// </remarks>
+  public float EvaluateWeight(float distance) {
+    var r = MathF.Abs(distance);
+    var radius = this.Radius;
+    return r < radius ? JincMath.Jinc(r) * JincMath.Jinc(r / radius) : 0f;
+  }
+
+  /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
     IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
     int sourceWidth,
@@ -150,6 +185,14 @@ public readonly struct EwaLanczos : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static EwaLanczos Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _JincSafePath.Dispatch(this.Radius, JincType.EwaLanczos, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -163,7 +206,7 @@ file enum JincType {
 
 file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, int radius, JincType jincType, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -202,27 +245,56 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     var fx = srcXf - srcXi;
     var fy = srcYf - srcYi;
 
-    // Accumulate weighted colors using radial distance
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     for (var ky = -radius + 1; ky <= radius; ++ky)
     for (var kx = -radius + 1; kx <= radius; ++kx) {
       var dx = fx - kx;
       var dy = fy - ky;
       var r = MathF.Sqrt(dx * dx + dy * dy);
-
-      var weight = jincType == JincType.EwaLanczos
-        ? this.EwaLanczosWeight(r)
-        : this.JincWeight(r);
-
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      var weight = jincType == JincType.EwaLanczos ? this.EwaLanczosWeight(r) : this.JincWeight(r);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+
+    Accum4F<TWork> acc = default;
+    for (var ky = -radius + 1; ky <= radius; ++ky)
+    for (var kx = -radius + 1; kx <= radius; ++kx) {
+      var dx = fx - kx;
+      var dy = fy - ky;
+      var r = MathF.Sqrt(dx * dx + dy * dy);
+      var weight = jincType == JincType.EwaLanczos ? this.EwaLanczosWeight(r) : this.JincWeight(r);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -radius + 1, kxMaxExcl: radius + 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -radius + 1, kyMaxExcl: radius + 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// Jinc weight: J₁(πr)/(πr).
@@ -248,19 +320,19 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   /// Jinc function: J₁(πr)/(πr).
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float JincFunction(float r) {
-    if (r == 0f)
-      return 0.5f; // lim r→0 of J₁(πr)/(πr) = 0.5
+  private static float JincFunction(float r) => JincMath.Jinc(r);
+}
+
+internal static class JincMath {
+
+  /// <summary>Jinc function: J₁(πr)/(πr), with the limit 0.5 at r=0.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Jinc(float r) {
+    if (r == 0f) return 0.5f;
     var pir = MathF.PI * r;
     return BesselJ1(pir) / pir;
   }
 
-  /// <summary>
-  /// Bessel function of the first kind, order 1.
-  /// </summary>
-  /// <remarks>
-  /// Polynomial approximation from Numerical Recipes in C.
-  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float BesselJ1(float x) {
     var ax = MathF.Abs(x);
@@ -272,7 +344,6 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
         + y * (99447.43394f + y * (376.9991397f + y))));
       return ans1 / ans2;
     }
-
     var z = 8f / ax;
     var y2 = z * z;
     var xx = ax - 2.356194491f;
@@ -283,6 +354,22 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     var result = MathF.Sqrt(0.636619772f / ax) *
       (MathF.Cos(xx) * ans1b - z * MathF.Sin(xx) * ans2b);
     return x < 0f ? -result : result;
+  }
+}
+
+file static class _JincSafePath {
+  public static Bitmap Dispatch(int radius, JincType jincType,
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new JincKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, radius, jincType, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      JincKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
   }
 }
 

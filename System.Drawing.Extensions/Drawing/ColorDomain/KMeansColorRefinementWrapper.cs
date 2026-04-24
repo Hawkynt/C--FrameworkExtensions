@@ -50,10 +50,10 @@ public sealed class KMeansColorRefinementWrapper : IColorQuantizer {
     this._metric = metric ?? throw new ArgumentNullException(nameof(metric));
   }
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<Color> usedColors)
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors)
     => this.ReduceColorsTo(numberOfColors, usedColors.Select(c => (c, 1u)));
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
     var snapshot = histogram.ToList();
     var palette = this._inner.ReduceColorsTo(numberOfColors, snapshot);
 

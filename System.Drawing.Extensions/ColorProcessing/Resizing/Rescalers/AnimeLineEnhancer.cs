@@ -41,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("Anime Line Enhancer",
   Description = "Gradient-based edge enhancement for anime/cartoon content", Category = ScalerCategory.Resampler)]
-public readonly struct AnimeLineEnhancer : IPixelScaler {
+public readonly struct AnimeLineEnhancer : IRescaler {
   private readonly int _scale;
 
   /// <summary>

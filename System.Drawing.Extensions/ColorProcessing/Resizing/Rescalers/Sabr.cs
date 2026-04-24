@@ -53,8 +53,8 @@ public enum SabrVariant {
 /// </remarks>
 [ScalerInfo("SABR", Author = "Joshua Street", Year = 2012,
   Url = "https://github.com/libretro/common-shaders/tree/master/sabr",
-  Description = "Scalable bicubic renderer with multi-angle edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct Sabr : IPixelScaler {
+  Description = "Scalable bicubic renderer with multi-angle edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct Sabr : IRescaler {
   private readonly int _scale;
   private readonly SabrVariant _variant;
 
@@ -136,8 +136,8 @@ public readonly struct Sabr : IPixelScaler {
 /// </summary>
 [ScalerInfo("SABR Sharp", Author = "Joshua Street", Year = 2012,
   Url = "https://github.com/libretro/common-shaders/tree/master/sabr",
-  Description = "SABR with sharper edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct SabrSharp : IPixelScaler {
+  Description = "SABR with sharper edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct SabrSharp : IRescaler {
   private readonly int _scale;
 
   /// <summary>
@@ -198,8 +198,8 @@ public readonly struct SabrSharp : IPixelScaler {
 /// </summary>
 [ScalerInfo("SABR Smooth", Author = "Joshua Street", Year = 2012,
   Url = "https://github.com/libretro/common-shaders/tree/master/sabr",
-  Description = "SABR with smoother edge blending", Category = ScalerCategory.PixelArt)]
-public readonly struct SabrSmooth : IPixelScaler {
+  Description = "SABR with smoother edge blending", Category = ScalerCategory.Rescaler)]
+public readonly struct SabrSmooth : IRescaler {
   private readonly int _scale;
 
   /// <summary>

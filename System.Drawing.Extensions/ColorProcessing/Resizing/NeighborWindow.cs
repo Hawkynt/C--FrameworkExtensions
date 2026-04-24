@@ -48,6 +48,7 @@ public unsafe ref struct NeighborWindow<TWork, TKey>
   private readonly NeighborPixel<TWork, TKey>* _ptrP0;
   private readonly NeighborPixel<TWork, TKey>* _ptrP1;
   private readonly NeighborPixel<TWork, TKey>* _ptrP2;
+  private readonly int _startX;
   private int _currentX;
 
   /// <summary>
@@ -67,7 +68,18 @@ public unsafe ref struct NeighborWindow<TWork, TKey>
     this._ptrP0 = ptrP0;
     this._ptrP1 = ptrP1;
     this._ptrP2 = ptrP2;
+    this._startX = startX;
     this._currentX = startX;
+  }
+
+  /// <summary>
+  /// Gets the zero-based column index in the source image (independent of OOB padding).
+  /// Kernels that need position-dependent behavior (e.g., subpixel/shadow-mask effects
+  /// keyed to column parity) read this.
+  /// </summary>
+  public int X {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._currentX - this._startX;
   }
 
   #region Row -2 (M2)

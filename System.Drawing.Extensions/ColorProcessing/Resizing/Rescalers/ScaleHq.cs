@@ -43,8 +43,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </list>
 /// </remarks>
 [ScalerInfo("ScaleHQ",
-  Description = "High quality edge-aware scaling with weighted interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct ScaleHq : IPixelScaler {
+  Description = "High quality edge-aware scaling with weighted interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct ScaleHq : IRescaler {
   private readonly int _scale;
 
   /// <summary>

@@ -38,8 +38,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("SaL", Author = "guest(r)", Year = 2007,
   Url = "https://github.com/libretro/common-shaders/tree/master/xsal",
-  Description = "Scaline algorithm using diagonal color distance weighting", Category = ScalerCategory.PixelArt)]
-public readonly struct Sal : IPixelScaler {
+  Description = "Scaline algorithm using diagonal color distance weighting", Category = ScalerCategory.Rescaler)]
+public readonly struct Sal : IRescaler {
   private readonly bool _level2;
 
   /// <summary>

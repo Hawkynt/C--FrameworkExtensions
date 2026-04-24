@@ -186,5 +186,5 @@ public static class WorkPipeline {
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<TPixel, TWork>
     where TProject : struct, IProject<TWork, TKey>
-    => new(sourcePtr, width, height, stride, decoder, projector, horizontalMode, verticalMode, startY);
+    => new(sourcePtr, width, height, stride, decoder, projector, horizontalMode, verticalMode, canvasPixel: default, startY);
 }

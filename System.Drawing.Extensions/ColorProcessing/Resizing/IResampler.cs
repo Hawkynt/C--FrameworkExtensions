@@ -28,7 +28,7 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// <remarks>
 /// <para>
 /// Resamplers like Lanczos, Bilinear, and Bicubic support arbitrary
-/// target dimensions. Unlike <see cref="IPixelScaler"/>, resamplers
+/// target dimensions. Unlike <see cref="IRescaler"/>, resamplers
 /// do not have fixed scale factors - target dimensions are passed
 /// at call time.
 /// </para>

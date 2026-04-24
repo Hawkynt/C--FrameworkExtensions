@@ -42,8 +42,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From Visual Boy Advance emulator.</para>
 /// </remarks>
 [ScalerInfo("Bilinear Plus Original", Author = "VBA Team", Year = 2004,
-  Description = "VBA weighted bilinear interpolation (5:2:1)", Category = ScalerCategory.PixelArt)]
-public readonly struct BilinearPlusOriginal : IPixelScaler {
+  Description = "VBA weighted bilinear interpolation (5:2:1)", Category = ScalerCategory.Rescaler)]
+public readonly struct BilinearPlusOriginal : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);
@@ -143,8 +143,8 @@ file readonly struct BilinearPlusOriginalKernel<TWork, TKey, TPixel, TLerp, TEnc
 /// <para>Uses 14/16 gamma factor on the top-left pixel for CRT-like appearance.</para>
 /// </remarks>
 [ScalerInfo("Bilinear Plus", Author = "VBA Team", Year = 2004,
-  Description = "VBA bilinear with gamma correction (14/16)", Category = ScalerCategory.PixelArt)]
-public readonly struct BilinearPlus : IPixelScaler {
+  Description = "VBA bilinear with gamma correction (14/16)", Category = ScalerCategory.Rescaler)]
+public readonly struct BilinearPlus : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

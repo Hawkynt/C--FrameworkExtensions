@@ -52,8 +52,8 @@ public enum Nnedi3Quality {
 /// <para>Algorithm by tritical, 2010. Reference: https://github.com/sekrit-twc/znedi3</para>
 /// </remarks>
 [ScalerInfo("NNEDI3", Author = "tritical", Year = 2010,
-  Description = "Neural Network Edge Directed Interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct Nnedi3 : IPixelScaler {
+  Description = "Neural Network Edge Directed Interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct Nnedi3 : IRescaler {
 
   private readonly int _scale;
   private readonly Nnedi3Quality _quality;

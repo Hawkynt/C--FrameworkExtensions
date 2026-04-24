@@ -42,7 +42,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("NIS", Author = "NVIDIA", Year = 2021,
   Url = "https://github.com/NVIDIAGameWorks/NVIDIAImageScaling",
   Description = "Edge-adaptive spatial upscaler with directional sharpening", Category = ScalerCategory.Resampler)]
-public readonly struct Nis : IPixelScaler {
+public readonly struct Nis : IRescaler {
   private readonly int _scale;
 
   /// <summary>

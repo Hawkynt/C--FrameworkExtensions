@@ -43,8 +43,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </list>
 /// </remarks>
 [ScalerInfo("SMAA", Author = "Jorge Jimenez et al.", Year = 2012, Url = "https://www.iryoku.com/smaa/",
-  Description = "Subpixel Morphological Anti-Aliasing", Category = ScalerCategory.PixelArt)]
-public readonly struct Smaa : IPixelScaler {
+  Description = "Subpixel Morphological Anti-Aliasing", Category = ScalerCategory.Rescaler)]
+public readonly struct Smaa : IRescaler {
 
   private readonly int _scale;
   private readonly SmaaQuality _quality;

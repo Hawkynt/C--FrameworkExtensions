@@ -41,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("Catmull-Rom", Author = "Edwin Catmull, Raphael Rom", Year = 1974,
   Url = "https://en.wikipedia.org/wiki/Centripetal_Catmull-Rom_spline",
   Description = "Catmull-Rom spline interpolation for smooth curves", Category = ScalerCategory.Resampler)]
-public readonly struct CatmullRom : IPixelScaler {
+public readonly struct CatmullRom : IRescaler {
   private readonly int _scale;
 
   /// <summary>

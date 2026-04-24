@@ -41,8 +41,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Developed by Kreed in 1999 as an enhanced version of 2xSaI.</para>
 /// </remarks>
 [ScalerInfo("Super2xSaI", Author = "Kreed", Year = 1999,
-  Description = "Enhanced 2xSaI with improved edge handling", Category = ScalerCategory.PixelArt)]
-public readonly struct Super2xSaI : IPixelScaler {
+  Description = "Enhanced 2xSaI with improved edge handling", Category = ScalerCategory.Rescaler)]
+public readonly struct Super2xSaI : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);
@@ -314,8 +314,8 @@ file readonly struct Super2xSaIKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
 /// <para>Developed by Kreed in 1999.</para>
 /// </remarks>
 [ScalerInfo("SuperEagle", Author = "Kreed", Year = 1999,
-  Description = "Enhanced Eagle with SaI-style edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct SuperEagle : IPixelScaler {
+  Description = "Enhanced Eagle with SaI-style edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct SuperEagle : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

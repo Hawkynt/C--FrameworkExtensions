@@ -41,14 +41,17 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// [1,1] = Luminance (grayscale).
 /// </para>
 /// <para>
-/// 3x mode: Creates a 3x3 RGB stripe pattern with each row showing
-/// Red, Green, Blue sub-pixels across the columns.
+/// 3x mode: 3x2 dot-matrix shadow-mask — each source pixel emits a horizontal R/G/B
+/// stripe on its even target row; on its odd target row, the R and B subpixels
+/// "stagger" one source row vertically based on source-column parity, producing a
+/// shadow-mask (aperture-grille) pattern. This is the authentic MS-DOS algorithm
+/// from 1998, not a plain RGB stripe.
 /// </para>
 /// <para>Original algorithm by Hawkynt, 1998.</para>
 /// </remarks>
 [ScalerInfo("Hawkynt TV", Author = "Hawkynt", Year = 1998,
-  Description = "RGB channel separation effect", Category = ScalerCategory.PixelArt)]
-public readonly struct HawkyntTv : IPixelScaler {
+  Description = "RGB channel separation effect", Category = ScalerCategory.Rescaler)]
+public readonly struct HawkyntTv : IRescaler {
 
   private readonly int _scale;
 
@@ -63,7 +66,11 @@ public readonly struct HawkyntTv : IPixelScaler {
   }
 
   /// <inheritdoc />
-  public ScaleFactor Scale => this._scale == 0 ? new(2, 2) : new(this._scale, this._scale);
+  public ScaleFactor Scale => this._scale switch {
+    0 or 2 => new(2, 2),
+    3 => new(3, 2),
+    _ => new(this._scale, this._scale),
+  };
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -86,19 +93,19 @@ public readonly struct HawkyntTv : IPixelScaler {
   /// <summary>
   /// Gets the list of scale factors supported.
   /// </summary>
-  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 3)];
+  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 2)];
 
   /// <summary>
   /// Determines whether the specified scale factor is supported.
   /// </summary>
-  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 3 };
+  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 2 };
 
   /// <summary>
   /// Enumerates all possible target dimensions.
   /// </summary>
   public static IEnumerable<(int Width, int Height)> GetPossibleTargets(int sourceWidth, int sourceHeight) {
     yield return (sourceWidth * 2, sourceHeight * 2);
-    yield return (sourceWidth * 3, sourceHeight * 3);
+    yield return (sourceWidth * 3, sourceHeight * 2);
   }
 
   /// <summary>
@@ -169,7 +176,7 @@ file readonly struct HawkyntTv3xKernel<TWork, TKey, TPixel, TEncode>
   where TEncode : struct, IEncode<TWork, TPixel> {
 
   public int ScaleX => 3;
-  public int ScaleY => 3;
+  public int ScaleY => 2;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Scale(
@@ -178,35 +185,40 @@ file readonly struct HawkyntTv3xKernel<TWork, TKey, TPixel, TEncode>
     int destStride,
     in TEncode encoder
   ) {
-    var pixel = window.P0P0.Work;
+    // Dot-matrix shadow-mask: top row always R-G-B from this pixel; bottom row staggers
+    // R and B one source row vertically based on source-column parity.
+    var here = window.P0P0.Work;
+    var below = window.P0P1.Work;
 
-    // Get RGBA components using ColorConverter
-    var (r, g, b) = ColorConverter.GetNormalizedRgb(pixel);
-    var a = ColorConverter.GetAlpha(pixel);
+    var (hr, hg, hb) = ColorConverter.GetNormalizedRgb(here);
+    var ha = ColorConverter.GetAlpha(here);
+    var (br, bg, bb) = ColorConverter.GetNormalizedRgb(below);
+    var ba = ColorConverter.GetAlpha(below);
 
-    // Create single-channel pixels using ColorConverter
-    var redOnly = ColorConverter.FromNormalizedRgba<TWork>(r, 0, 0, a);
-    var greenOnly = ColorConverter.FromNormalizedRgba<TWork>(0, g, 0, a);
-    var blueOnly = ColorConverter.FromNormalizedRgba<TWork>(0, 0, b, a);
-
-    var encodedR = encoder.Encode(redOnly);
-    var encodedG = encoder.Encode(greenOnly);
-    var encodedB = encoder.Encode(blueOnly);
+    var hR = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(hr, 0, 0, ha));
+    var hG = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0, hg, 0, ha));
+    var hB = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0, 0, hb, ha));
+    var bR = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(br, 0, 0, ba));
+    var bG = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0, bg, 0, ba));
+    var bB = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0, 0, bb, ba));
 
     var row0 = destTopLeft;
     var row1 = destTopLeft + destStride;
-    var row2 = row1 + destStride;
 
-    // All 3 rows show R, G, B stripe pattern
-    // This creates vertical RGB stripes like an LCD display
-    row0[0] = encodedR;
-    row0[1] = encodedG;
-    row0[2] = encodedB;
-    row1[0] = encodedR;
-    row1[1] = encodedG;
-    row1[2] = encodedB;
-    row2[0] = encodedR;
-    row2[1] = encodedG;
-    row2[2] = encodedB;
+    row0[0] = hR;
+    row0[1] = hG;
+    row0[2] = hB;
+
+    if ((window.X & 1) == 0) {
+      // even source column: R and B stay on this row, G comes from the row below
+      row1[0] = hR;
+      row1[1] = bG;
+      row1[2] = hB;
+    } else {
+      // odd source column: R and B come from the row below, G stays on this row
+      row1[0] = bR;
+      row1[1] = hG;
+      row1[2] = bB;
+    }
   }
 }

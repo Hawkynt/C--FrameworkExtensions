@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From FNES emulator.</para>
 /// </remarks>
 [ScalerInfo("DES", Author = "FNES Team", Year = 2000,
-  Description = "Diagonal Edge Scaling filter (1x1)", Category = ScalerCategory.PixelArt)]
-public readonly struct Des : IPixelScaler {
+  Description = "Diagonal Edge Scaling filter (1x1)", Category = ScalerCategory.Rescaler)]
+public readonly struct Des : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(1, 1);
@@ -147,8 +147,8 @@ file readonly struct DesKernel<TWork, TKey, TPixel, TEquality, TLerp, TEncode>(T
 /// <para>From FNES emulator.</para>
 /// </remarks>
 [ScalerInfo("DES 2x", Author = "FNES Team", Year = 2000,
-  Description = "Diagonal Edge Scaling with weighted blending", Category = ScalerCategory.PixelArt)]
-public readonly struct Des2 : IPixelScaler {
+  Description = "Diagonal Edge Scaling with weighted blending", Category = ScalerCategory.Rescaler)]
+public readonly struct Des2 : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

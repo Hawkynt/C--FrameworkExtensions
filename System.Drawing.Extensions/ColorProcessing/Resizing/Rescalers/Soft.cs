@@ -44,7 +44,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("4xSoft", Author = "guest(r)", Year = 2007,
   Url = "https://github.com/libretro/common-shaders/tree/master/xsoft",
   Description = "Contrast-weighted soft interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct Soft : IPixelScaler {
+public readonly struct Soft : IRescaler {
   /// <inheritdoc />
   public ScaleFactor Scale => new(4, 4);
 

@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Caligari", Author = "Caligari",
   Url = "https://github.com/libretro/slang-shaders/tree/master/crt/shaders",
   Description = "Performance-focused CRT with electron beam spot simulation", Category = ScalerCategory.Resampler)]
-public readonly struct CrtCaligari : IPixelScaler {
+public readonly struct CrtCaligari : IRescaler {
   private readonly int _scale;
 
   /// <summary>

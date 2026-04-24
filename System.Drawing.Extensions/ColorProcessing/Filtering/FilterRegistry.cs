@@ -41,7 +41,14 @@ namespace Hawkynt.ColorProcessing.Filtering;
 /// </code>
 /// </example>
 /// </remarks>
-public static class FilterRegistry {
+public static partial class FilterRegistry {
+
+  /// <summary>
+  /// Implemented by the source generator at compile time. See
+  /// <c>ScalerRegistry._CollectFromSourceGenerator</c> for the contract.
+  /// </summary>
+  static partial void _CollectFromSourceGenerator(List<FilterDescriptor> into);
+
 
   private static readonly Lazy<IReadOnlyList<FilterDescriptor>> _all = new(
     () => new ReadOnlyList<FilterDescriptor>(DiscoverFilters()));
@@ -92,21 +99,29 @@ public static class FilterRegistry {
     => All.FirstOrDefault(d => d.Type == typeof(TFilter));
 
   private static List<FilterDescriptor> DiscoverFilters() {
-    var assembly = typeof(FilterRegistry).Assembly;
     var descriptors = new List<FilterDescriptor>();
 
-    foreach (var type in assembly.GetTypes()) {
-      if (!type.IsValueType || type.IsAbstract)
-        continue;
+    _CollectFromSourceGenerator(descriptors);
 
-      if (!typeof(IPixelFilter).IsAssignableFrom(type))
-        continue;
+    if (descriptors.Count == 0) {
+      var assembly = typeof(FilterRegistry).Assembly;
+      foreach (var type in assembly.GetTypes()) {
+        if (!type.IsValueType || type.IsAbstract)
+          continue;
 
-      var descriptor = FilterDescriptor.FromType(type);
-      if (descriptor != null)
-        descriptors.Add(descriptor);
+        if (!typeof(IPixelFilter).IsAssignableFrom(type))
+          continue;
+
+        var descriptor = FilterDescriptor.FromType(type);
+        if (descriptor != null)
+          descriptors.Add(descriptor);
+      }
     }
 
-    return descriptors.OrderBy(d => d.Name).ToList();
+    return descriptors
+      .GroupBy(d => d.Type)
+      .Select(g => g.First())
+      .OrderBy(d => d.Name)
+      .ToList();
   }
 }

@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("Simple", Author = "ScummVM Team", Year = 2001,
   Url = "https://wiki.scummvm.org/index.php/Scalers",
-  Description = "Basic point duplication scaling from ScummVM", Category = ScalerCategory.PixelArt)]
-public readonly struct Simple : IPixelScaler {
+  Description = "Basic point duplication scaling from ScummVM", Category = ScalerCategory.Rescaler)]
+public readonly struct Simple : IRescaler {
   private readonly int _scale;
 
   /// <summary>

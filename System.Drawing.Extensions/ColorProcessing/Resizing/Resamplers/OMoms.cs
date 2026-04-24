@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -47,7 +52,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("o-Moms 3", Year = 2001,
   Description = "Cubic o-Moms interpolation (optimal moments)", Category = ScalerCategory.Resampler)]
-public readonly struct OMoms3 : IResampler {
+public readonly struct OMoms3 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -57,6 +62,9 @@ public readonly struct OMoms3 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => PrefilterInfo.OMoms3;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => OMomsMath.OMoms3Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -79,6 +87,14 @@ public readonly struct OMoms3 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static OMoms3 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _OMomsSafePath.Dispatch(OMomsType.OMoms3, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -100,7 +116,7 @@ public readonly struct OMoms3 : IResampler {
 /// </remarks>
 [ScalerInfo("o-Moms 5", Year = 2001,
   Description = "Quintic o-Moms interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct OMoms5 : IResampler {
+public readonly struct OMoms5 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -110,6 +126,9 @@ public readonly struct OMoms5 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => PrefilterInfo.OMoms5;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => OMomsMath.OMoms5Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -132,6 +151,14 @@ public readonly struct OMoms5 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static OMoms5 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _OMomsSafePath.Dispatch(OMomsType.OMoms5, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -153,7 +180,7 @@ public readonly struct OMoms5 : IResampler {
 /// </remarks>
 [ScalerInfo("o-Moms 7", Year = 2001,
   Description = "Septic o-Moms interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct OMoms7 : IResampler {
+public readonly struct OMoms7 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -163,6 +190,9 @@ public readonly struct OMoms7 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => PrefilterInfo.OMoms7;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => OMomsMath.OMoms7Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -185,6 +215,14 @@ public readonly struct OMoms7 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static OMoms7 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _OMomsSafePath.Dispatch(OMomsType.OMoms7, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -199,7 +237,7 @@ file enum OMomsType {
 
 file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, OMomsType type, bool useCenteredGrid = true)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -244,20 +282,53 @@ file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
     var fx = srcXf - srcXi;
     var fy = srcYf - srcYi;
 
-    // Accumulate weighted colors from kernel
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     var r = this.Radius;
     for (var ky = -r + 1; ky <= r; ++ky)
     for (var kx = -r + 1; kx <= r; ++kx) {
       var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+
+    Accum4F<TWork> acc = default;
+    var r = this.Radius;
+    for (var ky = -r + 1; ky <= r; ++ky)
+    for (var kx = -r + 1; kx <= r; ++kx) {
+      var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion() {
+    var r = this.Radius;
+    return ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -r + 1, kxMaxExcl: r + 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -r + 1, kyMaxExcl: r + 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
   }
 
   /// <summary>
@@ -271,102 +342,87 @@ file readonly struct OMomsKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
     _ => 0f
   };
 
-  /// <summary>
-  /// Cubic o-Moms weight function.
-  /// </summary>
-  /// <remarks>
-  /// Based on "Interpolation Revisited" by Thévenaz, Blu, and Unser.
-  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float OMoms3Weight(float x) {
+  private static float OMoms3Weight(float x) => OMomsMath.OMoms3Weight(x);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float OMoms5Weight(float x) => OMomsMath.OMoms5Weight(x);
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float OMoms7Weight(float x) => OMomsMath.OMoms7Weight(x);
+}
+
+file static class _OMomsSafePath {
+  public static Bitmap Dispatch(OMomsType type, Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new OMomsKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, type, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      OMomsKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
+}
+
+internal static class OMomsMath {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float OMoms3Weight(float x) {
     x = MathF.Abs(x);
-    if (x < 1f) {
-      // ((x/2 - 1) * x + 1/14) * x + 13/21
+    if (x < 1f)
       return ((x * 0.5f - 1f) * x + 1f / 14f) * x + 13f / 21f;
-    }
-
-    if (x < 2f) {
-      // ((-x/6 + 1) * x - 85/42) * x + 29/21
+    if (x < 2f)
       return ((-x / 6f + 1f) * x - 85f / 42f) * x + 29f / 21f;
-    }
-
     return 0f;
   }
 
-  /// <summary>
-  /// Quintic o-Moms weight function.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float OMoms5Weight(float x) {
+  public static float OMoms5Weight(float x) {
     x = MathF.Abs(x);
     if (x <= 1f) {
       var x2 = x * x;
-      // (1/12 * x^4 - 1/6 * x^3 - 1/4 * x^2 + 1/2 * x + 1/12) adjusted for o-Moms
-      // From Blu-Thévenaz: specific polynomial coefficients for optimal moments
       return 11f / 16f + x2 * (-13f / 24f + x2 * (11f / 48f - x * (1f / 12f)));
     }
-
     if (x < 2f) {
       var t = 2f - x;
-      var t2 = t * t;
-      var t3 = t2 * t;
-      var t4 = t2 * t2;
-      // OMoms5 for region [1,2)
       return 1f / 48f + t * (3f / 16f + t * (1f / 8f + t * (-1f / 8f + t * (1f / 16f - t * (1f / 48f)))));
     }
-
     if (x < 3f) {
       var t = 3f - x;
       var t2 = t * t;
       var t4 = t2 * t2;
-      // OMoms5 for region [2,3)
       return t4 * t * (1f / 120f);
     }
-
     return 0f;
   }
 
-  /// <summary>
-  /// Septic o-Moms weight function.
-  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float OMoms7Weight(float x) {
+  public static float OMoms7Weight(float x) {
     x = MathF.Abs(x);
     if (x <= 1f) {
       var x2 = x * x;
-      var x4 = x2 * x2;
-      // OMoms7 central region
       return 151f / 315f + x2 * (-1f / 3f + x2 * (1f / 9f + x2 * (-1f / 36f + x * (1f / 144f))));
     }
-
     if (x < 2f) {
-      // OMoms7 for region [1,2)
       var t = 2f - x;
-      var t2 = t * t;
-      var t3 = t2 * t;
-      var t4 = t2 * t2;
-      var t5 = t4 * t;
-      var t6 = t3 * t3;
       return 1f / 10080f + t * (1f / 720f + t * (1f / 180f + t * (-1f / 180f + t * (1f / 144f + t * (-1f / 240f + t * (1f / 720f - t * (1f / 5040f)))))));
     }
-
     if (x < 3f) {
-      // OMoms7 for region [2,3)
       var t = 3f - x;
       var t2 = t * t;
       var t4 = t2 * t2;
       var t6 = t4 * t2;
       return t6 * t * (1f / 5040f) + t6 * (1f / 720f);
     }
-
     if (x < 4f) {
-      // OMoms7 for region [3,4)
       var t = 4f - x;
       var t2 = t * t;
       var t4 = t2 * t2;
       return t4 * t2 * t * (1f / 5040f);
     }
-
     return 0f;
   }
 }

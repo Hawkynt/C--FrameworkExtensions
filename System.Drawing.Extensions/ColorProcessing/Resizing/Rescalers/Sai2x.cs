@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>One of the most popular pixel-art scalers, widely used in emulators.</para>
 /// </remarks>
 [ScalerInfo("2xSaI", Author = "Derek Liauw Kie Fa", Year = 1999,
-  Description = "Scale and Interpolation - advanced diagonal edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct Sai2x : IPixelScaler {
+  Description = "Scale and Interpolation - advanced diagonal edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct Sai2x : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

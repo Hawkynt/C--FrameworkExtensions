@@ -41,6 +41,20 @@ namespace Hawkynt.ColorProcessing.Filtering;
 public sealed class FilterDescriptor {
 
   /// <summary>
+  /// Compile-time factory used by the source generator. See <c>ScalerDescriptor.__CreateFromGenerator</c> for rationale.
+  /// </summary>
+  internal static FilterDescriptor __CreateFromGenerator(
+    Type type,
+    string name,
+    string? author,
+    string? description,
+    string? url,
+    int year,
+    FilterCategory category)
+    => new(type, name, author, description, url, year, category);
+
+
+  /// <summary>
   /// Gets the concrete type of the filter.
   /// </summary>
   public Type Type { get; }

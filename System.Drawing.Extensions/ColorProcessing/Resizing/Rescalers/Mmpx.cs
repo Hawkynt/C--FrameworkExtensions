@@ -40,9 +40,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: https://casual-effects.com/research/McGuire2021PixelArt/index.html</para>
 /// </remarks>
 [ScalerInfo("MMPX 2x", Author = "Morgan McGuire", Year = 2021,
-  Description = "MMPX 2x style-preserving pixel art scaling", Category = ScalerCategory.PixelArt,
+  Description = "MMPX 2x style-preserving pixel art scaling", Category = ScalerCategory.Rescaler,
   Url = "https://casual-effects.com/research/McGuire2021PixelArt/index.html")]
-public readonly struct Mmpx2x : IPixelScaler {
+public readonly struct Mmpx2x : IRescaler {
 
   public ScaleFactor Scale => new(2, 2);
 

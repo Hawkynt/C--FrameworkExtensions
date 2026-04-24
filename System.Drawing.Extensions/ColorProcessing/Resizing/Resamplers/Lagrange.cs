@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -41,7 +46,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Lagrange-3", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Cubic polynomial interpolation through 4 points", Category = ScalerCategory.Resampler)]
-public readonly struct Lagrange3 : IResampler {
+public readonly struct Lagrange3 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -51,6 +56,9 @@ public readonly struct Lagrange3 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => LagrangeMath.Lagrange3Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -73,6 +81,14 @@ public readonly struct Lagrange3 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Lagrange3 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _LagrangeSafePath.Dispatch(LagrangeType.Lagrange3, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -90,7 +106,7 @@ public readonly struct Lagrange3 : IResampler {
 /// </remarks>
 [ScalerInfo("Lagrange-5", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Quintic polynomial interpolation through 6 points", Category = ScalerCategory.Resampler)]
-public readonly struct Lagrange5 : IResampler {
+public readonly struct Lagrange5 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -100,6 +116,9 @@ public readonly struct Lagrange5 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => LagrangeMath.Lagrange5Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -122,6 +141,14 @@ public readonly struct Lagrange5 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Lagrange5 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _LagrangeSafePath.Dispatch(LagrangeType.Lagrange5, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -139,7 +166,7 @@ public readonly struct Lagrange5 : IResampler {
 /// </remarks>
 [ScalerInfo("Lagrange-7", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Septic polynomial interpolation through 8 points", Category = ScalerCategory.Resampler)]
-public readonly struct Lagrange7 : IResampler {
+public readonly struct Lagrange7 : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -149,6 +176,9 @@ public readonly struct Lagrange7 : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => LagrangeMath.Lagrange7Weight(distance);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -171,6 +201,14 @@ public readonly struct Lagrange7 : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Lagrange7 Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _LagrangeSafePath.Dispatch(LagrangeType.Lagrange7, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 file enum LagrangeType {
@@ -181,7 +219,7 @@ file enum LagrangeType {
 
 file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, LagrangeType type, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -226,20 +264,53 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
     var fx = srcXf - srcXi;
     var fy = srcYf - srcYi;
 
-    // Accumulate weighted colors based on Lagrange type
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     var r = this.Radius;
     for (var ky = -r + 1; ky <= r; ++ky)
     for (var kx = -r + 1; kx <= r; ++kx) {
       var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+
+    Accum4F<TWork> acc = default;
+    var r = this.Radius;
+    for (var ky = -r + 1; ky <= r; ++ky)
+    for (var kx = -r + 1; kx <= r; ++kx) {
+      var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion() {
+    var r = this.Radius;
+    return ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -r + 1, kxMaxExcl: r + 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -r + 1, kyMaxExcl: r + 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
   }
 
   /// <summary>
@@ -267,31 +338,7 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
   /// The weight function receives x = fx - kx (offset from interpolation point to sample).
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Lagrange3Weight(float x) {
-    if (x >= 2f || x < -2f)
-      return 0f;
-
-    if (x >= 1f) {
-      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
-      var t = x - 1f;
-      return -t * (t - 1f) * (t - 2f) / 6f;
-    }
-
-    if (x >= 0f) {
-      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
-      return (x + 1f) * (x - 1f) * (x - 2f) / 2f;
-    }
-
-    if (x >= -1f) {
-      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
-      var t = x + 1f;
-      return -(t + 1f) * t * (t - 2f) / 2f;
-    }
-
-    // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
-    var u = x + 2f;
-    return (u + 1f) * u * (u - 1f) / 6f;
-  }
+  private static float Lagrange3Weight(float x) => LagrangeMath.Lagrange3Weight(x);
 
   /// <summary>
   /// Lagrange 6-point (quintic) basis polynomial weights.
@@ -301,43 +348,7 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
   /// The weight function receives x = fx - kx (offset from interpolation point to sample).
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Lagrange5Weight(float x) {
-    if (x >= 3f || x < -3f)
-      return 0f;
-
-    if (x >= 2f) {
-      // x ∈ [2, 3): sample at index -2, L_{-2}(fx) where fx = x - 2
-      var t = x - 2f;
-      return -(t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 120f;
-    }
-
-    if (x >= 1f) {
-      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
-      var t = x - 1f;
-      return -(t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 24f;
-    }
-
-    if (x >= 0f) {
-      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
-      return (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) / 12f;
-    }
-
-    if (x >= -1f) {
-      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
-      var t = x + 1f;
-      return -(t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) / 12f;
-    }
-
-    if (x >= -2f) {
-      // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
-      var t = x + 2f;
-      return -(t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) / 24f;
-    }
-
-    // x ∈ [-3, -2): sample at index 3, L_3(fx) where fx = x + 3
-    var u = x + 3f;
-    return (u + 2f) * (u + 1f) * u * (u - 1f) * (u - 2f) / 120f;
-  }
+  private static float Lagrange5Weight(float x) => LagrangeMath.Lagrange5Weight(x);
 
   /// <summary>
   /// Lagrange 8-point (septic) basis polynomial weights.
@@ -347,52 +358,97 @@ file readonly struct LagrangeKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
   /// The weight function receives x = fx - kx (offset from interpolation point to sample).
   /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float Lagrange7Weight(float x) {
-    if (x >= 4f || x < -4f)
-      return 0f;
+  private static float Lagrange7Weight(float x) => LagrangeMath.Lagrange7Weight(x);
+}
 
+file static class _LagrangeSafePath {
+  public static Bitmap Dispatch(LagrangeType type, Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new LagrangeKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, type, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      LagrangeKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
+}
+
+internal static class LagrangeMath {
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Lagrange3Weight(float x) {
+    if (x >= 2f || x < -2f) return 0f;
+    if (x >= 1f) {
+      var t = x - 1f;
+      return -t * (t - 1f) * (t - 2f) / 6f;
+    }
+    if (x >= 0f)
+      return (x + 1f) * (x - 1f) * (x - 2f) / 2f;
+    if (x >= -1f) {
+      var t = x + 1f;
+      return -(t + 1f) * t * (t - 2f) / 2f;
+    }
+    var u = x + 2f;
+    return (u + 1f) * u * (u - 1f) / 6f;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Lagrange5Weight(float x) {
+    if (x >= 3f || x < -3f) return 0f;
+    if (x >= 2f) {
+      var t = x - 2f;
+      return -(t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 120f;
+    }
+    if (x >= 1f) {
+      var t = x - 1f;
+      return -(t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 24f;
+    }
+    if (x >= 0f)
+      return (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) / 12f;
+    if (x >= -1f) {
+      var t = x + 1f;
+      return -(t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) / 12f;
+    }
+    if (x >= -2f) {
+      var t = x + 2f;
+      return -(t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) / 24f;
+    }
+    var u = x + 3f;
+    return (u + 2f) * (u + 1f) * u * (u - 1f) * (u - 2f) / 120f;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Lagrange7Weight(float x) {
+    if (x >= 4f || x < -4f) return 0f;
     if (x >= 3f) {
-      // x ∈ [3, 4): sample at index -3, L_{-3}(fx) where fx = x - 3
       var t = x - 3f;
       return -(t + 2f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 5040f;
     }
-
     if (x >= 2f) {
-      // x ∈ [2, 3): sample at index -2, L_{-2}(fx) where fx = x - 2
       var t = x - 2f;
       return (t + 3f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 720f;
     }
-
     if (x >= 1f) {
-      // x ∈ [1, 2): sample at index -1, L_{-1}(fx) where fx = x - 1
       var t = x - 1f;
       return -(t + 3f) * (t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) * (t - 4f) / 240f;
     }
-
-    if (x >= 0f) {
-      // x ∈ [0, 1): sample at index 0, L_0(fx) where fx = x
+    if (x >= 0f)
       return (x + 3f) * (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) * (x - 4f) / 144f;
-    }
-
     if (x >= -1f) {
-      // x ∈ [-1, 0): sample at index 1, L_1(fx) where fx = x + 1
       var t = x + 1f;
       return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) * (t - 4f) / 144f;
     }
-
     if (x >= -2f) {
-      // x ∈ [-2, -1): sample at index 2, L_2(fx) where fx = x + 2
       var t = x + 2f;
       return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) * (t - 4f) / 240f;
     }
-
     if (x >= -3f) {
-      // x ∈ [-3, -2): sample at index 3, L_3(fx) where fx = x + 3
       var t = x + 3f;
       return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 2f) * (t - 4f) / 720f;
     }
-
-    // x ∈ [-4, -3): sample at index 4, L_4(fx) where fx = x + 4
     var u = x + 4f;
     return (u + 3f) * (u + 2f) * (u + 1f) * u * (u - 1f) * (u - 2f) * (u - 3f) / 5040f;
   }

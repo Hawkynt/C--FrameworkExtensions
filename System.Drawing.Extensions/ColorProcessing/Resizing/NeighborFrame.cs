@@ -63,6 +63,8 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   private readonly TProject _projector;
   private readonly OutOfBoundsMode _horizontalMode;
   private readonly OutOfBoundsMode _verticalMode;
+  /// <summary>Pre-decoded canvas pixel for <see cref="OutOfBoundsMode.Transparent"/>. Serves as the fill used when sampling outside the source image.</summary>
+  private readonly NeighborPixel<TWork, TKey> _canvasPixel;
 
   private NeighborPixel<TWork, TKey>* _ptrM2;
   private NeighborPixel<TWork, TKey>* _ptrM1;
@@ -101,11 +103,52 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   public NeighborPixel<TWork, TKey> this[int x, int y] {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
-      var clampedX = this._ClampX(x);
-      var clampedY = this._ClampY(y);
-      var pixel = this._sourcePtr[clampedY * this._sourceStride + clampedX];
-      return this._DecodeAndProject(pixel);
+      // Fast path: both coordinates are inside the source image. The unsigned compare collapses
+      // the two-sided bounds check (x >= 0 && x < width) into a single cmp+branch. For interior
+      // destination pixels this is the only branch taken — no mode dispatch, no clamp, no canvas
+      // check. Resampler kernels spend the overwhelming majority of their samples in here.
+      if ((uint)x < (uint)this._sourceWidth && (uint)y < (uint)this._sourceHeight) {
+        var pixel = this._sourcePtr[y * this._sourceStride + x];
+        return this._DecodeAndProject(pixel);
+      }
+
+      return this._GetOutOfBounds(x, y);
     }
+  }
+
+  /// <summary>
+  /// Reads, decodes and projects a source pixel without any bounds check. Caller must guarantee
+  /// <c>0 &lt;= x &lt; Width</c> and <c>0 &lt;= y &lt; Height</c>; use <see cref="IsWindowSafe"/>
+  /// to gate calls. Aggressively inlined so kernel inner loops compile to straight-line loads.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public NeighborPixel<TWork, TKey> GetUnchecked(int x, int y) {
+    var pixel = this._sourcePtr[y * this._sourceStride + x];
+    return this._DecodeAndProject(pixel);
+  }
+
+  /// <summary>
+  /// True when the half-open sample window <c>[xMin, xMaxExcl) × [yMin, yMaxExcl)</c> sits
+  /// fully inside the source image. Kernels call this once per destination pixel and dispatch
+  /// to a no-OOB inner loop on the safe path. Single branch, very well predicted (constant per row).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool IsWindowSafe(int xMin, int xMaxExcl, int yMin, int yMaxExcl)
+    => xMin >= 0 && xMaxExcl <= this._sourceWidth
+    && yMin >= 0 && yMaxExcl <= this._sourceHeight;
+
+  /// <summary>Slow-path OOB resolver: applies horizontal/vertical mode dispatch and canvas-colour fallback.</summary>
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  private NeighborPixel<TWork, TKey> _GetOutOfBounds(int x, int y) {
+    if (this._verticalMode == OutOfBoundsMode.Transparent && (y < 0 || y >= this._sourceHeight))
+      return this._canvasPixel;
+    if (this._horizontalMode == OutOfBoundsMode.Transparent && (x < 0 || x >= this._sourceWidth))
+      return this._canvasPixel;
+
+    var clampedX = this._ClampX(x);
+    var clampedY = this._ClampY(y);
+    var pixel = this._sourcePtr[clampedY * this._sourceStride + clampedX];
+    return this._DecodeAndProject(pixel);
   }
 
   /// <summary>
@@ -119,6 +162,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// <param name="projector">The projector instance.</param>
   /// <param name="horizontalMode">How to handle horizontal out-of-bounds access.</param>
   /// <param name="verticalMode">How to handle vertical out-of-bounds access.</param>
+  /// <param name="canvasPixel">Pixel used as the "canvas" fill when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode and the sample falls outside the source image.</param>
   /// <param name="startY">The starting Y row (for parallel processing).</param>
   public NeighborFrame(
     TPixel* sourcePtr,
@@ -129,6 +173,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     TProject projector,
     OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
     OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    TPixel canvasPixel = default,
     int startY = 0
   ) {
     this._sourcePtr = sourcePtr;
@@ -139,6 +184,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     this._projector = projector;
     this._horizontalMode = horizontalMode;
     this._verticalMode = verticalMode;
+    this._canvasPixel = this._DecodeAndProject(canvasPixel);
     this._rowWidth = width + 4; // +2 left, +2 right for OOB padding
 
     // Allocate and pin buffer
@@ -211,6 +257,12 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _LoadRow(NeighborPixel<TWork, TKey>* rowPtr, int y) {
+    // Transparent Y: entire row is canvas colour, no source read.
+    if (this._verticalMode == OutOfBoundsMode.Transparent && (y < 0 || y >= this._sourceHeight)) {
+      this._FillRowCanvas(rowPtr);
+      return;
+    }
+
     var clampedY = this._ClampY(y);
 
     // Fast path for Const-Const mode (most common)
@@ -218,6 +270,15 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
       this._LoadRowConstConst(rowPtr, clampedY);
     else
       this._LoadRowGeneric(rowPtr, clampedY);
+  }
+
+  /// <summary>Fills the 5-row sliding buffer for a single row with the canvas pixel (Transparent-mode OOB rows).</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private void _FillRowCanvas(NeighborPixel<TWork, TKey>* rowPtr) {
+    var canvas = this._canvasPixel;
+    var width = this._rowWidth;
+    for (var i = 0; i < width; ++i)
+      rowPtr[i] = canvas;
   }
 
   /// <summary>
@@ -508,15 +569,37 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   }
 
   /// <summary>
-  /// Generic row loader for all OOB modes.
+  /// Generic row loader for non-Const-Const OOB modes. Splits into three segments so the wide
+  /// in-bounds middle runs with zero per-pixel OOB overhead (no clamp, no transparency check);
+  /// the only branches are four corner pixels on each row edge.
   /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _LoadRowGeneric(NeighborPixel<TWork, TKey>* rowPtr, int y) {
     var srcRow = this._sourcePtr + y * this._sourceStride;
     var width = this._sourceWidth;
+    var transparentX = this._horizontalMode == OutOfBoundsMode.Transparent;
+    var canvas = this._canvasPixel;
 
-    for (var bufferX = 0; bufferX < this._rowWidth; ++bufferX) {
-      var srcX = this._ClampX(bufferX - 2);
-      rowPtr[bufferX] = this._DecodeAndProject(srcRow[srcX]);
+    // Left OOB padding: bufferX ∈ {0, 1} → origX ∈ {-2, -1}
+    if (transparentX) {
+      rowPtr[0] = canvas;
+      rowPtr[1] = canvas;
+    } else {
+      rowPtr[0] = this._DecodeAndProject(srcRow[this._ClampX(-2)]);
+      rowPtr[1] = this._DecodeAndProject(srcRow[this._ClampX(-1)]);
+    }
+
+    // In-bounds middle: bufferX ∈ [2, width+1] → origX ∈ [0, width-1]. No OOB check needed.
+    for (var i = 0; i < width; ++i)
+      rowPtr[i + 2] = this._DecodeAndProject(srcRow[i]);
+
+    // Right OOB padding: bufferX ∈ {width+2, width+3} → origX ∈ {width, width+1}
+    if (transparentX) {
+      rowPtr[width + 2] = canvas;
+      rowPtr[width + 3] = canvas;
+    } else {
+      rowPtr[width + 2] = this._DecodeAndProject(srcRow[this._ClampX(width)]);
+      rowPtr[width + 3] = this._DecodeAndProject(srcRow[this._ClampX(width + 1)]);
     }
   }
 

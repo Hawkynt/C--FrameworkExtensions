@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From MAME emulator.</para>
 /// </remarks>
 [ScalerInfo("MAME RGB", Author = "MAME Team", Year = 1997,
-  Description = "LCD RGB subpixel filter", Category = ScalerCategory.PixelArt)]
-public readonly struct MameRgb : IPixelScaler {
+  Description = "LCD RGB subpixel filter", Category = ScalerCategory.Rescaler)]
+public readonly struct MameRgb : IRescaler {
 
   private readonly int _scale;
 

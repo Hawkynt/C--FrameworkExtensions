@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: Xenowhirl, 2007</para>
 /// </remarks>
 [ScalerInfo("RotSprite", Author = "Xenowhirl", Year = 2007,
-  Description = "RotSprite pixel art scaling with rotation support", Category = ScalerCategory.PixelArt)]
-public readonly struct RotSprite : IPixelScaler {
+  Description = "RotSprite pixel art scaling with rotation support", Category = ScalerCategory.Rescaler)]
+public readonly struct RotSprite : IRescaler {
   private readonly int _scale;
   private readonly float _rotationRadians;
 

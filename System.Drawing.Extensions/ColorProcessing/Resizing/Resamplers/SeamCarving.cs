@@ -64,7 +64,7 @@ public enum SeamCarvingEnergyMode {
 /// </para>
 /// </remarks>
 [ScalerInfo("SeamCarving", Author = "Avidan, Shamir", Year = 2007,
-  Description = "Content-aware seam carving resizer", Category = ScalerCategory.ContentAware)]
+  Description = "Content-aware seam carving resizer", Category = ScalerCategory.Resampler)]
 public readonly struct SeamCarving : IContentAwareResampler {
 
   private readonly SeamCarvingEnergyMode _energyMode;

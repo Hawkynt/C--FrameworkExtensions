@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -37,7 +42,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Blackman", Author = "Ralph Blackman", Year = 1958,
   Description = "Blackman-windowed sinc resampler with very low sidelobes", Category = ScalerCategory.Resampler)]
-public readonly struct Blackman : IResampler {
+public readonly struct Blackman : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -81,10 +86,21 @@ public readonly struct Blackman : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Blackman, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Blackman);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Blackman Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Blackman, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -100,7 +116,7 @@ public readonly struct Blackman : IResampler {
 /// </remarks>
 [ScalerInfo("Hann", Author = "Julius von Hann", Year = 1903,
   Description = "Hann-windowed sinc resampler with cosine taper", Category = ScalerCategory.Resampler)]
-public readonly struct Hann : IResampler {
+public readonly struct Hann : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -144,10 +160,21 @@ public readonly struct Hann : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hann, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Hann);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Hann Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Hann, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -163,7 +190,7 @@ public readonly struct Hann : IResampler {
 /// </remarks>
 [ScalerInfo("Hamming", Author = "Richard Hamming", Year = 1977,
   Description = "Hamming-windowed sinc resampler", Category = ScalerCategory.Resampler)]
-public readonly struct Hamming : IResampler {
+public readonly struct Hamming : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -207,10 +234,21 @@ public readonly struct Hamming : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hamming, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Hamming);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Hamming Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Hamming, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -227,7 +265,7 @@ public readonly struct Hamming : IResampler {
 /// </remarks>
 [ScalerInfo("Kaiser", Author = "James Kaiser", Year = 1974,
   Description = "Kaiser-windowed sinc resampler with adjustable β parameter", Category = ScalerCategory.Resampler)]
-public readonly struct Kaiser : IResampler {
+public readonly struct Kaiser : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default β parameter (8.6 gives excellent sidelobe suppression).
@@ -291,10 +329,21 @@ public readonly struct Kaiser : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Kaiser, this.Beta, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Kaiser, this.Beta);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Kaiser Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Kaiser, this.Beta, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -310,7 +359,7 @@ public readonly struct Kaiser : IResampler {
 /// </remarks>
 [ScalerInfo("Welch", Author = "Peter Welch", Year = 1967,
   Description = "Welch-windowed sinc resampler with parabolic taper", Category = ScalerCategory.Resampler)]
-public readonly struct Welch : IResampler {
+public readonly struct Welch : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -354,10 +403,21 @@ public readonly struct Welch : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Welch, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Welch);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Welch Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Welch, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -373,7 +433,7 @@ public readonly struct Welch : IResampler {
 /// </remarks>
 [ScalerInfo("Bartlett", Author = "M.S. Bartlett", Year = 1950,
   Description = "Bartlett-windowed sinc resampler with triangular taper", Category = ScalerCategory.Resampler)]
-public readonly struct Bartlett : IResampler {
+public readonly struct Bartlett : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -417,10 +477,21 @@ public readonly struct Bartlett : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bartlett, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Bartlett);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Bartlett Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Bartlett, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -436,7 +507,7 @@ public readonly struct Bartlett : IResampler {
 /// </remarks>
 [ScalerInfo("Nuttal", Year = 1981,
   Description = "Nuttal-windowed sinc resampler with 4-term cosine sum", Category = ScalerCategory.Resampler)]
-public readonly struct Nuttal : IResampler {
+public readonly struct Nuttal : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -480,10 +551,21 @@ public readonly struct Nuttal : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Nuttal, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Nuttal);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Nuttal Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Nuttal, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -499,7 +581,7 @@ public readonly struct Nuttal : IResampler {
 /// </remarks>
 [ScalerInfo("BlackmanNuttal", Year = 1981,
   Description = "Blackman-Nuttal-windowed sinc resampler", Category = ScalerCategory.Resampler)]
-public readonly struct BlackmanNuttal : IResampler {
+public readonly struct BlackmanNuttal : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -543,10 +625,21 @@ public readonly struct BlackmanNuttal : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanNuttal, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.BlackmanNuttal);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static BlackmanNuttal Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.BlackmanNuttal, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -562,7 +655,7 @@ public readonly struct BlackmanNuttal : IResampler {
 /// </remarks>
 [ScalerInfo("BlackmanHarris", Author = "Fredric Harris", Year = 1978,
   Description = "Blackman-Harris-windowed sinc resampler with minimum sidelobes", Category = ScalerCategory.Resampler)]
-public readonly struct BlackmanHarris : IResampler {
+public readonly struct BlackmanHarris : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -606,10 +699,21 @@ public readonly struct BlackmanHarris : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BlackmanHarris, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.BlackmanHarris);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static BlackmanHarris Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.BlackmanHarris, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -626,7 +730,7 @@ public readonly struct BlackmanHarris : IResampler {
 /// </remarks>
 [ScalerInfo("FlatTop", Year = 1990,
   Description = "FlatTop-windowed sinc resampler with flat passband", Category = ScalerCategory.Resampler)]
-public readonly struct FlatTop : IResampler {
+public readonly struct FlatTop : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -670,10 +774,21 @@ public readonly struct FlatTop : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.FlatTop, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.FlatTop);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static FlatTop Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.FlatTop, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -689,7 +804,7 @@ public readonly struct FlatTop : IResampler {
 /// </remarks>
 [ScalerInfo("Cosine",
   Description = "Cosine-windowed sinc resampler", Category = ScalerCategory.Resampler)]
-public readonly struct Cosine : IResampler {
+public readonly struct Cosine : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -733,10 +848,21 @@ public readonly struct Cosine : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cosine, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Cosine);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Cosine Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Cosine, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -752,7 +878,7 @@ public readonly struct Cosine : IResampler {
 /// </remarks>
 [ScalerInfo("PowerOfCosine",
   Description = "Power-of-Cosine-windowed sinc resampler with adjustable α", Category = ScalerCategory.Resampler)]
-public readonly struct PowerOfCosine : IResampler {
+public readonly struct PowerOfCosine : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default α parameter.
@@ -816,10 +942,21 @@ public readonly struct PowerOfCosine : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.PowerOfCosine, this.Alpha, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.PowerOfCosine, this.Alpha);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static PowerOfCosine Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.PowerOfCosine, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -835,7 +972,7 @@ public readonly struct PowerOfCosine : IResampler {
 /// </remarks>
 [ScalerInfo("Tukey", Author = "John Tukey", Year = 1967,
   Description = "Tukey-windowed sinc resampler with tapered cosine", Category = ScalerCategory.Resampler)]
-public readonly struct Tukey : IResampler {
+public readonly struct Tukey : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default α parameter (0.5 = half tapered).
@@ -900,10 +1037,21 @@ public readonly struct Tukey : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Tukey, this.Alpha, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Tukey, this.Alpha);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Tukey Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Tukey, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -919,7 +1067,7 @@ public readonly struct Tukey : IResampler {
 /// </remarks>
 [ScalerInfo("Poisson",
   Description = "Poisson-windowed sinc resampler with exponential decay", Category = ScalerCategory.Resampler)]
-public readonly struct Poisson : IResampler {
+public readonly struct Poisson : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default decay parameter (d=60 gives ~0 at edges).
@@ -983,10 +1131,21 @@ public readonly struct Poisson : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Poisson, this.Decay, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Poisson, this.Decay);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Poisson Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Poisson, this.Decay, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -1002,7 +1161,7 @@ public readonly struct Poisson : IResampler {
 /// </remarks>
 [ScalerInfo("BartlettHann",
   Description = "Bartlett-Hann-windowed sinc resampler (linear + cosine hybrid)", Category = ScalerCategory.Resampler)]
-public readonly struct BartlettHann : IResampler {
+public readonly struct BartlettHann : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -1046,10 +1205,21 @@ public readonly struct BartlettHann : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.BartlettHann, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.BartlettHann);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static BartlettHann Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.BartlettHann, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -1065,7 +1235,7 @@ public readonly struct BartlettHann : IResampler {
 /// </remarks>
 [ScalerInfo("HanningPoisson",
   Description = "Hanning-Poisson-windowed sinc resampler (Hann × Poisson)", Category = ScalerCategory.Resampler)]
-public readonly struct HanningPoisson : IResampler {
+public readonly struct HanningPoisson : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default α parameter.
@@ -1129,10 +1299,21 @@ public readonly struct HanningPoisson : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.HanningPoisson, this.Alpha, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.HanningPoisson, this.Alpha);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static HanningPoisson Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.HanningPoisson, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -1148,7 +1329,7 @@ public readonly struct HanningPoisson : IResampler {
 /// </remarks>
 [ScalerInfo("Bohman",
   Description = "Bohman-windowed sinc resampler", Category = ScalerCategory.Resampler)]
-public readonly struct Bohman : IResampler {
+public readonly struct Bohman : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -1192,10 +1373,21 @@ public readonly struct Bohman : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Bohman, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Bohman);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Bohman Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Bohman, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -1211,7 +1403,7 @@ public readonly struct Bohman : IResampler {
 /// </remarks>
 [ScalerInfo("Cauchy",
   Description = "Cauchy-windowed sinc resampler (Lorentzian)", Category = ScalerCategory.Resampler)]
-public readonly struct Cauchy : IResampler {
+public readonly struct Cauchy : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>
   /// Default α parameter.
@@ -1275,10 +1467,21 @@ public readonly struct Cauchy : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Cauchy, this.Alpha, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Cauchy, this.Alpha);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Cauchy Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Cauchy, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
@@ -1295,7 +1498,7 @@ public readonly struct Cauchy : IResampler {
 /// </remarks>
 [ScalerInfo("Rectangular",
   Description = "Unwindowed sinc resampler (pure sinc / box window)", Category = ScalerCategory.Resampler)]
-public readonly struct Rectangular : IResampler {
+public readonly struct Rectangular : IKernelResampler, IResamplerWithSafePath {
 
   private readonly int _radius;
 
@@ -1339,17 +1542,28 @@ public readonly struct Rectangular : IResampler {
     => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Rectangular, 0f, useCenteredGrid));
 
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Rectangular);
+
   /// <summary>
   /// Gets the default configuration.
   /// </summary>
   public static Rectangular Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Rectangular, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 #endregion
 
 #region Shared Kernel Infrastructure
 
-file enum WindowType {
+internal enum WindowType {
   Blackman,
   Hann,
   Hamming,
@@ -1371,9 +1585,153 @@ file enum WindowType {
   Rectangular
 }
 
+internal static class SincWindowMath {
+  /// <summary>Windowed-sinc kernel weight for charting: sinc(x) * window(x).</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Weight(float x, int radius, WindowType windowType, float param = 0f) {
+    if (x == 0f) return 1f;
+    var absX = MathF.Abs(x);
+    if (absX >= radius) return 0f;
+    return Sinc(x) * Window(x, radius, windowType, param);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float Sinc(float x) {
+    if (x == 0f) return 1f;
+    var pix = MathF.PI * x;
+    return MathF.Sin(pix) / pix;
+  }
+
+  private static float Window(float x, int radius, WindowType windowType, float param) => windowType switch {
+    WindowType.Blackman => _Blackman(x, radius),
+    WindowType.Hann => _Hann(x, radius),
+    WindowType.Hamming => _Hamming(x, radius),
+    WindowType.Kaiser => _Kaiser(x, radius, param == 0f ? Kaiser.DefaultBeta : param),
+    WindowType.Welch => _Welch(x, radius),
+    WindowType.Bartlett => 1f - MathF.Abs(x) / radius,
+    WindowType.Nuttal => _Cosine4(x, radius, 0.355768f, 0.487396f, 0.144232f, 0.012604f),
+    WindowType.BlackmanNuttal => _Cosine4(x, radius, 0.3635819f, 0.4891775f, 0.1365995f, 0.0106411f),
+    WindowType.BlackmanHarris => _Cosine4(x, radius, 0.35875f, 0.48829f, 0.14128f, 0.01168f),
+    WindowType.FlatTop => _FlatTop(x, radius),
+    WindowType.Cosine => MathF.Cos(MathF.PI * x / (2f * radius)),
+    WindowType.PowerOfCosine => MathF.Pow(MathF.Cos(MathF.PI * x / (2f * radius)), param == 0f ? PowerOfCosine.DefaultAlpha : param),
+    WindowType.Tukey => _Tukey(x, radius, param == 0f ? Tukey.DefaultAlpha : param),
+    WindowType.Poisson => _Poisson(x, radius, param == 0f ? Poisson.DefaultDecay : param),
+    WindowType.BartlettHann => _BartlettHann(x, radius),
+    WindowType.HanningPoisson => _HanningPoisson(x, radius, param == 0f ? HanningPoisson.DefaultAlpha : param),
+    WindowType.Bohman => _Bohman(x, radius),
+    WindowType.Cauchy => _Cauchy(x, radius, param == 0f ? Cauchy.DefaultAlpha : param),
+    WindowType.Rectangular => 1f,
+    _ => 1f
+  };
+
+  private static float _Blackman(float x, int r) {
+    var t = MathF.PI * x / r;
+    return 0.42f + 0.5f * MathF.Cos(t) + 0.08f * MathF.Cos(2f * t);
+  }
+
+  private static float _Hann(float x, int r) {
+    var t = MathF.PI * x / r;
+    return 0.5f * (1f + MathF.Cos(t));
+  }
+
+  private static float _Hamming(float x, int r) {
+    var t = MathF.PI * x / r;
+    return 0.54f + 0.46f * MathF.Cos(t);
+  }
+
+  private static float _Kaiser(float x, int r, float beta) {
+    var ratio = x / r;
+    var arg = 1f - ratio * ratio;
+    if (arg <= 0f) return 0f;
+    return _BesselI0(beta * MathF.Sqrt(arg)) / _BesselI0(beta);
+  }
+
+  private static float _Welch(float x, int r) {
+    var ratio = x / r;
+    return 1f - ratio * ratio;
+  }
+
+  private static float _Cosine4(float x, int radius, float a0, float a1, float a2, float a3) {
+    var n = x + radius;
+    var N = 2f * radius;
+    var t = 2f * MathF.PI * n / N;
+    return a0 - a1 * MathF.Cos(t) + a2 * MathF.Cos(2f * t) - a3 * MathF.Cos(3f * t);
+  }
+
+  private static float _FlatTop(float x, int radius) {
+    var n = x + radius;
+    var N = 2f * radius;
+    var t = 2f * MathF.PI * n / N;
+    var raw = 1f - 1.93f * MathF.Cos(t) + 1.29f * MathF.Cos(2f * t) - 0.388f * MathF.Cos(3f * t) + 0.0322f * MathF.Cos(4f * t);
+    // Peak (at x=0, t=π) = 1 + 1.93 + 1.29 + 0.388 + 0.0322 = 4.6402 → normalize to unity there.
+    return raw / 4.6402f;
+  }
+
+  private static float _Tukey(float x, int radius, float alpha) {
+    var absX = MathF.Abs(x);
+    var r = absX / radius;
+    if (r <= 1f - alpha) return 1f;
+    if (r <= 1f) {
+      var t = MathF.PI * (r - (1f - alpha)) / alpha;
+      return 0.5f * (1f + MathF.Cos(t));
+    }
+    return 0f;
+  }
+
+  private static float _Poisson(float x, int radius, float decay) {
+    // Continuous symmetric form: peak at x=0, edge weight = exp(-decay).
+    // The discrete n = x + radius substitution centred at (N-1)/2 caused a half-sample asymmetry.
+    var tau = radius / decay;
+    return MathF.Exp(-MathF.Abs(x) / tau);
+  }
+
+  private static float _BartlettHann(float x, int radius) {
+    var n = x + radius;
+    var N = 2f * radius;
+    var t = n / N;
+    return 0.62f - 0.48f * MathF.Abs(t - 0.5f) - 0.38f * MathF.Cos(2f * MathF.PI * t);
+  }
+
+  private static float _HanningPoisson(float x, int radius, float alpha) {
+    // Continuous symmetric form; the Hann factor was already symmetric (simplifies to
+    // 0.5·(1 + cos(πx/r))); the Poisson factor was shifted by half a sample.
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * x / radius));
+    var poisson = MathF.Exp(-alpha * MathF.Abs(x) / radius);
+    return hann * poisson;
+  }
+
+  private static float _Bohman(float x, int radius) {
+    var f = MathF.Abs(x / radius);
+    if (f >= 1f) return 0f;
+    var pif = MathF.PI * f;
+    return (1f - f) * MathF.Cos(pif) + MathF.Sin(pif) / MathF.PI;
+  }
+
+  private static float _Cauchy(float x, int radius, float alpha) {
+    var ratio = alpha * x / radius;
+    return 1f / (1f + ratio * ratio);
+  }
+
+  private static float _BesselI0(float x) {
+    var ax = MathF.Abs(x);
+    if (ax < 3.75f) {
+      var y = x / 3.75f;
+      y *= y;
+      return 1f + y * (3.5156229f + y * (3.0899424f + y * (1.2067492f
+        + y * (0.2659732f + y * (0.0360768f + y * 0.0045813f)))));
+    }
+    var ay = 3.75f / ax;
+    return MathF.Exp(ax) / MathF.Sqrt(ax) * (0.39894228f
+      + ay * (0.01328592f + ay * (0.00225319f + ay * (-0.00157565f
+      + ay * (0.00916281f + ay * (-0.02057706f + ay * (0.02635537f
+      + ay * (-0.01647633f + ay * 0.00392377f))))))));
+  }
+}
+
 file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, int radius, WindowType windowType, float param = 0f, bool useCenteredGrid = true)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -1412,20 +1770,50 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     var fx = srcXf - srcXi;
     var fy = srcYf - srcYi;
 
-    // Accumulate weighted colors from (2*radius)x(2*radius) kernel
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
     for (var ky = -radius + 1; ky <= radius; ++ky)
     for (var kx = -radius + 1; kx <= radius; ++kx) {
       var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[srcXi + kx, srcYi + ky].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var srcXi = (int)MathF.Floor(srcXf);
+    var srcYi = (int)MathF.Floor(srcYf);
+    var fx = srcXf - srcXi;
+    var fy = srcYf - srcYi;
+
+    Accum4F<TWork> acc = default;
+    for (var ky = -radius + 1; ky <= radius; ++ky)
+    for (var kx = -radius + 1; kx <= radius; ++kx) {
+      var weight = this.Weight(fx - kx) * this.Weight(fy - ky);
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -radius + 1, kxMaxExcl: radius + 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -radius + 1, kyMaxExcl: radius + 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// Computes the windowed sinc weight for a given distance.
@@ -1589,8 +1977,8 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     var t = 2f * MathF.PI * n / N;
     var raw = 1f - 1.93f * MathF.Cos(t) + 1.29f * MathF.Cos(2f * t)
               - 0.388f * MathF.Cos(3f * t) + 0.0322f * MathF.Cos(4f * t);
-    // Normalize (max value is ~4.636 at center)
-    return raw / 4.636f;
+    // Peak (at x=0, t=π) = 1 + 1.93 + 1.29 + 0.388 + 0.0322 = 4.6402 → normalize to unity there.
+    return raw / 4.6402f;
   }
 
   /// <summary>
@@ -1631,14 +2019,12 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
   }
 
   /// <summary>
-  /// Poisson window (exponential): exp(-|x|*d/(N-1)).
+  /// Poisson window (exponential): exp(-|x| * decay / R). Symmetric around x=0, edge weight exp(-decay).
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private float PoissonWindow(float x, float decay) {
-    var n = x + radius;
-    var N = 2f * radius;
-    var tau = (N - 1f) * 0.5f / decay;
-    return MathF.Exp(-MathF.Abs(n - (N - 1f) * 0.5f) / tau);
+    var tau = radius / decay;
+    return MathF.Exp(-MathF.Abs(x) / tau);
   }
 
   /// <summary>
@@ -1657,14 +2043,12 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
   }
 
   /// <summary>
-  /// Hanning-Poisson window: Hann × Poisson.
+  /// Hanning-Poisson window: Hann × Poisson. Symmetric around x=0.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private float HanningPoissonWindow(float x, float alpha) {
-    var n = x + radius;
-    var N = 2f * radius;
-    var hann = 0.5f * (1f - MathF.Cos(2f * MathF.PI * n / N));
-    var poisson = MathF.Exp(-alpha * MathF.Abs(N - 1f - 2f * n) / (N - 1f));
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * x / radius));
+    var poisson = MathF.Exp(-alpha * MathF.Abs(x) / radius);
     return hann * poisson;
   }
 
@@ -1710,6 +2094,22 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
       + ay * (0.01328592f + ay * (0.00225319f + ay * (-0.00157565f
       + ay * (0.00916281f + ay * (-0.02057706f + ay * (0.02635537f
       + ay * (-0.01647633f + ay * 0.00392377f))))))));
+  }
+}
+
+file static class _SincWindowSafePath {
+  public static Bitmap Dispatch(int radius, WindowType windowType, float param,
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new SincWindowKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, radius, windowType, param, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      SincWindowKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
   }
 }
 

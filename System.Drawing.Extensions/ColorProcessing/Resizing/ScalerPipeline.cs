@@ -360,7 +360,8 @@ public static class ScalerPipeline {
     TProject projector = default,
     TEncode encoder = default,
     OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    TPixel canvasPixel = default
   )
     where TPixel : unmanaged, IStorageSpace
     where TWork : unmanaged, IColorSpace4F<TWork>
@@ -374,18 +375,9 @@ public static class ScalerPipeline {
 
     // Fall back to sequential if image is too small for parallel overhead
     if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
-      // Use a single frame for random access - no sliding window needed
       using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
-        sourcePtr,
-        sourceWidth,
-        sourceHeight,
-        sourceStride,
-        decoder,
-        projector,
-        horizontalMode,
-        verticalMode,
-        startY: 0
-      );
+        sourcePtr, sourceWidth, sourceHeight, sourceStride,
+        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
 
       for (var destY = 0; destY < destHeight; ++destY)
       for (var destX = 0; destX < destWidth; ++destX)
@@ -404,24 +396,143 @@ public static class ScalerPipeline {
         var startRow = range.Item1;
         var endRow = range.Item2;
 
-        // Each partition creates its own frame for thread-safe random access
         using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
-          sourcePtr,
-          sourceWidth,
-          sourceHeight,
-          sourceStride,
-          decoder,
-          projector,
-          horizontalMode,
-          verticalMode,
-          startY: 0
-        );
+          sourcePtr, sourceWidth, sourceHeight, sourceStride,
+          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
 
         for (var destY = startRow; destY < endRow; ++destY)
         for (var destX = 0; destX < destWidth; ++destX)
           kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
       }
     );
+  }
+
+  /// <summary>
+  /// Safe-path-aware overload: splits the destination into 4 edge bands + 1 safe interior
+  /// using the kernel's <see cref="IResampleKernelWithSafePath{TPixel,TWork,TKey,TDecode,TProject,TEncode}.GetSafeDestinationRegion"/>.
+  /// Inside the safe interior every destination pixel is processed via
+  /// <see cref="IResampleKernelWithSafePath{TPixel,TWork,TKey,TDecode,TProject,TEncode}.ResampleUnchecked"/>
+  /// — no per-pixel OOB branch, tight enough for SIMD.
+  /// </summary>
+  /// <remarks>
+  /// Non-opt-in kernels (filters, content-aware resamplers) use the standard
+  /// <see cref="ExecuteResampleParallel{TPixel,TWork,TKey,TDecode,TProject,TEncode,TKernel}(TPixel*, int, int, int, TPixel*, int, int, int, TKernel, TDecode, TProject, TEncode, OutOfBoundsMode, OutOfBoundsMode, TPixel)"/>.
+  /// </remarks>
+  public static unsafe void ExecuteResampleParallelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+    TPixel* sourcePtr,
+    int sourceWidth,
+    int sourceHeight,
+    int sourceStride,
+    TPixel* destPtr,
+    int destWidth,
+    int destHeight,
+    int destStride,
+    TKernel kernel,
+    TDecode decoder = default,
+    TProject projector = default,
+    TEncode encoder = default,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    TPixel canvasPixel = default
+  )
+    where TPixel : unmanaged, IStorageSpace
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    where TKernel : struct, IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode> {
+
+    // Compute the destination region where every sample window sits inside the source image.
+    // For most resizes this is almost the entire destination — the edge bands are ~radius pixels thick.
+    var safe = kernel.GetSafeDestinationRegion();
+    var safeLeft = Math.Max(0, safe.Left);
+    var safeTop = Math.Max(0, safe.Top);
+    var safeRight = Math.Min(destWidth, safe.Right);
+    var safeBottom = Math.Min(destHeight, safe.Bottom);
+    if (safeRight < safeLeft) safeRight = safeLeft;
+    if (safeBottom < safeTop) safeBottom = safeTop;
+
+    var totalPixels = (long)destWidth * destHeight;
+    var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
+
+    if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
+      using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
+        sourcePtr, sourceWidth, sourceHeight, sourceStride,
+        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+
+      _ResampleRangeSafeSplit(
+        ref kernel, frame, destPtr, destStride, in encoder,
+        0, destHeight, destWidth,
+        safeLeft, safeTop, safeRight, safeBottom);
+      return;
+    }
+
+    var rowsPerBatch = Math.Max(8, destHeight / (Environment.ProcessorCount * 4));
+    var partitioner = Partitioner.Create(0, destHeight, rowsPerBatch);
+
+    var kernelCopy = kernel;
+    var encoderCopy = encoder;
+    var safeLeftCapture = safeLeft;
+    var safeTopCapture = safeTop;
+    var safeRightCapture = safeRight;
+    var safeBottomCapture = safeBottom;
+
+    Parallel.ForEach(
+      partitioner,
+      range => {
+        using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
+          sourcePtr, sourceWidth, sourceHeight, sourceStride,
+          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+
+        var k = kernelCopy;
+        _ResampleRangeSafeSplit(
+          ref k, frame, destPtr, destStride, in encoderCopy,
+          range.Item1, range.Item2, destWidth,
+          safeLeftCapture, safeTopCapture, safeRightCapture, safeBottomCapture);
+      }
+    );
+  }
+
+  /// <summary>
+  /// Row-batch worker: for rows inside the safe band splits each into left-edge /
+  /// safe-interior / right-edge; for rows outside uses the full edge path.
+  /// The safe-interior inner loop has zero per-pixel OOB overhead.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void _ResampleRangeSafeSplit<TPixel, TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+    ref TKernel kernel,
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    TPixel* destPtr, int destStride, in TEncode encoder,
+    int startRow, int endRow, int destWidth,
+    int safeLeft, int safeTop, int safeRight, int safeBottom)
+    where TPixel : unmanaged, IStorageSpace
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    where TKernel : struct, IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode> {
+
+    for (var destY = startRow; destY < endRow; ++destY) {
+      if (destY < safeTop || destY >= safeBottom) {
+        for (var destX = 0; destX < destWidth; ++destX)
+          kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
+        continue;
+      }
+
+      // Left edge
+      for (var destX = 0; destX < safeLeft; ++destX)
+        kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
+
+      // Safe interior — zero per-pixel OOB branch. Tight inner loop ready for SIMD per-kernel.
+      for (var destX = safeLeft; destX < safeRight; ++destX)
+        kernel.ResampleUnchecked(frame, destX, destY, destPtr, destStride, encoder);
+
+      // Right edge
+      for (var destX = safeRight; destX < destWidth; ++destX)
+        kernel.Resample(frame, destX, destY, destPtr, destStride, encoder);
+    }
   }
 
   /// <summary>

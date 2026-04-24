@@ -42,8 +42,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>By Christoph Feck (christoph@maxiom.de) / Hyllian.</para>
 /// </remarks>
 [ScalerInfo("Reverse Anti-Alias", Author = "Christoph Feck / Hyllian", Year = 2011,
-  Description = "Reverse anti-aliasing for smooth edge detection", Category = ScalerCategory.PixelArt)]
-public readonly struct ReverseAa : IPixelScaler {
+  Description = "Reverse anti-aliasing for smooth edge detection", Category = ScalerCategory.Rescaler)]
+public readonly struct ReverseAa : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

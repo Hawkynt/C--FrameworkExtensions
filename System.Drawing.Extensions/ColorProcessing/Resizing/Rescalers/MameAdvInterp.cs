@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From MAME emulator, modified by Hawkynt for threshold support.</para>
 /// </remarks>
 [ScalerInfo("MAME AdvInterp", Author = "MAME Team", Year = 1997,
-  Description = "Advanced interpolation similar to Scale2x/Scale3x", Category = ScalerCategory.PixelArt)]
-public readonly struct MameAdvInterp : IPixelScaler {
+  Description = "Advanced interpolation similar to Scale2x/Scale3x", Category = ScalerCategory.Rescaler)]
+public readonly struct MameAdvInterp : IRescaler {
 
   private readonly int _scale;
 

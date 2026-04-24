@@ -39,11 +39,11 @@ public interface IColorQuantizer {
   /// Reduces <paramref name="usedColors"/> down to at most <paramref name="numberOfColors"/>
   /// representative colors. Each input color is treated as having weight 1.
   /// </summary>
-  Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<Color> usedColors);
+  Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors);
 
   /// <summary>
   /// Reduces a color histogram to at most <paramref name="numberOfColors"/> representative
   /// colors. Higher-count entries influence the result more.
   /// </summary>
-  Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<(Color color, uint count)> histogram);
+  Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<(Color color, uint count)> histogram);
 }

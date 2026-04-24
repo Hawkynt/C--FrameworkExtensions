@@ -40,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("Quilez", Author = "Inigo Quilez",
   Url = "http://www.iquilezles.org/www/articles/texture/texture.htm",
   Description = "Quintic smoothstep interpolation for smooth gradients", Category = ScalerCategory.Resampler)]
-public readonly struct Quilez : IPixelScaler {
+public readonly struct Quilez : IRescaler {
   private readonly int _scale;
 
   /// <summary>

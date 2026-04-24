@@ -41,7 +41,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Royale", Author = "TroggleMonkey",
   Url = "https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale",
   Description = "Advanced CRT with phosphor masks, bloom, and halation", Category = ScalerCategory.Resampler)]
-public readonly struct CrtRoyale : IPixelScaler {
+public readonly struct CrtRoyale : IRescaler {
   private readonly int _scale;
 
   /// <summary>

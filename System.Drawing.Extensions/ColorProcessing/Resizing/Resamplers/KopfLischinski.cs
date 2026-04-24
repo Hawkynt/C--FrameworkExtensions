@@ -43,7 +43,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Kopf-Lischinski", Author = "Kopf & Lischinski", Year = 2011,
   Url = "https://johanneskopf.de/publications/pixelart/paper/pixel.pdf",
-  Description = "Depixelizing pixel art algorithm", Category = ScalerCategory.ContentAware)]
+  Description = "Depixelizing pixel art algorithm", Category = ScalerCategory.Resampler)]
 public readonly struct KopfLischinski : IEdgeAwareResampler {
 
   /// <inheritdoc />

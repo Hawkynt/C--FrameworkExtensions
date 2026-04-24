@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Algorithm by Xin Li and Michael T. Orchard, IEEE Trans. Image Processing, 2001.</para>
 /// </remarks>
 [ScalerInfo("NEDI", Author = "Xin Li/Michael T. Orchard", Year = 2001,
-  Description = "New Edge-Directed Interpolation", Category = ScalerCategory.PixelArt)]
-public readonly struct Nedi : IPixelScaler {
+  Description = "New Edge-Directed Interpolation", Category = ScalerCategory.Rescaler)]
+public readonly struct Nedi : IRescaler {
 
   private readonly int _scale;
 

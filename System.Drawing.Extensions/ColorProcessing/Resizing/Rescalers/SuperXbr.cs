@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Algorithm by Hyllian, 2015.</para>
 /// </remarks>
 [ScalerInfo("Super-xBR", Author = "Hyllian", Year = 2015,
-  Description = "Super-Scale2x Refinement edge-directed scaler", Category = ScalerCategory.PixelArt)]
-public readonly struct SuperXbr : IPixelScaler {
+  Description = "Super-Scale2x Refinement edge-directed scaler", Category = ScalerCategory.Rescaler)]
+public readonly struct SuperXbr : IRescaler {
 
   private readonly bool _fast;
 

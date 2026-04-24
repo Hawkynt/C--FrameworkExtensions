@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("zfast-CRT",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/zfast-crt",
   Description = "Performance-optimized CRT simulation", Category = ScalerCategory.Resampler)]
-public readonly struct ZfastCrt : IPixelScaler {
+public readonly struct ZfastCrt : IRescaler {
   private readonly int _scale;
 
   /// <summary>

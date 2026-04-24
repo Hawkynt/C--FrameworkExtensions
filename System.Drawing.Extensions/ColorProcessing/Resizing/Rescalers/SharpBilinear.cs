@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("Sharp Bilinear", Author = "LibRetro", Year = 2014,
   Url = "https://github.com/libretro/common-shaders/blob/master/interpolation/shaders/sharp-bilinear.cg",
-  Description = "Crisp integer scaling with controlled bilinear smoothing", Category = ScalerCategory.PixelArt)]
-public readonly struct SharpBilinear : IPixelScaler {
+  Description = "Crisp integer scaling with controlled bilinear smoothing", Category = ScalerCategory.Rescaler)]
+public readonly struct SharpBilinear : IRescaler {
   private readonly int _scale;
 
   /// <summary>

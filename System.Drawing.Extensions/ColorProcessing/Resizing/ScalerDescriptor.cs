@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Drawing;
+using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Linq;
 using System.Reflection;
 using Hawkynt.ColorProcessing.Resizing.Rescalers;
@@ -38,6 +39,27 @@ namespace Hawkynt.ColorProcessing.Resizing;
 /// </para>
 /// </remarks>
 public sealed class ScalerDescriptor {
+
+  /// <summary>
+  /// Compile-time factory used by the source generator. Exposed as <c>internal</c> so only the
+  /// generated registry partials in this assembly may construct descriptors directly; callers
+  /// should still use <see cref="ScalerRegistry"/> for discovery. The underscored prefix flags
+  /// it as an implementation detail that must not be called by normal user code.
+  /// </summary>
+  internal static ScalerDescriptor __CreateFromGenerator(
+    Type type,
+    string name,
+    string? author,
+    string? description,
+    string? url,
+    int year,
+    ScalerCategory category,
+    ScaleFactor[] supportedScales,
+    bool isRescaler,
+    bool isResampler,
+    int radius)
+    => new(type, name, author, description, url, year, category, supportedScales, isRescaler, isResampler, radius);
+
 
   /// <summary>
   /// Gets the concrete type of the scaler.
@@ -75,30 +97,21 @@ public sealed class ScalerDescriptor {
   public ScalerCategory Category { get; }
 
   /// <summary>
-  /// Gets the supported scale factors for this scaler.
+  /// Supported scale factors. For rescalers (fixed-scale pattern-based), lists the discrete
+  /// factors the algorithm was designed for (2x2, 3x3, 2x3, …). For resamplers (arbitrary-scale
+  /// kernel/vector/content-aware), empty because any target dimensions are supported.
   /// </summary>
-  /// <remarks>
-  /// For pixel-art scalers, this contains discrete scale factors like 2x2, 3x3.
-  /// For resamplers, this is empty since they support arbitrary target dimensions.
-  /// </remarks>
   public ScaleFactor[] SupportedScales { get; }
 
-  /// <summary>
-  /// Gets whether this is a pixel-art scaler (implements <see cref="IPixelScaler"/>).
-  /// </summary>
-  public bool IsPixelScaler { get; }
+  /// <summary>True when this algorithm is a <see cref="IRescaler"/> (fixed integer scale, pattern-based).</summary>
+  public bool IsRescaler { get; }
 
-  /// <summary>
-  /// Gets whether this is a resampler (implements <see cref="IResampler"/>).
-  /// </summary>
+  /// <summary>True when this algorithm is a <see cref="IResampler"/> (arbitrary scale, source-faithful math).</summary>
   public bool IsResampler { get; }
 
   /// <summary>
-  /// Gets the kernel radius for resamplers.
+  /// Kernel support radius (only meaningful for resamplers). Zero for rescalers.
   /// </summary>
-  /// <remarks>
-  /// Only meaningful for resamplers. Returns 0 for pixel-art scalers.
-  /// </remarks>
   public int Radius { get; }
 
   private ScalerDescriptor(
@@ -110,7 +123,7 @@ public sealed class ScalerDescriptor {
     int year,
     ScalerCategory category,
     ScaleFactor[] supportedScales,
-    bool isPixelScaler,
+    bool isRescaler,
     bool isResampler,
     int radius) {
     this.Type = type;
@@ -121,7 +134,7 @@ public sealed class ScalerDescriptor {
     this.Year = year;
     this.Category = category;
     this.SupportedScales = supportedScales;
-    this.IsPixelScaler = isPixelScaler;
+    this.IsRescaler = isRescaler;
     this.IsResampler = isResampler;
     this.Radius = radius;
   }
@@ -129,17 +142,17 @@ public sealed class ScalerDescriptor {
   /// <summary>
   /// Creates a descriptor from a scaler type.
   /// </summary>
-  /// <param name="type">The scaler type (must implement <see cref="IPixelScaler"/> or <see cref="IResampler"/>).</param>
+  /// <param name="type">The scaler type (must implement <see cref="IRescaler"/> or <see cref="IResampler"/>).</param>
   /// <returns>A descriptor, or <c>null</c> if the type doesn't have the <see cref="ScalerInfoAttribute"/>.</returns>
   internal static ScalerDescriptor? FromType(Type type) {
     var attr = type.GetCustomAttribute<ScalerInfoAttribute>();
     if (attr == null)
       return null;
 
-    var isPixelScaler = typeof(IPixelScaler).IsAssignableFrom(type);
+    var isRescaler = typeof(IRescaler).IsAssignableFrom(type);
     var isResampler = typeof(IResampler).IsAssignableFrom(type);
 
-    if (!isPixelScaler && !isResampler)
+    if (!isRescaler && !isResampler)
       return null;
 
     // Try to get SupportedScales static property
@@ -169,7 +182,7 @@ public sealed class ScalerDescriptor {
       attr.Year,
       attr.Category,
       supportedScales,
-      isPixelScaler,
+      isRescaler,
       isResampler,
       radius
     );
@@ -223,6 +236,20 @@ public sealed class ScalerDescriptor {
     return _resampleGenericDef!.MakeGenericMethod(type);
   });
 
+  // Cached lookup for the OOB/canvas/centred-grid overload (9 parameters incl. the tag).
+  private static readonly ConcurrentDictionary<Type, MethodInfo> _resampleOobMethodCache = new();
+  private static MethodInfo? _resampleOobGenericDef;
+  private static MethodInfo GetResampleOobMethod(Type resamplerType) => _resampleOobMethodCache.GetOrAdd(resamplerType, type => {
+    _resampleOobGenericDef ??= typeof(BitmapScalerExtensions)
+      .GetMethods(BindingFlags.Public | BindingFlags.Static)
+      .First(m => m.Name == nameof(BitmapScalerExtensions.Resample)
+                  && m.IsGenericMethod
+                  && m.GetParameters().Length == 9
+                  && m.GetParameters()[1].ParameterType.IsGenericParameter)
+      ;
+    return _resampleOobGenericDef!.MakeGenericMethod(type);
+  });
+
   /// <summary>
   /// Scales a bitmap using this scaler with default configuration.
   /// </summary>
@@ -232,7 +259,7 @@ public sealed class ScalerDescriptor {
   /// <para>For pixel scalers, applies the scaler's native scale factor.</para>
   /// <para>For resamplers, scales to 2x the original dimensions.</para>
   /// </remarks>
-  public Bitmap Scale(Bitmap source) => this.IsPixelScaler 
+  public Bitmap Scale(Bitmap source) => this.IsRescaler 
     ? this.Upscale(source) 
     : this.Resample(source, source.Width * 2, source.Height * 2)
     ;
@@ -261,7 +288,7 @@ public sealed class ScalerDescriptor {
   /// <returns>A new upscaled bitmap.</returns>
   /// <exception cref="InvalidOperationException">Thrown if this is not a pixel scaler.</exception>
   public Bitmap Upscale(Bitmap source, ScalerQuality quality = ScalerQuality.Fast) {
-    if (!this.IsPixelScaler)
+    if (!this.IsRescaler)
       throw new InvalidOperationException($"{this.Name} is not a pixel scaler. Use Resample() instead.");
 
     var scaler = this.CreateDefault();
@@ -278,7 +305,7 @@ public sealed class ScalerDescriptor {
   /// <returns>A new upscaled bitmap.</returns>
   /// <exception cref="InvalidOperationException">Thrown if this is not a pixel scaler.</exception>
   public Bitmap Upscale(Bitmap source, object scaler, ScalerQuality quality = ScalerQuality.Fast) {
-    if (!this.IsPixelScaler)
+    if (!this.IsRescaler)
       throw new InvalidOperationException($"{this.Name} is not a pixel scaler. Use Resample() instead.");
 
     var method = GetUpscaleMethod(this.Type);
@@ -319,6 +346,34 @@ public sealed class ScalerDescriptor {
     var method = GetResampleMethod(this.Type);
     var tag = _CreateResamplerTag(this.Type);
     return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight, tag])!;
+  }
+
+  /// <summary>
+  /// Resamples a bitmap with full control over out-of-bounds handling, canvas fill colour and grid centring.
+  /// </summary>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <param name="horizontalMode">Behaviour for samples that fall outside the source's horizontal range.</param>
+  /// <param name="verticalMode">Behaviour for samples that fall outside the source's vertical range.</param>
+  /// <param name="canvasColor">Fill colour used when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode (the "canvas" painted around the source image).</param>
+  /// <param name="useCenteredGrid">If <c>true</c> (default), pixel centres are aligned when mapping destination→source; if <c>false</c>, top-left corners are.</param>
+  /// <exception cref="InvalidOperationException">Thrown if this descriptor is not a resampler.</exception>
+  public Bitmap Resample(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    OutOfBoundsMode horizontalMode,
+    OutOfBoundsMode verticalMode,
+    Color canvasColor,
+    bool useCenteredGrid) {
+    if (!this.IsResampler)
+      throw new InvalidOperationException($"{this.Name} is not a resampler. Use Upscale() instead.");
+
+    var resampler = this.CreateDefault();
+    var method = GetResampleOobMethod(this.Type);
+    var tag = _CreateResamplerTag(this.Type);
+    return (Bitmap)method.Invoke(null, [source, resampler, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid, tag])!;
   }
 
   private static readonly ConcurrentDictionary<Type, object> _resamplerTagCache = new();

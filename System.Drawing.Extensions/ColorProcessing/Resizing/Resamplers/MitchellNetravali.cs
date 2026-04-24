@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -35,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Mitchell-Netravali", Author = "Don P. Mitchell, Arun N. Netravali", Year = 1988,
   Description = "Cubic filter with B=1/3, C=1/3", Category = ScalerCategory.Resampler)]
-public readonly struct MitchellNetravali : IResampler {
+public readonly struct MitchellNetravali : IKernelResampler, IResamplerWithSafePath {
 
   private readonly float _b, _c;
 
@@ -64,6 +69,9 @@ public readonly struct MitchellNetravali : IResampler {
   public PrefilterInfo? Prefilter => null;
 
   /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, this._b, this._c);
+
+  /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
     IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
     int sourceWidth,
@@ -84,6 +92,11 @@ public readonly struct MitchellNetravali : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static MitchellNetravali Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(this._b, this._c, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -95,7 +108,7 @@ public readonly struct MitchellNetravali : IResampler {
 /// </remarks>
 [ScalerInfo("Catmull-Rom", Author = "Edwin Catmull, Raphael Rom", Year = 1974,
   Description = "Cubic spline with B=0, C=0.5", Category = ScalerCategory.Resampler)]
-public readonly struct CatmullRom : IResampler {
+public readonly struct CatmullRom : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -105,6 +118,9 @@ public readonly struct CatmullRom : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, 0f, 0.5f);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -127,6 +143,11 @@ public readonly struct CatmullRom : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static CatmullRom Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(0f, 0.5f, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -142,7 +163,7 @@ public readonly struct CatmullRom : IResampler {
 /// </remarks>
 [ScalerInfo("B-Spline 3", Author = "Standard Algorithm",
   Description = "Cubic B-spline with B=1, C=0 (degree 3)", Category = ScalerCategory.Resampler)]
-public readonly struct BSpline : IResampler {
+public readonly struct BSpline : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -152,6 +173,9 @@ public readonly struct BSpline : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => PrefilterInfo.BSpline3;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, 1f, 0f);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -174,6 +198,11 @@ public readonly struct BSpline : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static BSpline Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(1f, 0f, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -185,7 +214,7 @@ public readonly struct BSpline : IResampler {
 /// </remarks>
 [ScalerInfo("Robidoux", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Optimized Mitchell variant with B=0.3782, C=0.3109", Category = ScalerCategory.Resampler)]
-public readonly struct Robidoux : IResampler {
+public readonly struct Robidoux : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>B parameter value.</summary>
   public const float B = 0.3782157550102413f;
@@ -201,6 +230,9 @@ public readonly struct Robidoux : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, B, C);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -223,6 +255,11 @@ public readonly struct Robidoux : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Robidoux Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(B, C, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -234,7 +271,7 @@ public readonly struct Robidoux : IResampler {
 /// </remarks>
 [ScalerInfo("RobidouxSharp", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Sharper Robidoux variant with B=0.2620, C=0.3690", Category = ScalerCategory.Resampler)]
-public readonly struct RobidouxSharp : IResampler {
+public readonly struct RobidouxSharp : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>B parameter value.</summary>
   public const float B = 0.2620145123990142f;
@@ -250,6 +287,9 @@ public readonly struct RobidouxSharp : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, B, C);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -272,6 +312,11 @@ public readonly struct RobidouxSharp : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static RobidouxSharp Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(B, C, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 /// <summary>
@@ -283,7 +328,7 @@ public readonly struct RobidouxSharp : IResampler {
 /// </remarks>
 [ScalerInfo("RobidouxSoft", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Smoother Robidoux variant with B=0.6796, C=0.1602", Category = ScalerCategory.Resampler)]
-public readonly struct RobidouxSoft : IResampler {
+public readonly struct RobidouxSoft : IKernelResampler, IResamplerWithSafePath {
 
   /// <summary>B parameter value.</summary>
   public const float B = 0.67962275088539597f;
@@ -299,6 +344,9 @@ public readonly struct RobidouxSoft : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => MitchellMath.Weight(distance, B, C);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -321,11 +369,16 @@ public readonly struct RobidouxSoft : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static RobidouxSoft Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)
+    => _MitchellSafePath.Dispatch(B, C, source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
 }
 
 file readonly struct MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, float b, float c, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -372,26 +425,82 @@ file readonly struct MitchellNetravaliKernel<TPixel, TWork, TKey, TDecode, TProj
       wy[i] = MitchellWeight(fy - (i - 1), b, c);
     }
 
-    // Accumulate weighted colors from 4x4 kernel
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here.
     Accum4F<TWork> acc = default;
     for (var ky = 0; ky < 4; ++ky)
     for (var kx = 0; kx < 4; ++kx) {
       var weight = wx[kx] * wy[ky];
-      if (weight == 0f)
-        continue;
-
-      var pixel = frame[x0 + kx - 1, y0 + ky - 1].Work;
-      acc.AddMul(pixel, weight);
+      if (weight == 0f) continue;
+      acc.AddMul(frame[x0 + kx - 1, y0 + ky - 1].Work, weight);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
 
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+
+    var wx = stackalloc float[4];
+    var wy = stackalloc float[4];
+    for (var i = 0; i < 4; ++i) {
+      wx[i] = MitchellWeight(fx - (i - 1), b, c);
+      wy[i] = MitchellWeight(fy - (i - 1), b, c);
+    }
+
+    Accum4F<TWork> acc = default;
+    for (var ky = 0; ky < 4; ++ky)
+    for (var kx = 0; kx < 4; ++kx) {
+      var weight = wx[kx] * wy[ky];
+      if (weight == 0f) continue;
+      acc.AddMul(frame.GetUnchecked(x0 + kx - 1, y0 + ky - 1).Work, weight);
+    }
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: -1, kxMaxExcl: 3, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: -1, kyMaxExcl: 3, this._scaleY, this._offsetY, sourceHeight, targetHeight);
+
   /// <summary>
   /// Computes the Mitchell-Netravali weight for a given distance.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float MitchellWeight(float x, float b, float c) {
+  private static float MitchellWeight(float x, float b, float c) => MitchellMath.Weight(x, b, c);
+}
+
+internal static class _MitchellSafePath {
+  public static Bitmap Dispatch(float b, float c, Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new MitchellNetravaliKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, b, c, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      MitchellNetravaliKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
+}
+
+internal static class MitchellMath {
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Weight(float x, float b, float c) {
     x = MathF.Abs(x);
     if (x < 1f)
       return ((12f - 9f * b - 6f * c) * x * x * x

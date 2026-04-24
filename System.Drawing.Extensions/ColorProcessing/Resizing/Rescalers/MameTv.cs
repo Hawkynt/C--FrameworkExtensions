@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>From MAME emulator.</para>
 /// </remarks>
 [ScalerInfo("MAME TV", Author = "MAME Team", Year = 1997,
-  Description = "CRT interlace emulation", Category = ScalerCategory.PixelArt)]
-public readonly struct MameTv : IPixelScaler {
+  Description = "CRT interlace emulation", Category = ScalerCategory.Rescaler)]
+public readonly struct MameTv : IRescaler {
 
   private readonly int _scale;
   private readonly float _gamma1;

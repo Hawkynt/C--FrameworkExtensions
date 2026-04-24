@@ -18,9 +18,14 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -34,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Nearest Neighbor", Author = "Standard Algorithm",
   Description = "Fastest resampling with no interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct NearestNeighbor : IResampler {
+public readonly struct NearestNeighbor : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -44,6 +49,13 @@ public readonly struct NearestNeighbor : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) {
+    // Nearest-neighbour is a half-open rectangular window [-0.5, 0.5).
+    var x = MathF.Abs(distance);
+    return x < 0.5f ? 1f : 0f;
+  }
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -66,11 +78,27 @@ public readonly struct NearestNeighbor : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static NearestNeighbor Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new NearestNeighborKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      NearestNeighborKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
 }
 
 file readonly struct NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -101,12 +129,29 @@ file readonly struct NearestNeighborKernel<TPixel, TWork, TKey, TDecode, TProjec
     var srcX = (int)(destX * this._scaleX + this._offsetX);
     var srcY = (int)(destY * this._scaleY + this._offsetY);
 
-    // Clamp to source bounds
-    srcX = Math.Clamp(srcX, 0, sourceWidth - 1);
-    srcY = Math.Clamp(srcY, 0, sourceHeight - 1);
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
+    var p = frame[srcX, srcY].Work;
+    dest[destY * destStride + destX] = encoder.Encode(p);
+  }
 
-    // Get source pixel and encode to destination
-    var pixel = frame[srcX, srcY].Work;
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcX = (int)(destX * this._scaleX + this._offsetX);
+    var srcY = (int)(destY * this._scaleY + this._offsetY);
+    var pixel = frame.GetUnchecked(srcX, srcY).Work;
     dest[destY * destStride + destX] = encoder.Encode(pixel);
   }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: 0, kxMaxExcl: 1, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: 0, kyMaxExcl: 1, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 }

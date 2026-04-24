@@ -37,7 +37,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("NTSC", Author = "blargg",
   Description = "NTSC composite video color bleeding simulation", Category = ScalerCategory.Resampler)]
-public readonly struct Ntsc : IPixelScaler {
+public readonly struct Ntsc : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 2);

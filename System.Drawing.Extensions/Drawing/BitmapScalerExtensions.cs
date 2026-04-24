@@ -72,7 +72,7 @@ public static class BitmapScalerExtensions {
     /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Upscale<TScaler>(TScaler scaler, ScalerQuality quality = ScalerQuality.Fast)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       => _UpscaleGeneric(@this, scaler, quality);
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class BitmapScalerExtensions {
     /// <returns>A new bitmap scaled according to the scaler's factors.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Upscale<TScaler>(ScalerQuality quality = ScalerQuality.Fast)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       => _UpscaleGeneric(@this, new TScaler(), quality);
 
     /// <summary>
@@ -111,7 +111,7 @@ public static class BitmapScalerExtensions {
       int targetHeight,
       TScaler scaler = default,
       ScalerQuality quality = ScalerQuality.Fast
-    ) where TScaler : struct, IPixelScaler
+    ) where TScaler : struct, IRescaler
       => _UpscaleToTarget(@this, scaler, targetWidth, targetHeight, quality);
 
     /// <summary>
@@ -127,7 +127,7 @@ public static class BitmapScalerExtensions {
       int targetWidth,
       int targetHeight,
       ScalerQuality quality = ScalerQuality.Fast
-    ) where TScaler : struct, IPixelScaler
+    ) where TScaler : struct, IRescaler
       => _UpscaleToTarget(@this, new TScaler(), targetWidth, targetHeight, quality);
 
     /// <summary>
@@ -151,7 +151,7 @@ public static class BitmapScalerExtensions {
       TScaler scaler,
       TEquality equality = default,
       TLerp lerp = default)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       where TWork : unmanaged, IColorSpace
       where TKey : unmanaged, IColorSpace
       where TDecode : struct, IDecode<Bgra8888, TWork>
@@ -176,7 +176,7 @@ public static class BitmapScalerExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap UpscaleWithMetric<TScaler, TMetric>(
       TScaler scaler)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       where TMetric : struct, IColorMetric<Bgra8888>, INormalizedMetric
       => _UpscaleWithMetric<TScaler, TMetric>(@this, scaler);
 
@@ -193,7 +193,7 @@ public static class BitmapScalerExtensions {
     public Bitmap UpscaleWithEquality<TScaler, TEquality>(
       TScaler scaler,
       TEquality equality)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       where TEquality : struct, IColorEquality<Bgra8888>
       => _UpscaleWithEquality<TScaler, TEquality>(@this, scaler, equality);
 
@@ -210,7 +210,7 @@ public static class BitmapScalerExtensions {
     public Bitmap UpscaleWithLerp<TScaler, TLerp>(
       TScaler scaler,
       TLerp lerp)
-      where TScaler : struct, IPixelScaler
+      where TScaler : struct, IRescaler
       where TLerp : struct, ILerp<Bgra8888>
       => _UpscaleWithLerp<TScaler, TLerp>(@this, scaler, lerp);
   }
@@ -221,7 +221,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleGeneric<TScaler>(Bitmap source, TScaler scaler, ScalerQuality quality)
-    where TScaler : struct, IPixelScaler
+    where TScaler : struct, IRescaler
     => _ApplyScalerOnce(source, scaler, quality);
 
   /// <summary>
@@ -230,7 +230,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _ApplyScalerOnce<TScaler>(Bitmap source, TScaler scaler, ScalerQuality quality)
-    where TScaler : struct, IPixelScaler
+    where TScaler : struct, IRescaler
     => quality switch {
       ScalerQuality.Fast => _UpscaleFast(source, scaler),
       ScalerQuality.HighQuality => _UpscaleHighQuality(source, scaler),
@@ -243,7 +243,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleFast<TScaler>(Bitmap source, TScaler scaler)
-    where TScaler : struct, IPixelScaler {
+    where TScaler : struct, IRescaler {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
@@ -258,7 +258,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleHighQuality<TScaler>(Bitmap source, TScaler scaler)
-    where TScaler : struct, IPixelScaler {
+    where TScaler : struct, IRescaler {
     var callback = new UpscaleCallback<
       LinearRgbaF, OklabF,
       Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source);
@@ -275,7 +275,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithMetric<TScaler, TMetric>(Bitmap source, TScaler scaler)
-    where TScaler : struct, IPixelScaler
+    where TScaler : struct, IRescaler
     where TMetric : struct, IColorMetric<Bgra8888>, INormalizedMetric {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
@@ -291,7 +291,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithEquality<TScaler, TEquality>(Bitmap source, TScaler scaler, TEquality equality)
-    where TScaler : struct, IPixelScaler
+    where TScaler : struct, IRescaler
     where TEquality : struct, IColorEquality<Bgra8888> {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
@@ -307,7 +307,7 @@ public static class BitmapScalerExtensions {
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Bitmap _UpscaleWithLerp<TScaler, TLerp>(Bitmap source, TScaler scaler, TLerp lerp)
-    where TScaler : struct, IPixelScaler
+    where TScaler : struct, IRescaler
     where TLerp : struct, ILerp<Bgra8888> {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
@@ -347,7 +347,7 @@ public static class BitmapScalerExtensions {
     int targetWidth,
     int targetHeight,
     ScalerQuality quality
-  ) where TScaler : struct, IPixelScaler {
+  ) where TScaler : struct, IRescaler {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
     
@@ -527,12 +527,54 @@ public static class BitmapScalerExtensions {
   /// Uses IColorSpace4F for internal accumulation.
   /// </para>
   /// </remarks>
+  /// <summary>
+  /// Bitmap-level dispatcher for the safe-path pipeline. Given a kernel that implements
+  /// <see cref="IResampleKernelWithSafePath{TPixel,TWork,TKey,TDecode,TProject,TEncode}"/>,
+  /// routes through <see cref="ScalerPipeline.ExecuteResampleParallelWithSafePath"/> so the
+  /// destination interior is processed with zero per-pixel OOB overhead.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static unsafe Bitmap InvokeSafePathResampler<TKernel>(
+    Bitmap source,
+    int targetWidth,
+    int targetHeight,
+    TKernel kernel,
+    OutOfBoundsMode horizontalMode,
+    OutOfBoundsMode verticalMode,
+    Bgra8888 canvasPixel)
+    where TKernel : struct, IResampleKernelWithSafePath<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32> {
+
+    var result = new Bitmap(targetWidth, targetHeight, PixelFormat.Format32bppArgb);
+    using var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly);
+    using var dstLocker = new Argb8888BitmapLocker(result, ImageLockMode.WriteOnly);
+    var srcFrame = srcLocker.AsFrame();
+    var dstFrame = dstLocker.AsFrame();
+
+    fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
+    fixed (Bgra8888* dstPtr = dstFrame.Pixels)
+      ScalerPipeline.ExecuteResampleParallelWithSafePath<
+        Bgra8888, LinearRgbaF, OklabF,
+        Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32,
+        TKernel>(
+        srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride,
+        dstPtr, targetWidth, targetHeight, dstFrame.Stride,
+        kernel,
+        horizontalMode: horizontalMode,
+        verticalMode: verticalMode,
+        canvasPixel: canvasPixel);
+
+    return result;
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   internal static unsafe Bitmap Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(
     Bitmap source,
     int targetWidth,
     int targetHeight,
-    TKernel kernel)
+    TKernel kernel,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    Bgra8888 canvasPixel = default)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
     where TDecode : struct, IDecode<Bgra8888, TWork>
@@ -556,7 +598,10 @@ public static class BitmapScalerExtensions {
       >(
         srcPtr, srcFrame.Width, srcFrame.Height, srcFrame.Stride,
         dstPtr, targetWidth, targetHeight, dstFrame.Stride,
-        kernel
+        kernel,
+        horizontalMode: horizontalMode,
+        verticalMode: verticalMode,
+        canvasPixel: canvasPixel
       );
 
     return result;
@@ -565,7 +610,11 @@ public static class BitmapScalerExtensions {
   /// <summary>
   /// Callback that receives a concrete resampler kernel and executes the resample pipeline.
   /// </summary>
-  private sealed class ResampleCallback<TWork, TKey, TDecode, TProject, TEncode>(Bitmap source, int targetWidth, int targetHeight)
+  private sealed class ResampleCallback<TWork, TKey, TDecode, TProject, TEncode>(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    Bgra8888 canvasPixel = default)
     : IResampleKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, Bitmap>
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
@@ -575,7 +624,12 @@ public static class BitmapScalerExtensions {
 
     public Bitmap Invoke<TKernel>(TKernel kernel)
       where TKernel : struct, IResampleKernel<Bgra8888, TWork, TKey, TDecode, TProject, TEncode>
-      => Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(source, targetWidth, targetHeight, kernel);
+      => Resample<TWork, TKey, TDecode, TProject, TEncode, TKernel>(
+          source, targetWidth, targetHeight, kernel,
+          horizontalMode: horizontalMode,
+          verticalMode: verticalMode,
+          canvasPixel: canvasPixel
+        );
   }
 
   /// <summary>
@@ -614,17 +668,53 @@ public static class BitmapScalerExtensions {
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = default)
+    where TResampler : struct, IResampler
+    => source.Resample(resampler, targetWidth, targetHeight, OutOfBoundsMode.Const, OutOfBoundsMode.Const, default, useCenteredGrid: true);
+
+  /// <summary>
+  /// Resamples a bitmap to target dimensions with full control over out-of-bounds handling, canvas fill and grid centring.
+  /// </summary>
+  /// <typeparam name="TResampler">The resampler type (e.g., Lanczos3, Bicubic).</typeparam>
+  /// <param name="source">Source bitmap.</param>
+  /// <param name="resampler">The resampler instance.</param>
+  /// <param name="targetWidth">Target width.</param>
+  /// <param name="targetHeight">Target height.</param>
+  /// <param name="horizontalMode">How to treat pixels sampled outside the source's horizontal range.</param>
+  /// <param name="verticalMode">How to treat pixels sampled outside the source's vertical range.</param>
+  /// <param name="canvasColor">Canvas fill colour used when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode. A transparent canvas (A=0) gives traditional "bleed-alpha" behaviour.</param>
+  /// <param name="useCenteredGrid">If <c>true</c> (default), destination pixel centres map to source coordinates <c>(destX+0.5)*scale-0.5</c>; if <c>false</c>, top-left corners map to <c>destX*scale</c>.</param>
+  /// <returns>A new bitmap scaled to the target dimensions.</returns>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static Bitmap Resample<TResampler>(
+    this Bitmap source,
+    TResampler resampler,
+    int targetWidth,
+    int targetHeight,
+    OutOfBoundsMode horizontalMode,
+    OutOfBoundsMode verticalMode,
+    Color canvasColor,
+    bool useCenteredGrid,
+    __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler {
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
 
+    // Safe-path opt-in: if the resampler publishes IResamplerWithSafePath, dispatch straight
+    // through the zero-OOB pipeline. The struct boxes once per resize for the interface check —
+    // negligible at image granularity, and critically contains NO reflection so it remains
+    // trim-safe and AOT-compatible. Falls back to the callback pipeline for every other resampler.
+    if (resampler is IResamplerWithSafePath safePath)
+      return safePath.ResampleWithSafePath(source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+
+    var canvasPixel = new Bgra8888(canvasColor);
     var callback = new ResampleCallback<
       LinearRgbaF, OklabF,
-      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source, targetWidth, targetHeight);
+      Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+        source, targetWidth, targetHeight, horizontalMode, verticalMode, canvasPixel);
     return resampler.InvokeKernel<
       LinearRgbaF, OklabF, Bgra8888,
       Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32, Bitmap>(
-      callback, source.Width, source.Height, targetWidth, targetHeight);
+      callback, source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
   }
 
   /// <summary>

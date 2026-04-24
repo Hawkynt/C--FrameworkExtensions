@@ -40,9 +40,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: https://github.com/nobuyukinyuu/godot-omniscale</para>
 /// </remarks>
 [ScalerInfo("Omniscale", Author = "nobuyukinyuu", Year = 2017,
-  Description = "Omniscale adaptive scaling", Category = ScalerCategory.PixelArt,
+  Description = "Omniscale adaptive scaling", Category = ScalerCategory.Rescaler,
   Url = "https://github.com/nobuyukinyuu/godot-omniscale")]
-public readonly struct Omniscale : IPixelScaler {
+public readonly struct Omniscale : IRescaler {
   private readonly int _scale;
   private readonly float _edgeThreshold;
 

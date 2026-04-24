@@ -82,9 +82,9 @@ public enum HqMode {
 /// <para>Reference: https://code.google.com/archive/p/hqx</para>
 /// </remarks>
 [ScalerInfo("HQ/LQ", Author = "Maxim Stepin", Year = 2003,
-  Description = "High/Low quality upscaler with 256 pattern cases", Category = ScalerCategory.PixelArt,
+  Description = "High/Low quality upscaler with 256 pattern cases", Category = ScalerCategory.Rescaler,
   Url = "https://code.google.com/archive/p/hqx")]
-public readonly struct HqLq : IPixelScaler {
+public readonly struct HqLq : IRescaler {
   private readonly HqQuality _quality;
   private readonly int _scaleX;
   private readonly int _scaleY;
@@ -231,9 +231,9 @@ public readonly struct HqLq : IPixelScaler {
 /// <para>Reference: https://code.google.com/archive/p/hqx</para>
 /// </remarks>
 [ScalerInfo("HQ", Author = "Maxim Stepin", Year = 2003,
-  Description = "High quality upscaler with 256 pattern cases", Category = ScalerCategory.PixelArt,
+  Description = "High quality upscaler with 256 pattern cases", Category = ScalerCategory.Rescaler,
   Url = "https://code.google.com/archive/p/hqx")]
-public readonly struct Hq : IPixelScaler {
+public readonly struct Hq : IRescaler {
   private readonly int _scaleX;
   private readonly int _scaleY;
   private readonly HqMode _mode;
@@ -321,8 +321,8 @@ public readonly struct Hq : IPixelScaler {
 /// <para>Supports symmetric (2x, 3x, 4x) and unsymmetric (2x3, 2x4) scaling.</para>
 /// </remarks>
 [ScalerInfo("LQ", Author = "Maxim Stepin", Year = 2003,
-  Description = "Low quality upscaler - simplified HQ", Category = ScalerCategory.PixelArt)]
-public readonly struct Lq : IPixelScaler {
+  Description = "Low quality upscaler - simplified HQ", Category = ScalerCategory.Rescaler)]
+public readonly struct Lq : IRescaler {
   private readonly int _scaleX;
   private readonly int _scaleY;
   private readonly HqMode _mode;

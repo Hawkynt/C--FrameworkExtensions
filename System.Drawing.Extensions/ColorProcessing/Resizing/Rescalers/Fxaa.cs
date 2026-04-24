@@ -40,8 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Algorithm by Timothy Lottes/NVIDIA, 2009.</para>
 /// </remarks>
 [ScalerInfo("FXAA", Author = "Timothy Lottes/NVIDIA", Year = 2009,
-  Description = "Fast Approximate Anti-Aliasing", Category = ScalerCategory.PixelArt)]
-public readonly struct Fxaa : IPixelScaler {
+  Description = "Fast Approximate Anti-Aliasing", Category = ScalerCategory.Rescaler)]
+public readonly struct Fxaa : IRescaler {
 
   private readonly int _scale;
 

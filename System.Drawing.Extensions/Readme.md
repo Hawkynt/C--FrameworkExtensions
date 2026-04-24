@@ -340,6 +340,12 @@ Color metrics implementing `IColorMetric<T>` for palette lookups, quantization, 
 
 **Note**: Squared variants are faster (no sqrt) when only relative comparison is needed.
 
+#### Further Reading
+
+- [Color difference — Wikipedia](https://en.wikipedia.org/wiki/Color_difference) — overview of all major perceptual and numerical color-distance formulas
+- [Redmean / "Colour metric"](https://www.compuphase.com/cmetric.htm) — CompuPhase's weighted-Euclidean approximation write-up
+- [Image-quantization color metrics](https://github.com/ibezkrovnyi/image-quantization) — TypeScript reference with Euclidean BT.709, Manhattan, CIEDE2000, CIE94, PNGQuant implementations
+
 ### Palette Lookup
 
 The `PaletteLookup<TWork, TMetric>` struct provides efficient nearest-neighbor color matching with automatic caching.
@@ -616,6 +622,20 @@ var weighted = new KMeansQuantizer<PngQuantDistance>(default);
 var custom = new KMeansQuantizer { MaxIterations = 200, ConvergenceThreshold = 0.0001f };
 ```
 
+### Further Reading
+
+- [A Simple Yet Quite Powerful Palette Quantizer in C#](https://www.codeproject.com/Articles/66341/A-Simple-Yet-Quite-Powerful-Palette-Quantizer-in-C) — broad CodeProject survey of palette quantizers
+- [Median Cut: a popular colour quantization strategy](https://gowtham000.hashnode.dev/median-cut-a-popular-colour-quantization-strategy) — step-by-step tutorial on Median Cut
+- [Octree Color Palette](https://www.codeproject.com/Articles/109133/Octree-Color-Palette) — CodeProject walkthrough of Octree quantization
+- [Variance-based color image quantization](http://algorithmicbotany.org/papers/variance-based.pdf) — Wan, Wong, Prusinkiewicz 1990 (original variance-based paper)
+- [Binary splitting](https://opg.optica.org/josaa/fulltext.cfm?uri=josaa-11-11-2777&id=847) — Orchard & Bouman 1991
+- [Binary splitting with Ant-tree for color quantization](https://link.springer.com/article/10.1007/s11554-018-0814-8) — Pérez-Delgado 2018
+- [Adaptive Distributing Units (ADU)](https://www.tandfonline.com/doi/full/10.1179/1743131X13Y.0000000059) — competitive-learning quantizer paper
+- [Variance-Cut](https://ieeexplore.ieee.org/document/6718239) — IEEE original
+- [WU + Ant-tree (ATCQ) reference implementation](https://github.com/mattdesl/atcq) — mattdesl's JS port
+- [Binary Splitting with iterative ATCQ (BSITATCQ)](https://www.mdpi.com/2076-3417/10/21/7819) — applied combination
+- [NeuQuant — fast high-quality image quantization](https://scientificgems.wordpress.com/stuff/neuquant-fast-high-quality-image-quantization/) — Dekker's neural quantizer
+
 ---
 
 ## Dithering
@@ -700,6 +720,26 @@ var grey = NoiseDitherer.GreyNoise;     // Perceptually uniform
 
 // Adjust strength and seed
 var custom = NoiseDitherer.WhiteNoise.WithStrength(0.8f).WithSeed(12345);
+```
+
+### Arithmetic (`a_dither`) Ditherers
+
+[Arithmetic dithering](https://pippin.gimp.org/a_dither/) by Øyvind Kolås is a family of procedural ordered ditherers that compute the threshold from pixel coordinates via cheap integer arithmetic, producing blue-noise-like patterns without a lookup table or error buffer. Fully parallel.
+
+| Ditherer                                                         | Pattern                     | Description                                                            |
+| ---------------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------- |
+| [`XorY149Ditherer`](https://pippin.gimp.org/a_dither/)           | `(x ^ y·149) & 0xFF`        | XOR-based pattern with Y×149 multiplier — low-cost, isotropic noise    |
+| [`XYArithmeticDitherer`](https://pippin.gimp.org/a_dither/)      | `(x + y·237) × 119 & 0xFF`  | Additive-multiplicative pattern with different spatial characteristics |
+| [`UniformDitherer`](https://pippin.gimp.org/a_dither/)           | `0.5` threshold             | Fixed threshold binarization — not true dithering but useful as baseline |
+
+`XorY149Ditherer` and `XYArithmeticDitherer` each provide two static instances: `.Default` (identical mask across RGB channels) and `.WithChannel` (different phase per channel for decorrelated dithering).
+
+```csharp
+// XOR Y×149 pattern (single-channel)
+var ditherer = XorY149Ditherer.Default;
+
+// Per-channel variation (decorrelates RGB — often looks cleaner)
+var decorrelated = XYArithmeticDitherer.WithChannel;
 ```
 
 ### Advanced Ditherers
@@ -790,27 +830,59 @@ var hilbertOrder4 = new RiemersmaDitherer(16, SpaceFillingCurve.Hilbert, 4);  //
 var peanoOrder3 = new RiemersmaDitherer(16, SpaceFillingCurve.Peano, 3);      // 27x27 coverage
 ```
 
+### Further Reading
+
+- [Dithering: Eleven algorithms and source code](https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html) — Tanner Helland's reference roundup of matrix-based error-diffusion kernels
+- [DitherPunk](https://surma.dev/things/ditherpunk/) — Surma's hands-on tour of error diffusion and ordered dithering with interactive examples
+- [Cyotek Dithering](https://github.com/cyotek/Dithering/tree/master/src/Dithering) — C# reference implementations of most classic ditherers
+- [Dithermark resources](https://dithermark.com/resources/) — curated list of dithering algorithms, papers, and online tools
+- [Ordered dithering for arbitrary palettes](https://matejlou.blog/2023/12/06/ordered-dithering-for-arbitrary-or-irregular-palettes/) — matejlou's deep-dive into Halftone, N-Closest, N-Convex, Barycentric, TIN, and Natural Neighbour
+- [Image-quantization algorithms](https://github.com/ibezkrovnyi/image-quantization) — Igor Bezkrovnyi's comprehensive TypeScript library used as reference for several metric implementations
+- [Tetrapal](https://github.com/matejlou/tetrapal) — tetrahedral palette interpolation reference for TIN-style ditherers
+- [Dithertron](https://github.com/sehugg/dithertron) — reference implementations for `TwoD`, `Down`, `DoubleDown`, `Diagonal`, `VerticalDiamond`, `HorizontalDiamond`, `Diamond`
+- [dither-dream](https://github.com/kgjenkins/dither-dream) — equally-distributed Floyd-Steinberg reference
+- [hitherdither](https://github.com/hbldh/hitherdither) — Stevenson-Arce and other error-diffusion Python implementations
+- [ditherit.com](https://ditherit.com) — interactive playground covering Fan, ShiauFan, ShiauFan2 and more
+- [Bayer matrix generator](https://github.com/dmnsgn/bayer) — reference Bayer threshold-map generator
+- [Dizzy Dithering](https://liamappelbe.medium.com/dizzy-dithering-2ae76dbceba1) — Liam Appelbe's 2024 spiral-based error-diffusion algorithm
+- [False Floyd-Steinberg](https://github.com/makew0rld) — makeworld's simplified 3-neighbor variant
+- [Variable-coefficient dithering (Ostromoukhov, interactive)](https://observablehq.com/@jobleonard/variable-coefficient-dithering) — Job Leonard's interactive visualization
+- [Riemersma curve dithering](https://www.compuphase.com/riemer.htm) and a [TypeScript port](https://github.com/ibezkrovnyi/image-quantization/blob/main/packages/image-q/src/image/riemersma.ts)
+- [Graphics Academy — Jarvis-Judice-Ninke](https://www.graphicsacademy.com/what_ditherjarvis.php) ([comparison figure](https://www.researchgate.net/figure/Difference-between-Jarvis-Judice-and-Ninke-and-Floyd-Steinberg-results-from-watch-input_fig3_342085636)), [Average](https://www.graphicsacademy.com/what_dithera.php), [Random](https://www.graphicsacademy.com/what_ditherr.php)
+- [Joel Yliluoma's pattern-dithering algorithms 1-3](https://bisqwit.iki.fi/story/howto/dither/jy/) — canonical write-up
+
 ---
 
-## Image Scaling / Pixel Art Rescaling
+## Image Resizing
 
-The library provides a comprehensive collection of image scaling algorithms, from simple interpolation methods to sophisticated pixel art scalers and retro gaming effects.
+The umbrella activity of changing an image's dimensions is called **resizing** (verb pair: **upsize** / **downsize**). This library splits resizing algorithms into three categories along the *fidelity axis* — how faithfully the output reflects the source — and exposes the distinction both in the type system and in the `ScalerCategory` metadata attribute.
 
-### Upscaling Methods
+| Category           | Verb pair                   | Scale characteristic           | Fidelity contract                                                                                                                                                  | Examples                                                                                                            |
+| ------------------ | --------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| **Rescaler**       | up**scale** / down**scale** | Fixed integer factor           | Output pixels are chosen from a pre-tabulated decision tree keyed on the source neighbourhood — pattern-matched, deterministic, no invented content.               | HQ2/3/4x, XBR, XBRz, Eagle, SuperEagle, Scale2x (Epx), SuperXbr, NNEDI3, MMPX, SMAA, FXAA, MLAA                     |
+| **Resampler**      | up**sample** / down**sample** | Arbitrary target dimensions  | Every output pixel is derived from real source samples via deterministic math: kernel convolution, vector tracing, content-aware edge direction, or content shuffling. Faithful reconstruction, no hallucination. | Lanczos, Bicubic, Mitchell-Netravali, Bilinear, Hermite, Gaussian, Jinc, B-splines, OMoms, Lagrange, Splines, SincWindow family, Kopf-Lischinski, DCCI, EEDI2, Seam Carving |
+| **Regenerator**    | always both up AND down     | Arbitrary target dimensions   | Output is synthesised by a learned model that may invent plausible detail not present in the source — at the cost of hallucinations that can diverge from the source. | AI super-resolution, diffusion upscalers (when/if added)                                                            |
+
+A Rescaler that needs to reach non-integer target dimensions chains with a Resampler for the residual (typically Lanczos for downsampling the over-scaled result). A Regenerator has no verb asymmetry — it's always "regenerate at target dimensions", never just upsample or downsample.
+
+### Quick examples
 
 ```csharp
 using var source = new Bitmap("sprite.png");
 
-// Pixel art scalers
-using var scaled2x = source.Upscale(Eagle.X2);
-using var scaled3x = source.Upscale(SuperEagle.X2);
-using var hq4x = source.Upscale(Hqnx.X4);
+// Rescaler — integer factor, pattern-matched
+using var hq4x    = source.Upscale(Hqnx.X4);
+using var eagle2x = source.Upscale(Eagle.X2);
+using var xbr2x   = source.Upscale(Xbr.X2);
 
-// Anti-aliased scaling
-using var smaa = source.Upscale(Smaa.X2);
+// Resampler — arbitrary scale, kernel-math, source-faithful
+using var lanczos = source.Resample(Lanczos3.Default, 1920, 1080);
+using var bicubic = source.Resample(Bicubic.Default, 1024, 768);
 
-// Edge-preserving smoothing
-using var bilateral = source.Upscale(Bilateral.X2);
+// Resampler — arbitrary scale, content-aware (still source-faithful — analyses edges,
+// does not invent content)
+using var dcci    = source.Resample(Dcci.Default, 1024, 768);
+using var seams   = source.Resample(SeamCarving.Default, 800, 600);
 ```
 
 ### Available Scalers

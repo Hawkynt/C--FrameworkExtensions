@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -35,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Bilinear", Author = "Standard Algorithm",
   Description = "2x2 weighted average interpolation", Category = ScalerCategory.Resampler)]
-public readonly struct Bilinear : IResampler {
+public readonly struct Bilinear : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -45,6 +50,12 @@ public readonly struct Bilinear : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) {
+    var x = MathF.Abs(distance);
+    return x < 1f ? 1f - x : 0f;
+  }
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -67,11 +78,27 @@ public readonly struct Bilinear : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Bilinear Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new BilinearKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      BilinearKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
 }
 
 file readonly struct BilinearKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -110,25 +137,54 @@ file readonly struct BilinearKernel<TPixel, TWork, TKey, TDecode, TProject, TEnc
     var fx = srcXf - x0;
     var fy = srcYf - y0;
 
-    // Get 4 neighboring pixels (NeighborFrame handles clamping)
-    var p00 = frame[x0, y0].Work;
-    var p10 = frame[x0 + 1, y0].Work;
-    var p01 = frame[x0, y0 + 1].Work;
-    var p11 = frame[x0 + 1, y0 + 1].Work;
-
     // Bilinear weights
     var w00 = (1f - fx) * (1f - fy);
     var w10 = fx * (1f - fy);
     var w01 = (1f - fx) * fy;
     var w11 = fx * fy;
 
-    // Accumulate weighted colors
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
-    acc.AddMul(p00, w00);
-    acc.AddMul(p10, w10);
-    acc.AddMul(p01, w01);
-    acc.AddMul(p11, w11);
+    acc.AddMul(frame[x0, y0].Work, w00);
+    acc.AddMul(frame[x0 + 1, y0].Work, w10);
+    acc.AddMul(frame[x0, y0 + 1].Work, w01);
+    acc.AddMul(frame[x0 + 1, y0 + 1].Work, w11);
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+    var w00 = (1f - fx) * (1f - fy);
+    var w10 = fx * (1f - fy);
+    var w01 = (1f - fx) * fy;
+    var w11 = fx * fy;
+
+    Accum4F<TWork> acc = default;
+    acc.AddMul(frame.GetUnchecked(x0, y0).Work, w00);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0).Work, w10);
+    acc.AddMul(frame.GetUnchecked(x0, y0 + 1).Work, w01);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0 + 1).Work, w11);
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: 0, kxMaxExcl: 2, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: 0, kyMaxExcl: 2, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 }

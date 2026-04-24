@@ -43,10 +43,10 @@ public sealed class PcaColorQuantizerWrapper : IColorQuantizer {
   public PcaColorQuantizerWrapper(IColorQuantizer inner)
     => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<Color> usedColors)
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors)
     => this.ReduceColorsTo(numberOfColors, usedColors.Select(c => (c, 1u)));
 
-  public Color[] ReduceColorsTo(byte numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
+  public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<(Color color, uint count)> histogram) {
     var snapshot = histogram.ToList();
     if (snapshot.Count == 0)
       return [];

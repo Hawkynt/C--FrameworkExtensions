@@ -18,10 +18,15 @@
 #endregion
 
 using System;
+using System.Drawing;
 using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Spaces.Perceptual;
+using Hawkynt.ColorProcessing.Storage;
+using Hawkynt.ColorProcessing.Working;
+using Hawkynt.Drawing;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
@@ -35,7 +40,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// </remarks>
 [ScalerInfo("Hermite", Author = "Charles Hermite", Year = 1878,
   Description = "Cubic interpolation with smooth falloff", Category = ScalerCategory.Resampler)]
-public readonly struct Hermite : IResampler {
+public readonly struct Hermite : IKernelResampler, IResamplerWithSafePath {
 
   /// <inheritdoc />
   public ScaleFactor Scale => default;
@@ -45,6 +50,12 @@ public readonly struct Hermite : IResampler {
 
   /// <inheritdoc />
   public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) {
+    var x = MathF.Abs(distance);
+    return x < 1f ? (2f * x - 3f) * x * x + 1f : 0f;
+  }
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -67,11 +78,27 @@ public readonly struct Hermite : IResampler {
   /// Gets the default configuration.
   /// </summary>
   public static Hermite Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid) {
+    ArgumentNullException.ThrowIfNull(source);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
+
+    var kernel = new HermiteKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(
+      source.Width, source.Height, targetWidth, targetHeight, useCenteredGrid);
+    return BitmapScalerExtensions.InvokeSafePathResampler<
+      HermiteKernel<Bgra8888, LinearRgbaF, OklabF, Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>
+    >(source, targetWidth, targetHeight, kernel, horizontalMode, verticalMode, new Bgra8888(canvasColor));
+  }
 }
 
 file readonly struct HermiteKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
   int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid)
-  : IResampleKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
+  : IResampleKernelWithSafePath<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   where TPixel : unmanaged, IStorageSpace
   where TWork : unmanaged, IColorSpace4F<TWork>
   where TKey : unmanaged, IColorSpace
@@ -116,27 +143,60 @@ file readonly struct HermiteKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
     var hy0 = HermiteWeight(-fy);
     var hy1 = HermiteWeight(1f - fy);
 
-    // Get 4 neighboring pixels
-    var p00 = frame[x0, y0].Work;
-    var p10 = frame[x0 + 1, y0].Work;
-    var p01 = frame[x0, y0 + 1].Work;
-    var p11 = frame[x0 + 1, y0 + 1].Work;
-
     // Compute combined weights
     var w00 = hx0 * hy0;
     var w10 = hx1 * hy0;
     var w01 = hx0 * hy1;
     var w11 = hx1 * hy1;
 
-    // Accumulate weighted colors
+    // Edge path: bounds-checked indexer. Pipeline routes only edge-band pixels here; the safe
+    // interior runs through ResampleUnchecked (below).
     Accum4F<TWork> acc = default;
-    acc.AddMul(p00, w00);
-    acc.AddMul(p10, w10);
-    acc.AddMul(p01, w01);
-    acc.AddMul(p11, w11);
+    acc.AddMul(frame[x0, y0].Work, w00);
+    acc.AddMul(frame[x0 + 1, y0].Work, w10);
+    acc.AddMul(frame[x0, y0 + 1].Work, w01);
+    acc.AddMul(frame[x0 + 1, y0 + 1].Work, w11);
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void ResampleUnchecked(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    int destX, int destY,
+    TPixel* dest,
+    int destStride,
+    in TEncode encoder) {
+    var srcXf = destX * this._scaleX + this._offsetX;
+    var srcYf = destY * this._scaleY + this._offsetY;
+    var x0 = (int)MathF.Floor(srcXf);
+    var y0 = (int)MathF.Floor(srcYf);
+    var fx = srcXf - x0;
+    var fy = srcYf - y0;
+    var hx0 = HermiteWeight(-fx);
+    var hx1 = HermiteWeight(1f - fx);
+    var hy0 = HermiteWeight(-fy);
+    var hy1 = HermiteWeight(1f - fy);
+    var w00 = hx0 * hy0;
+    var w10 = hx1 * hy0;
+    var w01 = hx0 * hy1;
+    var w11 = hx1 * hy1;
+
+    Accum4F<TWork> acc = default;
+    acc.AddMul(frame.GetUnchecked(x0, y0).Work, w00);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0).Work, w10);
+    acc.AddMul(frame.GetUnchecked(x0, y0 + 1).Work, w01);
+    acc.AddMul(frame.GetUnchecked(x0 + 1, y0 + 1).Work, w11);
+
+    dest[destY * destStride + destX] = encoder.Encode(acc.Result);
+  }
+
+  /// <inheritdoc />
+  public Rectangle GetSafeDestinationRegion()
+    => ResampleKernelHelpers.ComputeSafeDestinationRegion(
+      kxMin: 0, kxMaxExcl: 2, this._scaleX, this._offsetX, sourceWidth, targetWidth,
+      kyMin: 0, kyMaxExcl: 2, this._scaleY, this._offsetY, sourceHeight, targetHeight);
 
   /// <summary>
   /// Computes the Hermite weight for a given distance.

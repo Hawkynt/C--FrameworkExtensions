@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 [ScalerInfo("CRT-Geom",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom",
   Description = "CRT simulation with shadow mask and scanline darkening", Category = ScalerCategory.Resampler)]
-public readonly struct CrtGeom : IPixelScaler {
+public readonly struct CrtGeom : IRescaler {
   private readonly int _scale;
 
   /// <summary>

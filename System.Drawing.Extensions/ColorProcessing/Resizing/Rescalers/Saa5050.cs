@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// </remarks>
 [ScalerInfo("SAA5050", Author = "Mullard", Year = 1980,
   Url = "https://en.wikipedia.org/wiki/Mullard_SAA5050",
-  Description = "Teletext character smoothing with 2x3 scaling", Category = ScalerCategory.PixelArt)]
-public readonly struct Saa5050 : IPixelScaler {
+  Description = "Teletext character smoothing with 2x3 scaling", Category = ScalerCategory.Rescaler)]
+public readonly struct Saa5050 : IRescaler {
 
   /// <inheritdoc />
   public ScaleFactor Scale => new(2, 3);

@@ -40,9 +40,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 /// <para>Reference: http://board.byuu.org/viewtopic.php?f=10&amp;t=2248</para>
 /// </remarks>
 [ScalerInfo("XBR", Author = "Hyllian", Year = 2011,
-  Description = "Edge-directed upscaler with neighborhood analysis", Category = ScalerCategory.PixelArt,
+  Description = "Edge-directed upscaler with neighborhood analysis", Category = ScalerCategory.Rescaler,
   Url = "http://board.byuu.org/viewtopic.php?f=10&t=2248")]
-public readonly struct Xbr : IPixelScaler {
+public readonly struct Xbr : IRescaler {
 
   private readonly int _scale;
   private readonly bool _allowAlphaBlending;
@@ -51,12 +51,12 @@ public readonly struct Xbr : IPixelScaler {
   /// <summary>
   /// Creates an XBR scaler with specified scale factor and options.
   /// </summary>
-  /// <param name="scale">The scale factor (2, 3, or 4).</param>
+  /// <param name="scale">The scale factor (2, 3, 4, or 5).</param>
   /// <param name="allowAlphaBlending">Whether to allow alpha blending for smoother results.</param>
   /// <param name="useOriginalImplementation">Whether to use the original implementation variant (only used by 3x).</param>
   public Xbr(int scale = 2, bool allowAlphaBlending = true, bool useOriginalImplementation = false) {
     ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
-    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 4);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 5);
     this._scale = scale;
     this._allowAlphaBlending = allowAlphaBlending;
     this._useOriginalImplementation = useOriginalImplementation;
@@ -94,18 +94,20 @@ public readonly struct Xbr : IPixelScaler {
         this._allowAlphaBlending, this._useOriginalImplementation, equality, default, lerp)),
       4 => callback.Invoke(new Xbr4xKernel<TWork, TKey, TPixel, TEquality, TDistance, TLerp, TEncode>(
         this._allowAlphaBlending, equality, default, lerp)),
+      5 => callback.Invoke(new Xbr5xKernel<TWork, TKey, TPixel, TEquality, TDistance, TLerp, TEncode>(
+        this._allowAlphaBlending, equality, default, lerp)),
       _ => throw new System.InvalidOperationException($"Invalid scale factor: {this._scale}")
     };
 
   /// <summary>
   /// Gets the list of scale factors supported by XBR.
   /// </summary>
-  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 3), new(4, 4)];
+  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 3), new(4, 4), new(5, 5)];
 
   /// <summary>
   /// Determines whether XBR supports the specified scale factor.
   /// </summary>
-  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 3 } or { X: 4, Y: 4 };
+  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 3 } or { X: 4, Y: 4 } or { X: 5, Y: 5 };
 
   /// <summary>
   /// Enumerates all possible target dimensions for XBR.
@@ -114,6 +116,7 @@ public readonly struct Xbr : IPixelScaler {
     yield return (sourceWidth * 2, sourceHeight * 2);
     yield return (sourceWidth * 3, sourceHeight * 3);
     yield return (sourceWidth * 4, sourceHeight * 4);
+    yield return (sourceWidth * 5, sourceHeight * 5);
   }
 
   /// <summary>
@@ -135,8 +138,138 @@ public readonly struct Xbr : IPixelScaler {
   /// <summary>Gets an XBR 4x scaler.</summary>
   public static Xbr Scale4x => new(4);
 
+  /// <summary>Gets an XBR 5x scaler.</summary>
+  public static Xbr Scale5x => new(5);
+
   /// <summary>Gets the default XBR configuration (2x).</summary>
   public static Xbr Default => new(2);
+}
+
+#endregion
+
+#region XBR NoBlend (alpha blending disabled — sharper edges)
+
+/// <summary>
+/// XBR variant with alpha blending disabled. Produces sharper edge transitions than the default Xbr,
+/// matching the pre-2013 "NonBlend" behaviour used by the Hyllian reference shaders.
+/// </summary>
+/// <remarks>
+/// Exposes 2x/3x/4x variants; delegates to <see cref="Xbr"/> with <c>allowAlphaBlending=false</c>.
+/// </remarks>
+[ScalerInfo("XBR NoBlend", Author = "Hyllian", Year = 2011,
+  Description = "XBR without alpha blending — sharper, more retro edge transitions",
+  Category = ScalerCategory.Rescaler,
+  Url = "http://board.byuu.org/viewtopic.php?f=10&t=2248")]
+public readonly struct XbrNoBlend : IRescaler {
+
+  private readonly int _scale;
+
+  /// <summary>
+  /// Creates an XBR-NoBlend scaler with the specified scale factor.
+  /// </summary>
+  /// <param name="scale">The scale factor (2, 3, 4, or 5).</param>
+  public XbrNoBlend(int scale = 2) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(scale, 2);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(scale, 5);
+    this._scale = scale;
+  }
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => this._scale == 0 ? new(2, 2) : new(this._scale, this._scale);
+
+  /// <summary>Gets the list of scale factors supported by XBR NoBlend.</summary>
+  public static ScaleFactor[] SupportedScales { get; } = [new(2, 2), new(3, 3), new(4, 4), new(5, 5)];
+
+  /// <summary>Determines whether XBR NoBlend supports the specified scale factor.</summary>
+  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 2, Y: 2 } or { X: 3, Y: 3 } or { X: 4, Y: 4 } or { X: 5, Y: 5 };
+
+  /// <summary>Enumerates all possible target dimensions for XBR NoBlend.</summary>
+  public static IEnumerable<(int Width, int Height)> GetPossibleTargets(int sourceWidth, int sourceHeight) {
+    yield return (sourceWidth * 2, sourceHeight * 2);
+    yield return (sourceWidth * 3, sourceHeight * 3);
+    yield return (sourceWidth * 4, sourceHeight * 4);
+    yield return (sourceWidth * 5, sourceHeight * 5);
+  }
+
+  /// <summary>Gets an XBR-NoBlend 2x scaler.</summary>
+  public static XbrNoBlend Scale2x => new(2);
+
+  /// <summary>Gets an XBR-NoBlend 3x scaler.</summary>
+  public static XbrNoBlend Scale3x => new(3);
+
+  /// <summary>Gets an XBR-NoBlend 4x scaler.</summary>
+  public static XbrNoBlend Scale4x => new(4);
+
+  /// <summary>Gets an XBR-NoBlend 5x scaler.</summary>
+  public static XbrNoBlend Scale5x => new(5);
+
+  /// <summary>Gets the default XBR-NoBlend configuration (2x).</summary>
+  public static XbrNoBlend Default => new(2);
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
+    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
+    TEquality equality = default,
+    TLerp lerp = default)
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
+    where TEquality : struct, IColorEquality<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => new Xbr(this._scale == 0 ? 2 : this._scale, allowAlphaBlending: false)
+      .InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(callback, equality, lerp);
+}
+
+#endregion
+
+#region XBR 3x Original (pre-2013 implementation variant)
+
+/// <summary>
+/// XBR 3x using the original (pre-2013) implementation variant. Produces slightly different edge
+/// detection than the modern 3x; preserved for parity with retro shader presets.
+/// </summary>
+/// <remarks>
+/// Delegates to <see cref="Xbr"/> with <c>scale=3</c> and <c>useOriginalImplementation=true</c>.
+/// </remarks>
+[ScalerInfo("XBR 3x Original", Author = "Hyllian", Year = 2011,
+  Description = "XBR 3x — original (pre-2013) implementation variant",
+  Category = ScalerCategory.Rescaler,
+  Url = "http://board.byuu.org/viewtopic.php?f=10&t=2248")]
+public readonly struct Xbr3xOriginal : IRescaler {
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => new(3, 3);
+
+  /// <summary>Gets the list of scale factors supported by XBR 3x Original (3x only).</summary>
+  public static ScaleFactor[] SupportedScales { get; } = [new(3, 3)];
+
+  /// <summary>Determines whether XBR 3x Original supports the specified scale factor.</summary>
+  public static bool SupportsScale(ScaleFactor scale) => scale is { X: 3, Y: 3 };
+
+  /// <summary>Enumerates all possible target dimensions for XBR 3x Original.</summary>
+  public static IEnumerable<(int Width, int Height)> GetPossibleTargets(int sourceWidth, int sourceHeight) {
+    yield return (sourceWidth * 3, sourceHeight * 3);
+  }
+
+  /// <summary>Gets the default XBR 3x Original configuration.</summary>
+  public static Xbr3xOriginal Default => new();
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
+    IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback,
+    TEquality equality = default,
+    TLerp lerp = default)
+    where TWork : unmanaged, IColorSpace
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDistance : struct, IColorMetric<TKey>, INormalizedMetric
+    where TEquality : struct, IColorEquality<TKey>
+    where TLerp : struct, ILerp<TWork>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => new Xbr(scale: 3, allowAlphaBlending: true, useOriginalImplementation: true)
+      .InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(callback, equality, lerp);
 }
 
 #endregion
@@ -795,6 +928,136 @@ file readonly struct Xbr4xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     this._AlphaBlend128W(ref n11, pixel);
     this._AlphaBlend128W(ref n14, pixel);
     n15 = pixel;
+  }
+}
+
+#endregion
+
+#region XBR 5x Kernel
+
+/// <summary>
+/// Internal kernel for XBR 5x algorithm.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Faithful port of the Hyllian legacy 5xbr.cg reference shader
+/// (<see href="https://github.com/libretro/common-shaders/blob/master/xbr/shaders/legacy/5xbr.cg"/>).
+/// The reference shader computes three interpolated values (E14, E19, E24) from a single
+/// edge-detection pass and distributes them with 4-fold symmetry across the 5×5 output block
+/// (not 4 independent rotations like 2x/3x/4x). This yields noticeably different — and in some
+/// configurations more blocky — output than a proper 4-rotation XBR would; upstreaming a proper
+/// 4-rotation XBR 5x is future work.
+/// </para>
+/// <para>
+/// Alpha-blend weights match the reference exactly:
+/// <c>E19 = lerp(E19, F, 0.875)</c> (= <c>Interpolate(e, F, 1, 7)</c>),
+/// <c>E14 = lerp(E14, F, 0.125)</c> (= <c>Interpolate(e, F, 7, 1)</c>).
+/// </para>
+/// <para>
+/// Output 5x5 block:
+/// <code>
+/// E24 E19 E14 E19 E24
+/// E19 E14  e  E14 E19
+/// E14  e   e   e  E14
+/// E19 E14  e  E14 E19
+/// E24 E19 E14 E19 E24
+/// </code>
+/// </para>
+/// </remarks>
+file readonly struct Xbr5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp, TEncode>(
+  bool allowBlending = true,
+  TEquality equality = default,
+  TMetric metric = default,
+  TLerp lerp = default
+) : IScaler<TWork, TKey, TPixel, TEncode>
+  where TWork : unmanaged, IColorSpace
+  where TKey : unmanaged, IColorSpace
+  where TPixel : unmanaged, IStorageSpace
+  where TEquality : struct, IColorEquality<TKey>
+  where TMetric : struct, IColorMetric<TKey>
+  where TLerp : struct, ILerp<TWork>
+  where TEncode : struct, IEncode<TWork, TPixel> {
+
+  // The reference 5xbr.cg shader uses equality only; metric is accepted for signature
+  // parity with Xbr2/3/4 so the dispatcher at Xbr.InvokeKernel can pass it uniformly.
+  private readonly TMetric _unusedMetric = metric;
+
+  /// <inheritdoc />
+  public int ScaleX => 5;
+
+  /// <inheritdoc />
+  public int ScaleY => 5;
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public unsafe void Scale(
+    in NeighborWindow<TWork, TKey> window,
+    TPixel* destTopLeft,
+    int destStride,
+    in TEncode encoder
+  ) {
+    // 3x3 neighbourhood (a..i) — only the immediate 8-neighbours + center are consulted.
+    // (Hyllian 5xbr.cg reference uses no further-away samples.)
+    var b = window.M1P0;  // top
+    var c = window.M1P1;  // top-right
+    var d = window.P0M1;  // left
+    var e = window.P0P0;  // center
+    var f = window.P0P1;  // right
+    var g = window.P1M1;  // bottom-left
+    var h = window.P1P0;  // bottom
+    var i = window.P1P1;  // bottom-right
+
+    var center = e.Work;
+    var E24 = center;
+    var E19 = center;
+    var E14 = center;
+
+    // Reference single-rotation condition (bottom-right edge):
+    //   if (h==f && h!=e && ( e==g && (h==i || e==d) || e==c && (h==i || e==b) ))
+    if (equality.Equals(h.Key, f.Key)
+        && !equality.Equals(h.Key, e.Key)
+        && (equality.Equals(e.Key, g.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, d.Key))
+            || equality.Equals(e.Key, c.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, b.Key)))) {
+      E24 = f.Work;
+      // E19 ≈ 0.875·F + 0.125·e ; E14 ≈ 0.125·F + 0.875·e
+      this._AlphaBlend224W(ref E19, f.Work);
+      this._AlphaBlend32W(ref E14, f.Work);
+    }
+
+    // Distribute E24/E19/E14/e across the 5×5 block with 4-fold symmetry.
+    var r0 = destTopLeft;
+    var r1 = destTopLeft + destStride;
+    var r2 = destTopLeft + destStride * 2;
+    var r3 = destTopLeft + destStride * 3;
+    var r4 = destTopLeft + destStride * 4;
+
+    var eCorner = encoder.Encode(E24);
+    var eEdge = encoder.Encode(E19);
+    var eMid = encoder.Encode(E14);
+    var eCenter = encoder.Encode(center);
+
+    r0[0] = eCorner; r0[1] = eEdge;   r0[2] = eMid;    r0[3] = eEdge;   r0[4] = eCorner;
+    r1[0] = eEdge;   r1[1] = eMid;    r1[2] = eCenter; r1[3] = eMid;    r1[4] = eEdge;
+    r2[0] = eMid;    r2[1] = eCenter; r2[2] = eCenter; r2[3] = eCenter; r2[4] = eMid;
+    r3[0] = eEdge;   r3[1] = eMid;    r3[2] = eCenter; r3[3] = eMid;    r3[4] = eEdge;
+    r4[0] = eCorner; r4[1] = eEdge;   r4[2] = eMid;    r4[3] = eEdge;   r4[4] = eCorner;
+  }
+
+  // Start from e (==initial E14/E19), so lerp(current, src, t) = (current*(1-t) + src*t).
+  // Interpolate(a, b, wA, wB) = (a*wA + b*wB) / (wA+wB). We pick the wA:wB that reproduces
+  // the reference 0.875/0.125 blends exactly.
+  //   AlphaBlend224W: 1:7  →  dst*1/8 + src*7/8  = lerp(dst, src, 0.875)
+  //   AlphaBlend32W:  7:1  →  dst*7/8 + src*1/8  = lerp(dst, src, 0.125)
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private void _AlphaBlend224W(ref TWork dst, in TWork src) {
+    dst = allowBlending ? lerp.Lerp(dst, src, 1, 7) : src;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private void _AlphaBlend32W(ref TWork dst, in TWork src) {
+    if (allowBlending)
+      dst = lerp.Lerp(dst, src, 7, 1);
   }
 }
 
