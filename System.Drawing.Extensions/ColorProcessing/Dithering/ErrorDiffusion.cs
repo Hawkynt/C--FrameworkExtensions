@@ -528,7 +528,9 @@ file static class ErrorDiffusionCore {
         var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
         errors.AsSpan(errIdx, 4).Clear();
 
-        var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
+        // Post-error adjusted colours are effectively unique per pixel on photographic
+        // input, so the palette-lookup's dictionary cache is a net loss here.
+        var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
         DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
           data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
 
@@ -584,7 +586,7 @@ file static class ErrorDiffusionCore {
           var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
           errors.AsSpan(errIdx, 4).Clear();
 
-          var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
+          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
           DistributeErrorReverse(adjustedColor, nearestColor, errors, x, y, width, endY,
             data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
 
@@ -601,7 +603,7 @@ file static class ErrorDiffusionCore {
           var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
           errors.AsSpan(errIdx, 4).Clear();
 
-          var nearestIdx = lookup.FindNearest(adjustedColor, out var nearestColor);
+          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
           DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
             data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
 

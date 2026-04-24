@@ -356,7 +356,7 @@ public sealed class ScalerDescriptor {
   /// <param name="targetHeight">Target height.</param>
   /// <param name="horizontalMode">Behaviour for samples that fall outside the source's horizontal range.</param>
   /// <param name="verticalMode">Behaviour for samples that fall outside the source's vertical range.</param>
-  /// <param name="canvasColor">Fill colour used when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode (the "canvas" painted around the source image).</param>
+  /// <param name="canvasColor">Fill colour used when either axis is in <see cref="OutOfBoundsMode.FlatColor"/> mode (the "canvas" painted around the source image).</param>
   /// <param name="useCenteredGrid">If <c>true</c> (default), pixel centres are aligned when mapping destination→source; if <c>false</c>, top-left corners are.</param>
   /// <exception cref="InvalidOperationException">Thrown if this descriptor is not a resampler.</exception>
   public Bitmap Resample(

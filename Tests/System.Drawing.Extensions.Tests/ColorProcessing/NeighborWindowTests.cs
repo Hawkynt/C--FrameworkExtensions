@@ -71,7 +71,7 @@ public class NeighborWindowTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();
@@ -95,7 +95,7 @@ public class NeighborWindowTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();
@@ -123,7 +123,7 @@ public class NeighborWindowTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();
@@ -188,7 +188,7 @@ public class NeighborWindowTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();
@@ -214,7 +214,7 @@ public class NeighborWindowTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();

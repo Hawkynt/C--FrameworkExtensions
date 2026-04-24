@@ -63,7 +63,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   private readonly TProject _projector;
   private readonly OutOfBoundsMode _horizontalMode;
   private readonly OutOfBoundsMode _verticalMode;
-  /// <summary>Pre-decoded canvas pixel for <see cref="OutOfBoundsMode.Transparent"/>. Serves as the fill used when sampling outside the source image.</summary>
+  /// <summary>Pre-decoded canvas pixel for <see cref="OutOfBoundsMode.FlatColor"/>. Serves as the fill used when sampling outside the source image.</summary>
   private readonly NeighborPixel<TWork, TKey> _canvasPixel;
 
   private NeighborPixel<TWork, TKey>* _ptrM2;
@@ -140,9 +140,9 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// <summary>Slow-path OOB resolver: applies horizontal/vertical mode dispatch and canvas-colour fallback.</summary>
   [MethodImpl(MethodImplOptions.NoInlining)]
   private NeighborPixel<TWork, TKey> _GetOutOfBounds(int x, int y) {
-    if (this._verticalMode == OutOfBoundsMode.Transparent && (y < 0 || y >= this._sourceHeight))
+    if (this._verticalMode == OutOfBoundsMode.FlatColor && (y < 0 || y >= this._sourceHeight))
       return this._canvasPixel;
-    if (this._horizontalMode == OutOfBoundsMode.Transparent && (x < 0 || x >= this._sourceWidth))
+    if (this._horizontalMode == OutOfBoundsMode.FlatColor && (x < 0 || x >= this._sourceWidth))
       return this._canvasPixel;
 
     var clampedX = this._ClampX(x);
@@ -162,7 +162,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// <param name="projector">The projector instance.</param>
   /// <param name="horizontalMode">How to handle horizontal out-of-bounds access.</param>
   /// <param name="verticalMode">How to handle vertical out-of-bounds access.</param>
-  /// <param name="canvasPixel">Pixel used as the "canvas" fill when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode and the sample falls outside the source image.</param>
+  /// <param name="canvasPixel">Pixel used as the "canvas" fill when either axis is in <see cref="OutOfBoundsMode.FlatColor"/> mode and the sample falls outside the source image.</param>
   /// <param name="startY">The starting Y row (for parallel processing).</param>
   public NeighborFrame(
     TPixel* sourcePtr,
@@ -171,8 +171,8 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     int stride,
     TDecode decoder,
     TProject projector,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     TPixel canvasPixel = default,
     int startY = 0
   ) {
@@ -258,7 +258,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void _LoadRow(NeighborPixel<TWork, TKey>* rowPtr, int y) {
     // Transparent Y: entire row is canvas colour, no source read.
-    if (this._verticalMode == OutOfBoundsMode.Transparent && (y < 0 || y >= this._sourceHeight)) {
+    if (this._verticalMode == OutOfBoundsMode.FlatColor && (y < 0 || y >= this._sourceHeight)) {
       this._FillRowCanvas(rowPtr);
       return;
     }
@@ -266,7 +266,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     var clampedY = this._ClampY(y);
 
     // Fast path for Const-Const mode (most common)
-    if (this._horizontalMode == OutOfBoundsMode.Const && this._verticalMode == OutOfBoundsMode.Const)
+    if (this._horizontalMode == OutOfBoundsMode.ConstantExtension && this._verticalMode == OutOfBoundsMode.ConstantExtension)
       this._LoadRowConstConst(rowPtr, clampedY);
     else
       this._LoadRowGeneric(rowPtr, clampedY);
@@ -577,7 +577,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   private void _LoadRowGeneric(NeighborPixel<TWork, TKey>* rowPtr, int y) {
     var srcRow = this._sourcePtr + y * this._sourceStride;
     var width = this._sourceWidth;
-    var transparentX = this._horizontalMode == OutOfBoundsMode.Transparent;
+    var transparentX = this._horizontalMode == OutOfBoundsMode.FlatColor;
     var canvas = this._canvasPixel;
 
     // Left OOB padding: bufferX ∈ {0, 1} → origX ∈ {-2, -1}
@@ -639,11 +639,11 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
       return y;
 
     return this._verticalMode switch {
-      OutOfBoundsMode.Const => y < 0 ? 0 : this._sourceHeight - 1,
-      OutOfBoundsMode.Half => this._MirrorHalf(y, this._sourceHeight),
-      OutOfBoundsMode.Whole => this._MirrorWhole(y, this._sourceHeight),
-      OutOfBoundsMode.Wrap => this._Wrap(y, this._sourceHeight),
-      OutOfBoundsMode.Transparent => 0, // Will be overridden with transparent value
+      OutOfBoundsMode.ConstantExtension => y < 0 ? 0 : this._sourceHeight - 1,
+      OutOfBoundsMode.HalfSampleSymmetric => this._MirrorHalf(y, this._sourceHeight),
+      OutOfBoundsMode.WholeSampleSymmetric => this._MirrorWhole(y, this._sourceHeight),
+      OutOfBoundsMode.WrapAround => this._Wrap(y, this._sourceHeight),
+      OutOfBoundsMode.FlatColor => 0, // Will be overridden with transparent value
       _ => y < 0 ? 0 : this._sourceHeight - 1
     };
   }
@@ -657,11 +657,11 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
       return x;
 
     return this._horizontalMode switch {
-      OutOfBoundsMode.Const => x < 0 ? 0 : this._sourceWidth - 1,
-      OutOfBoundsMode.Half => this._MirrorHalf(x, this._sourceWidth),
-      OutOfBoundsMode.Whole => this._MirrorWhole(x, this._sourceWidth),
-      OutOfBoundsMode.Wrap => this._Wrap(x, this._sourceWidth),
-      OutOfBoundsMode.Transparent => 0, // Will be overridden with transparent value
+      OutOfBoundsMode.ConstantExtension => x < 0 ? 0 : this._sourceWidth - 1,
+      OutOfBoundsMode.HalfSampleSymmetric => this._MirrorHalf(x, this._sourceWidth),
+      OutOfBoundsMode.WholeSampleSymmetric => this._MirrorWhole(x, this._sourceWidth),
+      OutOfBoundsMode.WrapAround => this._Wrap(x, this._sourceWidth),
+      OutOfBoundsMode.FlatColor => 0, // Will be overridden with transparent value
       _ => x < 0 ? 0 : this._sourceWidth - 1
     };
   }

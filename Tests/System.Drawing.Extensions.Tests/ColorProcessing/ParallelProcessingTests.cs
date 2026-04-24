@@ -74,7 +74,7 @@ public class ParallelProcessingTests {
         using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
           ptrCopy, width, height, width,
           default, default,
-          OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+          OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
           startY
         );
 
@@ -129,7 +129,7 @@ public class ParallelProcessingTests {
         using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
           ptrCopy, width, height, width,
           default, default,
-          OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+          OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
           startY
         );
 
@@ -164,7 +164,7 @@ public class ParallelProcessingTests {
           using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
             ptrCopy, width, height, width,
             default, default,
-            OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+            OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
             y
           );
 
@@ -204,7 +204,7 @@ public class ParallelProcessingTests {
         using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
           ptrCopy, width, height, width,
           default, default,
-          OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+          OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
           y
         );
 
@@ -243,7 +243,7 @@ public class ParallelProcessingTests {
       using (var frame1 = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
                ptrCopy, width, height, width,
                default, default,
-               OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+               OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
                0)) {
         for (var y = 0; y < 9; ++y)
           frame1.MoveDown();
@@ -260,7 +260,7 @@ public class ParallelProcessingTests {
       using (var frame2 = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
                ptrCopy, width, height, width,
                default, default,
-               OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+               OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
                10)) {
         var window = frame2.GetWindow();
         partition2Neighbors[0] = window.M2P0.Work;
@@ -301,14 +301,14 @@ public class ParallelProcessingTests {
       using var frame1 = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
         0
       );
 
       using var frame2 = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
         10
       );
 

@@ -34,7 +34,16 @@ namespace Hawkynt.ColorProcessing;
 /// <para>Wraps a palette array and metric to provide efficient nearest-color lookup.</para>
 /// <para>Uses a color cube acceleration structure for palettes with more than 8 entries,
 /// reducing per-lookup cost from O(palette) to O(candidates) where candidates is typically 1-5.</para>
-/// <para>Use <see cref="FindNearest"/> to get the index of the closest palette color.</para>
+/// <para>Use <see cref="FindNearest(in TWork)"/> to get the index of the closest palette color.</para>
+/// <para><b>Batch-distance opt-in.</b> If <typeparamref name="TMetric"/> implements
+/// <see cref="IBatchDistance{TKey}"/> the lookup pre-packs each cube cell's
+/// candidates into a dense byte buffer at construction time and delegates the
+/// inner "find closest of N" step to the metric's batch method — which typically
+/// fans out to a SIMD kernel (e.g. SSE2 for <see cref="EuclideanSquared4B{T}"/>).
+/// Discovery is a single <c>is</c>-cast at construction, so per-pixel dispatch
+/// is free and the scalar fallback is automatic for metrics that opt out. Metrics
+/// that don't opt in go through the per-candidate scalar <c>Distance</c> loop
+/// exactly as before.</para>
 /// </remarks>
 public readonly struct PaletteLookup<TWork, TMetric>
   where TWork : unmanaged, IColorSpace4<TWork>
@@ -44,6 +53,19 @@ public readonly struct PaletteLookup<TWork, TMetric>
   private readonly TMetric _metric;
   private readonly Dictionary<TWork, int> _cache;
   private readonly byte[][]? _cube;
+  // Non-null iff the metric opted into IBatchDistance<TWork>. The cast is done
+  // once at construction so the per-pixel hot path can do a cheap null-check.
+  // Struct metrics box exactly once per PaletteLookup instance lifetime.
+  private readonly IBatchDistance<TWork>? _batchMetric;
+  // Per-cube-cell dense packed view of the cell's candidate colours — laid out
+  // back-to-back at sizeof(TWork) bytes per entry — so the batch kernel reads
+  // linearly and doesn't need a gather indirection. Null unless
+  // <see cref="_batchMetric"/> is non-null (and consequently unless there's a
+  // cube at all). Each inner array is parallel to the index array at the same
+  // <c>_cube</c> slot: <c>_cube[cell][localIdx]</c> is the palette index, and
+  // <c>_cubePackedBytes[cell][localIdx * sizeof(TWork) .. +sizeof(TWork)]</c>
+  // holds the same palette colour's raw bytes.
+  private readonly byte[][]? _cubePackedBytes;
 
   private const int _CUBE_BITS = 4;
   private const int _CUBE_SIZE = 1 << _CUBE_BITS;
@@ -73,6 +95,38 @@ public readonly struct PaletteLookup<TWork, TMetric>
     this._cube = palette.Length is > _CUBE_MIN_PALETTE and <= 256
       ? _GetOrBuildCube(palette, metric)
       : null;
+
+    // One-time box-via-interface: struct metrics that implement IBatchDistance<TWork>
+    // surface their SIMD-capable FindMinDistance here. Null otherwise -> scalar path.
+    this._batchMetric = metric as IBatchDistance<TWork>;
+
+    // Pre-pack each cube cell's candidates into a contiguous byte buffer the
+    // batch kernel can read linearly. Only built when we actually have a batch
+    // metric AND a cube; both together describe the fast path.
+    this._cubePackedBytes = this._batchMetric != null && this._cube != null
+      ? _BuildCubePackedBytes(this._cube, palette)
+      : null;
+  }
+
+  private static unsafe byte[][] _BuildCubePackedBytes(byte[][] cube, TWork[] palette) {
+    var packed = new byte[cube.Length][];
+    var elementSize = sizeof(TWork);
+    for (var cell = 0; cell < cube.Length; ++cell) {
+      var candidates = cube[cell];
+      var buf = new byte[candidates.Length * elementSize];
+      fixed (byte* dstBase = buf) {
+        for (var i = 0; i < candidates.Length; ++i) {
+          fixed (TWork* srcBase = &palette[candidates[i]]) {
+            var srcBytes = (byte*)srcBase;
+            var dst = dstBase + i * elementSize;
+            for (var b = 0; b < elementSize; ++b)
+              dst[b] = srcBytes[b];
+          }
+        }
+      }
+      packed[cell] = buf;
+    }
+    return packed;
   }
 
   /// <summary>
@@ -101,6 +155,39 @@ public readonly struct PaletteLookup<TWork, TMetric>
     if (this._cache.TryGetValue(color, out var cached))
       return cached;
 
+    var nearestIdx = this._FindNearestUncached(color);
+    this._cache.TryAdd(color, nearestIdx);
+    return nearestIdx;
+  }
+
+  /// <summary>
+  /// Finds the index of the nearest palette color without consulting or updating the
+  /// internal dictionary cache. Intended for hot paths where the input colour is
+  /// effectively unique per call (e.g. the per-pixel adjusted colour inside error
+  /// diffusion) so the cache adds overhead instead of amortising work.
+  /// </summary>
+  /// <param name="color">The color to match.</param>
+  /// <returns>The zero-based index of the closest palette color.</returns>
+  /// <remarks>
+  /// Returns the same answer as <see cref="FindNearest(in TWork)"/> — the cube and
+  /// linear-scan tie-break rules are identical. The cache is pure memoization.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public int FindNearestNoCache(in TWork color) => this._FindNearestUncached(color);
+
+  /// <summary>
+  /// Finds the nearest palette color without cache interaction and returns both
+  /// index and colour. Companion to <see cref="FindNearestNoCache(in TWork)"/>.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public int FindNearestNoCache(in TWork color, out TWork nearestColor) {
+    var idx = this._FindNearestUncached(color);
+    nearestColor = this._palette[idx];
+    return idx;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private int _FindNearestUncached(in TWork color) {
     var palette = this._palette;
     var metric = this._metric;
     int nearestIdx;
@@ -115,7 +202,24 @@ public readonly struct PaletteLookup<TWork, TMetric>
       if (i2 >= _CUBE_SIZE) i2 = _CUBE_SIZE - 1;
       if (i3 >= _CUBE_SIZE) i3 = _CUBE_SIZE - 1;
 
-      var candidates = cube[(i1 << (_CUBE_BITS + _CUBE_BITS)) | (i2 << _CUBE_BITS) | i3];
+      var cellIdx = (i1 << (_CUBE_BITS + _CUBE_BITS)) | (i2 << _CUBE_BITS) | i3;
+      var candidates = cube[cellIdx];
+
+      // Batch fast path: the metric knows how to find the min-distance candidate
+      // in a packed byte buffer in one shot (typically SIMD). Pre-built per-cell
+      // packed buffers avoid a per-call gather and make the kernel's reads
+      // strictly linear. Cell-local index maps back to palette index via the
+      // existing candidate array. Falls through to the scalar loop when either
+      // the metric didn't opt into IBatchDistance or candidates is too short for
+      // the batch path to be worthwhile (the batch method's own threshold — we
+      // keep the call to defer the decision to the metric implementation).
+      var batch = this._batchMetric;
+      if (batch != null) {
+        var packed = this._cubePackedBytes![cellIdx];
+        batch.FindMinDistance(color, packed, candidates.Length, out var localIdx);
+        return candidates[localIdx];
+      }
+
       var minDist = UNorm32.One;
       nearestIdx = candidates[0];
 
@@ -148,7 +252,6 @@ public readonly struct PaletteLookup<TWork, TMetric>
       }
     }
 
-    this._cache.TryAdd(color, nearestIdx);
     return nearestIdx;
   }
 

@@ -572,8 +572,8 @@ public static class BitmapScalerExtensions {
     int targetWidth,
     int targetHeight,
     TKernel kernel,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     Bgra8888 canvasPixel = default)
     where TWork : unmanaged, IColorSpace4F<TWork>
     where TKey : unmanaged, IColorSpace
@@ -612,8 +612,8 @@ public static class BitmapScalerExtensions {
   /// </summary>
   private sealed class ResampleCallback<TWork, TKey, TDecode, TProject, TEncode>(
     Bitmap source, int targetWidth, int targetHeight,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     Bgra8888 canvasPixel = default)
     : IResampleKernelCallback<TWork, TKey, Bgra8888, TDecode, TProject, TEncode, Bitmap>
     where TWork : unmanaged, IColorSpace4F<TWork>
@@ -669,7 +669,7 @@ public static class BitmapScalerExtensions {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Bitmap Resample<TResampler>(this Bitmap source, TResampler resampler, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = default)
     where TResampler : struct, IResampler
-    => source.Resample(resampler, targetWidth, targetHeight, OutOfBoundsMode.Const, OutOfBoundsMode.Const, default, useCenteredGrid: true);
+    => source.Resample(resampler, targetWidth, targetHeight, OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension, default, useCenteredGrid: true);
 
   /// <summary>
   /// Resamples a bitmap to target dimensions with full control over out-of-bounds handling, canvas fill and grid centring.
@@ -681,7 +681,7 @@ public static class BitmapScalerExtensions {
   /// <param name="targetHeight">Target height.</param>
   /// <param name="horizontalMode">How to treat pixels sampled outside the source's horizontal range.</param>
   /// <param name="verticalMode">How to treat pixels sampled outside the source's vertical range.</param>
-  /// <param name="canvasColor">Canvas fill colour used when either axis is in <see cref="OutOfBoundsMode.Transparent"/> mode. A transparent canvas (A=0) gives traditional "bleed-alpha" behaviour.</param>
+  /// <param name="canvasColor">Canvas fill colour used when either axis is in <see cref="OutOfBoundsMode.FlatColor"/> mode. A transparent canvas (A=0) gives traditional "bleed-alpha" behaviour.</param>
   /// <param name="useCenteredGrid">If <c>true</c> (default), destination pixel centres map to source coordinates <c>(destX+0.5)*scale-0.5</c>; if <c>false</c>, top-left corners map to <c>destX*scale</c>.</param>
   /// <returns>A new bitmap scaled to the target dimensions.</returns>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

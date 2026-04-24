@@ -54,7 +54,7 @@ public interface IResamplerWithSafePath {
 
   /// <summary>
   /// Resamples <paramref name="source"/> to the target dimensions with full out-of-bounds
-  /// control, canvas colour (for <see cref="OutOfBoundsMode.Transparent"/>), and grid
+  /// control, canvas colour (for <see cref="OutOfBoundsMode.FlatColor"/>), and grid
   /// centring. Internally routes through the safe-path pipeline: destination split into
   /// 4 edge bands + 1 safe interior, interior sampled without any OOB overhead.
   /// </summary>

@@ -77,8 +77,8 @@ public static class ScalerPipeline {
     TDecode decoder = default,
     TProject projector = default,
     TEncode encoder = default,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension
   )
     where TPixel : unmanaged, IStorageSpace
     where TWork : unmanaged, IColorSpace4F<TWork>
@@ -209,8 +209,8 @@ public static class ScalerPipeline {
     TDecode decoder = default,
     TProject projector = default,
     TEncode encoder = default,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension
   )
     where TPixel : unmanaged, IStorageSpace
     where TWork : unmanaged, IColorSpace
@@ -359,8 +359,8 @@ public static class ScalerPipeline {
     TDecode decoder = default,
     TProject projector = default,
     TEncode encoder = default,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     TPixel canvasPixel = default
   )
     where TPixel : unmanaged, IStorageSpace
@@ -431,8 +431,8 @@ public static class ScalerPipeline {
     TDecode decoder = default,
     TProject projector = default,
     TEncode encoder = default,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     TPixel canvasPixel = default
   )
     where TPixel : unmanaged, IStorageSpace
@@ -582,8 +582,8 @@ public static class ScalerPipeline {
     TDecode decoder = default,
     TProject projector = default,
     TEncode encoder = default,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension
   )
     where TPixel : unmanaged, IStorageSpace
     where TWork : unmanaged, IColorSpace4F<TWork>

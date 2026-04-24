@@ -175,8 +175,8 @@ public static class WorkPipeline {
     int width,
     int height,
     int stride,
-    OutOfBoundsMode horizontalMode = OutOfBoundsMode.Const,
-    OutOfBoundsMode verticalMode = OutOfBoundsMode.Const,
+    OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
+    OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     int startY = 0,
     TDecode decoder = default,
     TProject projector = default

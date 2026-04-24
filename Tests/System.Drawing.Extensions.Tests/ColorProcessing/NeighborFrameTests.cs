@@ -61,7 +61,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       Assert.That(frame.CurrentY, Is.EqualTo(0));
@@ -85,7 +85,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -113,7 +113,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
         startY
       );
 
@@ -136,7 +136,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
         startY
       );
 
@@ -151,7 +151,7 @@ public class NeighborFrameTests {
 
   #endregion
 
-  #region OutOfBoundsMode.Const Tests
+  #region OutOfBoundsMode.ConstantExtension Tests
 
   [Test]
   [Category("HappyPath")]
@@ -164,7 +164,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       frame.MoveDown();
@@ -200,7 +200,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       var window = frame.GetWindow();
@@ -230,7 +230,7 @@ public class NeighborFrameTests {
 
   #endregion
 
-  #region OutOfBoundsMode.Wrap Tests
+  #region OutOfBoundsMode.WrapAround Tests
 
   [Test]
   [Category("HappyPath")]
@@ -243,7 +243,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Wrap, OutOfBoundsMode.Const
+        OutOfBoundsMode.WrapAround, OutOfBoundsMode.ConstantExtension
       );
 
       frame.MoveDown();
@@ -268,7 +268,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Wrap
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.WrapAround
       );
 
       var window = frame.GetWindow();
@@ -283,7 +283,7 @@ public class NeighborFrameTests {
 
   #endregion
 
-  #region OutOfBoundsMode.Half Tests
+  #region OutOfBoundsMode.HalfSampleSymmetric Tests
 
   [Test]
   [Category("HappyPath")]
@@ -297,7 +297,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Half, OutOfBoundsMode.Const
+        OutOfBoundsMode.HalfSampleSymmetric, OutOfBoundsMode.ConstantExtension
       );
 
       frame.MoveDown();
@@ -313,7 +313,7 @@ public class NeighborFrameTests {
 
   #endregion
 
-  #region OutOfBoundsMode.Whole Tests
+  #region OutOfBoundsMode.WholeSampleSymmetric Tests
 
   [Test]
   [Category("HappyPath")]
@@ -327,7 +327,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Whole, OutOfBoundsMode.Const
+        OutOfBoundsMode.WholeSampleSymmetric, OutOfBoundsMode.ConstantExtension
       );
 
       frame.MoveDown();
@@ -356,7 +356,7 @@ public class NeighborFrameTests {
       var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       frame.Dispose();
@@ -381,7 +381,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       Assert.That(frame.Width, Is.EqualTo(width));
@@ -399,7 +399,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       Assert.That(frame.Height, Is.EqualTo(height));
@@ -422,7 +422,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -459,7 +459,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y)
@@ -482,7 +482,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       // Negative X clamps to 0
@@ -509,7 +509,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       // X >= width clamps to width-1
@@ -536,7 +536,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Wrap, OutOfBoundsMode.Wrap
+        OutOfBoundsMode.WrapAround, OutOfBoundsMode.WrapAround
       );
 
       // X wraps: -1 -> width-1
@@ -561,7 +561,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       // Extreme negative coordinates should clamp to (0, 0)
@@ -592,7 +592,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Wrap, OutOfBoundsMode.Wrap
+        OutOfBoundsMode.WrapAround, OutOfBoundsMode.WrapAround
       );
 
       // -1000 % 10 = 0 (after adding 10 for negative modulo)
@@ -627,7 +627,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Half, OutOfBoundsMode.Half
+        OutOfBoundsMode.HalfSampleSymmetric, OutOfBoundsMode.HalfSampleSymmetric
       );
 
       // Half mirror: cba|abcde|edc
@@ -656,7 +656,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const,
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
         startY: 10
       );
 
@@ -723,7 +723,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestUInt64, TestUInt64, TestUInt64, IdentityDecode8, IdentityProject8>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -753,7 +753,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestUInt64, TestUInt64, TestUInt64, IdentityDecode8, IdentityProject8>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       frame.MoveDown();
@@ -789,7 +789,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestUInt32, TestUInt64, TestUInt64, WideningDecode, IdentityProject8From4>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -821,7 +821,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestUInt32, TestUInt64, TestInt32, WideningDecodeForTransform, NarrowingProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -852,7 +852,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {
@@ -882,7 +882,7 @@ public class NeighborFrameTests {
       using var frame = new NeighborFrame<TestUInt64, TestUInt64, TestUInt64, IdentityDecode8, IdentityProject8>(
         ptr, width, height, width,
         default, default,
-        OutOfBoundsMode.Const, OutOfBoundsMode.Const
+        OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension
       );
 
       for (var y = 0; y < height; ++y) {

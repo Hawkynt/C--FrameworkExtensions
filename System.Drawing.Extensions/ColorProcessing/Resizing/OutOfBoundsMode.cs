@@ -26,25 +26,25 @@ public enum OutOfBoundsMode {
   /// <summary>
   /// Extends edge pixels: aaa|abcde|eee
   /// </summary>
-  Const,
+  ConstantExtension,
 
   /// <summary>
   /// Mirrors at half-pixel positions: cba|abcde|edc
   /// </summary>
-  Half,
+  HalfSampleSymmetric,
 
   /// <summary>
   /// Mirrors at pixel centers: dcb|abcde|dcb
   /// </summary>
-  Whole,
+  WholeSampleSymmetric,
 
   /// <summary>
   /// Wraps around (tileable): cde|abcde|abc
   /// </summary>
-  Wrap,
+  WrapAround,
 
   /// <summary>
-  /// Returns transparent/zero pixels: 000|abcde|000
+  /// Returns a user-supplied flat canvas colour (typically transparent): 000|abcde|000
   /// </summary>
-  Transparent
+  FlatColor
 }
