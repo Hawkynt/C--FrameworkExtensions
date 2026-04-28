@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Guard;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
@@ -44,8 +45,10 @@ public sealed class ColorDithererAdapter : IColorDitherer {
 
   private readonly Hawkynt.ColorProcessing.IDitherer _inner;
 
-  public ColorDithererAdapter(Hawkynt.ColorProcessing.IDitherer inner)
-    => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
+  public ColorDithererAdapter(Hawkynt.ColorProcessing.IDitherer inner) {
+    Against.ArgumentIsNull(inner);
+    this._inner = inner;
+  }
 
   /// <summary>The underlying extension ditherer; useful for downcasting to call
   /// algorithm-specific helpers (e.g. <c>ErrorDiffusion.Serpentine</c>).</summary>
@@ -76,6 +79,9 @@ public sealed class ColorDithererAdapter : IColorDitherer {
     for (var i = 0; i < palette.Length; ++i)
       bgraPalette[i] = new Bgra8888(palette[i]);
 
+    // Ditherers now consume a pre-decoded TWork* buffer. With TWork = Bgra8888 and
+    // IdentityDecode<Bgra8888> the decode is a no-op copy, so srcBuffer doubles as the
+    // TWork buffer that the ditherer reads from.
     var srcBuffer = new Bgra8888[width * height];
     for (var y = 0; y < height; ++y)
       for (var x = 0; x < width; ++x)
@@ -83,13 +89,12 @@ public sealed class ColorDithererAdapter : IColorDitherer {
 
     fixed (Bgra8888* srcPtr = srcBuffer) {
       var idxPtr = (byte*)target.Scan0;
-      var decoder = default(IdentityDecode<Bgra8888>);
       var metric = default(EuclideanSquared4B<Bgra8888>);
 
-      this._inner.Dither<Bgra8888, Bgra8888, IdentityDecode<Bgra8888>, EuclideanSquared4B<Bgra8888>>(
+      this._inner.Dither<Bgra8888, EuclideanSquared4B<Bgra8888>>(
         srcPtr, idxPtr, width, height,
         width, target.Stride, 0,
-        decoder, metric, bgraPalette);
+        metric, bgraPalette);
     }
   }
 }

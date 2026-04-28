@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -73,31 +72,28 @@ public readonly struct RandomDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var intensity = this._intensity;
     var random = new Random(this._seed + startY);
     var endY = startY + height;
-
     for (var y = startY; y < endY; ++y) {
-      for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-        // Decode source pixel
-        var pixel = decoder.Decode(source[sourceIdx]);
+      var rowSource = source + y * sourceStride;
+      for (int x = 0, targetIdx = y * targetStride; x < width; ++x, ++targetIdx) {
+        // Read pre-decoded source pixel from the working buffer.
+        var pixel = rowSource[x];
         var (c1, c2, c3, alpha) = pixel.ToNormalized();
         var pixelC1 = c1.ToFloat();
         var pixelC2 = c2.ToFloat();

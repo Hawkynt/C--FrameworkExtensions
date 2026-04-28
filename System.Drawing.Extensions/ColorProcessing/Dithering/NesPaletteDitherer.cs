@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -92,26 +91,22 @@ public readonly struct NesPaletteDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
     var paletteLen = palette.Length;
-
     // Process by 8×8 tiles so the per-tile colour restriction is honoured.
     // Tiles are independent, so the outer tile-row loop could in principle
     // be parallelised.
@@ -131,8 +126,7 @@ public readonly struct NesPaletteDitherer : IDitherer {
         for (var px = 0; px < tileCols; ++px) {
           var y = tileY + py;
           var x = tileX + px;
-          var srcIdx = y * sourceStride + x;
-          var color = decoder.Decode(source[srcIdx]);
+          var color = source[y * sourceStride + x];
           var (c1, c2, c3, a) = color.ToNormalized();
           var t = _Bayer[(py & (_MATRIX - 1)) * _MATRIX + (px & (_MATRIX - 1))];
           var adj = ColorFactory.FromNormalized_4<TWork>(

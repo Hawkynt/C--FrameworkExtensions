@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -116,20 +115,17 @@ public readonly struct SmartDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     // Handle default struct initialization (_config = null)
@@ -137,7 +133,7 @@ public readonly struct SmartDitherer : IDitherer {
     var endY = startY + height;
 
     // Analyze image to create strategy map
-    var strategyMap = _AnalyzeImage<TWork, TPixel, TDecode>(source, width, height, sourceStride, startY, decoder);
+    var strategyMap = _AnalyzeImage<TWork>(source, width, height, sourceStride, startY);
 
     // Apply all ditherers
     var buffers = new Dictionary<DitheringStrategy, byte[]>();
@@ -152,7 +148,7 @@ public readonly struct SmartDitherer : IDitherer {
     foreach (var (strategy, ditherer) in ditherers) {
       var buffer = new byte[width * height];
       fixed (byte* bufferPtr = buffer) {
-        ditherer.Dither(source, bufferPtr, width, height, sourceStride, width, startY, decoder, metric, palette);
+        ditherer.Dither(source, bufferPtr, width, height, sourceStride, width, startY, metric, palette);
       }
       buffers[strategy] = buffer;
     }
@@ -170,16 +166,13 @@ public readonly struct SmartDitherer : IDitherer {
     }
   }
 
-  private static unsafe DitheringStrategy[,] _AnalyzeImage<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe DitheringStrategy[,] _AnalyzeImage<TWork>(
+    TWork* source,
     int width,
     int height,
     int stride,
-    int startY,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int startY)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var strategies = new DitheringStrategy[width, height];
     const int blockSize = 8;
@@ -189,7 +182,7 @@ public readonly struct SmartDitherer : IDitherer {
       var blockW = Math.Min(blockSize, width - blockX);
       var blockH = Math.Min(blockSize, height - blockY);
 
-      var strategy = _AnalyzeBlock<TWork, TPixel, TDecode>(source, stride, blockX, startY + blockY, blockW, blockH, decoder);
+      var strategy = _AnalyzeBlock<TWork>(source, stride, blockX, startY + blockY, blockW, blockH);
 
       for (var y = blockY; y < blockY + blockH; ++y)
       for (var x = blockX; x < blockX + blockW; ++x)
@@ -201,15 +194,12 @@ public readonly struct SmartDitherer : IDitherer {
     return strategies;
   }
 
-  private static unsafe DitheringStrategy _AnalyzeBlock<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe DitheringStrategy _AnalyzeBlock<TWork>(
+    TWork* source,
     int stride,
     int startX, int startY,
-    int blockWidth, int blockHeight,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int blockWidth, int blockHeight)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var edgeStrength = 0.0;
     var colorVariance = 0.0;
@@ -223,7 +213,7 @@ public readonly struct SmartDitherer : IDitherer {
     // First pass: calculate averages
     for (var y = 0; y < blockHeight; ++y)
     for (var x = 0; x < blockWidth; ++x) {
-      var pixel = decoder.Decode(source[(startY + y) * stride + (startX + x)]);
+      var pixel = source[(startY + y) * stride + (startX + x)];
       var (c1, c2, c3, _) = pixel.ToNormalized();
       sumC1 += c1.ToFloat();
       sumC2 += c2.ToFloat();
@@ -239,7 +229,7 @@ public readonly struct SmartDitherer : IDitherer {
     // Second pass: calculate variance and edges
     for (var y = 0; y < blockHeight; ++y)
     for (var x = 0; x < blockWidth; ++x) {
-      var pixel = decoder.Decode(source[(startY + y) * stride + (startX + x)]);
+      var pixel = source[(startY + y) * stride + (startX + x)];
       var (c1, c2, c3, _) = pixel.ToNormalized();
 
       var diffC1 = c1.ToFloat() - avgC1;
@@ -248,7 +238,7 @@ public readonly struct SmartDitherer : IDitherer {
       colorVariance += diffC1 * diffC1 + diffC2 * diffC2 + diffC3 * diffC3;
 
       if (x > 0 && y > 0 && x < blockWidth - 1 && y < blockHeight - 1)
-        edgeStrength += _CalculateEdgeStrength<TWork, TPixel, TDecode>(source, stride, startX + x, startY + y, decoder);
+        edgeStrength += _CalculateEdgeStrength<TWork>(source, stride, startX + x, startY + y);
     }
 
     colorVariance = Math.Sqrt(colorVariance / pixelCount) * 255.0;
@@ -257,23 +247,20 @@ public readonly struct SmartDitherer : IDitherer {
     return _ClassifyRegion(edgeStrength, colorVariance, avgBrightness);
   }
 
-  private static unsafe double _CalculateEdgeStrength<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe double _CalculateEdgeStrength<TWork>(
+    TWork* source,
     int stride,
-    int x, int y,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int x, int y)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
-    var tl = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y - 1) * stride + (x - 1)]));
-    var tm = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y - 1) * stride + x]));
-    var tr = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y - 1) * stride + (x + 1)]));
-    var ml = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[y * stride + (x - 1)]));
-    var mr = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[y * stride + (x + 1)]));
-    var bl = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y + 1) * stride + (x - 1)]));
-    var bm = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y + 1) * stride + x]));
-    var br = _GetGrayscale<TWork, TPixel, TDecode>(decoder.Decode(source[(y + 1) * stride + (x + 1)]));
+    var tl = _GetGrayscale<TWork>(source[(y - 1) * stride + (x - 1)]);
+    var tm = _GetGrayscale<TWork>(source[(y - 1) * stride + x]);
+    var tr = _GetGrayscale<TWork>(source[(y - 1) * stride + (x + 1)]);
+    var ml = _GetGrayscale<TWork>(source[y * stride + (x - 1)]);
+    var mr = _GetGrayscale<TWork>(source[y * stride + (x + 1)]);
+    var bl = _GetGrayscale<TWork>(source[(y + 1) * stride + (x - 1)]);
+    var bm = _GetGrayscale<TWork>(source[(y + 1) * stride + x]);
+    var br = _GetGrayscale<TWork>(source[(y + 1) * stride + (x + 1)]);
 
     var gx = -tl + tr - 2 * ml + 2 * mr - bl + br;
     var gy = -tl - 2 * tm - tr + bl + 2 * bm + br;
@@ -281,7 +268,7 @@ public readonly struct SmartDitherer : IDitherer {
     return Math.Sqrt(gx * gx + gy * gy);
   }
 
-  private static float _GetGrayscale<TWork, TPixel, TDecode>(TWork pixel)
+  private static float _GetGrayscale<TWork>(TWork pixel)
     where TWork : unmanaged, IColorSpace4<TWork> {
     var (c1, c2, c3, _) = pixel.ToNormalized();
     return (c1.ToFloat() + c2.ToFloat() + c3.ToFloat()) / 3f;

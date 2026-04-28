@@ -18,7 +18,6 @@
 #endregion
 
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -78,22 +77,19 @@ public readonly struct LatinSquareDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>
-    => _Inner.Dither(source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette);
+    => _Inner.Dither(source, indices, width, height, sourceStride, targetStride, startY, metric, palette);
 
   // Latin square L[y, x] = (x + 3·y) mod 8. Since gcd(1, 8) = gcd(3, 8) = 1
   // every row and column is a permutation of 0..7. Expanding each cell by

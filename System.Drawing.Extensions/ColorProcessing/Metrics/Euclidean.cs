@@ -184,8 +184,21 @@ public readonly struct Euclidean4F<TKey> : IColorMetric<TKey>, INormalizedMetric
 /// <para>Omits the square root for faster comparisons when only relative distances matter.</para>
 /// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
 /// <para>Maximum raw distance: 4.0.</para>
+/// <para><b>Batch-distance opt-in (<see cref="IBatchDistance{TKey}"/>).</b>
+/// Mirrors the byte-domain <see cref="EuclideanSquared4B{TKey}"/> opt-in for
+/// the high-quality (LinearRgbaF / OklabaF) K-means and BisectingKMeans paths.
+/// The candidate buffer holds <c>sizeof(TKey)</c>-sized colour records back-to-
+/// back; the SIMD kernel reads each candidate as a <see cref="Vector128{Single}"/>
+/// (AoS), subtracts the broadcast reference, squares, and horizontal-adds to one
+/// scalar squared distance per candidate. The integer return value is the
+/// IEEE-754 bit pattern of the float — monotonic for non-negative finite floats,
+/// so the cross-call ordering invariant from <see cref="IBatchDistance{TKey}"/>
+/// is preserved without needing a separate float-distance API. Argmin over
+/// raw squared distance and over <c>sqrt(squared)</c> agree because sqrt is
+/// monotonic on [0, +∞), so this metric's nearest-index answer matches every
+/// scalar Euclidean-style consumer.</para>
 /// </remarks>
-public readonly struct EuclideanSquared4F<TKey> : IColorMetric<TKey>, INormalizedMetric
+public readonly struct EuclideanSquared4F<TKey> : IColorMetric<TKey>, INormalizedMetric, IBatchDistance<TKey>
   where TKey : unmanaged, IColorSpace4F<TKey> {
 
   private const float InverseMaxDistance = 0.25f; // 1/(4 × 1.0²)
@@ -205,6 +218,227 @@ public readonly struct EuclideanSquared4F<TKey> : IColorMetric<TKey>, INormalize
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public UNorm32 Distance(in TKey a, in TKey b)
     => UNorm32.FromFloatClamped(_Calculate(a, b) * InverseMaxDistance);
+
+  /// <summary>
+  /// Reinterprets the IEEE-754 bit pattern of a non-negative finite float as a
+  /// non-negative int. Monotonic on [0, +∞): if 0 ≤ a ≤ b then bits(a) ≤ bits(b),
+  /// so int comparison reproduces the float ordering. Used so the IBatchDistance
+  /// API's int-typed distance can carry a raw squared-float distance without a
+  /// separate float-flavoured interface.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _FloatBitsAsInt(float v) {
+#if SUPPORTS_BITCONVERTER_UINT_CONVERSION
+    return BitConverter.SingleToInt32Bits(v);
+#else
+    return Unsafe.As<float, int>(ref v);
+#endif
+  }
+
+  /// <summary>
+  /// Batch-distance implementation: scans a packed candidate buffer (each entry =
+  /// <c>sizeof(TKey)</c> bytes, layout-equivalent to a <typeparamref name="TKey"/>
+  /// value) and returns the smallest raw squared distance plus its index.
+  /// </summary>
+  /// <remarks>
+  /// <para><b>SSE path.</b> Each candidate is loaded directly as a
+  /// <see cref="Vector128{Single}"/> via an unaligned load; the reference is loaded
+  /// once per call and reused. <c>(ref - cand)</c>, <c>mul</c>, then a
+  /// horizontal-add of the four lanes yields one scalar squared distance per
+  /// candidate. The horizontal-add path uses two shuffle+adds on plain SSE so
+  /// every supported TFM with <c>System.Runtime.Intrinsics</c> takes the SIMD
+  /// branch; SSE3 would have a one-instruction <c>haddps</c> but is intentionally
+  /// not required.</para>
+  /// <para>Tie-break: first-occurrence on equal distance, matching the scalar
+  /// fallback contract.</para>
+  /// </remarks>
+  public int FindMinDistance(in TKey reference, ReadOnlySpan<byte> candidates, int count, out int minIndex) {
+    var bestIdx = 0;
+    var bestBits = int.MaxValue;
+
+    unsafe {
+      var elementSize = sizeof(TKey);
+      fixed (byte* pb = candidates) {
+        fixed (TKey* prefBase = &Unsafe.AsRef(in reference)) {
+#if SUPPORTS_INTRINSICS
+          if (Sse.IsSupported) {
+            var refVec = Sse.LoadVector128((float*)prefBase);
+            for (var i = 0; i < count; ++i) {
+              var candVec = Sse.LoadVector128((float*)(pb + i * elementSize));
+              var diff = Sse.Subtract(refVec, candVec);
+              var sq = Sse.Multiply(diff, diff);
+              // Horizontal-add of 4 lanes: shuffle high pair to low, add → low
+              // 2 lanes contain (a+c, b+d); shuffle lane1 to lane0, add → lane0
+              // contains (a+c+b+d). Avoiding SSE3 keeps the kernel on plain SSE.
+              var shuf1 = Sse.Shuffle(sq, sq, 0b_00_00_11_10); // [c, d, _, _]
+              var pair = Sse.Add(sq, shuf1);                    // lane0: a+c, lane1: b+d
+              var shuf2 = Sse.Shuffle(pair, pair, 0b_00_00_00_01); // lane0: b+d
+              var sum = Sse.AddScalar(pair, shuf2);             // lane0: a+b+c+d
+              var d = sum.GetElement(0);
+              var dBits = _FloatBitsAsInt(d);
+              if (dBits < bestBits) {
+                bestBits = dBits;
+                bestIdx = i;
+                if (dBits == 0) {
+                  minIndex = bestIdx;
+                  return 0;
+                }
+              }
+            }
+            minIndex = bestIdx;
+            return bestBits == int.MaxValue ? 0 : bestBits;
+          }
+#endif
+
+          // Scalar fallback. Identical sum order to the SIMD kernel modulo IEEE
+          // associativity — the kernel does (a+c)+(b+d) lane-pair-then-cross,
+          // while the scalar loop does ((a+b)+c)+d. Squared-distance values are
+          // non-negative so both orders are well-conditioned, and only argmin
+          // (an inequality) escapes this method, so any ±1 ULP wobble is
+          // absorbed by the consumer's "is dist strictly less" comparison.
+          var refLocal = *prefBase;
+          for (var i = 0; i < count; ++i) {
+            var c = *(TKey*)(pb + i * elementSize);
+            var d = _Calculate(refLocal, c);
+            var dBits = _FloatBitsAsInt(d);
+            if (dBits < bestBits) {
+              bestBits = dBits;
+              bestIdx = i;
+              if (dBits == 0)
+                break;
+            }
+          }
+        }
+      }
+    }
+
+    minIndex = bestIdx;
+    return bestBits == int.MaxValue ? 0 : bestBits;
+  }
+
+  /// <summary>
+  /// Batch nearest-of-N for multiple reference colours. The candidate buffer is
+  /// reused across all references (palette-pattern: every reference scans the
+  /// same N candidates), so the inner candidate loop walks the buffer once per
+  /// reference and the SIMD per-reference kernel pays the load cost once.
+  /// </summary>
+  /// <remarks>
+  /// <para><b>SSE path.</b> 4 references at a time × 4 candidates at a time. Each
+  /// inner iteration loads 4 candidate vectors and computes 4 squared distances
+  /// per reference (<c>diff·diff</c> + horizontal-add per pair), updating per-
+  /// reference best-distance and best-index in scalar registers so the first-
+  /// occurrence tie-break stays bit-exact with <see cref="FindMinDistance"/>.</para>
+  /// <para>The unaligned-load pattern (<c>Sse.LoadVector128</c>) means the buffer
+  /// only needs to be naturally aligned to <c>sizeof(float) = 4</c>, which a
+  /// managed <c>byte[]</c> satisfies trivially.</para>
+  /// </remarks>
+  public void FindMinDistanceBatch(
+    ReadOnlySpan<TKey> references,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    Span<int> outIndices) {
+
+    var refCount = references.Length;
+    if (refCount <= 0 || candidateCount <= 0)
+      return;
+
+    unsafe {
+      var elementSize = sizeof(TKey);
+#if SUPPORTS_INTRINSICS
+      if (Sse.IsSupported && refCount >= 4 && candidateCount >= 4) {
+        var refTail = refCount & ~3;
+        fixed (byte* pb = candidates) {
+          fixed (TKey* prefs = &Unsafe.AsRef(in references[0])) {
+            for (var r = 0; r < refTail; r += 4) {
+              var v0 = Sse.LoadVector128((float*)(prefs + r + 0));
+              var v1 = Sse.LoadVector128((float*)(prefs + r + 1));
+              var v2 = Sse.LoadVector128((float*)(prefs + r + 2));
+              var v3 = Sse.LoadVector128((float*)(prefs + r + 3));
+
+              var b0 = int.MaxValue;
+              var b1 = int.MaxValue;
+              var b2 = int.MaxValue;
+              var b3 = int.MaxValue;
+              var i0 = 0;
+              var i1 = 0;
+              var i2 = 0;
+              var i3 = 0;
+
+              for (var c = 0; c < candidateCount; ++c) {
+                var cv = Sse.LoadVector128((float*)(pb + c * elementSize));
+
+                var d0 = _SquaredDistance(v0, cv);
+                var d1 = _SquaredDistance(v1, cv);
+                var d2 = _SquaredDistance(v2, cv);
+                var d3 = _SquaredDistance(v3, cv);
+
+                var k0 = _FloatBitsAsInt(d0);
+                var k1 = _FloatBitsAsInt(d1);
+                var k2 = _FloatBitsAsInt(d2);
+                var k3 = _FloatBitsAsInt(d3);
+
+                if (k0 < b0) { b0 = k0; i0 = c; }
+                if (k1 < b1) { b1 = k1; i1 = c; }
+                if (k2 < b2) { b2 = k2; i2 = c; }
+                if (k3 < b3) { b3 = k3; i3 = c; }
+              }
+
+              outIndices[r + 0] = i0;
+              outIndices[r + 1] = i1;
+              outIndices[r + 2] = i2;
+              outIndices[r + 3] = i3;
+            }
+          }
+        }
+
+        // Tail references (<4): fall through to scalar per-reference path below.
+        for (var r = refTail; r < refCount; ++r) {
+          this.FindMinDistance(references[r], candidates, candidateCount, out var idx);
+          outIndices[r] = idx;
+        }
+        return;
+      }
+#endif
+
+      // Scalar path: per-reference forwarding.
+      for (var r = 0; r < refCount; ++r) {
+        this.FindMinDistance(references[r], candidates, candidateCount, out var idx);
+        outIndices[r] = idx;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Top-k closest-candidates scan. Forwards to the generic scalar fallback —
+  /// the SIMD kernel above is single-min-only; FindNClosest's ditherer consumers
+  /// (NClosest / Barycentric / NaturalNeighbour) have per-pixel cost dominated
+  /// by other work so the scalar partial-selection is the right shape.
+  /// </summary>
+  public int FindNClosest(
+    in TKey reference,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    int k,
+    Span<int> outIndices, Span<int> outDistances)
+    => BatchDistanceDefaults.FindNClosestScalar<TKey, EuclideanSquared4F<TKey>>(
+      in this, reference, candidates, candidateCount, k, outIndices, outDistances);
+
+#if SUPPORTS_INTRINSICS
+  /// <summary>
+  /// Computes the scalar squared distance between a reference vector and a
+  /// candidate vector, both packed AoS (4 floats: c1, c2, c3, a). The SIMD kernel
+  /// reuses this helper so every distance flows through the same horizontal-add
+  /// shape.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float _SquaredDistance(Vector128<float> reference, Vector128<float> candidate) {
+    var diff = Sse.Subtract(reference, candidate);
+    var sq = Sse.Multiply(diff, diff);
+    var shuf1 = Sse.Shuffle(sq, sq, 0b_00_00_11_10);
+    var pair = Sse.Add(sq, shuf1);
+    var shuf2 = Sse.Shuffle(pair, pair, 0b_00_00_00_01);
+    var sum = Sse.AddScalar(pair, shuf2);
+    return sum.GetElement(0);
+  }
+#endif
 }
 
 #endregion
@@ -415,6 +649,192 @@ public readonly struct EuclideanSquared4B<TKey> : IColorMetric<TKey>, INormalize
     minIndex = bestIdx;
     return (int)bestDist;
   }
+
+  /// <summary>
+  /// Batch nearest-of-N for <em>multiple</em> reference colours against the same
+  /// packed candidate buffer. Each entry of <paramref name="references"/> picks one
+  /// candidate index that ends up in <paramref name="outIndices"/> at the same offset.
+  /// </summary>
+  /// <remarks>
+  /// <para><b>SSE2 path.</b> Processes 4 references at a time. For each batch of
+  /// 4 references we walk the candidate buffer in a single pass: each iteration
+  /// loads 4 candidates and computes a 4-by-4 distance grid (4 reference lanes ×
+  /// 4 candidate lanes). The two PMADDWD multiplications already produce 4 squared
+  /// pair-sums per byte-vector, and after a horizontal-add we have 4 candidate
+  /// distances per reference. We track per-reference best-index/best-distance in
+  /// scalar registers so the tie-break stays first-occurrence-on-equal.</para>
+  /// <para>The implementation reuses the per-reference path (<see cref="FindMinDistance"/>)
+  /// for the &lt;4 leftover and for the unsupported runtime case, so behaviour stays
+  /// identical to the scalar fallback. For the common consumer pattern (M references,
+  /// each scanning the same N candidates) the cross-product fan-out is a simple
+  /// outer loop over candidates and an inner SSE2 reference-batch.</para>
+  /// </remarks>
+  public void FindMinDistanceBatch(
+    ReadOnlySpan<TKey> references,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    Span<int> outIndices) {
+
+    var refCount = references.Length;
+    if (refCount <= 0 || candidateCount <= 0)
+      return;
+
+#if SUPPORTS_INTRINSICS
+    if (Sse2.IsSupported && candidateCount >= 4 && refCount >= 4) {
+      // Process 4 references at a time. The inner candidate loop walks the buffer
+      // once per reference-batch; the candidate vector is reused across all 4
+      // reference lanes to amortise the load.
+      var refTail = refCount & ~3;
+      unsafe {
+        fixed (byte* pb = candidates) {
+          for (var r = 0; r < refTail; r += 4) {
+            // Broadcast each of the 4 references to its own 16-byte vector.
+            var rk0 = references[r + 0];
+            var rk1 = references[r + 1];
+            var rk2 = references[r + 2];
+            var rk3 = references[r + 3];
+            var t0u = Unsafe.As<TKey, uint>(ref rk0);
+            var t1u = Unsafe.As<TKey, uint>(ref rk1);
+            var t2u = Unsafe.As<TKey, uint>(ref rk2);
+            var t3u = Unsafe.As<TKey, uint>(ref rk3);
+
+            var v0 = Vector128.Create(t0u).AsByte();
+            var v1 = Vector128.Create(t1u).AsByte();
+            var v2 = Vector128.Create(t2u).AsByte();
+            var v3 = Vector128.Create(t3u).AsByte();
+
+            var b0 = uint.MaxValue;
+            var b1 = uint.MaxValue;
+            var b2 = uint.MaxValue;
+            var b3 = uint.MaxValue;
+            var i0 = 0;
+            var i1 = 0;
+            var i2 = 0;
+            var i3 = 0;
+
+            var candTail = candidateCount & ~3;
+            for (var c = 0; c < candTail; c += 4) {
+              var c0 = *(uint*)(pb + (c + 0) * 4);
+              var c1 = *(uint*)(pb + (c + 1) * 4);
+              var c2 = *(uint*)(pb + (c + 2) * 4);
+              var c3 = *(uint*)(pb + (c + 3) * 4);
+
+              var cand = Vector128.Create(c0, c1, c2, c3).AsByte();
+
+              // 4 distances per reference = 4 horizontal-adds; we compute them
+              // four times (once per reference) but the candidate vector is hot
+              // in registers so this is cheap.
+              var d0 = _DistancesAgainstCandidates4(v0, cand);
+              var d1 = _DistancesAgainstCandidates4(v1, cand);
+              var d2 = _DistancesAgainstCandidates4(v2, cand);
+              var d3 = _DistancesAgainstCandidates4(v3, cand);
+
+              _UpdateBest4(d0, c, ref b0, ref i0);
+              _UpdateBest4(d1, c, ref b1, ref i1);
+              _UpdateBest4(d2, c, ref b2, ref i2);
+              _UpdateBest4(d3, c, ref b3, ref i3);
+            }
+
+            // Scalar tail across the last 0-3 candidates for each reference.
+            for (var c = candTail; c < candidateCount; ++c) {
+              var cU32 = *(uint*)(pb + c * 4);
+              var d0 = _ScalarSquaredDist(t0u, cU32);
+              var d1 = _ScalarSquaredDist(t1u, cU32);
+              var d2 = _ScalarSquaredDist(t2u, cU32);
+              var d3 = _ScalarSquaredDist(t3u, cU32);
+              if (d0 < b0) { b0 = d0; i0 = c; }
+              if (d1 < b1) { b1 = d1; i1 = c; }
+              if (d2 < b2) { b2 = d2; i2 = c; }
+              if (d3 < b3) { b3 = d3; i3 = c; }
+            }
+
+            outIndices[r + 0] = i0;
+            outIndices[r + 1] = i1;
+            outIndices[r + 2] = i2;
+            outIndices[r + 3] = i3;
+          }
+        }
+      }
+
+      // Tail references (<4): fall through to the scalar per-reference path below.
+      for (var r = refTail; r < refCount; ++r) {
+        this.FindMinDistance(references[r], candidates, candidateCount, out var idx);
+        outIndices[r] = idx;
+      }
+      return;
+    }
+#endif
+
+    // Scalar path: forward to the per-reference helper.
+    for (var r = 0; r < refCount; ++r) {
+      this.FindMinDistance(references[r], candidates, candidateCount, out var idx);
+      outIndices[r] = idx;
+    }
+  }
+
+  /// <summary>
+  /// SIMD-backed top-k closest-candidates scan with first-occurrence tie-break. Forwards
+  /// to the generic scalar fallback because the SIMD top-k machinery is more involved
+  /// than its callers (NClosest / Barycentric / NaturalNeighbour ditherers) need — the
+  /// per-pixel cost dominates anyway and the scalar path is correct.
+  /// </summary>
+  public int FindNClosest(
+    in TKey reference,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    int k,
+    Span<int> outIndices, Span<int> outDistances)
+    => BatchDistanceDefaults.FindNClosestScalar<TKey, EuclideanSquared4B<TKey>>(
+      in this, reference, candidates, candidateCount, k, outIndices, outDistances);
+
+#if SUPPORTS_INTRINSICS
+  /// <summary>
+  /// Computes 4 squared distances [d(t,c0), d(t,c1), d(t,c2), d(t,c3)] given the
+  /// broadcast-target vector and a 16-byte candidate vector packed C0|C1|C2|C3.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Vector128<int> _DistancesAgainstCandidates4(Vector128<byte> target, Vector128<byte> cand) {
+    var diff = Sse2.Or(Sse2.SubtractSaturate(target, cand), Sse2.SubtractSaturate(cand, target));
+    var zero = Vector128<byte>.Zero;
+    var diffLo16 = Sse2.UnpackLow(diff, zero).AsInt16();
+    var diffHi16 = Sse2.UnpackHigh(diff, zero).AsInt16();
+    var pair0 = Sse2.MultiplyAddAdjacent(diffLo16, diffLo16);
+    var pair1 = Sse2.MultiplyAddAdjacent(diffHi16, diffHi16);
+
+    if (Ssse3.IsSupported) {
+      return Ssse3.HorizontalAdd(pair0, pair1);
+    }
+
+    var lo = Sse2.UnpackLow(pair0.AsInt64(), pair1.AsInt64()).AsInt32();
+    var hi = Sse2.UnpackHigh(pair0.AsInt64(), pair1.AsInt64()).AsInt32();
+    var evens = Sse2.Shuffle(lo, 0b_10_00_10_00);
+    var odds = Sse2.Shuffle(lo, 0b_11_01_11_01);
+    var loSum = Sse2.Add(evens, odds);
+    var evens2 = Sse2.Shuffle(hi, 0b_10_00_10_00);
+    var odds2 = Sse2.Shuffle(hi, 0b_11_01_11_01);
+    var hiSum = Sse2.Add(evens2, odds2);
+    return Sse2.UnpackLow(loSum, hiSum);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void _UpdateBest4(Vector128<int> sums, int baseC, ref uint best, ref int bestIdx) {
+    var d0 = (uint)sums.GetElement(0);
+    var d1 = (uint)sums.GetElement(1);
+    var d2 = (uint)sums.GetElement(2);
+    var d3 = (uint)sums.GetElement(3);
+    if (d0 < best) { best = d0; bestIdx = baseC + 0; }
+    if (d1 < best) { best = d1; bestIdx = baseC + 1; }
+    if (d2 < best) { best = d2; bestIdx = baseC + 2; }
+    if (d3 < best) { best = d3; bestIdx = baseC + 3; }
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static uint _ScalarSquaredDist(uint t, uint c) {
+    var dR = (int)(t & 0xFF) - (int)(c & 0xFF);
+    var dG = (int)((t >> 8) & 0xFF) - (int)((c >> 8) & 0xFF);
+    var dB = (int)((t >> 16) & 0xFF) - (int)((c >> 16) & 0xFF);
+    var dA = (int)((t >> 24) & 0xFF) - (int)((c >> 24) & 0xFF);
+    return (uint)(dR * dR + dG * dG + dB * dB + dA * dA);
+  }
+#endif
 }
 
 #endregion

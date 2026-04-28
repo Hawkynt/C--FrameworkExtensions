@@ -17,7 +17,9 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
+using Guard;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Codecs;
@@ -28,11 +30,20 @@ namespace Hawkynt.ColorProcessing.Codecs;
 /// <remarks>
 /// Used in fast-path scaling where no color space conversion is needed.
 /// </remarks>
-public readonly struct IdentityDecode<TPixel> : IDecode<TPixel, TPixel> where TPixel: unmanaged, IStorageSpace {
+public readonly struct IdentityDecode<TPixel> : IDecode<TPixel, TPixel>, IBatchDecode<TPixel, TPixel>
+  where TPixel : unmanaged, IStorageSpace {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public TPixel Decode(in TPixel pixel) => pixel;
+
+  /// <inheritdoc />
+  /// <remarks>Span-to-span memory copy; bit-exact with the per-pixel identity by construction.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void DecodeBatch(ReadOnlySpan<TPixel> source, Span<TPixel> destination) {
+    Against.CountBelow(destination.Length, source.Length);
+    source.CopyTo(destination);
+  }
 }
 
 /// <summary>

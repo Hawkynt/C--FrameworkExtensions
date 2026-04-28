@@ -19,8 +19,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -69,55 +72,128 @@ public readonly struct InterleavedGradientNoiseDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var intensity = this._intensity;
     var endY = startY + height;
+#if SUPPORTS_INTRINSICS
+    // float-domain SIMD across 4 pixels of B/G/R add+clamp; scalar quantize.
+    // Eligibility check is loop-invariant — hoisted out of the y-loop so the JIT sees
+    // two distinct hot loops, and so legacy TFMs (net35/40/45/48) don't pay a per-row
+    // Sse2.IsSupported field load.
+    var simdEligible = Sse2.IsSupported && typeof(TWork) == typeof(Bgra8888) && width >= 4;
+    if (simdEligible) {
+      var simdEnd = width & ~3;
+      var bChannels = stackalloc float[4];
+      var gChannels = stackalloc float[4];
+      var rChannels = stackalloc float[4];
+      var alphaBytes = stackalloc byte[4];
+      var thresholds4 = stackalloc float[4];
 
-    for (var y = startY; y < endY; ++y) {
-      for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-        // Decode source pixel
-        var pixel = decoder.Decode(source[sourceIdx]);
-        var (c1, c2, c3, alpha) = pixel.ToNormalized();
-        var pixelC1 = c1.ToFloat();
-        var pixelC2 = c2.ToFloat();
-        var pixelC3 = c3.ToFloat();
-        var pixelA = alpha.ToFloat();
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var x = 0;
+        var targetIdx = y * targetStride;
 
-        // Compute IGN value (-1 to 1) and scale by intensity
-        var noiseValue = (float)_ComputeIGN(x, y);
-        var threshold = noiseValue * intensity;
+        var srcBase = (byte*)rowSource;
+        for (; x < simdEnd; x += 4) {
+          ThresholdDithererSimd.DecodeBgra4Pixels(srcBase + x * 4, bChannels, gChannels, rChannels, alphaBytes);
 
-        // Apply noise to each channel
-        var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + threshold));
-        var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + threshold));
-        var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + threshold));
+          // Compute 4 per-pixel IGN thresholds (double-precision frac, scalar).
+          for (var lane = 0; lane < 4; ++lane) {
+            var noiseValue = (float)_ComputeIGN(x + lane, y);
+            thresholds4[lane] = noiseValue * intensity;
+          }
 
-        // Create adjusted color
-        var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-          UNorm32.FromFloatClamped(adjustedC1),
-          UNorm32.FromFloatClamped(adjustedC2),
-          UNorm32.FromFloatClamped(adjustedC3),
-          UNorm32.FromFloatClamped(pixelA)
-        );
+          ThresholdDithererSimd.AddThresholdAndClamp_4Pixels(bChannels, gChannels, rChannels, thresholds4);
 
-        // Find nearest palette color
-        indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+          for (var lane = 0; lane < 4; ++lane) {
+            // Bgra8888 component convention: (C1, C2, C3, A) = (R, G, B, A).
+            var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+              UNorm32.FromFloatClamped(rChannels[lane]),
+              UNorm32.FromFloatClamped(gChannels[lane]),
+              UNorm32.FromFloatClamped(bChannels[lane]),
+              UNorm32.FromByte(alphaBytes[lane])
+            );
+            indices[targetIdx + x + lane] = (byte)lookup.FindNearest(adjustedColor);
+          }
+        }
+        targetIdx += x;
+
+        // Tail: width-mod-4 leftover lanes.
+        for (; x < width; ++x, ++targetIdx) {
+          var pixel = rowSource[x];
+          var (c1, c2, c3, alpha) = pixel.ToNormalized();
+          var pixelC1 = c1.ToFloat();
+          var pixelC2 = c2.ToFloat();
+          var pixelC3 = c3.ToFloat();
+          var pixelA = alpha.ToFloat();
+
+          var noiseValue = (float)_ComputeIGN(x, y);
+          var threshold = noiseValue * intensity;
+
+          var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + threshold));
+          var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + threshold));
+          var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + threshold));
+
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(adjustedC1),
+            UNorm32.FromFloatClamped(adjustedC2),
+            UNorm32.FromFloatClamped(adjustedC3),
+            UNorm32.FromFloatClamped(pixelA)
+          );
+
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
+      }
+    } else
+#endif
+    {
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var targetIdx = y * targetStride;
+
+        for (var x = 0; x < width; ++x, ++targetIdx) {
+          // Read pre-decoded source pixel from the working buffer.
+          var pixel = rowSource[x];
+          var (c1, c2, c3, alpha) = pixel.ToNormalized();
+          var pixelC1 = c1.ToFloat();
+          var pixelC2 = c2.ToFloat();
+          var pixelC3 = c3.ToFloat();
+          var pixelA = alpha.ToFloat();
+
+          // Compute IGN value (-1 to 1) and scale by intensity
+          var noiseValue = (float)_ComputeIGN(x, y);
+          var threshold = noiseValue * intensity;
+
+          // Apply noise to each channel
+          var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + threshold));
+          var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + threshold));
+          var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + threshold));
+
+          // Create adjusted color
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(adjustedC1),
+            UNorm32.FromFloatClamped(adjustedC2),
+            UNorm32.FromFloatClamped(adjustedC3),
+            UNorm32.FromFloatClamped(pixelA)
+          );
+
+          // Find nearest palette color
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
       }
     }
   }

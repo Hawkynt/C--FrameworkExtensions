@@ -73,7 +73,9 @@ public readonly struct CIEDE2000Squared : IColorMetric<LabF>, INormalizedMetric 
     var c1 = Math.Sqrt(a1 * a1 + b1 * b1);
     var c2 = Math.Sqrt(a2 * a2 + b2 * b2);
     var cMean = (c1 + c2) * 0.5;
-    var cMean7 = Math.Pow(cMean, 7);
+    // x^7 inlined: (x^2)^3 * x — 4 muls vs Math.Pow's transcendental call.
+    var cMeanSq = cMean * cMean;
+    var cMean7 = cMeanSq * cMeanSq * cMeanSq * cMean;
     var g = 0.5 * (1.0 - Math.Sqrt(cMean7 / (cMean7 + Pow25_7)));
 
     var a1Prime = a1 * (1.0 + g);
@@ -125,8 +127,10 @@ public readonly struct CIEDE2000Squared : IColorMetric<LabF>, INormalizedMetric 
     var sC = 1.0 + 0.045 * cMeanPrime;
     var sH = 1.0 + 0.015 * cMeanPrime * t;
 
-    var deltaTheta = 30.0 * Math.Exp(-Math.Pow((hMeanPrime - 275.0) / 25.0, 2));
-    var cMeanPrime7 = Math.Pow(cMeanPrime, 7);
+    var hMeanShifted = (hMeanPrime - 275.0) / 25.0;
+    var deltaTheta = 30.0 * Math.Exp(-(hMeanShifted * hMeanShifted));
+    var cMeanPrimeSq = cMeanPrime * cMeanPrime;
+    var cMeanPrime7 = cMeanPrimeSq * cMeanPrimeSq * cMeanPrimeSq * cMeanPrime;
     var rC = 2.0 * Math.Sqrt(cMeanPrime7 / (cMeanPrime7 + Pow25_7));
     var rT = -rC * Math.Sin(_DegreesToRadians(2.0 * deltaTheta));
 

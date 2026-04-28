@@ -373,11 +373,22 @@ public static class ScalerPipeline {
     var totalPixels = (long)destWidth * destHeight;
     var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
 
+    // Size the GetUnchecked decode cache: 2*radius covers a single output pixel's vertical
+    // sample window; +2 leaves headroom for sequential destination rows so adjacent srcY's
+    // never collide on the same modulo slot. The kernel pays the sRGB EOTF + projection at
+    // most once per (source-y, x), then every subsequent tap hits the cache. Disable the cache
+    // at 1:1 same-size: the no-cache path's straight-line decode + AddMul is already JIT-vectorised
+    // and the 256 KB pinned ring just dirties L1 with no resize work to amortise it over.
+    // High-radius kernels (Lanczos3+) keep the cache even at 1:1 because row-share amortisation
+    // across many taps outweighs the saving from skipping the cache's mask+L1-load overhead.
+    var cacheRows = (destWidth == sourceWidth && destHeight == sourceHeight && kernel.Radius <= 2) ? 0 : (2 * kernel.Radius + 2);
+
     // Fall back to sequential if image is too small for parallel overhead
     if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
       using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
         sourcePtr, sourceWidth, sourceHeight, sourceStride,
-        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0,
+        decodeCacheRowCount: cacheRows);
 
       for (var destY = 0; destY < destHeight; ++destY)
       for (var destX = 0; destX < destWidth; ++destX)
@@ -398,7 +409,8 @@ public static class ScalerPipeline {
 
         using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
           sourcePtr, sourceWidth, sourceHeight, sourceStride,
-          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0,
+          decodeCacheRowCount: cacheRows);
 
         for (var destY = startRow; destY < endRow; ++destY)
         for (var destX = 0; destX < destWidth; ++destX)
@@ -456,10 +468,21 @@ public static class ScalerPipeline {
     var totalPixels = (long)destWidth * destHeight;
     var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
 
+    // Size the GetUnchecked decode cache: 2*radius covers a single output pixel's vertical
+    // sample window; +2 leaves headroom for sequential destination rows so adjacent srcY's
+    // never collide on the same modulo slot. The safe-interior fast path of the kernel calls
+    // GetUnchecked once per tap — the cache amortises the sRGB EOTF + projection across all
+    // (radius²) taps that share a source row. Disable at 1:1 same-size where the cache pays
+    // its allocation/L1 cost without recouping any taps (see ExecuteResampleParallel).
+    // High-radius kernels (Lanczos3+) keep the cache even at 1:1 because row-share amortisation
+    // across many taps outweighs the saving from skipping the cache's mask+L1-load overhead.
+    var cacheRows = (destWidth == sourceWidth && destHeight == sourceHeight && kernel.Radius <= 2) ? 0 : (2 * kernel.Radius + 2);
+
     if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
       using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
         sourcePtr, sourceWidth, sourceHeight, sourceStride,
-        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+        decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0,
+        decodeCacheRowCount: cacheRows);
 
       _ResampleRangeSafeSplit(
         ref kernel, frame, destPtr, destStride, in encoder,
@@ -477,13 +500,15 @@ public static class ScalerPipeline {
     var safeTopCapture = safeTop;
     var safeRightCapture = safeRight;
     var safeBottomCapture = safeBottom;
+    var decodeCacheRowsCapture = cacheRows;
 
     Parallel.ForEach(
       partitioner,
       range => {
         using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
           sourcePtr, sourceWidth, sourceHeight, sourceStride,
-          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0);
+          decoder, projector, horizontalMode, verticalMode, canvasPixel, startY: 0,
+          decodeCacheRowCount: decodeCacheRowsCapture);
 
         var k = kernelCopy;
         _ResampleRangeSafeSplit(
@@ -596,6 +621,14 @@ public static class ScalerPipeline {
     var totalPixels = (long)destWidth * destHeight;
     var minRowsForParallel = Math.Max(100, Environment.ProcessorCount * 5);
 
+    // See ExecuteResampleParallel for the cache sizing rationale; edge-aware kernels also
+    // call GetUnchecked through their similarity-graph traversal and benefit from the same
+    // amortisation across taps that share a source row. Disabled at 1:1 same-size for the
+    // same reasons as the plain dispatcher.
+    // High-radius kernels (Lanczos3+) keep the cache even at 1:1 because row-share amortisation
+    // across many taps outweighs the saving from skipping the cache's mask+L1-load overhead.
+    var cacheRows = (destWidth == sourceWidth && destHeight == sourceHeight && kernel.Radius <= 2) ? 0 : (2 * kernel.Radius + 2);
+
     // Fall back to sequential if image is too small for parallel overhead
     if (totalPixels <= 1_000_000 || destHeight < minRowsForParallel) {
       using var frame = new NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>(
@@ -607,7 +640,8 @@ public static class ScalerPipeline {
         projector,
         horizontalMode,
         verticalMode,
-        startY: 0
+        startY: 0,
+        decodeCacheRowCount: cacheRows
       );
 
       for (var destY = 0; destY < destHeight; ++destY)
@@ -636,7 +670,8 @@ public static class ScalerPipeline {
           projector,
           horizontalMode,
           verticalMode,
-          startY: 0
+          startY: 0,
+          decodeCacheRowCount: cacheRows
         );
 
         for (var destY = startRow; destY < endRow; ++destY)

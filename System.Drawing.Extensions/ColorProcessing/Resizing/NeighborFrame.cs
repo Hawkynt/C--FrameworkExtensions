@@ -74,6 +74,21 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   private int _currentY;
   private bool _disposed;
 
+  // ===== Decode cache (used only by GetUnchecked) =========================================
+  // A separate ring of pre-decoded source rows, sized at construction by the consumer
+  // (the resample pipeline passes the next power-of-two of 2*radius+2). On each GetUnchecked
+  // call we hash the source y to a ring slot via bitmask; on hit we return the cached pixel
+  // directly, avoiding the repeated sRGB→linear EOTF (and the projection that's dead for
+  // resampler kernels) that dominates Lanczos/Bicubic/Mitchell inner loops. Power-of-two
+  // sizing turns the slot computation into AND instead of a (much slower) integer modulo.
+  // Cache disabled when _decodeCacheRowCount == 0 (back to per-call decode + project).
+  private readonly NeighborPixel<TWork, TKey>[]? _decodeCache;
+  private readonly GCHandle _decodeCacheHandle;
+  private readonly NeighborPixel<TWork, TKey>* _decodeCachePtr;
+  private readonly int[]? _decodeCacheRows; // slot -> cached source y, or int.MinValue if empty
+  private readonly int _decodeCacheRowCount;
+  private readonly int _decodeCacheRowMask; // (rowCount - 1) when rowCount is a power of two
+
   /// <summary>
   /// Gets the width of the source frame.
   /// </summary>
@@ -121,10 +136,98 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// <c>0 &lt;= x &lt; Width</c> and <c>0 &lt;= y &lt; Height</c>; use <see cref="IsWindowSafe"/>
   /// to gate calls. Aggressively inlined so kernel inner loops compile to straight-line loads.
   /// </summary>
+  /// <remarks>
+  /// When the optional decode cache is enabled (resample pipeline passes
+  /// <c>decodeCacheRowCount &gt; 0</c>), this method serves the pixel from a ring of pre-decoded
+  /// source rows instead of re-running the sRGB EOTF + projection on every tap. For Lanczos3
+  /// (49 taps) and Bicubic/Mitchell (16 taps) per output pixel this turns the inner loop from
+  /// decode-bound to arithmetic-bound. Cache misses populate the slot from source — bit-identical
+  /// to the no-cache path because the same <see cref="_DecodeAndProject"/> is used.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public NeighborPixel<TWork, TKey> GetUnchecked(int x, int y) {
+    // Fast path: decode cache enabled. Bitmask-mapped ring (rowCount is always a power of two);
+    // the pipeline sizes the ring so all taps for a single destination pixel hit unique slots,
+    // and sequential destination rows naturally evict the oldest cached source row via FIFO.
+    var mask = this._decodeCacheRowMask;
+    if (mask > 0) {
+      var slot = y & mask;
+
+      // _decodeCacheRows is allocated whenever _decodeCacheRowCount > 0 (see ctor); the null
+      // suppression is purely to satisfy the analyser on TFMs that enable nullable reference types.
+      var rows = this._decodeCacheRows!;
+      if (rows[slot] != y)
+        this._FillDecodeCacheRow(slot, y);
+
+      return this._decodeCachePtr[slot * this._sourceWidth + x];
+    }
+
+    // Slow path: cache disabled (used by tests / non-resample callers, and the 1:1 same-size
+    // resample path that the pipeline gates the cache off for). Re-decode per call but skip the
+    // dead projection — every resampler kernel reads only .Work off this result, and the bounds-
+    // checked indexer is the entry point used by callers that actually consume .Key. See the
+    // _DecodeOnly remarks for the bit-exactness argument.
     var pixel = this._sourcePtr[y * this._sourceStride + x];
-    return this._DecodeAndProject(pixel);
+    return this._DecodeOnly(pixel);
+  }
+
+  /// <summary>
+  /// Populates a single row of the decode cache from the source image. Off the hot path —
+  /// runs once per (slot, source-y) pair, then every subsequent <see cref="GetUnchecked"/> for
+  /// that y is a single load.
+  /// </summary>
+  /// <remarks>
+  /// Skips the <typeparamref name="TProject"/> projection that <see cref="_DecodeAndProject"/>
+  /// would otherwise compute. <see cref="GetUnchecked"/>'s contract is that callers only read
+  /// <see cref="NeighborPixel{TWork,TKey}.Work"/> (verified across the resampler suite — no
+  /// kernel reads <c>.Key</c> off a <c>GetUnchecked</c> result), so the cube-root-heavy
+  /// <c>LinearRgbaFToOklabF</c> path is dead work for resamplers. The cached <c>.Work</c> is
+  /// bit-identical to <see cref="_DecodeAndProject"/> by construction (same <c>_decoder</c>,
+  /// same input bytes); <c>.Key</c> is left at <c>default</c> and never observed.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.NoInlining)]
+  private void _FillDecodeCacheRow(int slot, int y) {
+    var srcRow = this._sourcePtr + y * this._sourceStride;
+    var dstRow = this._decodeCachePtr + slot * this._sourceWidth;
+    var width = this._sourceWidth;
+
+    // JIT-folded type test: Decode() is a no-op when TWork == TPixel (see _DecodeOnly).
+    if (typeof(TWork) == typeof(TPixel)) {
+      for (var x = 0; x < width; ++x) {
+        var pixel = srcRow[x];
+        dstRow[x] = new NeighborPixel<TWork, TKey>(Unsafe.As<TPixel, TWork>(ref pixel), default);
+      }
+    } else {
+      for (var x = 0; x < width; ++x)
+        dstRow[x] = new NeighborPixel<TWork, TKey>(this._decoder.Decode(in srcRow[x]), default);
+    }
+
+    // _decodeCacheRows is allocated whenever _decodeCacheRowCount > 0 (see ctor) — and this
+    // method is only ever reached from the cache-enabled branch in GetUnchecked.
+    this._decodeCacheRows![slot] = y;
+  }
+
+  /// <summary>
+  /// Decodes a pixel to work space without computing the key projection. Returned pixel has
+  /// <see cref="NeighborPixel{TWork,TKey}.Key"/> set to <c>default</c>; callers must guarantee
+  /// they never read it. Used by <see cref="GetUnchecked"/>'s no-cache fallback path so the
+  /// expensive <typeparamref name="TProject"/> step (e.g. <c>LinearRgbaFToOklabF</c>'s three
+  /// cube roots per pixel) is skipped — every resampler kernel only consumes <c>.Work</c>, the
+  /// projection is dead work for them. Bounds-checked random access via <c>this[x, y]</c> still
+  /// goes through <see cref="_DecodeAndProject"/> so quantizer / palette-lookup callers that do
+  /// read <c>.Key</c> remain correct.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private NeighborPixel<TWork, TKey> _DecodeOnly(TPixel pixel) {
+    TWork work;
+
+    // Fast path: TWork == TPixel (skip decode). JIT folds the type test at codegen time.
+    if (typeof(TWork) == typeof(TPixel))
+      work = Unsafe.As<TPixel, TWork>(ref pixel);
+    else
+      work = this._decoder.Decode(in pixel);
+
+    return new(work, default);
   }
 
   /// <summary>
@@ -164,6 +267,16 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
   /// <param name="verticalMode">How to handle vertical out-of-bounds access.</param>
   /// <param name="canvasPixel">Pixel used as the "canvas" fill when either axis is in <see cref="OutOfBoundsMode.FlatColor"/> mode and the sample falls outside the source image.</param>
   /// <param name="startY">The starting Y row (for parallel processing).</param>
+  /// <param name="decodeCacheRowCount">
+  /// When &gt; 0, allocates a ring of <paramref name="decodeCacheRowCount"/> pre-decoded source
+  /// rows that <see cref="GetUnchecked"/> consults instead of re-decoding from source. The resample
+  /// pipeline sizes this to <c>2 * kernelRadius + 2</c> so all taps of a single output pixel land
+  /// in distinct slots and sequential destination rows evict the oldest cached source row via FIFO
+  /// modulo addressing. Pass <c>0</c> (the default, also used for 1:1 same-size resamples where
+  /// the cache's pinned ring is pure overhead) to fall back to per-call decode — without the
+  /// projection, since <see cref="GetUnchecked"/>'s no-cache path runs the cheaper
+  /// <c>_DecodeOnly</c> rather than the cube-root-heavy <c>_DecodeAndProject</c>.
+  /// </param>
   public NeighborFrame(
     TPixel* sourcePtr,
     int width,
@@ -174,7 +287,8 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     OutOfBoundsMode horizontalMode = OutOfBoundsMode.ConstantExtension,
     OutOfBoundsMode verticalMode = OutOfBoundsMode.ConstantExtension,
     TPixel canvasPixel = default,
-    int startY = 0
+    int startY = 0,
+    int decodeCacheRowCount = 0
   ) {
     this._sourcePtr = sourcePtr;
     this._sourceWidth = width;
@@ -201,6 +315,26 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
 
     // Load initial 5 rows centered at startY
     this.SeekToRow(startY);
+
+    // Optionally allocate the GetUnchecked decode cache. Round the requested row count up to
+    // the next power of two so the per-call slot computation is a single AND. The pipeline
+    // requests 2*radius+2 (e.g. 6 for Bicubic/Mitchell, 8 for Lanczos3); we round to 8.
+    if (decodeCacheRowCount > 0) {
+      var pow2 = 1;
+      while (pow2 < decodeCacheRowCount)
+        pow2 <<= 1;
+
+      this._decodeCacheRowCount = pow2;
+      this._decodeCacheRowMask = pow2 - 1;
+      this._decodeCache = new NeighborPixel<TWork, TKey>[pow2 * width];
+      this._decodeCacheHandle = GCHandle.Alloc(this._decodeCache, GCHandleType.Pinned);
+      this._decodeCachePtr = (NeighborPixel<TWork, TKey>*)this._decodeCacheHandle.AddrOfPinnedObject();
+      this._decodeCacheRows = new int[pow2];
+      // Sentinel: int.MinValue means "no row cached" — guaranteed not to collide with any
+      // legitimate y because GetUnchecked is contractually called with 0 <= y < height.
+      for (var i = 0; i < pow2; ++i)
+        this._decodeCacheRows[i] = int.MinValue;
+    }
   }
 
   /// <summary>
@@ -707,5 +841,7 @@ public sealed unsafe class NeighborFrame<TPixel, TWork, TKey, TDecode, TProject>
     this._disposed = true;
     if (this._handle.IsAllocated)
       this._handle.Free();
+    if (this._decodeCacheHandle.IsAllocated)
+      this._decodeCacheHandle.Free();
   }
 }

@@ -112,26 +112,54 @@ internal static class QuantizationPipeline {
     var effectiveDitherer = isSimpleCase ? NoDithering.Instance : ditherer;
 
     // Step 4: Dither to indices
+    //
+    // The decode TPixel -> TWork is centralised here. Every ditherer receives a pre-decoded
+    // TWork* buffer (tight, sourceStride == width). This guarantees we pay the decode cost
+    // exactly once per source pixel regardless of how many palette-lookup attempts the
+    // ditherer performs internally.
     using (var srcLocker = new Argb8888BitmapLocker(source, ImageLockMode.ReadOnly)) {
       var srcFrame = srcLocker.AsFrame();
       var sourceStride = srcFrame.Stride;
 
-      fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels)
+      // Rent a tight TWork[width * height] buffer and decode the entire image into it
+      // in one shot. Probes for IBatchDecode<TPixel,TWork>; falls back to scalar otherwise.
+      using var work = WorkingBuffer<TWork>.Rent(checked(width * height));
+      var workArr = work.Array;
+
+      fixed (Bgra8888* srcPtr = srcFrame.ReadOnlyPixels) {
+        // Inline batch/scalar decode dispatch.
+        if (decoder is IBatchDecode<Bgra8888, TWork> batch) {
+          for (var y = 0; y < height; ++y) {
+            var rowSpan = new ReadOnlySpan<Bgra8888>(srcPtr + y * sourceStride, width);
+            batch.DecodeBatch(rowSpan, work.AsSpan(y * width, width));
+          }
+        } else {
+          var dec = decoder;
+          for (var y = 0; y < height; ++y) {
+            var srcRow = srcPtr + y * sourceStride;
+            var dstRowOffset = y * width;
+            for (var x = 0; x < width; ++x)
+              workArr[dstRowOffset + x] = dec.Decode(srcRow[x]);
+          }
+        }
+      }
+
+      fixed (TWork* workPtr = workArr)
       fixed (byte* indicesPtr = indices) {
         if (effectiveDitherer.RequiresSequentialProcessing) {
           // Sequential processing for error diffusion ditherers
-          effectiveDitherer.Dither(srcPtr, indicesPtr, width, height, sourceStride, width, 0, decoder, metric, finalPalette);
+          effectiveDitherer.Dither(workPtr, indicesPtr, width, height, width, width, 0, metric, finalPalette);
         } else {
-          // Parallel processing for ordered/noise ditherers using row partitioning
-          // Convert fixed pointers to IntPtr to allow capture in lambda
-          var srcPtrValue = (IntPtr)srcPtr;
+          // Parallel processing for ordered/noise ditherers using row partitioning.
+          // Convert fixed pointers to IntPtr to allow capture in lambda.
+          var workPtrValue = (IntPtr)workPtr;
           var indicesPtrValue = (IntPtr)indicesPtr;
 
           Parallel.ForEach(Partitioner.Create(0, height), range => {
             var (startY, endY) = range;
             var partitionHeight = endY - startY;
 
-            effectiveDitherer.Dither((Bgra8888*)srcPtrValue, (byte*)indicesPtrValue, width, partitionHeight, sourceStride, width, startY, decoder, metric, finalPalette);
+            effectiveDitherer.Dither((TWork*)workPtrValue, (byte*)indicesPtrValue, width, partitionHeight, width, width, startY, metric, finalPalette);
           });
         }
       }

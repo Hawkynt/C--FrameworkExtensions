@@ -186,6 +186,61 @@ public readonly struct PaletteLookup<TWork, TMetric>
     return idx;
   }
 
+  /// <summary>
+  /// Batched nearest-palette lookup. For each colour in <paramref name="colors"/>,
+  /// writes the corresponding palette index to <paramref name="outIndices"/> at the same
+  /// offset. Falls through to per-pixel <see cref="FindNearestNoCache(in TWork)"/> for cube
+  /// cells / metrics that don't benefit from cross-pixel SIMD; uses
+  /// <see cref="IBatchDistance{TKey}.FindMinDistanceBatch"/> when the metric implements it
+  /// AND the lookup has no cube (so all pixels query the same candidate set = the full
+  /// palette), which is the K-means-style worst case the SSE2 path was built for.
+  /// </summary>
+  /// <remarks>
+  /// <para>
+  /// When a cube exists each pixel may target a different cube cell, so we can't share a
+  /// single packed-candidate buffer across pixels. In that case we fall back to per-pixel
+  /// <see cref="FindNearestNoCache(in TWork)"/> — which itself already uses the metric's
+  /// per-candidate batch path inside the cube cell.
+  /// </para>
+  /// <para>
+  /// Same tie-break as <see cref="FindNearestNoCache(in TWork)"/> (first-occurrence on
+  /// equal distance).
+  /// </para>
+  /// </remarks>
+  public void FindNearestBatchNoCache(ReadOnlySpan<TWork> colors, Span<int> outIndices) {
+    var batch = this._batchMetric;
+    var palette = this._palette;
+    var cube = this._cube;
+
+    // Fast path: full-palette scan (no cube), batched metric available. Pre-pack the
+    // palette once and let the metric do the M-by-N grid in SIMD.
+    if (batch != null && cube == null) {
+      var packed = _PackPaletteBytes(palette);
+      batch.FindMinDistanceBatch(colors, packed, palette.Length, outIndices);
+      return;
+    }
+
+    // Cube path or scalar metric: per-pixel.
+    for (var i = 0; i < colors.Length; ++i)
+      outIndices[i] = this._FindNearestUncached(colors[i]);
+  }
+
+  private static unsafe byte[] _PackPaletteBytes(TWork[] palette) {
+    var elementSize = sizeof(TWork);
+    var packed = new byte[palette.Length * elementSize];
+    fixed (byte* dstBase = packed) {
+      for (var i = 0; i < palette.Length; ++i) {
+        fixed (TWork* srcBase = &palette[i]) {
+          var srcBytes = (byte*)srcBase;
+          var dst = dstBase + i * elementSize;
+          for (var b = 0; b < elementSize; ++b)
+            dst[b] = srcBytes[b];
+        }
+      }
+    }
+    return packed;
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int _FindNearestUncached(in TWork color) {
     var palette = this._palette;

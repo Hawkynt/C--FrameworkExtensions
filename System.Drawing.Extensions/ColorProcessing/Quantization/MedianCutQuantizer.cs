@@ -20,8 +20,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -74,17 +78,46 @@ public struct MedianCutQuantizer : IQuantizer {
           return;
         }
 
-        var (firstC1, firstC2, firstC3, firstA) = this._colors[0].ToNormalized();
-        var c1Min = firstC1.ToFloat();
-        var c1Max = c1Min;
-        var c2Min = firstC2.ToFloat();
-        var c2Max = c2Min;
-        var c3Min = firstC3.ToFloat();
-        var c3Max = c3Min;
-        double c1Sum = c1Min, c2Sum = c2Min, c3Sum = c3Min, aSum = firstA.ToFloat();
+        // Byte-domain fast path for 32bpp 4-channel storage TWork (today only Bgra8888).
+        // The branch is folded by the JIT in monomorphic instantiations.
+        // When this cube is large enough to amortise the parallel-spawn overhead
+        // (typically only the *root* cube during the very first split — sub-cubes
+        // are smaller and stay sequential), partition the sweep across cores and
+        // merge in deterministic order.
+        float c1Min, c1Max, c2Min, c2Max, c3Min, c3Max;
+        double c1Sum, c2Sum, c3Sum, aSum;
+        if (typeof(TWork) == typeof(Bgra8888)) {
+          if (this._colors.Count >= _ParallelHistogramThreshold)
+            _ComputeRangesAndSumsFast32bpp4chParallel<BgraLayout>(this._colors, out c1Min, out c1Max, out c2Min, out c2Max, out c3Min, out c3Max, out c1Sum, out c2Sum, out c3Sum, out aSum);
+          else
+            _ComputeRangesAndSumsFast32bpp4ch<BgraLayout>(this._colors, out c1Min, out c1Max, out c2Min, out c2Max, out c3Min, out c3Max, out c1Sum, out c2Sum, out c3Sum, out aSum);
+        } else {
+          _ComputeRangesAndSumsSlow(this._colors, out c1Min, out c1Max, out c2Min, out c2Max, out c3Min, out c3Max, out c1Sum, out c2Sum, out c3Sum, out aSum);
+        }
 
-        for (var i = 1; i < this._colors.Count; ++i) {
-          var (c1N, c2N, c3N, aN) = this._colors[i].ToNormalized();
+        this._c1Min = c1Min; this._c1Max = c1Max;
+        this._c2Min = c2Min; this._c2Max = c2Max;
+        this._c3Min = c3Min; this._c3Max = c3Max;
+        this._c1Sum = c1Sum; this._c2Sum = c2Sum; this._c3Sum = c3Sum;
+        this._aSum = aSum;
+      }
+
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private static void _ComputeRangesAndSumsSlow(
+        List<TWork> colors,
+        out float c1Min, out float c1Max,
+        out float c2Min, out float c2Max,
+        out float c3Min, out float c3Max,
+        out double c1Sum, out double c2Sum, out double c3Sum, out double aSum) {
+        var (firstC1, firstC2, firstC3, firstA) = colors[0].ToNormalized();
+        c1Min = firstC1.ToFloat(); c1Max = c1Min;
+        c2Min = firstC2.ToFloat(); c2Max = c2Min;
+        c3Min = firstC3.ToFloat(); c3Max = c3Min;
+        c1Sum = c1Min; c2Sum = c2Min; c3Sum = c3Min;
+        aSum = firstA.ToFloat();
+
+        for (var i = 1; i < colors.Count; ++i) {
+          var (c1N, c2N, c3N, aN) = colors[i].ToNormalized();
           var c1 = c1N.ToFloat();
           var c2 = c2N.ToFloat();
           var c3 = c3N.ToFloat();
@@ -99,13 +132,139 @@ public struct MedianCutQuantizer : IQuantizer {
           c3Sum += c3;
           aSum += a;
         }
-
-        this._c1Min = c1Min; this._c1Max = c1Max;
-        this._c2Min = c2Min; this._c2Max = c2Max;
-        this._c3Min = c3Min; this._c3Max = c3Max;
-        this._c1Sum = c1Sum; this._c2Sum = c2Sum; this._c3Sum = c3Sum;
-        this._aSum = aSum;
       }
+
+      /// <summary>
+      /// 32bpp 4-channel byte-domain range/sum sweep. Skips per-element
+      /// <see cref="IColorSpace4{T}.ToNormalized"/> and reads channel bytes directly via the
+      /// JIT-folded layout descriptor. Float values are computed once per channel and reused for
+      /// both range tracking and sum accumulation — bit-exact with the slow path because the
+      /// arithmetic chain (uint &gt; float &gt; min/max/sum) is identical.
+      /// </summary>
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private static void _ComputeRangesAndSumsFast32bpp4ch<TLayout>(
+        List<TWork> colors,
+        out float c1Min, out float c1Max,
+        out float c2Min, out float c2Max,
+        out float c3Min, out float c3Max,
+        out double c1Sum, out double c2Sum, out double c3Sum, out double aSum)
+        where TLayout : struct {
+        var first = colors[0];
+        var firstPacked = Unsafe.As<TWork, uint>(ref first);
+        var (firstC1F, firstC2F, firstC3F, firstAF) = StorageLayoutFast.UnpackFloats<TLayout>(firstPacked);
+        c1Min = firstC1F; c1Max = firstC1F;
+        c2Min = firstC2F; c2Max = firstC2F;
+        c3Min = firstC3F; c3Max = firstC3F;
+        c1Sum = firstC1F; c2Sum = firstC2F; c3Sum = firstC3F;
+        aSum = firstAF;
+
+        for (var i = 1; i < colors.Count; ++i) {
+          var color = colors[i];
+          var packed = Unsafe.As<TWork, uint>(ref color);
+          var (c1, c2, c3, a) = StorageLayoutFast.UnpackFloats<TLayout>(packed);
+
+          if (c1 < c1Min) c1Min = c1; else if (c1 > c1Max) c1Max = c1;
+          if (c2 < c2Min) c2Min = c2; else if (c2 > c2Max) c2Max = c2;
+          if (c3 < c3Min) c3Min = c3; else if (c3 > c3Max) c3Max = c3;
+
+          c1Sum += c1;
+          c2Sum += c2;
+          c3Sum += c3;
+          aSum += a;
+        }
+      }
+
+      /// <summary>
+      /// Parallel sweep over the colour list, partitioning into chunks and computing
+      /// per-chunk min/max/sum, then deterministically reducing in partition order.
+      /// Min/max merge associatively across chunks (bit-exact). Double sums merge in
+      /// fixed partition order, so the result is reproducible across runs.
+      /// </summary>
+      private static void _ComputeRangesAndSumsFast32bpp4chParallel<TLayout>(
+        List<TWork> colors,
+        out float c1Min, out float c1Max,
+        out float c2Min, out float c2Max,
+        out float c3Min, out float c3Max,
+        out double c1Sum, out double c2Sum, out double c3Sum, out double aSum)
+        where TLayout : struct {
+        var total = colors.Count;
+        var partitionCount = Math.Min(Environment.ProcessorCount, Math.Max(2, total / 16384));
+        var chunkSize = (total + partitionCount - 1) / partitionCount;
+
+        var partials = new (float c1Min, float c1Max, float c2Min, float c2Max, float c3Min, float c3Max,
+          double c1Sum, double c2Sum, double c3Sum, double aSum)[partitionCount];
+
+        Parallel.For(0, partitionCount, p => {
+          var start = p * chunkSize;
+          var end = Math.Min(start + chunkSize, total);
+          if (start >= end) {
+            partials[p] = (float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, 0, 0, 0, 0);
+            return;
+          }
+
+          var first = colors[start];
+          var firstPacked = Unsafe.As<TWork, uint>(ref first);
+          var (firstC1F, firstC2F, firstC3F, firstAF) = StorageLayoutFast.UnpackFloats<TLayout>(firstPacked);
+          var lc1Min = firstC1F; var lc1Max = firstC1F;
+          var lc2Min = firstC2F; var lc2Max = firstC2F;
+          var lc3Min = firstC3F; var lc3Max = firstC3F;
+          double lC1Sum = firstC1F, lC2Sum = firstC2F, lC3Sum = firstC3F, lASum = firstAF;
+
+          for (var i = start + 1; i < end; ++i) {
+            var color = colors[i];
+            var packed = Unsafe.As<TWork, uint>(ref color);
+            var (c1, c2, c3, a) = StorageLayoutFast.UnpackFloats<TLayout>(packed);
+
+            if (c1 < lc1Min) lc1Min = c1; else if (c1 > lc1Max) lc1Max = c1;
+            if (c2 < lc2Min) lc2Min = c2; else if (c2 > lc2Max) lc2Max = c2;
+            if (c3 < lc3Min) lc3Min = c3; else if (c3 > lc3Max) lc3Max = c3;
+
+            lC1Sum += c1;
+            lC2Sum += c2;
+            lC3Sum += c3;
+            lASum += a;
+          }
+
+          partials[p] = (lc1Min, lc1Max, lc2Min, lc2Max, lc3Min, lc3Max, lC1Sum, lC2Sum, lC3Sum, lASum);
+        });
+
+        // Deterministic in-order merge.
+        var firstValid = -1;
+        for (var p = 0; p < partitionCount; ++p) {
+          if (partials[p].c1Min == float.MaxValue && partials[p].c1Max == float.MinValue)
+            continue;
+          firstValid = p;
+          break;
+        }
+        if (firstValid < 0) {
+          c1Min = c2Min = c3Min = 0; c1Max = c2Max = c3Max = 0;
+          c1Sum = c2Sum = c3Sum = aSum = 0;
+          return;
+        }
+        var seed = partials[firstValid];
+        c1Min = seed.c1Min; c1Max = seed.c1Max;
+        c2Min = seed.c2Min; c2Max = seed.c2Max;
+        c3Min = seed.c3Min; c3Max = seed.c3Max;
+        c1Sum = seed.c1Sum; c2Sum = seed.c2Sum; c3Sum = seed.c3Sum; aSum = seed.aSum;
+        for (var p = firstValid + 1; p < partitionCount; ++p) {
+          var pp = partials[p];
+          if (pp.c1Min == float.MaxValue && pp.c1Max == float.MinValue)
+            continue;
+          if (pp.c1Min < c1Min) c1Min = pp.c1Min;
+          if (pp.c1Max > c1Max) c1Max = pp.c1Max;
+          if (pp.c2Min < c2Min) c2Min = pp.c2Min;
+          if (pp.c2Max > c2Max) c2Max = pp.c2Max;
+          if (pp.c3Min < c3Min) c3Min = pp.c3Min;
+          if (pp.c3Max > c3Max) c3Max = pp.c3Max;
+          c1Sum += pp.c1Sum;
+          c2Sum += pp.c2Sum;
+          c3Sum += pp.c3Sum;
+          aSum += pp.aSum;
+        }
+      }
+
+      /// <summary>Same threshold as Wu — see WuQuantizer for rationale.</summary>
+      private const int _ParallelHistogramThreshold = 65536;
 
       public float Volume => (this._c1Max - this._c1Min) * (this._c2Max - this._c2Min) * (this._c3Max - this._c3Min);
       public int ColorCount => this._colors.Count;
@@ -127,12 +286,24 @@ public struct MedianCutQuantizer : IQuantizer {
         var c2Range = this._c2Max - this._c2Min;
         var c3Range = this._c3Max - this._c3Min;
 
-        if (c1Range >= c2Range && c1Range >= c3Range)
-          this._colors.Sort((a, b) => a.ToNormalized().C1.CompareTo(b.ToNormalized().C1));
-        else if (c2Range >= c1Range && c2Range >= c3Range)
-          this._colors.Sort((a, b) => a.ToNormalized().C2.CompareTo(b.ToNormalized().C2));
-        else
-          this._colors.Sort((a, b) => a.ToNormalized().C3.CompareTo(b.ToNormalized().C3));
+        // Branchless argmax preserving original tie-break semantics:
+        //   c1 wins ties vs c2 and vs c3; c2 wins ties vs c3.
+        var axis = c2Range > c1Range ? 1 : 0;
+        var currentMax = axis == 0 ? c1Range : c2Range;
+        if (c3Range > currentMax)
+          axis = 2;
+
+        switch (axis) {
+          case 0:
+            this._colors.Sort((a, b) => a.ToNormalized().C1.CompareTo(b.ToNormalized().C1));
+            break;
+          case 1:
+            this._colors.Sort((a, b) => a.ToNormalized().C2.CompareTo(b.ToNormalized().C2));
+            break;
+          default:
+            this._colors.Sort((a, b) => a.ToNormalized().C3.CompareTo(b.ToNormalized().C3));
+            break;
+        }
 
         var medianIndex = this._colors.Count >> 1;
 

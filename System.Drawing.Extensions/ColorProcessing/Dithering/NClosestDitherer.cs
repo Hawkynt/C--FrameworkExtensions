@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -87,20 +86,17 @@ public readonly struct NClosestDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var random = new Random(this._seed + startY);
@@ -120,7 +116,7 @@ public readonly struct NClosestDitherer : IDitherer {
 
     for (var y = startY; y < endY; ++y)
     for (var x = 0; x < width; ++x) {
-      var pixel = decoder.Decode(source[y * sourceStride + x]);
+      var pixel = source[y * sourceStride + x];
       var closestColors = _FindNClosestColors(pixel, palette, metric, this._n);
 
       if (closestColors.Count == 0) {

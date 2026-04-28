@@ -201,7 +201,8 @@ public struct GaussianMixtureQuantizer : IQuantizer {
 
           // Gaussian probability (simplified - using spherical covariance)
           var exponent = -sqDist / (2.0f * variance);
-          var prob = weights[j] * (float)Math.Exp(exponent) / (float)Math.Pow(2 * Math.PI * variance, 2);
+          var twoPiVar = 2 * Math.PI * variance;
+          var prob = weights[j] * (float)Math.Exp(exponent) / (float)(twoPiVar * twoPiVar);
           probs[j] = prob;
           totalProb += prob;
         }
@@ -287,7 +288,8 @@ public struct GaussianMixtureQuantizer : IQuantizer {
           var sqDist = _SquaredDistance(points[i], means[j]);
           var variance = Math.Max(variances[j], minVariance);
           var exponent = -sqDist / (2.0f * variance);
-          prob += weights[j] * (float)Math.Exp(exponent) / (float)Math.Pow(2 * Math.PI * variance, 2);
+          var twoPiVar = 2 * Math.PI * variance;
+          prob += weights[j] * (float)Math.Exp(exponent) / (float)(twoPiVar * twoPiVar);
         }
 
         if (prob > 1e-10f)

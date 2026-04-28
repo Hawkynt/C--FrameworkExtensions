@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -91,26 +90,23 @@ public readonly struct AdaptiveDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     if (palette.Length == 0)
       return;
 
-    var characteristics = _AnalyzeImage(source, width, height, sourceStride, startY, decoder, palette);
+    var characteristics = _AnalyzeImage(source, width, height, sourceStride, startY, palette);
     var selectedDitherer = this._strategy switch {
       AdaptiveStrategy.QualityOptimized => _SelectForQuality(characteristics),
       AdaptiveStrategy.Balanced => _SelectForBalance(characteristics),
@@ -118,20 +114,17 @@ public readonly struct AdaptiveDitherer : IDitherer {
       AdaptiveStrategy.SmartSelection => _SelectSmart(characteristics),
       _ => ErrorDiffusion.FloydSteinberg
     };
-    selectedDitherer.Dither(source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette);
+    selectedDitherer.Dither(source, indices, width, height, sourceStride, targetStride, startY, metric, palette);
   }
 
-  private static unsafe ImageCharacteristics _AnalyzeImage<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe ImageCharacteristics _AnalyzeImage<TWork>(
+    TWork* source,
     int width,
     int height,
     int stride,
     int startY,
-    in TDecode decoder,
     TWork[] palette)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var totalPixels = width * height;
     var sampleSize = Math.Max(1, Math.Min(10000, totalPixels / 4));
@@ -149,7 +142,7 @@ public readonly struct AdaptiveDitherer : IDitherer {
 
     for (var y = startY; y < endY; y += stepY)
     for (var x = 0; x < width; x += stepX) {
-      var pixel = decoder.Decode(source[y * stride + x]);
+      var pixel = source[y * stride + x];
       var (c1, c2, c3, _) = pixel.ToNormalized();
 
       // Create a hash from normalized color
@@ -157,18 +150,18 @@ public readonly struct AdaptiveDitherer : IDitherer {
       colorSet.Add(hash);
 
       if (x > 0 && y > startY && x < width - 1 && y < endY - 1) {
-        var edgeStrength = _CalculateEdgeStrength<TWork, TPixel, TDecode>(source, stride, x, y, decoder);
+        var edgeStrength = _CalculateEdgeStrength(source, stride, x, y);
         if (edgeStrength > 0.12f) ++edgeCount;
         detailSum += edgeStrength;
       }
 
       if (x > 1 && y > startY + 1 && x < width - 2 && y < endY - 2) {
-        var localVariance = _CalculateLocalVariance<TWork, TPixel, TDecode>(source, stride, x, y, decoder);
+        var localVariance = _CalculateLocalVariance(source, stride, x, y);
         gradientVariance += localVariance;
       }
 
       if (x > 0 && y > startY) {
-        var prevPixel = decoder.Decode(source[(y - 1) * stride + (x - 1)]);
+        var prevPixel = source[(y - 1) * stride + (x - 1)];
         var (pc1, pc2, pc3, _) = prevPixel.ToNormalized();
         var colorDistance = Math.Abs(c1.ToFloat() - pc1.ToFloat()) +
                             Math.Abs(c2.ToFloat() - pc2.ToFloat()) +
@@ -196,19 +189,16 @@ public readonly struct AdaptiveDitherer : IDitherer {
     };
   }
 
-  private static unsafe float _CalculateEdgeStrength<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe float _CalculateEdgeStrength<TWork>(
+    TWork* source,
     int stride,
-    int x, int y,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int x, int y)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
-    var center = decoder.Decode(source[y * stride + x]);
-    var right = decoder.Decode(source[y * stride + x + 1]);
-    var down = decoder.Decode(source[(y + 1) * stride + x]);
-    var diag = decoder.Decode(source[(y + 1) * stride + x + 1]);
+    var center = source[y * stride + x];
+    var right = source[y * stride + x + 1];
+    var down = source[(y + 1) * stride + x];
+    var diag = source[(y + 1) * stride + x + 1];
 
     var (cc1, cc2, cc3, _) = center.ToNormalized();
     var (rc1, rc2, rc3, _) = right.ToNormalized();
@@ -222,14 +212,11 @@ public readonly struct AdaptiveDitherer : IDitherer {
     return (float)Math.Sqrt(horizontalGrad * horizontalGrad + verticalGrad * verticalGrad + diagonalGrad * diagonalGrad);
   }
 
-  private static unsafe float _CalculateLocalVariance<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe float _CalculateLocalVariance<TWork>(
+    TWork* source,
     int stride,
-    int x, int y,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int x, int y)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var values = new float[9];
     var index = 0;
@@ -237,7 +224,7 @@ public readonly struct AdaptiveDitherer : IDitherer {
 
     for (var dy = -1; dy <= 1; ++dy)
     for (var dx = -1; dx <= 1; ++dx) {
-      var pixel = decoder.Decode(source[(y + dy) * stride + (x + dx)]);
+      var pixel = source[(y + dy) * stride + (x + dx)];
       var (c1, c2, c3, _) = pixel.ToNormalized();
       var luminance = 0.299f * c1.ToFloat() + 0.587f * c2.ToFloat() + 0.114f * c3.ToFloat();
       values[index++] = luminance;

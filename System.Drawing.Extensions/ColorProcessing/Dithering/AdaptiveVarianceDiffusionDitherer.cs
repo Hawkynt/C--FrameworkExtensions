@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -83,20 +82,17 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -109,7 +105,7 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
     for (var y = startY; y < endY; ++y) {
       var localY = y - startY;
       for (var x = 0; x < width; ++x) {
-        var color = decoder.Decode(source[y * sourceStride + x]);
+        var color = source[y * sourceStride + x];
         var (c1, c2, c3, alpha) = color.ToNormalized();
         var pr = c1.ToFloat() + errR[x, localY];
         var pg = c2.ToFloat() + errG[x, localY];
@@ -135,7 +131,7 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
         // Estimate local variance with a 3×3 luminance sum. Reuse the
         // current pixel's decoded colour plus the committed errors to
         // approximate variance cheaply without a second image pass.
-        var alphaVar = _EstimateVariance<TPixel, TWork, TDecode>(source, decoder, x, y, sourceStride, width, endY);
+        var alphaVar = _EstimateVariance(source, x, y, sourceStride, width, endY);
         // α = 1 for variance > 0.02 (textured); α = 0 for variance < 0.002
         // (flat). Linear ramp in-between.
         var a = Math.Max(0f, Math.Min(1f, (alphaVar - 0.002f) / 0.018f));
@@ -165,11 +161,9 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe float _EstimateVariance<TPixel, TWork, TDecode>(
-    TPixel* source, in TDecode decoder, int x, int y, int sourceStride, int width, int endY)
-    where TPixel : unmanaged, IStorageSpace
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TDecode : struct, IDecode<TPixel, TWork> {
+  private static unsafe float _EstimateVariance<TWork>(
+    TWork* source, int x, int y, int sourceStride, int width, int endY)
+    where TWork : unmanaged, IColorSpace4<TWork> {
     var sum = 0f;
     var sumSq = 0f;
     var count = 0;
@@ -179,7 +173,7 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
       var ny = y + dy;
       if (nx < 0 || nx >= width || ny < 0 || ny >= endY)
         continue;
-      var decoded = decoder.Decode(source[ny * sourceStride + nx]);
+      var decoded = source[ny * sourceStride + nx];
       var (q1, q2, q3, _) = decoded.ToNormalized();
       var lum = 0.299f * q1.ToFloat() + 0.587f * q2.ToFloat() + 0.114f * q3.ToFloat();
       sum += lum;

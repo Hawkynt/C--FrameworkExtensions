@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -91,20 +90,17 @@ public readonly struct AverageDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -113,55 +109,56 @@ public readonly struct AverageDitherer : IDitherer {
     var halfSize = regionSize / 2;
     var strength = this.Strength;
 
-    for (var y = startY; y < endY; ++y)
-    for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-      var originalColor = decoder.Decode(source[sourceIdx]);
-      var (c1, c2, c3, c4) = originalColor.ToNormalized();
+    // pre-decode the entire region once. Both the central decode AND the per-pixel
+    // _ComputeRegionAverage call (which re-decodes O(regionSize²) neighbours) read from
+    // the working buffer, paying gamma-LUT cost exactly once per pixel.
+    for (var y = startY; y < endY; ++y) {
+      var rowSource = source + y * sourceStride;
+      for (int x = 0, targetIdx = y * targetStride; x < width; ++x, ++targetIdx) {
+        var originalColor = rowSource[x];
+        var (c1, c2, c3, c4) = originalColor.ToNormalized();
 
-      // Compute region average
-      var (avg1, avg2, avg3) = _ComputeRegionAverage<TWork, TPixel, TDecode>(
-        source, x, y, width, startY + height, sourceStride, halfSize, decoder);
+        // Compute region average from pre-decoded source buffer (no re-decode).
+        var (avg1, avg2, avg3) = _ComputeRegionAverageFromBuffer(source, sourceStride, x, y, width, startY + height, halfSize);
 
-      // Get float values for calculations
-      var f1 = c1.ToFloat();
-      var f2 = c2.ToFloat();
-      var f3 = c3.ToFloat();
+        // Get float values for calculations
+        var f1 = c1.ToFloat();
+        var f2 = c2.ToFloat();
+        var f3 = c3.ToFloat();
 
-      // Calculate difference from average
-      var diff1 = f1 - avg1;
-      var diff2 = f2 - avg2;
-      var diff3 = f3 - avg3;
+        // Calculate difference from average
+        var diff1 = f1 - avg1;
+        var diff2 = f2 - avg2;
+        var diff3 = f3 - avg3;
 
-      // Apply threshold adjustment based on whether pixel is brighter or darker than average
-      var adj1 = diff1 > 0 ? strength : -strength;
-      var adj2 = diff2 > 0 ? strength : -strength;
-      var adj3 = diff3 > 0 ? strength : -strength;
+        // Apply threshold adjustment based on whether pixel is brighter or darker than average
+        var adj1 = diff1 > 0 ? strength : -strength;
+        var adj2 = diff2 > 0 ? strength : -strength;
+        var adj3 = diff3 > 0 ? strength : -strength;
 
-      // Create adjusted color using ColorFactory
-      var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-        UNorm32.FromFloatClamped(f1 + adj1),
-        UNorm32.FromFloatClamped(f2 + adj2),
-        UNorm32.FromFloatClamped(f3 + adj3),
-        c4
-      );
+        // Create adjusted color using ColorFactory
+        var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+          UNorm32.FromFloatClamped(f1 + adj1),
+          UNorm32.FromFloatClamped(f2 + adj2),
+          UNorm32.FromFloatClamped(f3 + adj3),
+          c4
+        );
 
-      indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+      }
     }
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe (float, float, float) _ComputeRegionAverage<TWork, TPixel, TDecode>(
-    TPixel* source,
+  private static unsafe (float, float, float) _ComputeRegionAverageFromBuffer<TWork>(
+    TWork* source,
+    int sourceStride,
     int centerX,
     int centerY,
     int width,
-    int height,
-    int sourceStride,
-    int halfSize,
-    in TDecode decoder)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork> {
+    int endY,
+    int halfSize)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var sum1 = 0f;
     var sum2 = 0f;
@@ -170,13 +167,12 @@ public readonly struct AverageDitherer : IDitherer {
 
     var startX = Math.Max(0, centerX - halfSize);
     var endX = Math.Min(width - 1, centerX + halfSize);
-    var startY = Math.Max(0, centerY - halfSize);
-    var endY = Math.Min(height - 1, centerY + halfSize);
+    var startYLocal = Math.Max(0, centerY - halfSize);
+    var endYLocal = Math.Min(endY - 1, centerY + halfSize);
 
-    for (var ry = startY; ry <= endY; ++ry)
+    for (var ry = startYLocal; ry <= endYLocal; ++ry)
     for (var rx = startX; rx <= endX; ++rx) {
-      var idx = ry * sourceStride + rx;
-      var color = decoder.Decode(source[idx]);
+      var color = source[ry * sourceStride + rx];
       var (c1, c2, c3, _) = color.ToNormalized();
       sum1 += c1.ToFloat();
       sum2 += c2.ToFloat();

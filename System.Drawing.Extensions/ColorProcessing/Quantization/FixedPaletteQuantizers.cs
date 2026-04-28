@@ -67,7 +67,7 @@ public struct WebSafeQuantizer : IQuantizer {
 
       // Subsample the 6×6×6 cube to get well-distributed colors
       // Calculate optimal levels per channel for requested color count
-      var levelsPerChannel = (int)Math.Ceiling(Math.Pow(colorCount, 1.0 / 3.0));
+      var levelsPerChannel = (int)Math.Ceiling(Math.Cbrt(colorCount));
       levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 6));
 
       var result = new List<TWork>(colorCount);
@@ -226,7 +226,7 @@ public struct Vga256Quantizer : IQuantizer {
       // Add evenly distributed colors from web-safe portion (indices 16-231)
       var webSafeCount = Math.Max(0, colorCount - 6); // Reserve 6 slots for EGA primaries + grays
       if (webSafeCount > 0) {
-        var levelsPerChannel = (int)Math.Ceiling(Math.Pow(webSafeCount, 1.0 / 3.0));
+        var levelsPerChannel = (int)Math.Ceiling(Math.Cbrt(webSafeCount));
         levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 6));
         var stepIndices = _GetEvenlySpacedIndices(6, levelsPerChannel);
 
@@ -321,7 +321,7 @@ public struct Mac8BitQuantizer : IQuantizer {
       // Subsample the 8×8×4 cube to get well-distributed colors
       // Calculate optimal levels for each channel based on requested color count
       // Target: rLevels * gLevels * bLevels ≈ colorCount, with r:g:b ratio similar to 8:8:4
-      var totalRatio = Math.Pow(colorCount, 1.0 / 3.0);
+      var totalRatio = Math.Cbrt(colorCount);
       var rLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 1.26), RgLevels)); // 8/6.35 ≈ 1.26
       var gLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 1.26), RgLevels));
       var bLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 0.63), BlueLevels)); // 4/6.35 ≈ 0.63

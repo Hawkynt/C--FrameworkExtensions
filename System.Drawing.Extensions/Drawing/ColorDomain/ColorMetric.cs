@@ -282,7 +282,7 @@ public static class ColorMetricExtensions {
     return (L, A, B, alpha);
   }
 
-  private static double _LabF(double t) => t > 0.008856 ? Math.Pow(t, 1.0 / 3.0) : 7.787 * t + 16.0 / 116.0;
+  private static double _LabF(double t) => t > 0.008856 ? Math.Cbrt(t) : 7.787 * t + 16.0 / 116.0;
 
   private static readonly double _Pow25To7 = Math.Pow(25, 7);
   private const double _DegToRad = Math.PI / 180.0;
@@ -293,7 +293,8 @@ public static class ColorMetricExtensions {
     var C1 = Math.Sqrt(a1 * a1 + b1 * b1);
     var C2 = Math.Sqrt(a2 * a2 + b2 * b2);
     var Cab = (C1 + C2) * 0.5;
-    var CabPow7 = Math.Pow(Cab, 7);
+    var CabSq = Cab * Cab;
+    var CabPow7 = CabSq * CabSq * CabSq * Cab;
     var G = 0.5 * (1 - Math.Sqrt(CabPow7 / (CabPow7 + _Pow25To7)));
     var a1p = a1 * (1 + G);
     var a2p = a2 * (1 + G);
@@ -326,8 +327,10 @@ public static class ColorMetricExtensions {
               + 0.24 * Math.Cos(2 * hbpRad)
               + 0.32 * Math.Cos((3 * hbp + 6) * _DegToRad)
               - 0.20 * Math.Cos((4 * hbp - 63) * _DegToRad);
-    var dTheta = 30 * Math.Exp(-Math.Pow((hbp - 275) / 25.0, 2));
-    var CbpPow7 = Math.Pow(Cbp, 7);
+    var hbpShifted = (hbp - 275) / 25.0;
+    var dTheta = 30 * Math.Exp(-(hbpShifted * hbpShifted));
+    var CbpSq = Cbp * Cbp;
+    var CbpPow7 = CbpSq * CbpSq * CbpSq * Cbp;
     var RC = 2 * Math.Sqrt(CbpPow7 / (CbpPow7 + _Pow25To7));
     var Lm50 = Lbp - 50;
     var SL = 1 + 0.015 * Lm50 * Lm50 / Math.Sqrt(20 + Lm50 * Lm50);

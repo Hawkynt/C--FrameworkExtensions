@@ -61,7 +61,7 @@ public struct UniformQuantizer : IQuantizer {
 
       // Calculate optimal levels per channel to get close to colorCount colors
       // Try to find r×g×b that is as close to colorCount as possible without exceeding it
-      var baseLevels = (int)Math.Floor(Math.Pow(colorCount, 1.0 / 3.0));
+      var baseLevels = (int)Math.Floor(Math.Cbrt(colorCount));
       baseLevels = Math.Max(2, Math.Min(baseLevels, 8));
 
       // Find the best combination of levels that gives us <= colorCount colors

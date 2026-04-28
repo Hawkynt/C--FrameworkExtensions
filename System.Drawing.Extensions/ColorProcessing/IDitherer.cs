@@ -17,7 +17,6 @@
 
 #endregion
 
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing;
@@ -34,6 +33,15 @@ namespace Hawkynt.ColorProcessing;
 /// The working color space <typeparamref name="TWork"/> uses normalized UNorm32 components
 /// for integer-only operations when possible.
 /// </para>
+/// <para>
+/// As of the refactor, the source pixels are always pre-decoded into the working colour
+/// space before being handed to the ditherer. The pipeline dispatcher
+/// (<see cref="Hawkynt.ColorProcessing.Internal.QuantizationPipeline"/>) is responsible for
+/// performing the decode once (using <c>IBatchDecode</c> when available, scalar fallback
+/// otherwise). This eliminates per-implementation decode boilerplate and ensures that the
+/// per-pixel decode cost (gamma LUT, struct construction, alpha unpacking) is paid only
+/// once per source pixel, not once per palette-lookup attempt.
+/// </para>
 /// </remarks>
 public interface IDitherer {
 
@@ -48,39 +56,43 @@ public interface IDitherer {
   bool RequiresSequentialProcessing { get; }
 
   /// <summary>
-  /// Dithers source pixels to palette indices.
+  /// Dithers pre-decoded source pixels to palette indices.
   /// </summary>
   /// <typeparam name="TWork">The working color type for error accumulation and palette matching.</typeparam>
-  /// <typeparam name="TPixel">The storage pixel type.</typeparam>
-  /// <typeparam name="TDecode">The decoder type (TPixel -> TWork).</typeparam>
   /// <typeparam name="TMetric">The color distance metric type operating on TWork.</typeparam>
-  /// <param name="source">Pointer to source pixel data.</param>
+  /// <param name="source">
+  /// Pointer to the start of the pre-decoded source buffer (row 0, col 0). The buffer is
+  /// always tightly packed; <c>source[y * sourceStride + x]</c> is the working-space pixel
+  /// at <c>(x, y)</c>.
+  /// </param>
   /// <param name="indices">Pointer to caller-allocated index buffer (width * height bytes).</param>
   /// <param name="width">Width of the image in pixels.</param>
   /// <param name="height">Number of rows to process.</param>
-  /// <param name="sourceStride">Source image stride in pixels (not bytes).</param>
+  /// <param name="sourceStride">
+  /// Source buffer stride in <typeparamref name="TWork"/> elements (not bytes). For the
+  /// pipeline-allocated tight buffer this equals <paramref name="width"/>.
+  /// </param>
   /// <param name="targetStride">Target index buffer stride in pixels.</param>
   /// <param name="startY">Starting row index for processing (enables row partitioning).</param>
-  /// <param name="decoder">The pixel decoder (TPixel -> TWork).</param>
   /// <param name="metric">The color distance metric.</param>
   /// <param name="palette">The palette colors in TWork space.</param>
   /// <remarks>
-  /// The caller is responsible for allocating the indices buffer. When <see cref="RequiresSequentialProcessing"/>
-  /// is <c>false</c>, the caller may partition the image into row ranges and process them in parallel.
+  /// The caller is responsible for allocating both the indices buffer and the pre-decoded
+  /// source buffer. When <see cref="RequiresSequentialProcessing"/> is <c>false</c>, the
+  /// caller may partition the image into row ranges and process them in parallel; each
+  /// partition still receives the full-image source pointer plus its own
+  /// <paramref name="startY"/> and <paramref name="height"/>.
   /// </remarks>
-  unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>;
 }

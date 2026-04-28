@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -62,33 +61,21 @@ public readonly struct GradientAwareDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
-
-    // Store source pixels in normalized form
-    var sourceColors = new (float c1, float c2, float c3, float a)[height, width];
-    for (var y = startY; y < endY; ++y)
-    for (var x = 0; x < width; ++x) {
-      var pixel = decoder.Decode(source[y * sourceStride + x]);
-      var (c1, c2, c3, alpha) = pixel.ToNormalized();
-      sourceColors[y - startY, x] = (c1.ToFloat(), c2.ToFloat(), c3.ToFloat(), alpha.ToFloat());
-    }
 
     // Precompute palette colors in normalized form
     var paletteColors = new (float c1, float c2, float c3, float a)[palette.Length];
@@ -97,8 +84,10 @@ public readonly struct GradientAwareDitherer : IDitherer {
       paletteColors[i] = (c1.ToFloat(), c2.ToFloat(), c3.ToFloat(), a.ToFloat());
     }
 
-    // Pre-calculate gradient magnitudes
-    var gradients = _CalculateGradients(sourceColors, width, height);
+    // Pre-calculate gradient magnitudes using only luminance (4B/px) instead of holding the full
+    // sourceColors[height,width] tuple buffer (16B/px). Decoding happens twice (once here, once
+    // in the main loop), but the working set shrinks ~4x at 2048x2048.
+    var gradients = _CalculateGradientsStreaming(source, width, height, sourceStride, startY);
 
     // Error buffers for error diffusion
     var errorC1 = new float[width + 2, 2];
@@ -120,7 +109,11 @@ public readonly struct GradientAwareDitherer : IDitherer {
       }
 
       for (var x = xStart; x != xEnd; x += xStep) {
-        var originalColor = sourceColors[localY, x];
+        // Decode source pixel on the fly (matches the original byte-for-byte: same same
+        // ToNormalized, same ToFloat order).
+        var srcPixel = source[y * sourceStride + x];
+        var (sc1, sc2, sc3, salpha) = srcPixel.ToNormalized();
+        var originalColor = (c1: sc1.ToFloat(), c2: sc2.ToFloat(), c3: sc3.ToFloat(), a: salpha.ToFloat());
 
         // Get accumulated error
         var xi = x + 1;
@@ -203,50 +196,71 @@ public readonly struct GradientAwareDitherer : IDitherer {
     }
   }
 
-  private static float[,] _CalculateGradients(
-    (float c1, float c2, float c3, float a)[,] sourceColors,
-    int width, int height) {
+  private static unsafe float[,] _CalculateGradientsStreaming<TWork>(
+    TWork* source,
+    int width, int height, int sourceStride, int startY)
+    where TWork : unmanaged, IColorSpace4<TWork> {
 
     var gradients = new float[width, height];
 
-    for (var y = 0; y < height; ++y)
+    // Three rolling rows of luminance (4B/px) replace the full sourceColors[height,width] tuple
+    // buffer (16B/px). Mathematically identical because the original gradient only depends on the
+    // luminance of (x,y), (x-1,y), (x+1,y), (x,y-1), (x,y+1).
+    var lumAbove = new float[width];
+    var lumCurr = new float[width];
+    var lumBelow = new float[width];
+
+    // Decode row 0 into both lumAbove and lumCurr (for y==0 the original uses center as "top").
     for (var x = 0; x < width; ++x) {
-      var c = sourceColors[y, x];
-
-      // Get neighbor colors
-      var left = x > 0 ? sourceColors[y, x - 1] : c;
-      var right = x < width - 1 ? sourceColors[y, x + 1] : c;
-      var top = y > 0 ? sourceColors[y - 1, x] : c;
-      var bottom = y < height - 1 ? sourceColors[y + 1, x] : c;
-
-      // Calculate gradient using luminance
-      var lumCenter = _Luminance(c);
-      var lumLeft = _Luminance(left);
-      var lumRight = _Luminance(right);
-      var lumTop = _Luminance(top);
-      var lumBottom = _Luminance(bottom);
-
-      var gx = lumRight - lumLeft;
-      var gy = lumBottom - lumTop;
-
-      gradients[x, y] = (float)Math.Sqrt(gx * gx + gy * gy);
+      var pixel = source[startY * sourceStride + x];
+      var (c1, c2, c3, _) = pixel.ToNormalized();
+      var lum = 0.299f * c1.ToFloat() + 0.587f * c2.ToFloat() + 0.114f * c3.ToFloat();
+      lumAbove[x] = lum;
+      lumCurr[x] = lum;
     }
 
-    // Normalize gradients
     var maxGradient = 0f;
-    for (var y = 0; y < height; ++y)
-    for (var x = 0; x < width; ++x)
-      if (gradients[x, y] > maxGradient)
-        maxGradient = gradients[x, y];
+
+    for (var y = 0; y < height; ++y) {
+      // Populate lumBelow: row (y+1) if it exists, else clone current (mirrors `bottom = c` clamp).
+      if (y < height - 1)
+        for (var x = 0; x < width; ++x) {
+          var pixel = source[(startY + y + 1) * sourceStride + x];
+          var (c1, c2, c3, _) = pixel.ToNormalized();
+          lumBelow[x] = 0.299f * c1.ToFloat() + 0.587f * c2.ToFloat() + 0.114f * c3.ToFloat();
+        }
+      else
+        for (var x = 0; x < width; ++x)
+          lumBelow[x] = lumCurr[x];
+
+      for (var x = 0; x < width; ++x) {
+        var lumLeft = x > 0 ? lumCurr[x - 1] : lumCurr[x];
+        var lumRight = x < width - 1 ? lumCurr[x + 1] : lumCurr[x];
+        var lumTop = lumAbove[x];
+        var lumBottom = lumBelow[x];
+
+        var gx = lumRight - lumLeft;
+        var gy = lumBottom - lumTop;
+
+        var g = (float)Math.Sqrt(gx * gx + gy * gy);
+        gradients[x, y] = g;
+        if (g > maxGradient)
+          maxGradient = g;
+      }
+
+      // Roll rows for next iteration: above <- current, current <- below.
+      var tmp = lumAbove;
+      lumAbove = lumCurr;
+      lumCurr = lumBelow;
+      lumBelow = tmp;
+    }
 
     if (maxGradient > 0)
+      // Preserve the original "x / maxGradient" semantics (not "x * (1 / max)") to keep bytes exact.
       for (var y = 0; y < height; ++y)
       for (var x = 0; x < width; ++x)
         gradients[x, y] /= maxGradient;
 
     return gradients;
   }
-
-  private static float _Luminance((float c1, float c2, float c3, float a) c)
-    => 0.299f * c.c1 + 0.587f * c.c2 + 0.114f * c.c3;
 }

@@ -373,12 +373,11 @@ internal static class QuantizerHelper {
         var (pc1, pc2, pc3, pa) = initialPalette[j].ToNormalized();
         
         // TODO: thats euclidean distance. we have code for that, maybe we can re-use
-        var dist = Math.Sqrt(
-          Math.Pow(colors[i].c1 - pc1.ToFloat(), 2) +
-          Math.Pow(colors[i].c2 - pc2.ToFloat(), 2) +
-          Math.Pow(colors[i].c3 - pc3.ToFloat(), 2) +
-          Math.Pow(colors[i].a - pa.ToFloat(), 2)
-        );
+        var d1 = colors[i].c1 - pc1.ToFloat();
+        var d2 = colors[i].c2 - pc2.ToFloat();
+        var d3 = colors[i].c3 - pc3.ToFloat();
+        var d4 = colors[i].a - pa.ToFloat();
+        var dist = Math.Sqrt(d1 * d1 + d2 * d2 + d3 * d3 + d4 * d4);
         heuristic[i, j] = 1.0 / (dist + 0.001);
       }
     }

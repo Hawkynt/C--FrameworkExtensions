@@ -20,8 +20,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -63,12 +67,34 @@ public struct EnhancedOctreeQuantizer : IQuantizer {
       => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, this._ReduceColorsTo);
 
     private IEnumerable<TWork> _ReduceColorsTo(int colorCount, IEnumerable<(TWork color, uint count)> histogram) {
-      var root = new OctreeNode();
-      var leafCount = 0;
+      var histArray = histogram as (TWork color, uint count)[] ?? histogram.ToArray();
 
-      // Build octree with variance tracking
-      foreach (var (color, count) in histogram)
-        _AddColor(root, color, 0, count, ref leafCount);
+      // When the unique-colour histogram is large enough to amortise thread-spawn overhead,
+      // partition into chunks, build one private sub-tree per chunk, and merge them in
+      // deterministic partition order. ulong PixelCount merges associatively (bit-exact).
+      // Welford's running variance is order-dependent in the serial form, so per-thread
+      // sub-trees use a Chan/Welford parallel-merge formula (Chan, Golub & LeVeque 1979) when
+      // combining child accumulators into the master. Note: VarianceSum is currently a
+      // computed-but-unread field on this class; merging it correctly preserves semantic
+      // equivalence for any future reader without affecting the produced palette (which only
+      // reads C{1,2,3}Sum/PixelCount via OctreeNode.CreateColor). Goldens use 64²/96²/128²
+      // inputs whose histogram length stays well under the threshold, keeping the sequential
+      // path and bit-exact output for all 82 entries.
+      OctreeNode root;
+      var leafCount = 0;
+      if (histArray.Length >= _ParallelBuildThreshold)
+        root = this._BuildTreeParallel(histArray, ref leafCount);
+      else {
+        root = new OctreeNode();
+        // Build octree with variance tracking. M3: branch-once on TWork; the JIT folds
+        // the comparison and inlines the byte-domain fast path for 32bpp 4-channel storage.
+        if (typeof(TWork) == typeof(Bgra8888))
+          for (var i = 0; i < histArray.Length; ++i)
+            _AddColorFast32bpp4ch<BgraLayout>(root, histArray[i].color, histArray[i].count, ref leafCount);
+        else
+          for (var i = 0; i < histArray.Length; ++i)
+            _AddColor(root, histArray[i].color, 0, histArray[i].count, ref leafCount);
+      }
 
       // Calculate reserved slots for level 2 coverage
       var reserved = Math.Min(reservedLevel2Colors, colorCount / 2);
@@ -112,6 +138,118 @@ public struct EnhancedOctreeQuantizer : IQuantizer {
       return selectedLeaves.Select(n => n.CreateColor<TWork>());
     }
 
+    /// <summary>
+    /// Minimum unique-colour histogram length for the parallel tree-build path. As with
+    /// <see cref="OctreeQuantizer"/>, octree merge has the same per-node work as sequential
+    /// insertion so the parallel speedup is bounded by Amdahl on the merge phase. The threshold
+    /// is set high enough to keep goldens on the sequential path (bit-exact) and avoid regressing
+    /// typical photo workloads, while leaving the parallel path available for genuinely extreme
+    /// inputs.
+    /// </summary>
+    private const int _ParallelBuildThreshold = 1 << 20; // 1,048,576 unique colours
+
+    /// <summary>
+    /// Parallel tree-build. Partitions the histogram, builds a private sub-tree per chunk,
+    /// then merges them deterministically in partition-index order. Sums and counts merge
+    /// associatively for ulong; double-precision sums merge in fixed order; VarianceSum is
+    /// combined via Chan/Welford's parallel formula (Chan, Golub &amp; LeVeque 1979) so the
+    /// merged variance is correct even though the serial form is order-dependent.
+    /// </summary>
+    private OctreeNode _BuildTreeParallel((TWork color, uint count)[] histogram, ref int leafCount) {
+      var total = histogram.Length;
+      var partitionCount = Math.Min(Environment.ProcessorCount, Math.Max(2, total / 16384));
+      var chunkSize = (total + partitionCount - 1) / partitionCount;
+      var subTrees = new OctreeNode[partitionCount];
+
+      // Capture-by-value of the kernel ref-type for the lambda; instance fields (maxLevel, etc.)
+      // are read-only after construction so concurrent reads are safe.
+      var self = this;
+      Parallel.For(0, partitionCount, p => {
+        var start = p * chunkSize;
+        var end = Math.Min(start + chunkSize, total);
+        var local = new OctreeNode();
+        var localLeafCount = 0;
+        if (typeof(TWork) == typeof(Bgra8888))
+          for (var i = start; i < end; ++i)
+            self._AddColorFast32bpp4ch<BgraLayout>(local, histogram[i].color, histogram[i].count, ref localLeafCount);
+        else
+          for (var i = start; i < end; ++i)
+            self._AddColor(local, histogram[i].color, 0, histogram[i].count, ref localLeafCount);
+        subTrees[p] = local;
+      });
+
+      // Deterministic in-order merge.
+      var master = new OctreeNode();
+      var mergedLeafCount = 0;
+      for (var p = 0; p < partitionCount; ++p)
+        _MergeSubTreeInto(master, subTrees[p], ref mergedLeafCount);
+
+      leafCount = mergedLeafCount;
+      return master;
+    }
+
+    /// <summary>
+    /// Merges <paramref name="src"/> into <paramref name="dst"/> in deterministic order. At a
+    /// leaf, sums are added and the variance is combined via Chan's parallel formula. At an
+    /// internal node, recurse into matching child slots.
+    /// </summary>
+    private static void _MergeSubTreeInto(OctreeNode dst, OctreeNode src, ref int leafCount) {
+      var srcHasChildren = false;
+      for (var i = 0; i < src.Children.Length; ++i)
+        if (src.Children[i] != null) {
+          srcHasChildren = true;
+          break;
+        }
+
+      if (!srcHasChildren) {
+        // src is a leaf — replicate the leaf-update arithmetic from _DescendAndAccumulate
+        // but in the associative-merge form that does not depend on insertion order.
+        if (src.PixelCount == 0)
+          return; // empty source leaf — no contribution
+        if (dst.PixelCount == 0)
+          ++leafCount;
+
+        var nA = (double)dst.PixelCount;
+        var nB = (double)src.PixelCount;
+        var n = nA + nB;
+
+        // Chan/Welford parallel-merge for VarianceSum (only if both sides have data; else just
+        // adopt the non-empty side's value). This treats VarianceSum as the per-leaf M2-style
+        // weighted-squared-deviation accumulator the serial path computes.
+        if (dst.PixelCount > 0 && src.PixelCount > 0) {
+          var meanA1 = dst.C1Sum / nA;
+          var meanA2 = dst.C2Sum / nA;
+          var meanA3 = dst.C3Sum / nA;
+          var meanB1 = src.C1Sum / nB;
+          var meanB2 = src.C2Sum / nB;
+          var meanB3 = src.C3Sum / nB;
+          var d1 = meanB1 - meanA1;
+          var d2 = meanB2 - meanA2;
+          var d3 = meanB3 - meanA3;
+          var factor = nA * nB / n;
+          dst.VarianceSum = dst.VarianceSum + src.VarianceSum + (d1 * d1 + d2 * d2 + d3 * d3) * factor;
+        } else
+          dst.VarianceSum += src.VarianceSum;
+
+        dst.PixelCount = (ulong)n;
+        dst.C1Sum += src.C1Sum;
+        dst.C2Sum += src.C2Sum;
+        dst.C3Sum += src.C3Sum;
+        dst.ASum += src.ASum;
+        return;
+      }
+
+      // src is internal — recurse into matching child slots.
+      for (var i = 0; i < src.Children.Length; ++i) {
+        var srcChild = src.Children[i];
+        if (srcChild == null)
+          continue;
+        if (dst.Children[i] == null)
+          dst.Children[i] = new OctreeNode();
+        _MergeSubTreeInto(dst.Children[i]!, srcChild, ref leafCount);
+      }
+    }
+
     private void _AddColor(OctreeNode node, TWork color, int level, ulong pixelCount, ref int leafCount) {
       var (c1, c2, c3, a) = color.ToNormalized();
       var c1Byte = c1.ToByte();
@@ -123,6 +261,34 @@ public struct EnhancedOctreeQuantizer : IQuantizer {
       var c3Float = c3.ToFloat();
       var aFloat = a.ToFloat();
 
+      _DescendAndAccumulate(node, level, pixelCount, ref leafCount, c1Byte, c2Byte, c3Byte, c1Float, c2Float, c3Float, aFloat);
+    }
+
+    /// <summary>
+    /// 32bpp 4-channel fast path. Bytes are read directly from the packed pixel via the
+    /// JIT-folded layout descriptor; floats are computed from those same bytes using the
+    /// arithmetic <see cref="UNorm32.FromByte"/> + <c>ToFloat()</c> would have produced. Result
+    /// values for tree-descent indices and leaf accumulators are bit-exact with the slow path.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void _AddColorFast32bpp4ch<TLayout>(OctreeNode node, TWork color, ulong pixelCount, ref int leafCount)
+      where TLayout : struct {
+      var packed = Unsafe.As<TWork, uint>(ref color);
+      var (c1Byte, c2Byte, c3Byte, aByte) = StorageLayoutFast.UnpackBytes<TLayout>(packed);
+
+      const float unormToFloat = 1f / uint.MaxValue;
+      var c1Float = (float)((uint)c1Byte * 0x01010101u) * unormToFloat;
+      var c2Float = (float)((uint)c2Byte * 0x01010101u) * unormToFloat;
+      var c3Float = (float)((uint)c3Byte * 0x01010101u) * unormToFloat;
+      var aFloat = (float)((uint)aByte * 0x01010101u) * unormToFloat;
+
+      _DescendAndAccumulate(node, 0, pixelCount, ref leafCount, c1Byte, c2Byte, c3Byte, c1Float, c2Float, c3Float, aFloat);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void _DescendAndAccumulate(OctreeNode node, int level, ulong pixelCount, ref int leafCount,
+      byte c1Byte, byte c2Byte, byte c3Byte,
+      float c1Float, float c2Float, float c3Float, float aFloat) {
       for (;;) {
         if (level >= maxLevel) {
           // Update leaf node with variance tracking

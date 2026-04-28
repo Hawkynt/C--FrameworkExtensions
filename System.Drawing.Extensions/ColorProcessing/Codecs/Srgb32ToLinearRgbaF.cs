@@ -17,7 +17,9 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
+using Guard;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
@@ -32,7 +34,7 @@ namespace Hawkynt.ColorProcessing.Codecs;
 /// Uses LUT-based gamma expansion for performance.
 /// Stateless struct for zero-cost abstraction via generic dispatch.
 /// </remarks>
-public readonly struct Srgb32ToLinearRgbaF : IDecode<Bgra8888, LinearRgbaF> {
+public readonly struct Srgb32ToLinearRgbaF : IDecode<Bgra8888, LinearRgbaF>, IBatchDecode<Bgra8888, LinearRgbaF> {
 
   private const float FixedToFloat = 1f / 65536f;
 
@@ -46,4 +48,37 @@ public readonly struct Srgb32ToLinearRgbaF : IDecode<Bgra8888, LinearRgbaF> {
     FixedPointMath.GammaExpansionLut[pixel.B] * FixedToFloat,
     pixel.A * Bgra8888.ByteToNormalized
   );
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// 4-way unrolled span-to-span decode. Bit-exact with <see cref="Decode"/> by construction
+  /// (same LUT, same scaling constants). Produces identical output to a per-pixel call loop.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<LinearRgbaF> destination) {
+    var n = source.Length;
+    Against.CountBelow(destination.Length, n);
+
+    var lut = FixedPointMath.GammaExpansionLut;
+    const float inv = FixedToFloat;
+    const float invByte = Bgra8888.ByteToNormalized;
+
+    var i = 0;
+    var unrolledEnd = n - (n & 3);
+    for (; i < unrolledEnd; i += 4) {
+      ref readonly var p0 = ref source[i];
+      ref readonly var p1 = ref source[i + 1];
+      ref readonly var p2 = ref source[i + 2];
+      ref readonly var p3 = ref source[i + 3];
+      destination[i]     = new LinearRgbaF(lut[p0.R] * inv, lut[p0.G] * inv, lut[p0.B] * inv, p0.A * invByte);
+      destination[i + 1] = new LinearRgbaF(lut[p1.R] * inv, lut[p1.G] * inv, lut[p1.B] * inv, p1.A * invByte);
+      destination[i + 2] = new LinearRgbaF(lut[p2.R] * inv, lut[p2.G] * inv, lut[p2.B] * inv, p2.A * invByte);
+      destination[i + 3] = new LinearRgbaF(lut[p3.R] * inv, lut[p3.G] * inv, lut[p3.B] * inv, p3.A * invByte);
+    }
+
+    for (; i < n; ++i) {
+      ref readonly var p = ref source[i];
+      destination[i] = new LinearRgbaF(lut[p.R] * inv, lut[p.G] * inv, lut[p.B] * inv, p.A * invByte);
+    }
+  }
 }

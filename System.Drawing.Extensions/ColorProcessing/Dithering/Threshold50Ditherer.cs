@@ -18,8 +18,11 @@
 #endregion
 
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -64,44 +67,98 @@ public readonly struct Threshold50Ditherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
 
-    for (var y = startY; y < endY; ++y)
-    for (int x = width, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x > 0; ++sourceIdx, ++targetIdx, --x) {
-      var color = decoder.Decode(source[sourceIdx]);
-      var (c1, c2, c3, alpha) = color.ToNormalized();
+#if SUPPORTS_INTRINSICS
+    // byte-domain SIMD shortcut for the common Bgra8888 TWork. Stackalloc'd once
+    // (outside the y/x loops) to avoid CA2014 (potential stack overflow on repeated allocs).
+    // Eligibility check is loop-invariant — hoisted out of the y-loop so the JIT sees
+    // two distinct hot loops, and so legacy TFMs (net35/40/45/48) don't pay a per-row
+    // Sse2.IsSupported field load.
+    var simdEligible = Sse2.IsSupported && typeof(TWork) == typeof(Bgra8888) && width >= 4;
+    if (simdEligible) {
+      var simdEnd = width & ~3;
+      var thresholdedQuad = stackalloc byte[16];
 
-      // Hard 50% threshold per channel (alpha is preserved unchanged so
-      // transparent-friendly palettes still work as expected).
-      var t1 = c1.ToFloat() < 0.5f ? 0f : 1f;
-      var t2 = c2.ToFloat() < 0.5f ? 0f : 1f;
-      var t3 = c3.ToFloat() < 0.5f ? 0f : 1f;
+      // 50% per-channel threshold collapses to "byte ≥ 128 → 255, else 0" which is
+      // bit-exact with the scalar UNorm32.FromFloatClamped path (no float rounding
+      // boundary involved). Alpha lanes preserved verbatim. Goldens stay byte-exact.
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var x = 0;
+        var targetIdx = y * targetStride;
 
-      var thresholded = ColorFactory.FromNormalized_4<TWork>(
-        UNorm32.FromFloatClamped(t1),
-        UNorm32.FromFloatClamped(t2),
-        UNorm32.FromFloatClamped(t3),
-        alpha
-      );
+        var srcBase = (byte*)rowSource;
+        for (; x < simdEnd; x += 4) {
+          var srcQuad = srcBase + x * 4;
+          ThresholdDithererSimd.ApplyHardThreshold50_4Pixels(srcQuad, thresholdedQuad);
+          for (var lane = 0; lane < 4; ++lane) {
+            var px = ((Bgra8888*)thresholdedQuad)[lane];
+            indices[targetIdx + x + lane] = (byte)lookup.FindNearest(Unsafe.As<Bgra8888, TWork>(ref px));
+          }
+        }
+        targetIdx += x;
 
-      indices[targetIdx] = (byte)lookup.FindNearest(thresholded);
+        // Tail: width-mod-4 leftover lanes.
+        for (; x < width; ++x, ++targetIdx) {
+          var color = rowSource[x];
+          var (c1, c2, c3, alpha) = color.ToNormalized();
+
+          var t1 = c1.ToFloat() < 0.5f ? 0f : 1f;
+          var t2 = c2.ToFloat() < 0.5f ? 0f : 1f;
+          var t3 = c3.ToFloat() < 0.5f ? 0f : 1f;
+
+          var thresholded = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(t1),
+            UNorm32.FromFloatClamped(t2),
+            UNorm32.FromFloatClamped(t3),
+            alpha
+          );
+
+          indices[targetIdx] = (byte)lookup.FindNearest(thresholded);
+        }
+      }
+    } else
+#endif
+    {
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var targetIdx = y * targetStride;
+
+        for (var x = 0; x < width; ++x, ++targetIdx) {
+          var color = rowSource[x];
+          var (c1, c2, c3, alpha) = color.ToNormalized();
+
+          // Hard 50% threshold per channel (alpha is preserved unchanged so
+          // transparent-friendly palettes still work as expected).
+          var t1 = c1.ToFloat() < 0.5f ? 0f : 1f;
+          var t2 = c2.ToFloat() < 0.5f ? 0f : 1f;
+          var t3 = c3.ToFloat() < 0.5f ? 0f : 1f;
+
+          var thresholded = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(t1),
+            UNorm32.FromFloatClamped(t2),
+            UNorm32.FromFloatClamped(t3),
+            alpha
+          );
+
+          indices[targetIdx] = (byte)lookup.FindNearest(thresholded);
+        }
+      }
     }
   }
 }

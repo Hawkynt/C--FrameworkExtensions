@@ -137,7 +137,9 @@ public struct BayesianGaussianMixtureQuantizer : IQuantizer {
             var dx = x[i] - means[c].x; var dy = y[i] - means[c].y; var dz = z[i] - means[c].z;
             var sd2 = dx * dx + dy * dy + dz * dz;
             var vr = Math.Max(variances[c], minVariance);
-            var pc = weights[c] * Math.Exp(-sd2 / (2 * vr)) / Math.Pow(2 * Math.PI * vr, 1.5);
+            // Pow(t, 1.5) inlined as t * sqrt(t) — 1 mul + 1 sqrt vs Math.Pow's transcendental call.
+            var twoPiVr = 2 * Math.PI * vr;
+            var pc = weights[c] * Math.Exp(-sd2 / (2 * vr)) / (twoPiVr * Math.Sqrt(twoPiVr));
             probs[c] = pc;
             sum += pc;
           }

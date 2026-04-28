@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Guard;
 
 namespace Hawkynt.Drawing.ColorDomain;
 
@@ -40,8 +41,10 @@ public sealed class PcaColorQuantizerWrapper : IColorQuantizer {
 
   private readonly IColorQuantizer _inner;
 
-  public PcaColorQuantizerWrapper(IColorQuantizer inner)
-    => this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
+  public PcaColorQuantizerWrapper(IColorQuantizer inner) {
+    Against.ArgumentIsNull(inner);
+    this._inner = inner;
+  }
 
   public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors)
     => this.ReduceColorsTo(numberOfColors, usedColors.Select(c => (c, 1u)));

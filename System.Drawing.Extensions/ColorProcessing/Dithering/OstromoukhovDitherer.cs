@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -102,20 +101,17 @@ public readonly struct OstromoukhovDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -138,7 +134,7 @@ public readonly struct OstromoukhovDitherer : IDitherer {
         var sourceIdx = y * sourceStride + x;
 
         // Decode source pixel
-        var pixel = decoder.Decode(source[sourceIdx]);
+        var pixel = source[sourceIdx];
         var (c1, c2, c3, alpha) = pixel.ToNormalized();
         var pixelC1 = c1.ToFloat();
         var pixelC2 = c2.ToFloat();

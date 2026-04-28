@@ -22,6 +22,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Guard;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -87,12 +88,40 @@ public static partial class QuantizerRegistry {
   public static IEnumerable<QuantizerDescriptor> GetByType(QuantizationType type)
     => All.Where(q => q.Type == type);
 
+  private static readonly List<QuantizerDescriptor> _ParametricVariants = [];
+
+  /// <summary>
+  /// Registers an additional parametric variant of an existing quantizer. The variant
+  /// appears in <see cref="All"/> alongside the fixed-default entries.
+  /// </summary>
+  public static void RegisterParametric(
+    Type declaringType,
+    string name,
+    string parameterKey,
+    Func<IQuantizer> defaultFactory,
+    QuantizationType type = QuantizationType.Clustering,
+    string? author = null,
+    int year = 0,
+    int qualityRating = 5) {
+    Against.ArgumentIsNull(declaringType);
+    Against.ArgumentIsNullOrEmpty(name);
+    Against.ArgumentIsNullOrEmpty(parameterKey);
+    Against.ArgumentIsNull(defaultFactory);
+    lock (_ParametricVariants)
+      _ParametricVariants.Add(QuantizerDescriptor.__CreateParametric(
+        declaringType, name, author, type, year, qualityRating, defaultFactory, parameterKey));
+  }
+
   private static QuantizerDescriptor[] DiscoverQuantizers() {
     var descriptors = new List<QuantizerDescriptor>();
 
     _CollectFromSourceGenerator(descriptors);
-    if (descriptors.Count > 0)
+    if (descriptors.Count > 0) {
+      ParametricQuantizers.EnsureRegistered();
+      lock (_ParametricVariants)
+        descriptors.AddRange(_ParametricVariants);
       return descriptors.OrderBy(q => q.Name).ToArray();
+    }
 
     var assembly = typeof(QuantizerRegistry).Assembly;
 
@@ -150,6 +179,10 @@ public static partial class QuantizerRegistry {
       }
     }
 
+    ParametricQuantizers.EnsureRegistered();
+    lock (_ParametricVariants)
+      descriptors.AddRange(_ParametricVariants);
+
     return descriptors.OrderBy(q => q.Name).ToArray();
   }
 }
@@ -189,6 +222,20 @@ public sealed class QuantizerDescriptor {
   /// </summary>
   public int QualityRating { get; }
 
+  /// <summary>
+  /// Gets the optional algorithm key under which this descriptor's tunable parameters are
+  /// registered in <see cref="ParameterMetadata"/>. <see langword="null"/> for fixed-default entries.
+  /// </summary>
+  public string? ParameterKey { get; }
+
+  /// <summary>
+  /// Gets the parameter descriptors for this quantizer. Empty for fixed-default entries.
+  /// </summary>
+  public IReadOnlyList<ParameterDescriptor> Parameters
+    => this.ParameterKey is { Length: > 0 } key
+      ? ParameterMetadata.GetParameters(key)
+      : ParameterMetadata.GetParameters("__none__");
+
   private readonly Func<IQuantizer> _factory;
 
   /// <summary>
@@ -202,7 +249,21 @@ public sealed class QuantizerDescriptor {
     int year,
     int qualityRating,
     Func<IQuantizer> factory)
-    => new(declaringType, name, author, type, year, qualityRating, factory);
+    => new(declaringType, name, author, type, year, qualityRating, factory, parameterKey: null);
+
+  /// <summary>
+  /// Internal factory used by parametric variants to attach a <see cref="ParameterMetadata"/> key.
+  /// </summary>
+  internal static QuantizerDescriptor __CreateParametric(
+    Type declaringType,
+    string name,
+    string? author,
+    QuantizationType type,
+    int year,
+    int qualityRating,
+    Func<IQuantizer> factory,
+    string parameterKey)
+    => new(declaringType, name, author, type, year, qualityRating, factory, parameterKey);
 
   internal QuantizerDescriptor(
     Type declaringType,
@@ -211,7 +272,18 @@ public sealed class QuantizerDescriptor {
     QuantizationType type,
     int year,
     int qualityRating,
-    Func<IQuantizer> factory) {
+    Func<IQuantizer> factory)
+    : this(declaringType, name, author, type, year, qualityRating, factory, parameterKey: null) { }
+
+  internal QuantizerDescriptor(
+    Type declaringType,
+    string name,
+    string? author,
+    QuantizationType type,
+    int year,
+    int qualityRating,
+    Func<IQuantizer> factory,
+    string? parameterKey) {
     this.DeclaringType = declaringType;
     this.Name = name;
     this.Author = author;
@@ -219,6 +291,7 @@ public sealed class QuantizerDescriptor {
     this.Year = year;
     this.QualityRating = qualityRating;
     this._factory = factory;
+    this.ParameterKey = parameterKey;
   }
 
   /// <summary>
@@ -226,6 +299,23 @@ public sealed class QuantizerDescriptor {
   /// </summary>
   /// <returns>A quantizer instance.</returns>
   public IQuantizer CreateDefault() => this._factory();
+
+  /// <summary>
+  /// Creates an instance of this quantizer with the supplied parameter overrides. Any
+  /// parameter not present in <paramref name="values"/> falls back to its descriptor
+  /// default. For fixed-default entries this is equivalent to <see cref="CreateDefault"/>.
+  /// </summary>
+  public IQuantizer CreateWith(IReadOnlyDictionary<string, object?>? values) {
+    if (this.ParameterKey is { Length: > 0 } key) {
+      var builder = ParameterMetadata.GetBuilder(key);
+      if (builder != null)
+        return (IQuantizer)builder(values ?? _EmptyValues);
+    }
+    return this.CreateDefault();
+  }
+
+  private static readonly IReadOnlyDictionary<string, object?> _EmptyValues
+    = new System.Collections.ObjectModel.ReadOnlyDictionary<string, object?>(new Dictionary<string, object?>());
 
   /// <inheritdoc />
   public override string ToString() => $"{this.Name} ({this.Type})";

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -51,7 +52,22 @@ public sealed class FilterDescriptor {
     string? url,
     int year,
     FilterCategory category)
-    => new(type, name, author, description, url, year, category);
+    => new(type, name, author, description, url, year, category, parameterKey: null);
+
+  /// <summary>
+  /// Internal factory used by parametric variants to attach a <see cref="ParameterMetadata"/>
+  /// key. Mirrors <see cref="__CreateFromGenerator"/> but threads through the key.
+  /// </summary>
+  internal static FilterDescriptor __CreateParametric(
+    Type type,
+    string name,
+    string? author,
+    string? description,
+    string? url,
+    int year,
+    FilterCategory category,
+    string parameterKey)
+    => new(type, name, author, description, url, year, category, parameterKey);
 
 
   /// <summary>
@@ -89,6 +105,23 @@ public sealed class FilterDescriptor {
   /// </summary>
   public FilterCategory Category { get; }
 
+  /// <summary>
+  /// Gets the optional algorithm key under which this descriptor's tunable parameters
+  /// are registered in <see cref="ParameterMetadata"/>. <see langword="null"/> for
+  /// fixed-default entries (which expose an empty <see cref="Parameters"/> list).
+  /// </summary>
+  public string? ParameterKey { get; }
+
+  /// <summary>
+  /// Gets the parameter descriptors for this filter. Empty for entries that ship a
+  /// single fixed default; non-empty for parametric variants registered via
+  /// <see cref="ParameterMetadata.Register"/>.
+  /// </summary>
+  public IReadOnlyList<ParameterDescriptor> Parameters
+    => this.ParameterKey is { Length: > 0 } key
+      ? ParameterMetadata.GetParameters(key)
+      : ParameterMetadata.GetParameters("__none__");
+
   private FilterDescriptor(
     Type type,
     string name,
@@ -96,7 +129,8 @@ public sealed class FilterDescriptor {
     string? description,
     string? url,
     int year,
-    FilterCategory category) {
+    FilterCategory category,
+    string? parameterKey) {
     this.Type = type;
     this.Name = name;
     this.Author = author;
@@ -104,6 +138,7 @@ public sealed class FilterDescriptor {
     this.Url = url;
     this.Year = year;
     this.Category = category;
+    this.ParameterKey = parameterKey;
   }
 
   /// <summary>
@@ -126,7 +161,8 @@ public sealed class FilterDescriptor {
       attr.Description,
       attr.Url,
       attr.Year,
-      attr.Category
+      attr.Category,
+      parameterKey: null
     );
   }
 
@@ -135,6 +171,25 @@ public sealed class FilterDescriptor {
   /// </summary>
   /// <returns>A new instance of the filter with default configuration.</returns>
   public IPixelFilter CreateDefault() => (IPixelFilter)_CreateDefault();
+
+  /// <summary>
+  /// Creates an instance of this filter with the supplied parameter overrides. Any
+  /// parameter not present in <paramref name="values"/> falls back to its descriptor
+  /// default. For non-parametric filters (empty <see cref="Parameters"/>) this is
+  /// equivalent to <see cref="CreateDefault"/>.
+  /// </summary>
+  /// <param name="values">Mapping from parameter name to value; may be <see langword="null"/>.</param>
+  public IPixelFilter CreateWith(IReadOnlyDictionary<string, object?>? values) {
+    if (this.ParameterKey is { Length: > 0 } key) {
+      var builder = ParameterMetadata.GetBuilder(key);
+      if (builder != null)
+        return (IPixelFilter)builder(values ?? _EmptyValues);
+    }
+    return this.CreateDefault();
+  }
+
+  private static readonly IReadOnlyDictionary<string, object?> _EmptyValues
+    = new System.Collections.ObjectModel.ReadOnlyDictionary<string, object?>(new Dictionary<string, object?>());
 
   /// <summary>
   /// Creates a default instance of this filter as the specified type.

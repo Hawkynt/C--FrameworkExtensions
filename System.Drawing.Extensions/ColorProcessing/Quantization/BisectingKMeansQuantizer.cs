@@ -123,6 +123,13 @@ public struct BisectingKMeansQuantizer : IQuantizer {
 
       var random = new Random(42 + cluster.Points.Count);
 
+      // Hoisted scratch buffers reused across trials and iterations.
+      // Bisection trials typically split ~2:1, so reusing capacity is a real cache win.
+      var pointCount = cluster.Points.Count;
+      var capacityHint = (pointCount * 2 + 2) / 3; // ~2/3 of points -- the larger half of a 2:1 split
+      var points1 = new List<(TWork color, uint count)>(capacityHint);
+      var points2 = new List<(TWork color, uint count)>(capacityHint);
+
       for (var trial = 0; trial < bisectionTrials; ++trial) {
         // Initialize two centroids using K-Means++ style
         var idx1 = random.Next(cluster.Points.Count);
@@ -144,8 +151,8 @@ public struct BisectingKMeansQuantizer : IQuantizer {
 
         // Run K-Means with k=2
         for (var iteration = 0; iteration < maxIterationsPerSplit; ++iteration) {
-          var points1 = new List<(TWork color, uint count)>();
-          var points2 = new List<(TWork color, uint count)>();
+          points1.Clear();
+          points2.Clear();
 
           // Assign points to nearest centroid
           foreach (var point in cluster.Points) {

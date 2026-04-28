@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -76,20 +75,17 @@ public readonly struct DebandingDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -99,7 +95,7 @@ public readonly struct DebandingDitherer : IDitherer {
     var sourceColors = new (float c1, float c2, float c3, float a)[height * width];
     for (var y = startY; y < endY; ++y)
     for (var x = 0; x < width; ++x) {
-      var pixel = decoder.Decode(source[y * sourceStride + x]);
+      var pixel = source[y * sourceStride + x];
       var (c1, c2, c3, alpha) = pixel.ToNormalized();
       sourceColors[(y - startY) * width + x] = (c1.ToFloat(), c2.ToFloat(), c3.ToFloat(), alpha.ToFloat());
     }

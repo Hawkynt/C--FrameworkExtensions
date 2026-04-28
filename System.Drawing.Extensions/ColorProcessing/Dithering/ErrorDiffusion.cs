@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -98,24 +97,20 @@ public readonly struct ErrorDiffusion : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>
     => ErrorDiffusionCore.DitherLinear(
-      source, indices, width, height, sourceStride, targetStride, startY,
-      decoder, metric, palette, this._data);
+      source, indices, width, height, sourceStride, targetStride, startY, metric, palette, this._data);
 
   #endregion
 
@@ -201,6 +196,30 @@ public readonly struct ErrorDiffusion : IDitherer {
   /// <summary>Diamond: Symmetric diamond pattern. Quality: 7/10</summary>
   public static ErrorDiffusion Diamond { get; } = new(ErrorDiffusionData.Diamond);
 
+  /// <summary>Jarvis Reversed (1976): Single-line right-to-left-biased reduction of JJN. Quality: 7/10</summary>
+  /// <remarks>Reference: J.F. Jarvis, C.N. Judice, W.H. Ninke 1976.</remarks>
+  public static ErrorDiffusion JarvisReversed { get; } = new(ErrorDiffusionData.JarvisReversed);
+
+  /// <summary>Sierra Lite Reversed (1990): Left-biased horizontal mirror of Sierra Filter-Lite. Quality: 6/10</summary>
+  /// <remarks>Reference: Frankie Sierra 1990.</remarks>
+  public static ErrorDiffusion SierraLiteReversed { get; } = new(ErrorDiffusionData.SierraLiteReversed);
+
+  /// <summary>Ulichney Diagonal FS (1987): Diagonal-weighted Floyd-Steinberg that suppresses curdling on ramps. Quality: 8/10</summary>
+  /// <remarks>Reference: Robert Ulichney 1987.</remarks>
+  public static ErrorDiffusion UlichneyDiagonalFS { get; } = new(ErrorDiffusionData.UlichneyDiagonalFS);
+
+  /// <summary>Knuth-Witten (1987): Fast 3-neighbour error diffusion with asymmetric weights. Quality: 6/10</summary>
+  /// <remarks>Reference: Donald Knuth 1987.</remarks>
+  public static ErrorDiffusion KnuthWitten { get; } = new(ErrorDiffusionData.KnuthWitten);
+
+  /// <summary>Kolpatzik-Bouman (1992): HVS-weighted three-row variant of Floyd-Steinberg. Quality: 8/10</summary>
+  /// <remarks>Reference: B. Kolpatzik, C. Bouman 1992.</remarks>
+  public static ErrorDiffusion KolpatzikBouman { get; } = new(ErrorDiffusionData.KolpatzikBouman);
+
+  /// <summary>Fan 93 Double-Line: Two-row extension of Zhigang Fan's 1993 single-line matrix. Quality: 7/10</summary>
+  /// <remarks>Reference: Z. Fan 1993, two-row formulation.</remarks>
+  public static ErrorDiffusion Fan93DoubleLine { get; } = new(ErrorDiffusionData.Fan93DoubleLine);
+
   #endregion
 
 }
@@ -272,24 +291,20 @@ public readonly struct ErrorDiffusionSerpentine : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>
     => ErrorDiffusionCore.DitherSerpentine(
-      source, indices, width, height, sourceStride, targetStride, startY,
-      decoder, metric, palette, this._data);
+      source, indices, width, height, sourceStride, targetStride, startY, metric, palette, this._data);
 
   #endregion
 
@@ -479,6 +494,38 @@ internal readonly struct ErrorDiffusionData {
     { 1, 0, 2, 0, 1 }
   });
 
+  public static ErrorDiffusionData JarvisReversed { get; } = new(new byte[,] {
+    { 0, X, 3 },
+    { 5, 7, 1 }
+  });
+
+  public static ErrorDiffusionData SierraLiteReversed { get; } = new(new byte[,] {
+    { 2, X, 0 },
+    { 0, 1, 1 }
+  });
+
+  public static ErrorDiffusionData UlichneyDiagonalFS { get; } = new(new byte[,] {
+    { 0, X, 4 },
+    { 3, 5, 3 }
+  });
+
+  public static ErrorDiffusionData KnuthWitten { get; } = new(new byte[,] {
+    { 0, X, 2 },
+    { 1, 1, 0 }
+  });
+
+  public static ErrorDiffusionData KolpatzikBouman { get; } = new(new byte[,] {
+    { 0, X, 8 },
+    { 2, 4, 2 },
+    { 0, 1, 0 }
+  });
+
+  public static ErrorDiffusionData Fan93DoubleLine { get; } = new(new byte[,] {
+    { 0, X, 7 },
+    { 1, 3, 5 },
+    { 0, 1, 0 }
+  });
+
   #endregion
 
 }
@@ -489,21 +536,18 @@ internal readonly struct ErrorDiffusionData {
 file static class ErrorDiffusionCore {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void DitherLinear<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public static unsafe void DitherLinear<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette,
     in ErrorDiffusionData data)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -523,7 +567,7 @@ file static class ErrorDiffusionCore {
         var sourceIdx = rowSourceBase + x;
         var targetIdx = rowTargetBase + x;
 
-        var color = decoder.Decode(source[sourceIdx]);
+        var color = source[sourceIdx];
         var errIdx = row0Offset + x * 4;
         var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
         errors.AsSpan(errIdx, 4).Clear();
@@ -543,21 +587,18 @@ file static class ErrorDiffusionCore {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static unsafe void DitherSerpentine<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public static unsafe void DitherSerpentine<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette,
     in ErrorDiffusionData data)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -581,7 +622,7 @@ file static class ErrorDiffusionCore {
           var sourceIdx = rowSourceBase + x;
           var targetIdx = rowTargetBase + x;
 
-          var color = decoder.Decode(source[sourceIdx]);
+          var color = source[sourceIdx];
           var errIdx = row0Offset + x * 4;
           var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
           errors.AsSpan(errIdx, 4).Clear();
@@ -598,7 +639,7 @@ file static class ErrorDiffusionCore {
           var sourceIdx = rowSourceBase + x;
           var targetIdx = rowTargetBase + x;
 
-          var color = decoder.Decode(source[sourceIdx]);
+          var color = source[sourceIdx];
           var errIdx = row0Offset + x * 4;
           var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
           errors.AsSpan(errIdx, 4).Clear();

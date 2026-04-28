@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -85,20 +84,17 @@ public readonly struct UlichneyDiffusionDotDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -111,10 +107,10 @@ public readonly struct UlichneyDiffusionDotDitherer : IDitherer {
     for (var y = startY; y < endY; ++y) {
       var localY = y - startY;
       for (var x = 0; x < width; ++x) {
-        var color = decoder.Decode(source[y * sourceStride + x]);
+        var color = source[y * sourceStride + x];
         var (c1, c2, c3, alpha) = color.ToNormalized();
 
-        var activity = _EstimateActivity<TPixel, TWork, TDecode>(source, decoder, x, y, sourceStride, width, endY);
+        var activity = _EstimateActivity(source, x, y, sourceStride, width, endY);
         // Weight ∈ [0, 1]: 0 = use pure halftone (flat), 1 = use pure FS
         // (textured). Smooth ramp centred on 0.04.
         var edFrac = Math.Max(0f, Math.Min(1f, (activity - 0.02f) / 0.04f));
@@ -157,30 +153,26 @@ public readonly struct UlichneyDiffusionDotDitherer : IDitherer {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe float _EstimateActivity<TPixel, TWork, TDecode>(
-    TPixel* source, in TDecode decoder, int x, int y, int sourceStride, int width, int endY)
-    where TPixel : unmanaged, IStorageSpace
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TDecode : struct, IDecode<TPixel, TWork> {
+  private static unsafe float _EstimateActivity<TWork>(
+    TWork* source, int x, int y, int sourceStride, int width, int endY)
+    where TWork : unmanaged, IColorSpace4<TWork> {
     // Compute |4·centre - sum(4-neighbour)| (luminance Laplacian-like).
-    var centreLum = _Luma<TPixel, TWork, TDecode>(source, decoder, x, y, sourceStride);
+    var centreLum = _Luma(source, x, y, sourceStride);
     var sum = 0f;
     var n = 0;
-    if (x + 1 < width) { sum += _Luma<TPixel, TWork, TDecode>(source, decoder, x + 1, y, sourceStride); ++n; }
-    if (x - 1 >= 0) { sum += _Luma<TPixel, TWork, TDecode>(source, decoder, x - 1, y, sourceStride); ++n; }
-    if (y + 1 < endY) { sum += _Luma<TPixel, TWork, TDecode>(source, decoder, x, y + 1, sourceStride); ++n; }
-    if (y - 1 >= 0) { sum += _Luma<TPixel, TWork, TDecode>(source, decoder, x, y - 1, sourceStride); ++n; }
+    if (x + 1 < width) { sum += _Luma(source, x + 1, y, sourceStride); ++n; }
+    if (x - 1 >= 0) { sum += _Luma(source, x - 1, y, sourceStride); ++n; }
+    if (y + 1 < endY) { sum += _Luma(source, x, y + 1, sourceStride); ++n; }
+    if (y - 1 >= 0) { sum += _Luma(source, x, y - 1, sourceStride); ++n; }
     if (n == 0)
       return 0f;
     return Math.Abs(centreLum - sum / n);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe float _Luma<TPixel, TWork, TDecode>(TPixel* source, in TDecode decoder, int x, int y, int sourceStride)
-    where TPixel : unmanaged, IStorageSpace
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TDecode : struct, IDecode<TPixel, TWork> {
-    var decoded = decoder.Decode(source[y * sourceStride + x]);
+  private static unsafe float _Luma<TWork>(TWork* source, int x, int y, int sourceStride)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    var decoded = source[y * sourceStride + x];
     var (q1, q2, q3, _) = decoded.ToNormalized();
     return 0.299f * q1.ToFloat() + 0.587f * q2.ToFloat() + 0.114f * q3.ToFloat();
   }

@@ -18,7 +18,6 @@
 #endregion
 
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -84,20 +83,17 @@ public readonly struct CgaMode4Ditherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var cap = palette.Length < 4 ? palette.Length : 4;
@@ -106,18 +102,19 @@ public readonly struct CgaMode4Ditherer : IDitherer {
       sub[i] = palette[i];
     var lookup = new PaletteLookup<TWork, TMetric>(sub, metric);
     var endY = startY + height;
-
-    for (var y = startY; y < endY; ++y)
-    for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-      var color = decoder.Decode(source[sourceIdx]);
-      var (c1, c2, c3, a) = color.ToNormalized();
-      var t = _Screen[(y & 3) * _W + (x & (_W - 1))];
-      var adj = ColorFactory.FromNormalized_4<TWork>(
-        UNorm32.FromFloatClamped(c1.ToFloat() + t),
-        UNorm32.FromFloatClamped(c2.ToFloat() + t),
-        UNorm32.FromFloatClamped(c3.ToFloat() + t),
-        a);
-      indices[targetIdx] = (byte)lookup.FindNearest(adj);
+    for (var y = startY; y < endY; ++y) {
+      var rowSource = source + y * sourceStride;
+      for (int x = 0, targetIdx = y * targetStride; x < width; ++x, ++targetIdx) {
+        var color = rowSource[x];
+        var (c1, c2, c3, a) = color.ToNormalized();
+        var t = _Screen[(y & 3) * _W + (x & (_W - 1))];
+        var adj = ColorFactory.FromNormalized_4<TWork>(
+          UNorm32.FromFloatClamped(c1.ToFloat() + t),
+          UNorm32.FromFloatClamped(c2.ToFloat() + t),
+          UNorm32.FromFloatClamped(c3.ToFloat() + t),
+          a);
+        indices[targetIdx] = (byte)lookup.FindNearest(adj);
+      }
     }
   }
 }

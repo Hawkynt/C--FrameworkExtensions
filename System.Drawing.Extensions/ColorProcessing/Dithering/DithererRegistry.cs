@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Guard;
 
 namespace Hawkynt.ColorProcessing.Dithering;
 
@@ -86,12 +87,40 @@ public static partial class DithererRegistry {
   public static IEnumerable<DithererDescriptor> GetByType(DitheringType type)
     => All.Where(d => d.Type == type);
 
+  private static readonly List<DithererDescriptor> _ParametricVariants = [];
+
+  /// <summary>
+  /// Registers an additional parametric variant of an existing ditherer. The variant
+  /// appears in <see cref="All"/> alongside the fixed-default entries.
+  /// </summary>
+  public static void RegisterParametric(
+    Type declaringType,
+    string name,
+    string parameterKey,
+    Func<IDitherer> defaultFactory,
+    DitheringType type = DitheringType.Custom,
+    string? author = null,
+    string? description = null,
+    int year = 0) {
+    Against.ArgumentIsNull(declaringType);
+    Against.ArgumentIsNullOrEmpty(name);
+    Against.ArgumentIsNullOrEmpty(parameterKey);
+    Against.ArgumentIsNull(defaultFactory);
+    lock (_ParametricVariants)
+      _ParametricVariants.Add(DithererDescriptor.__CreateParametric(declaringType, name, author, description, type, year, defaultFactory, parameterKey));
+  }
+
   private static DithererDescriptor[] DiscoverDitherers() {
     var descriptors = new List<DithererDescriptor>();
 
     _CollectFromSourceGenerator(descriptors);
-    if (descriptors.Count > 0)
+    if (descriptors.Count > 0) {
+      ParametricDitherers.EnsureRegistered();
+      lock (_ParametricVariants)
+        descriptors.AddRange(_ParametricVariants);
+
       return descriptors.OrderBy(d => d.Name).ToArray();
+    }
 
     var assembly = typeof(DithererRegistry).Assembly;
 
@@ -149,6 +178,10 @@ public static partial class DithererRegistry {
       }
     }
 
+    ParametricDitherers.EnsureRegistered();
+    lock (_ParametricVariants)
+      descriptors.AddRange(_ParametricVariants);
+
     return descriptors.OrderBy(d => d.Name).ToArray();
   }
 }
@@ -188,6 +221,20 @@ public sealed class DithererDescriptor {
   /// </summary>
   public int Year { get; }
 
+  /// <summary>
+  /// Gets the optional algorithm key under which this descriptor's tunable parameters are
+  /// registered in <see cref="ParameterMetadata"/>. <see langword="null"/> for fixed-default entries.
+  /// </summary>
+  public string? ParameterKey { get; }
+
+  /// <summary>
+  /// Gets the parameter descriptors for this ditherer. Empty for fixed-default entries.
+  /// </summary>
+  public IReadOnlyList<ParameterDescriptor> Parameters
+    => this.ParameterKey is { Length: > 0 } key
+      ? ParameterMetadata.GetParameters(key)
+      : ParameterMetadata.GetParameters("__none__");
+
   private readonly Func<IDitherer> _factory;
 
   /// <summary>
@@ -201,7 +248,21 @@ public sealed class DithererDescriptor {
     DitheringType type,
     int year,
     Func<IDitherer> factory)
-    => new(declaringType, name, author, description, type, year, factory);
+    => new(declaringType, name, author, description, type, year, factory, parameterKey: null);
+
+  /// <summary>
+  /// Internal factory used by parametric variants to attach a <see cref="ParameterMetadata"/> key.
+  /// </summary>
+  internal static DithererDescriptor __CreateParametric(
+    Type declaringType,
+    string name,
+    string? author,
+    string? description,
+    DitheringType type,
+    int year,
+    Func<IDitherer> factory,
+    string parameterKey)
+    => new(declaringType, name, author, description, type, year, factory, parameterKey);
 
   internal DithererDescriptor(
     Type declaringType,
@@ -210,7 +271,18 @@ public sealed class DithererDescriptor {
     string? description,
     DitheringType type,
     int year,
-    Func<IDitherer> factory) {
+    Func<IDitherer> factory)
+    : this(declaringType, name, author, description, type, year, factory, parameterKey: null) { }
+
+  internal DithererDescriptor(
+    Type declaringType,
+    string name,
+    string? author,
+    string? description,
+    DitheringType type,
+    int year,
+    Func<IDitherer> factory,
+    string? parameterKey) {
     this.DeclaringType = declaringType;
     this.Name = name;
     this.Author = author;
@@ -218,6 +290,7 @@ public sealed class DithererDescriptor {
     this.Type = type;
     this.Year = year;
     this._factory = factory;
+    this.ParameterKey = parameterKey;
   }
 
   /// <summary>
@@ -225,6 +298,23 @@ public sealed class DithererDescriptor {
   /// </summary>
   /// <returns>A ditherer instance.</returns>
   public IDitherer CreateDefault() => this._factory();
+
+  /// <summary>
+  /// Creates an instance of this ditherer with the supplied parameter overrides. Any
+  /// parameter not present in <paramref name="values"/> falls back to its descriptor
+  /// default. For fixed-default entries this is equivalent to <see cref="CreateDefault"/>.
+  /// </summary>
+  public IDitherer CreateWith(IReadOnlyDictionary<string, object?>? values) {
+    if (this.ParameterKey is { Length: > 0 } key) {
+      var builder = ParameterMetadata.GetBuilder(key);
+      if (builder != null)
+        return (IDitherer)builder(values ?? _EmptyValues);
+    }
+    return this.CreateDefault();
+  }
+
+  private static readonly IReadOnlyDictionary<string, object?> _EmptyValues
+    = new System.Collections.ObjectModel.ReadOnlyDictionary<string, object?>(new Dictionary<string, object?>());
 
   /// <inheritdoc />
   public override string ToString() => $"{this.Name} ({this.Type})";

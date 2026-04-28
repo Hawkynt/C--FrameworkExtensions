@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -83,26 +82,22 @@ public readonly struct MsxScreen2Ditherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     // MSX-1 master palette has 16 entries; accept up to that many.
     var cap = palette.Length < 16 ? palette.Length : 16;
     var endY = startY + height;
-
     // Process each 8×1 row independently. Choosing the optimal colour-pair
     // per row is the work that makes the algorithm distinctive.
     for (var y = startY; y < endY; ++y)
@@ -112,8 +107,9 @@ public readonly struct MsxScreen2Ditherer : IDitherer {
       // Decode the pixels of this row once into a tiny stack scratch buffer.
       var pixels = stackalloc float[_ROW_WIDTH * 3];
       var count = rowEnd - rowX;
+      var rowSource = source + y * sourceStride;
       for (var i = 0; i < count; ++i) {
-        var color = decoder.Decode(source[y * sourceStride + rowX + i]);
+        var color = rowSource[rowX + i];
         var (c1, c2, c3, _) = color.ToNormalized();
         pixels[i * 3] = c1.ToFloat();
         pixels[i * 3 + 1] = c2.ToFloat();

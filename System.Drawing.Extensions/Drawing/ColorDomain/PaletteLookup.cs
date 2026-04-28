@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using Guard;
 
 namespace Hawkynt.Drawing.ColorDomain;
 
@@ -40,7 +41,7 @@ public sealed class PaletteLookup {
   private readonly Func<Color, Color, int> _metric;
 
   public PaletteLookup(IEnumerable<Color> palette, Func<Color, Color, int>? metric = null) {
-    if (palette == null) throw new ArgumentNullException(nameof(palette));
+    Against.ArgumentIsNull(palette);
     var list = new List<Color>();
     foreach (var c in palette)
       list.Add(c);

@@ -91,6 +91,9 @@
     <Folder Include="Utilities\" />
     <Folder Include="System\IO\" />
     <ProjectReference Include="..\Backports\Backports.csproj" />
+    <EmbeddedResource Include="ColorProcessing\Spaces\Perceptual\MunsellRenotation.dat">
+      <LogicalName>Hawkynt.ColorProcessing.Spaces.Perceptual.MunsellRenotation.dat</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <!-- System.IO.Compression for ZipArchive on .NET Framework 4.5+ -->

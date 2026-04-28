@@ -19,8 +19,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -88,20 +91,17 @@ public readonly struct BlueNoiseDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -111,50 +111,141 @@ public readonly struct BlueNoiseDitherer : IDitherer {
     var matrixSize = this._matrixSize > 0 ? this._matrixSize : _DEFAULT_MATRIX_SIZE;
     var noiseMatrix = this._noiseMatrix ?? _DefaultMatrix.Value;
 
-    for (var y = startY; y < endY; ++y) {
-      var matrixRowOffset = (y % matrixSize) * matrixSize;
+#if SUPPORTS_INTRINSICS
+    // float-domain SIMD across 4 pixels of B/G/R add+clamp; scalar quantize per
+    // channel preserves bit-exact output. Stackalloc'd once outside loops to avoid CA2014.
+    // Eligibility check is loop-invariant — hoisted out of the y-loop so the JIT sees
+    // two distinct hot loops, and so legacy TFMs (net35/40/45/48) don't pay a per-row
+    // Sse2.IsSupported field load.
+    var simdEligible = Sse2.IsSupported && typeof(TWork) == typeof(Bgra8888) && width >= 4;
+    if (simdEligible) {
+      var simdEnd = width & ~3;
+      var bChannels = stackalloc float[4];
+      var gChannels = stackalloc float[4];
+      var rChannels = stackalloc float[4];
+      var alphaBytes = stackalloc byte[4];
+      var thresholds4 = stackalloc float[4];
 
-      for (var x = 0; x < width; ++x) {
-        var sourceIdx = y * sourceStride + x;
-        var targetIdx = y * targetStride + x;
+      for (var y = startY; y < endY; ++y) {
+        var matrixRowOffset = (y % matrixSize) * matrixSize;
+        var rowSource = source + y * sourceStride;
+        var x = 0;
 
-        // Decode source pixel
-        var color = decoder.Decode(source[sourceIdx]);
+        var srcBase = (byte*)rowSource;
+        for (; x < simdEnd; x += 4) {
+          ThresholdDithererSimd.DecodeBgra4Pixels(srcBase + x * 4, bChannels, gChannels, rChannels, alphaBytes);
 
-        // First check if this color is very close to a palette entry (exact or near-exact match)
-        // In that case, skip threshold adjustment to preserve exact matches
-        var nearestIdx = lookup.FindNearest(color, out var nearestColor);
-        var (c1, c2, c3, a) = color.ToNormalized();
-        var (n1, n2, n3, na) = nearestColor.ToNormalized();
-        var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
-                            Math.Abs(c2.ToFloat() - n2.ToFloat()) +
-                            Math.Abs(c3.ToFloat() - n3.ToFloat()) +
-                            Math.Abs(a.ToFloat() - na.ToFloat());
+          // Compute 4 per-pixel thresholds.
+          for (var lane = 0; lane < 4; ++lane)
+            thresholds4[lane] = noiseMatrix[matrixRowOffset + ((x + lane) % matrixSize)];
 
-        // If the color is very close to the nearest palette entry, use it directly
-        if (distToNearest < 0.02f) {
-          indices[targetIdx] = (byte)nearestIdx;
-          continue;
+          ThresholdDithererSimd.AddThresholdAndClamp_4Pixels(bChannels, gChannels, rChannels, thresholds4);
+
+          for (var lane = 0; lane < 4; ++lane) {
+            var targetIdx = y * targetStride + x + lane;
+            var color = rowSource[x + lane];
+            var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+            var (c1, c2, c3, a) = color.ToNormalized();
+            var (n1, n2, n3, na) = nearestColor.ToNormalized();
+            var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                                Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                                Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                                Math.Abs(a.ToFloat() - na.ToFloat());
+            if (distToNearest < 0.02f) {
+              indices[targetIdx] = (byte)nearestIdx;
+              continue;
+            }
+
+            // Bgra8888 component convention: (C1, C2, C3, A) = (R, G, B, A).
+            var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+              UNorm32.FromFloatClamped(rChannels[lane]),
+              UNorm32.FromFloatClamped(gChannels[lane]),
+              UNorm32.FromFloatClamped(bChannels[lane]),
+              UNorm32.FromByte(alphaBytes[lane])
+            );
+            indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+          }
         }
 
-        // Get threshold from blue noise matrix (range: -0.5 to +0.5)
-        var threshold = noiseMatrix[matrixRowOffset + (x % matrixSize)];
+        // Tail: width-mod-4 leftover lanes.
+        for (; x < width; ++x) {
+          var targetIdx = y * targetStride + x;
+          var color = rowSource[x];
+          var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+          var (c1, c2, c3, a) = color.ToNormalized();
+          var (n1, n2, n3, na) = nearestColor.ToNormalized();
+          var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                              Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                              Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                              Math.Abs(a.ToFloat() - na.ToFloat());
+          if (distToNearest < 0.02f) {
+            indices[targetIdx] = (byte)nearestIdx;
+            continue;
+          }
 
-        // Apply threshold to each color channel (scaled appropriately for normalized values)
-        var adjustedC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + threshold));
-        var adjustedC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + threshold));
-        var adjustedC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + threshold));
+          var threshold = noiseMatrix[matrixRowOffset + (x % matrixSize)];
+          var adjustedC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + threshold));
+          var adjustedC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + threshold));
+          var adjustedC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + threshold));
 
-        // Create adjusted color
-        var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-          UNorm32.FromFloatClamped(adjustedC1),
-          UNorm32.FromFloatClamped(adjustedC2),
-          UNorm32.FromFloatClamped(adjustedC3),
-          a
-        );
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(adjustedC1),
+            UNorm32.FromFloatClamped(adjustedC2),
+            UNorm32.FromFloatClamped(adjustedC3),
+            a
+          );
 
-        // Find nearest palette color
-        indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
+      }
+    } else
+#endif
+    {
+      for (var y = startY; y < endY; ++y) {
+        var matrixRowOffset = (y % matrixSize) * matrixSize;
+        var rowSource = source + y * sourceStride;
+
+        for (var x = 0; x < width; ++x) {
+          var targetIdx = y * targetStride + x;
+
+          // Read pre-decoded source pixel from the working buffer.
+          var color = rowSource[x];
+
+          // First check if this color is very close to a palette entry (exact or near-exact match)
+          // In that case, skip threshold adjustment to preserve exact matches
+          var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+          var (c1, c2, c3, a) = color.ToNormalized();
+          var (n1, n2, n3, na) = nearestColor.ToNormalized();
+          var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                              Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                              Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                              Math.Abs(a.ToFloat() - na.ToFloat());
+
+          // If the color is very close to the nearest palette entry, use it directly
+          if (distToNearest < 0.02f) {
+            indices[targetIdx] = (byte)nearestIdx;
+            continue;
+          }
+
+          // Get threshold from blue noise matrix (range: -0.5 to +0.5)
+          var threshold = noiseMatrix[matrixRowOffset + (x % matrixSize)];
+
+          // Apply threshold to each color channel (scaled appropriately for normalized values)
+          var adjustedC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + threshold));
+          var adjustedC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + threshold));
+          var adjustedC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + threshold));
+
+          // Create adjusted color
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(adjustedC1),
+            UNorm32.FromFloatClamped(adjustedC2),
+            UNorm32.FromFloatClamped(adjustedC3),
+            a
+          );
+
+          // Find nearest palette color
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
       }
     }
   }

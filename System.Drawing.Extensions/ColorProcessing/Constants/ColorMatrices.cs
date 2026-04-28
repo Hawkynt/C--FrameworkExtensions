@@ -466,4 +466,49 @@ public static class ColorMatrices {
   public const float Inv500 = 1f / 500f;
 
   #endregion
+
+  #region Bradford chromatic adaptation D65 <-> C (illuminant C is the reference for ASTM D1535 / Munsell renotation)
+
+  // Computed M_adapt = M_Bradford^-1 * diag(rho_d/rho_s, gamma_d/gamma_s, beta_d/beta_s) * M_Bradford
+  // for source D65 (0.95047, 1.00000, 1.08883) and destination C (0.98074, 1.00000, 1.18232).
+
+  /// <summary>Bradford D65->C matrix entry (X row, X column).</summary>
+  public const float Brad65ToC_XX =  1.0095380f;
+  /// <summary>Bradford D65->C matrix entry (X row, Y column).</summary>
+  public const float Brad65ToC_XY =  0.0070620f;
+  /// <summary>Bradford D65->C matrix entry (X row, Z column).</summary>
+  public const float Brad65ToC_XZ =  0.0128430f;
+  /// <summary>Bradford D65->C matrix entry (Y row, X column).</summary>
+  public const float Brad65ToC_YX =  0.0124430f;
+  /// <summary>Bradford D65->C matrix entry (Y row, Y column).</summary>
+  public const float Brad65ToC_YY =  0.9844800f;
+  /// <summary>Bradford D65->C matrix entry (Y row, Z column).</summary>
+  public const float Brad65ToC_YZ =  0.0032970f;
+  /// <summary>Bradford D65->C matrix entry (Z row, X column).</summary>
+  public const float Brad65ToC_ZX =  0.0038350f;
+  /// <summary>Bradford D65->C matrix entry (Z row, Y column).</summary>
+  public const float Brad65ToC_ZY = -0.0072430f;
+  /// <summary>Bradford D65->C matrix entry (Z row, Z column).</summary>
+  public const float Brad65ToC_ZZ =  1.0891740f;
+
+  /// <summary>Bradford C->D65 matrix entry (X row, X column).</summary>
+  public const float BradCTo65_XX =  0.9906900f;
+  /// <summary>Bradford C->D65 matrix entry (X row, Y column).</summary>
+  public const float BradCTo65_XY = -0.0071940f;
+  /// <summary>Bradford C->D65 matrix entry (X row, Z column).</summary>
+  public const float BradCTo65_XZ = -0.0116590f;
+  /// <summary>Bradford C->D65 matrix entry (Y row, X column).</summary>
+  public const float BradCTo65_YX = -0.0125080f;
+  /// <summary>Bradford C->D65 matrix entry (Y row, Y column).</summary>
+  public const float BradCTo65_YY =  1.0158080f;
+  /// <summary>Bradford C->D65 matrix entry (Y row, Z column).</summary>
+  public const float BradCTo65_YZ = -0.0029280f;
+  /// <summary>Bradford C->D65 matrix entry (Z row, X column).</summary>
+  public const float BradCTo65_ZX = -0.0035720f;
+  /// <summary>Bradford C->D65 matrix entry (Z row, Y column).</summary>
+  public const float BradCTo65_ZY =  0.0067810f;
+  /// <summary>Bradford C->D65 matrix entry (Z row, Z column).</summary>
+  public const float BradCTo65_ZZ =  0.9181410f;
+
+  #endregion
 }

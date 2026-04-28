@@ -17,7 +17,9 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
+using Guard;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
@@ -32,7 +34,7 @@ namespace Hawkynt.ColorProcessing.Codecs;
 /// Uses LUT-based gamma expansion for performance.
 /// Stateless struct for zero-cost abstraction via generic dispatch.
 /// </remarks>
-public readonly struct Rgb24ToLinearRgbF : IDecode<Bgr888, LinearRgbF> {
+public readonly struct Rgb24ToLinearRgbF : IDecode<Bgr888, LinearRgbF>, IBatchDecode<Bgr888, LinearRgbF> {
 
   private const float FixedToFloat = 1f / 65536f;
 
@@ -45,4 +47,36 @@ public readonly struct Rgb24ToLinearRgbF : IDecode<Bgr888, LinearRgbF> {
     FixedPointMath.GammaExpansionLut[pixel.G] * FixedToFloat,
     FixedPointMath.GammaExpansionLut[pixel.B] * FixedToFloat
   );
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// 4-way unrolled span-to-span decode. Bit-exact with <see cref="Decode"/> by construction
+  /// (same LUT, same scaling constants).
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void DecodeBatch(ReadOnlySpan<Bgr888> source, Span<LinearRgbF> destination) {
+    var n = source.Length;
+    Against.CountBelow(destination.Length, n);
+
+    var lut = FixedPointMath.GammaExpansionLut;
+    const float inv = FixedToFloat;
+
+    var i = 0;
+    var unrolledEnd = n - (n & 3);
+    for (; i < unrolledEnd; i += 4) {
+      ref readonly var p0 = ref source[i];
+      ref readonly var p1 = ref source[i + 1];
+      ref readonly var p2 = ref source[i + 2];
+      ref readonly var p3 = ref source[i + 3];
+      destination[i]     = new LinearRgbF(lut[p0.R] * inv, lut[p0.G] * inv, lut[p0.B] * inv);
+      destination[i + 1] = new LinearRgbF(lut[p1.R] * inv, lut[p1.G] * inv, lut[p1.B] * inv);
+      destination[i + 2] = new LinearRgbF(lut[p2.R] * inv, lut[p2.G] * inv, lut[p2.B] * inv);
+      destination[i + 3] = new LinearRgbF(lut[p3.R] * inv, lut[p3.G] * inv, lut[p3.B] * inv);
+    }
+
+    for (; i < n; ++i) {
+      ref readonly var p = ref source[i];
+      destination[i] = new LinearRgbF(lut[p.R] * inv, lut[p.G] * inv, lut[p.B] * inv);
+    }
+  }
 }

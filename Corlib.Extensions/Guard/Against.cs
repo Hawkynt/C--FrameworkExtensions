@@ -309,6 +309,24 @@ internal static partial class Against {
 #if SUPPORTS_INLINING
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+  public static void CountBelow(int value, int minimum, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
+    if (value < minimum)
+      AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+  public static void CountBelow(long value, long minimum, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
+    if (value < minimum)
+      AlwaysThrow.ArgumentBelowRangeException(expression ?? nameof(value), value, minimum, caller);
+  }
+
+  [DebuggerHidden]
+#if SUPPORTS_INLINING
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
   public static void CountOutOfRange(int value, int maxValue, [CallerMemberName] string? caller = null, [CallerArgumentExpression(nameof(value))] string? expression = null) {
     if (value <= 0)
       AlwaysThrow.CountTooLowException(expression ?? nameof(value), value, caller);

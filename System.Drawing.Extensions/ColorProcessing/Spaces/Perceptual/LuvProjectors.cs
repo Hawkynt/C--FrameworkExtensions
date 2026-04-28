@@ -38,7 +38,7 @@ public readonly struct XyzFToLuvF : IProject<XyzF, LuvF> {
 
     // Calculate L*
     var l = yRatio > ColorMatrices.Lab_Epsilon
-      ? 116f * MathF.Pow(yRatio, 1f / 3f) - 16f
+      ? 116f * MathF.Cbrt(yRatio) - 16f
       : ColorMatrices.Lab_Kappa * yRatio;
 
     // Calculate u' and v'

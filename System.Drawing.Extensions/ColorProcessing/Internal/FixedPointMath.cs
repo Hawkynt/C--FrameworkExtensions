@@ -325,7 +325,7 @@ internal static class FixedPointMath {
 
     for (var i = 0; i <= 256; ++i) {
       var t = i / 256.0;
-      var f = t > epsilon ? Math.Pow(t, 1.0 / 3.0) : (kappa * t + 16.0) / 116.0;
+      var f = t > epsilon ? Math.Cbrt(t) : (kappa * t + 16.0) / 116.0;
       lut[i] = (int)(f * 65536.0 + 0.5);
     }
     return lut;

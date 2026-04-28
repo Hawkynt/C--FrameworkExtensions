@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -126,100 +125,94 @@ public readonly struct NoiseDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
     // Switch happens ONCE here, not per-pixel - each noise type uses specialized code path
     if (this.Mode == NoiseMode.AdditivePerturb) {
       switch (this.NoiseType) {
         case NoiseType.Blue:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(), this.Strength);
+          _DitherAdditive<TWork, TMetric, BlueNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(), this.Strength);
           return;
         case NoiseType.Pink:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          _DitherAdditive<TWork, TMetric, PinkNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
           return;
         case NoiseType.Brown:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          _DitherAdditive<TWork, TMetric, BrownNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
           return;
         case NoiseType.Violet:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          _DitherAdditive<TWork, TMetric, VioletNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
           return;
         case NoiseType.Grey:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          _DitherAdditive<TWork, TMetric, GreyNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
           return;
         default:
-          _DitherAdditive<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
-            source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+          _DitherAdditive<TWork, TMetric, WhiteNoiseGenerator>(
+            source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
           return;
       }
     }
 
     switch (this.NoiseType) {
       case NoiseType.White:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, WhiteNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
       case NoiseType.Blue:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BlueNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(), this.Strength);
+        _DitherWithNoise<TWork, TMetric, BlueNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(), this.Strength);
         break;
       case NoiseType.Pink:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, PinkNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, PinkNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
       case NoiseType.Brown:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, BrownNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, BrownNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
       case NoiseType.Violet:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, VioletNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, VioletNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
       case NoiseType.Grey:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, GreyNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, GreyNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
       default:
-        _DitherWithNoise<TWork, TPixel, TDecode, TMetric, WhiteNoiseGenerator>(
-          source, indices, width, height, sourceStride, targetStride, startY, decoder, metric, palette, new(this.Seed), this.Strength);
+        _DitherWithNoise<TWork, TMetric, WhiteNoiseGenerator>(
+          source, indices, width, height, sourceStride, targetStride, startY, metric, palette, new(this.Seed), this.Strength);
         break;
     }
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe void _DitherAdditive<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
-    TPixel* source,
+  private static unsafe void _DitherAdditive<TWork, TMetric, TNoiseGen>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette,
     TNoiseGen noiseGen,
     float strength)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>
     where TNoiseGen : struct, INoiseGenerator {
 
@@ -228,7 +221,7 @@ public readonly struct NoiseDitherer : IDitherer {
 
     for (var y = startY; y < endY; ++y)
     for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-      var color = decoder.Decode(source[sourceIdx]);
+      var color = source[sourceIdx];
       var (c1, c2, c3, a) = color.ToNormalized();
 
       // Perturb each channel by (noise * strength). Noise generator returns [-0.5, 0.5].
@@ -243,22 +236,19 @@ public readonly struct NoiseDitherer : IDitherer {
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static unsafe void _DitherWithNoise<TWork, TPixel, TDecode, TMetric, TNoiseGen>(
-    TPixel* source,
+  private static unsafe void _DitherWithNoise<TWork, TMetric, TNoiseGen>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette,
     TNoiseGen noiseGen,
     float strength)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork>
     where TNoiseGen : struct, INoiseGenerator {
 
@@ -267,7 +257,7 @@ public readonly struct NoiseDitherer : IDitherer {
 
     for (var y = startY; y < endY; ++y)
     for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-      var color = decoder.Decode(source[sourceIdx]);
+      var color = source[sourceIdx];
 
       // Find the two closest palette colors
       var nearestIdx = lookup.FindNearest(color, out var nearestColor);

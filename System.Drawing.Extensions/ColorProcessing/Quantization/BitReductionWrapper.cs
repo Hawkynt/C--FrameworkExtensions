@@ -20,7 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
+using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Quantization;
 
@@ -80,6 +83,113 @@ public readonly struct BitReductionWrapper<TInner> : IQuantizer
 
     /// <inheritdoc />
     public TWork[] GeneratePalette(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
+      // Fast path: when each reduced channel uses few enough bits that 4 channels packed
+      // into a single index fit a flat ulong[] of cache-friendly size, skip the dictionary.
+      // bitsToRemove >= 4 => bitsPerChannel <= 4 => total <= 16 bits => array <= 65536 ulong (~512 KB max).
+      // Typical reduction (bitsToRemove == 4): 4096 entries (32 KB) — comfortably L1/L2 sized.
+      // For wider reductions (bitsToRemove <= 3) the array would balloon (>= 256 MB), so keep the
+      // dictionary path in that case.
+      if (bitsToRemove >= 4)
+        return this._GeneratePaletteFlat(histogram, colorCount);
+
+      return this._GeneratePaletteDict(histogram, colorCount);
+    }
+
+    private TWork[] _GeneratePaletteFlat(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
+      var bitsPerChannel = 8 - bitsToRemove;
+      var perChannelMask = (1 << bitsPerChannel) - 1; // mask after right-shift
+      var bucketCount = 1 << (bitsPerChannel * 4);
+      var buckets = new ulong[bucketCount];
+      // Populated indices tracker — saves a full scan of the (potentially 64 K-entry) array
+      // when only a handful of buckets are occupied. For dense images we'd hit the array length.
+      var populated = new List<int>();
+
+      var shift = bitsToRemove;
+      var halfStep = (byte)(1 << (bitsToRemove - 1));
+
+      // byte-domain fast path for 32bpp 4-channel storage TWork (today only Bgra8888).
+      // Skips per-entry ToNormalized() + 4× ToByte() — bytes are read straight from the packed
+      // pixel via the JIT-folded layout descriptor. Bit-exact because (UNorm32.FromByte(b).ToByte()
+      // == b) by construction, so the bucket key is identical to the slow path.
+      if (typeof(TWork) == typeof(Bgra8888))
+        _BucketHistogramFast32bpp4ch<BgraLayout>(histogram, buckets, populated, shift, perChannelMask, bitsPerChannel);
+      else
+        _BucketHistogramSlow(histogram, buckets, populated, shift, perChannelMask, bitsPerChannel);
+
+      // Materialize the reduced histogram in insertion order.
+      var newHistogram = new (TWork color, uint count)[populated.Count];
+      for (var i = 0; i < populated.Count; ++i) {
+        var idx = populated[i];
+        var k1 = idx & perChannelMask;
+        var k2 = (idx >> bitsPerChannel) & perChannelMask;
+        var k3 = (idx >> (2 * bitsPerChannel)) & perChannelMask;
+        var ka = (idx >> (3 * bitsPerChannel)) & perChannelMask;
+
+        // Reconstruct the masked byte (shift back up) then center within the bucket.
+        var r1 = (byte)Math.Min(255, (k1 << shift) + halfStep);
+        var r2 = (byte)Math.Min(255, (k2 << shift) + halfStep);
+        var r3 = (byte)Math.Min(255, (k3 << shift) + halfStep);
+        var ra = (byte)Math.Min(255, (ka << shift) + halfStep);
+
+        var color = ColorFactory.FromNormalized_4<TWork>(
+          UNorm32.FromByte(r1),
+          UNorm32.FromByte(r2),
+          UNorm32.FromByte(r3),
+          UNorm32.FromByte(ra)
+        );
+        newHistogram[i] = (color, (uint)Math.Min(buckets[idx], uint.MaxValue));
+      }
+
+      return innerKernel.GeneratePalette(newHistogram, colorCount);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void _BucketHistogramSlow(IEnumerable<(TWork color, uint count)> histogram, ulong[] buckets, List<int> populated, int shift, int perChannelMask, int bitsPerChannel) {
+      foreach (var (color, count) in histogram) {
+        var (c1, c2, c3, a) = color.ToNormalized();
+
+        var k1 = (c1.ToByte() >> shift) & perChannelMask;
+        var k2 = (c2.ToByte() >> shift) & perChannelMask;
+        var k3 = (c3.ToByte() >> shift) & perChannelMask;
+        var ka = (a.ToByte() >> shift) & perChannelMask;
+
+        var idx = k1
+                  | (k2 << bitsPerChannel)
+                  | (k3 << (2 * bitsPerChannel))
+                  | (ka << (3 * bitsPerChannel));
+
+        if (buckets[idx] == 0)
+          populated.Add(idx);
+        buckets[idx] += count;
+      }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void _BucketHistogramFast32bpp4ch<TLayout>(IEnumerable<(TWork color, uint count)> histogram, ulong[] buckets, List<int> populated, int shift, int perChannelMask, int bitsPerChannel)
+      where TLayout : struct {
+      foreach (var (color, count) in histogram) {
+        var local = color;
+        var packed = Unsafe.As<TWork, uint>(ref local);
+        var (rByte, gByte, bByte, aByte) = StorageLayoutFast.UnpackBytes<TLayout>(packed);
+
+        // (C1, C2, C3, A) = (R, G, B, A) on Bgra8888 / future layouts.
+        var k1 = (rByte >> shift) & perChannelMask;
+        var k2 = (gByte >> shift) & perChannelMask;
+        var k3 = (bByte >> shift) & perChannelMask;
+        var ka = (aByte >> shift) & perChannelMask;
+
+        var idx = k1
+                  | (k2 << bitsPerChannel)
+                  | (k3 << (2 * bitsPerChannel))
+                  | (ka << (3 * bitsPerChannel));
+
+        if (buckets[idx] == 0)
+          populated.Add(idx);
+        buckets[idx] += count;
+      }
+    }
+
+    private TWork[] _GeneratePaletteDict(IEnumerable<(TWork color, uint count)> histogram, int colorCount) {
       // Apply bit reduction and re-bucket
       var mask = (uint)(0xFF << bitsToRemove) & 0xFF;
       var reducedHistogram = new Dictionary<(byte, byte, byte, byte), ulong>();
@@ -100,11 +210,13 @@ public readonly struct BitReductionWrapper<TInner> : IQuantizer
           reducedHistogram[key] = count;
       }
 
+      // Center the reduced value in its range for better representation. Hoisted out of
+      // the per-entry projection — invariant for the duration of this call.
+      var halfStep = (byte)(1 << (bitsToRemove - 1));
+
       // Convert back to TWork histogram
       var newHistogram = reducedHistogram.Select(kvp => {
         var (r1, r2, r3, ra) = kvp.Key;
-        // Center the reduced value in its range for better representation
-        var halfStep = (byte)(1 << (bitsToRemove - 1));
         var color = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromByte((byte)Math.Min(255, r1 + halfStep)),
           UNorm32.FromByte((byte)Math.Min(255, r2 + halfStep)),

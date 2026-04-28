@@ -93,6 +93,170 @@ using var sharp = bitmap.Resample(new Bicubic(-0.75f), newWidth, newHeight);
 
 ---
 
+## Parametric Algorithms
+
+Filters, ditherers and quantizers are auto-discovered via attributes
+(`[FilterInfo]` / `[Ditherer]` / `[Quantizer]`) and exposed through their
+respective registries (`FilterRegistry`, `DithererRegistry`, `QuantizerRegistry`).
+Every registered entry exposes a `Parameters` list of `ParameterDescriptor`s. For
+the *fixed-default* entries the list is empty and `CreateWith(null)` is equivalent
+to `CreateDefault()`. Algorithms with tunable knobs additionally register a
+**parametric variant** — the same backing type, exposed under a `… (parametric)`
+display name, whose `Parameters` describe each knob (name, .NET type, default,
+inclusive min/max, optional discrete `AllowedValues`).
+
+### Inspecting and instantiating
+
+```csharp
+// Discover the parametric Bayer ditherer
+var bayer = DithererRegistry.FindByName("Bayer (parametric)");
+foreach (var p in bayer!.Parameters)
+  Console.WriteLine($"{p.Name}: {p.Type.Name} default={p.DefaultValue} allowed=[{string.Join(",", p.AllowedValues)}]");
+// → size: Int32 default=8 allowed=[2,4,8,16,32]
+
+// Materialise with custom values
+var values = new Dictionary<string, object?> { ["size"] = 16 };
+IDitherer instance = bayer.CreateWith(new ReadOnlyDictionary<string, object?>(values));
+```
+
+### Auto-generating UI controls
+
+Because parameters carry `Type` + `MinValue` / `MaxValue` / `AllowedValues`, a UI
+can render a slider for `Float`, a numeric box for `Int`, a check-box for `Bool`,
+and a drop-down whenever `AllowedValues` is non-empty. Defaults round-trip:
+calling `CreateWith(null)` returns an instance byte-exact-equivalent to the
+fixed-default registry entry, which the unit tests assert per algorithm.
+
+### Filter example
+
+```csharp
+var blur = FilterRegistry.FindByName("GaussianBlur (parametric)")!;
+// Build a 7x7 kernel
+var values = new Dictionary<string, object?> { ["radiusX"] = 3, ["radiusY"] = 3 };
+IPixelFilter f = blur.CreateWith(new ReadOnlyDictionary<string, object?>(values));
+using var blurred = bitmap.ApplyFilter((GaussianBlur)f);
+```
+
+### Quantizer example
+
+```csharp
+var km = QuantizerRegistry.FindByName("K-Means (parametric)")!;
+var values = new Dictionary<string, object?> {
+  ["maxIterations"] = 250,
+  ["convergenceThreshold"] = 0.0001f,
+};
+IQuantizer q = km.CreateWith(new ReadOnlyDictionary<string, object?>(values));
+using var indexed = bitmap.ReduceColors(q, ErrorDiffusion.FloydSteinberg, 16, isHighQuality: true);
+```
+
+The set of algorithms shipped with parametric variants today: Bayer / VoidAndCluster
+/ ClusterDot / BlueNoise ditherers, Floyd-Steinberg / Stucki / Burkes /
+JarvisJudiceNinke error-diffusion ditherers, K-Means / Bisecting K-Means /
+Mean-Shift / DBSCAN / NeuQuant quantizers, and GaussianBlur / BilateralFilter /
+UnsharpMask / MedianFilter / Erode / Dilate filters. Adding more is a single
+`RegisterParametric` call away — see `ColorProcessing/Dithering/ParametricDitherers.cs`
+for the canonical reference.
+
+### Parametric Variant Reference
+
+The following entries enumerate every parametric registry entry by display name,
+listing each `ParameterDescriptor` (name, type, default, allowed range / discrete
+values, and description when present in source). Sourced verbatim from
+`ColorProcessing/Dithering/ParametricDitherers.cs`,
+`ColorProcessing/Quantization/ParametricQuantizers.cs`, and
+`ColorProcessing/Filtering/ParametricFilters.cs`.
+
+#### Ditherers
+
+##### Bayer (parametric)
+
+- `size` — `int` (choice), allowed `{2, 4, 8, 16, 32}`, default `8` — Bayer threshold matrix dimension. Larger sizes give finer dot patterns at higher cost; `32` selects the dedicated `Bayer32x32Ditherer`, others build via `BayerMatrix.Generate(size)`.
+
+##### VoidAndCluster (parametric)
+
+- `matrixSize` — `int` (choice), allowed `{4, 8, 16, 32}`, default `4` — Void-and-cluster blue-noise tile size. `4/8/16/32` map to pre-baked `VoidAndClusterDitherer.Size{N}x{N}` instances.
+
+##### ClusterDot (parametric)
+
+- `clusterSize` — `int` (choice), allowed `{4, 8}`, default `4` — Cluster-dot kernel size (selects between two pre-baked spiral matrices).
+- `strength` — `float`, range `[0, 1]`, default `1.0` — Dither strength multiplier applied to the threshold matrix.
+
+##### BlueNoise (parametric)
+
+- `tileSize` — `int` (choice), allowed `{8, 64, 128}`, default `8` — Blue-noise tile dimension. `8/64/128` map to `BlueNoiseDitherer.Size{N}x{N}` instances.
+
+##### FloydSteinberg (parametric)
+
+- `serpentine` — `bool`, default `false` — Alternate scan direction per row (reduces directional artefacts).
+- `strength` — `float`, range `[0, 1]`, default `1.0` — Error-diffusion strength (`0` = no diffusion, `1` = full).
+
+##### Stucki / Burkes / JarvisJudiceNinke (parametric)
+
+Each of these three error-diffusion variants registers with a single shared parameter:
+
+- `strength` — `float`, range `[0, 1]`, default `1.0` — Error-diffusion strength.
+
+#### Quantizers
+
+##### K-Means (parametric)
+
+- `maxIterations` — `int`, range `[1, 1000]`, default `100` — Maximum Lloyd iterations before giving up.
+- `convergenceThreshold` — `float`, range `[0, 1]`, default `0.001` — Stop early when the largest centroid movement falls below this fraction of the colour-space diagonal.
+
+##### Bisecting K-Means (parametric)
+
+- `maxIterationsPerSplit` — `int`, range `[1, 200]`, default `10` — Inner K-Means iterations per bisection step.
+- `bisectionTrials` — `int`, range `[1, 50]`, default `3` — Number of trials per split (best result kept).
+- `convergenceThreshold` — `float`, range `[0, 1]`, default `0.001` — Inner K-Means convergence threshold.
+
+##### Mean-Shift (parametric)
+
+- `bandwidth` — `float`, range `[0.001, 1]`, default `0.06` — Gaussian kernel bandwidth in normalised OkLab space (smaller = more clusters).
+
+##### DBSCAN (parametric)
+
+- `epsilon` — `float`, range `[0.001, 1]`, default `0.03` — ε neighbourhood radius in OkLab space.
+- `minPoints` — `int`, range `[1, 100]`, default `4` — Minimum points to form a dense region.
+
+##### NeuQuant (parametric)
+
+- `maxIterations` — `int`, range `[1, 1000]`, default `100` — Network training iterations.
+- `initialAlpha` — `float`, range `[0.001, 1]`, default `0.1` — Initial learning rate (decays to zero over training).
+
+#### Filters
+
+##### GaussianBlur (parametric)
+
+- `radiusX` — `int`, range `[0, 32]`, default `1` — Horizontal kernel radius (kernel width = 2·r+1).
+- `radiusY` — `int`, range `[0, 32]`, default `1` — Vertical kernel radius.
+
+##### BilateralFilter (parametric)
+
+- `radius` — `int`, range `[1, 32]`, default `3` — Window radius.
+- `spatialSigma` — `float`, range `[0.1, 32]`, default `3.0` — Spatial Gaussian σ.
+- `rangeSigma` — `float`, range `[0.001, 1]`, default `0.1` — Range / colour-similarity Gaussian σ.
+
+##### UnsharpMask (parametric)
+
+- `amount` — `float`, range `[0, 10]`, default `1.0` — Sharpening strength (1.0 = unity gain).
+- `threshold` — `float`, range `[0, 1]`, default `0.0` — Minimum local contrast required before sharpening (suppresses noise).
+- `radiusX` — `int`, range `[0, 32]`, default `1` — Horizontal blur radius for the unsharp mask.
+- `radiusY` — `int`, range `[0, 32]`, default `1` — Vertical blur radius.
+
+##### MedianFilter (parametric)
+
+- `radius` — `int` (choice), allowed `{1, 2, 3, 4}`, default `1` — Median window radius (window size = 2r+1).
+
+##### Erode (parametric)
+
+- `radius` — `int`, range `[0, 32]`, default `1` — Morphological erosion kernel radius.
+
+##### Dilate (parametric)
+
+- `radius` — `int`, range `[0, 32]`, default `1` — Morphological dilation kernel radius.
+
+---
+
 ### Image Extensions (`Image`)
 
 #### Multi-Page Support
@@ -478,6 +642,18 @@ Adaptive quantizers analyze the image to generate an optimal palette for each sp
 | [`EpanechnikovMeanShiftQuantizer`](https://en.wikipedia.org/wiki/Kernel_(statistics)#Kernel_functions_in_common_use)  | Epanechnikov          | 1969 | Density      | Mean-Shift with the asymptotically-MSE-optimal Epanechnikov kernel (compact support → sharper modes than Gaussian; cheaper inner loop)                   |
 | [`AdaptiveMeshQuantizer`](https://en.wikipedia.org/wiki/Adaptive_mesh_refinement)                                     | -                     | -    | Clustering   | Deformable 2-D lattice on the chroma plane, relaxed via Voronoi-centroid + Laplacian smoothing. Mesh density tracks histogram density                    |
 | [`GoldenRatioPaletteQuantizer`](https://en.wikipedia.org/wiki/Golden_ratio)                                           | Roberts               | 2018 | Fixed        | φ⁻¹-spaced Lab hue sequence with 3-tier lightness cycling; low-discrepancy perceptually-uniform palette. Image-independent (classified as Fixed)         |
+| [`AntColonyQuantizer`](https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms)                              | Dorigo, Maniezzo, Colorni | 1996 | Metaheuristic | Standalone Ant-Colony-Optimization palette builder (pheromone-guided constructive search; cf. Omran 2005). [IEEE TSMC 26(1)](https://doi.org/10.1109/3477.484436) |
+| [`ParticleSwarmQuantizer`](https://en.wikipedia.org/wiki/Particle_swarm_optimization)                                 | Kennedy, Eberhart     | 1995 | Metaheuristic | Swarm-of-particles palette search; velocities biased to global/local bests. [Reference](https://doi.org/10.1109/ICNN.1995.488968)                         |
+| [`GreyWolfOptimiserQuantizer`](https://en.wikipedia.org/wiki/Grey_wolf_optimizer)                                     | Mirjalili et al.      | 2014 | Metaheuristic | Alpha-Beta-Delta wolf hierarchy mimicking pack hunting for palette optimization. [Reference](https://doi.org/10.1016/j.advengsoft.2013.12.007)            |
+| [`FireflyQuantizer`](https://en.wikipedia.org/wiki/Firefly_algorithm)                                                 | X.-S. Yang            | 2008 | Metaheuristic | Light-attractiveness swarm search with distance-modulated brightness. [Reference](https://doi.org/10.1007/978-3-540-85984-0_25)                           |
+| [`DifferentialEvolutionQuantizer`](https://en.wikipedia.org/wiki/Differential_evolution)                              | Storn, Price          | 1997 | Metaheuristic | Vector-difference population mutation; robust black-box optimizer over palette parameters. [Reference](https://doi.org/10.1023/A:1008202821328)           |
+| [`GeneticKMedoidsQuantizer`](https://en.wikipedia.org/wiki/Genetic_algorithm)                                         | Lucasius, Dane, Kateman | 1993 | Metaheuristic | GA-driven medoid selection (chromosomes encode medoid index sets; fitness = within-cluster distance). [Reference](https://doi.org/10.1016/0169-7439(93)80064-O) |
+| [`BsasQuantizer`](https://en.wikipedia.org/wiki/Cluster_analysis)                                                     | Theodoridis, Koutroumbas | 2003 | Clustering | Basic Sequential Algorithmic Scheme — single-pass threshold-based incremental clustering (textbook *Pattern Recognition* baseline)                        |
+| [`MitchellBestCandidateQuantizer`](https://www.cs.princeton.edu/~chazelle/courses/BIB/pseudo-bestcand.htm)            | D.P. Mitchell         | 1991 | Clustering   | Best-candidate sampling — for each new palette entry pick the histogram colour furthest from existing entries. Quasi-blue-noise palette spread             |
+| [`GrowingNeuralGasQuantizer`](https://en.wikipedia.org/wiki/Neural_gas#Growing_neural_gas)                            | B. Fritzke            | 1995 | Neural       | Adaptive-topology Neural-Gas with online node insertion driven by accumulated error. [Reference](https://papers.nips.cc/paper/893)                         |
+| [`Som2DQuantizer`](https://en.wikipedia.org/wiki/Self-organizing_map)                                                 | T. Kohonen            | 1982 | Neural       | 2-D rectangular SOM lattice variant of `SomQuantizer` (1-D ring); produces perceptually-ordered palette grid                                              |
+| [`ReservoirSamplingQuantizer`](https://en.wikipedia.org/wiki/Reservoir_sampling)                                      | Efraimidis, Spirakis  | 2006 | Sampling     | Weighted reservoir sampling (A-Res algorithm) — picks `k` representative colours in one pass over the histogram. [Reference](https://doi.org/10.1016/j.ipl.2005.11.003) |
+| [`CountMinSketchQuantizer`](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)                                   | Cormode, Muthukrishnan | 2005 | Sketch       | Streaming approximate-frequency popularity quantizer using a CM-Sketch (sub-linear memory; cf. Popularity but for very large inputs). [Reference](https://doi.org/10.1016/j.jalgor.2003.12.001) |
 
 #### Quantizer Parameters
 
@@ -611,6 +787,11 @@ Fixed palette quantizers use predefined color palettes for specific platforms or
 | [`AmigaOcsQuantizer`](https://en.wikipedia.org/wiki/Original_Chip_Set)                             | 32     | Retro Amiga   | Amiga OCS 32-colour evenly-spaced 4-4-4 sub-cube (1985)                                                                                                                              |
 | [`Atari2600Quantizer`](https://en.wikipedia.org/wiki/Television_Interface_Adapter)                 | 128    | Retro Atari   | Atari 2600 TIA NTSC 128-colour chroma-phase grid (1977)                                                                                                                              |
 | [`GoldenRatioPaletteQuantizer`](https://en.wikipedia.org/wiki/Golden_ratio)                        | Any    | Data viz     | φ⁻¹-spaced Lab hue + 3-tier lightness cycle; image-independent categorical palette                                                                                                   |
+| [`Ega64Quantizer`](https://en.wikipedia.org/wiki/Enhanced_Graphics_Adapter#Color_palette)          | 64     | Retro DOS    | Full IBM EGA 6-bit RGBrgb hardware master palette (1984) — 64-colour gamut from which 16 are simultaneously displayable                                                              |
+| [`MasterSystemQuantizer`](https://en.wikipedia.org/wiki/Sega_Master_System)                        | 64     | Retro Sega   | Sega Master System / Game Gear VDP 4×4×4 (2-bit per channel) 64-colour palette (1985)                                                                                                |
+| [`Msx2Quantizer`](https://en.wikipedia.org/wiki/MSX2)                                              | 256    | Retro MSX    | MSX-2 V9938 "Screen 8" 8×8×4 (3-3-2 layout, GGGRRRBB index) fixed 256-colour palette (1985)                                                                                          |
+| [`CommodorePlus4Quantizer`](https://en.wikipedia.org/wiki/Commodore_Plus/4)                        | 121    | Retro Commodore | Commodore Plus/4 / C16 TED 7360 1+15×8 (15-hue × 8-luminance + black) 121-colour palette (1984)                                                                                  |
+| [`CgaComposite16Quantizer`](https://en.wikipedia.org/wiki/Color_Graphics_Adapter#Color_palette)    | 16     | Retro DOS    | CGA composite-NTSC artifact 16-colour palette (1981) — colours born of NTSC chroma artefacting on monochrome 320×200 modes                                                          |
 
 ### Quantizer Usage
 
@@ -749,6 +930,9 @@ Ordered dithering uses threshold matrices to determine pixel output. Unlike erro
 | `AmstradCpcMode0`                                               | -               | -    | 8x8   | CPC Mode-0 16-colour palette with 2×1 "fat-pixel" Bayer-8 dither                                                 |
 | `Atari2600Playfield`                                            | -               | -    | -     | TIA per-scanline 4-colour restriction; "racing-the-beam" colour budget                                           |
 | `Pico8`                                                         | -               | -    | 4x4   | Pico-8 fantasy console 16-colour palette + 4×4 Bayer fill-pattern dither                                         |
+| [`AnalyticFourierScreen`](https://doi.org/10.1117/12.135831)    | Mitsa, Parker, Allebach | 1992 | 16x16 | Ordered screen designed by target-spectrum (band-pass annulus) ranking — analytic blue-noise screen           |
+| [`HoshinoNishikawa`](https://patents.google.com/patent/US4920501A) | Y. Hoshino, Y. Nishikawa | 1990 | 16x16 | Bayer-derived 16×16 screen with sub-quantum jitter per pixel — patent-era dispersed-dot variant              |
+| [`PatternDependentThreshold`](https://www.imageprocessingplace.com/downloads_V3/root_downloads/tutorials/dithering/Ulichney%201987%20Digital%20Halftoning.pdf) | Robert Ulichney | 1987 | 8x8 | Bayer screen with causal-neighbourhood threshold correction (Ulichney *Digital Halftoning* §6.6)         |
 
 ```csharp
 // Ordered dithering with Bayer matrix
@@ -775,6 +959,11 @@ Noise dithering adds random or pseudo-random thresholds before quantization. Can
 | [`GoldNoise`](https://www.shadertoy.com/view/ltB3zD)                                                                                       | 2-D golden-ratio low-discrepancy noise (Quilez's Gold-Noise formula) — table-free, near-blue-noise spectrum   |
 | [`PoissonDiscNoise`](https://dl.acm.org/doi/10.1145/1278780.1278807)                                                                       | Jittered Poisson-disc-sampled threshold values (Bridson 2007) — blue-noise-like without a repeating 64×64 tile|
 | `MetallicInk`                                                                                                                              | Anisotropic noise with ≈4-pixel horizontal autocorrelation — brushed-metal / foil aesthetic                   |
+| [`PerlinNoise`](https://en.wikipedia.org/wiki/Perlin_noise)                                                                                | Classical Perlin gradient-noise threshold field (1985) — band-limited cloud grain                              |
+| [`SimplexNoise`](https://en.wikipedia.org/wiki/Simplex_noise)                                                                              | Perlin 2001 Simplex noise — triangular-lattice gradient noise; less directional bias than Perlin               |
+| [`WorleyNoise`](https://en.wikipedia.org/wiki/Worley_noise)                                                                                | Worley 1996 cellular / Voronoi-distance threshold field — organic stippled grain                               |
+| `Risograph`                                                                                                                                | Anisotropic noise emulating Risograph drum-streak + droplet-scatter grain                                      |
+| `WhiteNoiseAdditive`/`BlueNoiseAdditive`/`PinkNoiseAdditive`/`BrownNoiseAdditive`/`VioletNoiseAdditive`/`GreyNoiseAdditive`               | Same colored-noise spectra applied in *additive perturbation* mode (noise added to luma rather than threshold) |
 
 ```csharp
 // Noise dithering
@@ -1455,6 +1644,16 @@ using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQualit
 | `AutoLevels` | Local auto-levels contrast stretching based on neighborhood min/max (always uses frame access) |
 | `Equalize` | Local histogram equalization mapping via CDF in neighborhood (always uses frame access) |
 | `SigmoidContrast` | S-curve sigmoid contrast adjustment per channel (always uses frame access) |
+| [`Clahe`](https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE) | [Contrast-Limited Adaptive Histogram Equalization](https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE) — Zuiderveld 1994; tile-based local equalization with clip-limit (always uses frame access) |
+| [`Lut3D`](https://en.wikipedia.org/wiki/3D_lookup_table) | Applies a 3D color look-up table loaded from `.cube`/`.3dl` files via tetrahedral / trilinear interpolation |
+| [`HDRToneMap`](https://en.wikipedia.org/wiki/Tone_mapping) | Reinhard L/(1+L) HDR tone mapping with exposure and white-point parameters |
+| [`Reinhard`](https://www.cs.utah.edu/docs/techreports/2002/pdf/UUCS-02-001.pdf) | Reinhard, Stark, Shirley & Ferwerda 2002 — global luminance tone mapper L/(1+L) |
+| [`ReinhardExtended`](https://www.cs.utah.edu/docs/techreports/2002/pdf/UUCS-02-001.pdf) | Reinhard 2002 extended tone mapper with explicit white-point parameter |
+| [`Aces`](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/) | ACES filmic tone-mapping curve — Narkowicz/Hill 2015 approximation |
+| [`Drago`](https://resources.mpi-inf.mpg.de/tmo/logmap/logmap.pdf) | Drago, Myszkowski, Annen & Chiba 2003 — adaptive logarithmic tone mapping |
+| [`Hable`](http://filmicworlds.com/blog/filmic-tonemapping-operators/) | John Hable 2010 — Uncharted 2 filmic tone-mapping operator |
+| [`Lottes`](https://gpuopen.com/learn/optimized-reversible-tonemapper-for-resolve/) | Timothy Lottes 2016 — single-curve filmic tone mapper |
+| [`Mantiuk`](https://resources.mpi-inf.mpg.de/hdr/tmo/mantiuk08sap.pdf) | Mantiuk, Daly & Kerofsky 2008 — perceptual tone mapping (simplified) |
 
 #### Enhancement
 
@@ -1480,7 +1679,9 @@ using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQualit
 | `BokehBlur` | Polygonal disc-shaped blur with bright spot emphasis (always uses frame access) |
 | `SmartBlur` | Edge-preserving blur with hard color difference threshold (always uses frame access) |
 | `SmartSharpen` | Deconvolution-style sharpening with edge magnitude threshold (always uses frame access) |
-| `AnisotropicDiffusion` | Perona-Malik iterative edge-preserving PDE (`IMultiPassFilter`); complements single-pass BilateralFilter with convergence to piecewise-constant regions |
+| `AnisotropicDiffusion` | [Perona-Malik](https://doi.org/10.1109/34.56205) iterative edge-preserving PDE (`IMultiPassFilter`, 1990); complements single-pass BilateralFilter with convergence to piecewise-constant regions |
+| [`GuidedFilter`](http://kaiminghe.com/eccv10/) | He, Sun & Tang 2010 — edge-preserving guided filter with self-guidance; faster than bilateral, sharper edges |
+| [`LaplacianSharpen`](https://en.wikipedia.org/wiki/Discrete_Laplace_operator) | Image + amount × Laplacian per channel (Gonzalez & Woods 1992); classic textbook 3×3 Laplacian sharpening |
 
 #### Analysis
 
@@ -1499,6 +1700,9 @@ using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQualit
 | `ScharrEdge` | Rotation-optimal 3×3 gradient operator (better than Sobel for direction; structure-tensor / optical-flow friendly) |
 | `RobertsCross` | Classic 2×2 diagonal edge operator (Roberts 1963); fastest gradient-edge member |
 | `LaplacianOfGaussian` | Noise-robust 2nd-derivative edge / blob detector with configurable σ (Marr-Hildreth foundation, SIFT scale-space) |
+| [`FreiChenEdge`](https://en.wikipedia.org/wiki/Edge_detection) | Frei & Chen 1977 — orthonormal 3×3 basis projection edge detector; separates edge content from texture |
+| [`MarrHildrethEdge`](https://en.wikipedia.org/wiki/Marr%E2%80%93Hildreth_algorithm) | Marr & Hildreth 1980 — zero-crossing edge detector via Laplacian-of-Gaussian sign changes |
+| [`DifferenceOfGaussians`](https://en.wikipedia.org/wiki/Difference_of_Gaussians) | Difference-of-Gaussians band-pass edge response (σ=1.0/1.6) — feature detection / SIFT precursor |
 
 #### Artistic
 
@@ -1593,6 +1797,7 @@ using var hqSharp = source.ApplyFilter(Sharpen.Default, ScalerQuality.HighQualit
 | `Offset` | Wrap-around pixel offset displacement (always uses frame access) |
 | `Shear` | Linear horizontal or vertical shear displacement (always uses frame access) |
 | `ZigZag` | Radial zigzag sinusoidal displacement from center (always uses frame access) |
+| [`Fisheye`](https://en.wikipedia.org/wiki/Fisheye_lens) | Equidistant fisheye lens projection (180° FOV) — radial barrel distortion with configurable strength (always uses frame access) |
 
 #### Noise
 

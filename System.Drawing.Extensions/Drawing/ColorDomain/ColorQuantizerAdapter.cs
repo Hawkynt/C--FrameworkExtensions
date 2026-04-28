@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Guard;
 using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Storage;
 
@@ -50,7 +51,8 @@ public sealed class ColorQuantizerAdapter : IColorQuantizer {
   private readonly Hawkynt.ColorProcessing.IQuantizer _inner;
 
   public ColorQuantizerAdapter(Hawkynt.ColorProcessing.IQuantizer inner, bool allowFillingColors = true) {
-    this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
+    Against.ArgumentIsNull(inner);
+    this._inner = inner;
     this.AllowFillingColors = allowFillingColors;
   }
 

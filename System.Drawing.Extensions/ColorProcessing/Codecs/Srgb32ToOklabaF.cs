@@ -17,7 +17,9 @@
 
 #endregion
 
+using System;
 using System.Runtime.CompilerServices;
+using Guard;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Storage;
@@ -33,7 +35,7 @@ namespace Hawkynt.ColorProcessing.Codecs;
 /// <para>Combines gamma expansion (sRGB → linear) and OkLab conversion in one step.</para>
 /// <para>Uses LUT-based gamma expansion and fast cube root for OkLab.</para>
 /// </remarks>
-public readonly struct Srgb32ToOklabaF : IDecode<Bgra8888, OklabaF> {
+public readonly struct Srgb32ToOklabaF : IDecode<Bgra8888, OklabaF>, IBatchDecode<Bgra8888, OklabaF> {
 
   private const float FixedToFloat = 1f / 65536f;
 
@@ -63,6 +65,55 @@ public readonly struct Srgb32ToOklabaF : IDecode<Bgra8888, OklabaF> {
       ColorMatrices.Oklab_ToA_L * l_ + ColorMatrices.Oklab_ToA_M * m_ + ColorMatrices.Oklab_ToA_S * s_,
       ColorMatrices.Oklab_ToB_L * l_ + ColorMatrices.Oklab_ToB_M * m_ + ColorMatrices.Oklab_ToB_S * s_,
       pixel.A * Bgra8888.ByteToNormalized
+    );
+  }
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// 4-way unrolled span-to-span decode. Bit-exact with <see cref="Decode"/> by construction
+  /// (same LUT, same matrix constants, same FastCbrt path).
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<OklabaF> destination) {
+    var n = source.Length;
+    Against.CountBelow(destination.Length, n);
+
+    var lut = FixedPointMath.GammaExpansionLut;
+    const float inv = FixedToFloat;
+    const float invByte = Bgra8888.ByteToNormalized;
+
+    var i = 0;
+    var unrolledEnd = n - (n & 3);
+    for (; i < unrolledEnd; i += 4) {
+      destination[i]     = _DecodeOne(source[i],     lut, inv, invByte);
+      destination[i + 1] = _DecodeOne(source[i + 1], lut, inv, invByte);
+      destination[i + 2] = _DecodeOne(source[i + 2], lut, inv, invByte);
+      destination[i + 3] = _DecodeOne(source[i + 3], lut, inv, invByte);
+    }
+
+    for (; i < n; ++i)
+      destination[i] = _DecodeOne(source[i], lut, inv, invByte);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static OklabaF _DecodeOne(in Bgra8888 pixel, int[] lut, float inv, float invByte) {
+    var r = lut[pixel.R] * inv;
+    var g = lut[pixel.G] * inv;
+    var b = lut[pixel.B] * inv;
+
+    var l = ColorMatrices.Oklab_L_R * r + ColorMatrices.Oklab_L_G * g + ColorMatrices.Oklab_L_B * b;
+    var m = ColorMatrices.Oklab_M_R * r + ColorMatrices.Oklab_M_G * g + ColorMatrices.Oklab_M_B * b;
+    var s = ColorMatrices.Oklab_S_R * r + ColorMatrices.Oklab_S_G * g + ColorMatrices.Oklab_S_B * b;
+
+    var l_ = FixedPointMath.FastCbrt(l);
+    var m_ = FixedPointMath.FastCbrt(m);
+    var s_ = FixedPointMath.FastCbrt(s);
+
+    return new OklabaF(
+      ColorMatrices.Oklab_ToL_L * l_ + ColorMatrices.Oklab_ToL_M * m_ + ColorMatrices.Oklab_ToL_S * s_,
+      ColorMatrices.Oklab_ToA_L * l_ + ColorMatrices.Oklab_ToA_M * m_ + ColorMatrices.Oklab_ToA_S * s_,
+      ColorMatrices.Oklab_ToB_L * l_ + ColorMatrices.Oklab_ToB_M * m_ + ColorMatrices.Oklab_ToB_S * s_,
+      pixel.A * invByte
     );
   }
 }

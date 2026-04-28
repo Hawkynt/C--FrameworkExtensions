@@ -19,8 +19,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -113,20 +116,17 @@ public readonly struct OrderedDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -135,45 +135,148 @@ public readonly struct OrderedDitherer : IDitherer {
     var thresholds = this._thresholds;
     var endY = startY + height;
 
-    for (var y = startY; y < endY; ++y) {
-      // Pre-calculate row-invariant values
-      var thresholdRowOffset = (y % matrixSize) * matrixSize;
+#if SUPPORTS_INTRINSICS
+    // float-domain SIMD across 4 pixels of B/G/R add+clamp; scalar UNorm32.FromFloatClamped
+    // quantize per channel preserves bit-exact output (post-FindNearest goldens stay byte-exact).
+    // Stackalloc'd outside the y/x loops to avoid CA2014.
+    // Eligibility check is loop-invariant — hoisted out of the y-loop so the JIT sees
+    // two distinct hot loops, and so legacy TFMs (net35/40/45/48) don't pay a per-row
+    // Sse2.IsSupported field load.
+    var simdEligible = Sse2.IsSupported && typeof(TWork) == typeof(Bgra8888) && width >= 4;
+    if (simdEligible) {
+      var simdEnd = width & ~3;
+      var bChannels = stackalloc float[4];
+      var gChannels = stackalloc float[4];
+      var rChannels = stackalloc float[4];
+      var alphaBytes = stackalloc byte[4];
+      var thresholds4 = stackalloc float[4];
 
-      for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride, mx = 0; x < width; ++x, ++sourceIdx, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
-        // Decode source pixel
-        var color = decoder.Decode(source[sourceIdx]);
+      // 4-pixel SIMD batch: SIMD add+clamp on B/G/R, scalar quantize and lookup per lane.
+      // Bit-exact with the scalar path because SSE2 single-precision arithmetic is IEEE-754
+      // 32-bit identical to the .NET float path used by UNorm32.ToFloat.
+      for (var y = startY; y < endY; ++y) {
+        var thresholdRowOffset = (y % matrixSize) * matrixSize;
+        var rowSource = source + y * sourceStride;
+        var x = 0;
+        var targetIdx = y * targetStride;
+        var mx = 0;
 
-        // First check if this color is very close to a palette entry (exact or near-exact match)
-        // In that case, skip threshold adjustment to preserve exact matches
-        var nearestIdx = lookup.FindNearest(color, out var nearestColor);
-        var (c1, c2, c3, a) = color.ToNormalized();
-        var (n1, n2, n3, na) = nearestColor.ToNormalized();
-        var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
-                            Math.Abs(c2.ToFloat() - n2.ToFloat()) +
-                            Math.Abs(c3.ToFloat() - n3.ToFloat()) +
-                            Math.Abs(a.ToFloat() - na.ToFloat());
+        var srcBase = (byte*)rowSource;
+        for (; x < simdEnd; x += 4) {
+          // Decode 4 pixels' BGR channels into separate float[4] arrays + 4 alpha bytes.
+          ThresholdDithererSimd.DecodeBgra4Pixels(srcBase + x * 4, bChannels, gChannels, rChannels, alphaBytes);
 
-        // If the color is very close to the nearest palette entry, use it directly
-        // Threshold of 0.02 allows for minor rounding/quantization differences
-        if (distToNearest < 0.02f) {
-          indices[targetIdx] = (byte)nearestIdx;
-          continue;
+          // Compute 4 per-pixel thresholds (scalar — they're cheap and the SSE2 broadcast
+          // would cost more in setup than it saves).
+          for (var lane = 0; lane < 4; ++lane) {
+            thresholds4[lane] = thresholds[thresholdRowOffset + mx] * strength;
+            mx = ++mx < matrixSize ? mx : 0;
+          }
+
+          // SIMD add+clamp on all 3 channels in parallel (4 pixels per channel).
+          ThresholdDithererSimd.AddThresholdAndClamp_4Pixels(bChannels, gChannels, rChannels, thresholds4);
+
+          // Per-lane: early-out check against original colour, else lookup adjusted.
+          for (var lane = 0; lane < 4; ++lane) {
+            var color = rowSource[x + lane];
+            var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+            var (c1, c2, c3, a) = color.ToNormalized();
+            var (n1, n2, n3, na) = nearestColor.ToNormalized();
+            var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                                Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                                Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                                Math.Abs(a.ToFloat() - na.ToFloat());
+            if (distToNearest < 0.02f) {
+              indices[targetIdx + x + lane] = (byte)nearestIdx;
+              continue;
+            }
+
+            // Bgra8888 component convention: (C1, C2, C3, A) = (R, G, B, A).
+            var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+              UNorm32.FromFloatClamped(rChannels[lane]),
+              UNorm32.FromFloatClamped(gChannels[lane]),
+              UNorm32.FromFloatClamped(bChannels[lane]),
+              UNorm32.FromByte(alphaBytes[lane])
+            );
+            indices[targetIdx + x + lane] = (byte)lookup.FindNearest(adjustedColor);
+          }
         }
+        targetIdx += x;
 
-        // Get threshold from matrix (mx wraps via increment logic above)
-        var threshold = thresholds[thresholdRowOffset + mx] * strength;
+        // Tail: width-mod-4 leftover lanes.
+        for (; x < width; ++x, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
+          var color = rowSource[x];
+          var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+          var (c1, c2, c3, a) = color.ToNormalized();
+          var (n1, n2, n3, na) = nearestColor.ToNormalized();
+          var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                              Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                              Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                              Math.Abs(a.ToFloat() - na.ToFloat());
 
-        // Apply threshold to color components
-        var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-          UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
-          UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
-          UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
-          a
-        );
+          if (distToNearest < 0.02f) {
+            indices[targetIdx] = (byte)nearestIdx;
+            continue;
+          }
 
-        // Find nearest palette color and store index
-        nearestIdx = lookup.FindNearest(adjustedColor);
-        indices[targetIdx] = (byte)nearestIdx;
+          var threshold = thresholds[thresholdRowOffset + mx] * strength;
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
+            UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
+            UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
+            a
+          );
+
+          nearestIdx = lookup.FindNearest(adjustedColor);
+          indices[targetIdx] = (byte)nearestIdx;
+        }
+      }
+    } else
+#endif
+    {
+      for (var y = startY; y < endY; ++y) {
+        // Pre-calculate row-invariant values
+        var thresholdRowOffset = (y % matrixSize) * matrixSize;
+        var rowSource = source + y * sourceStride;
+        var targetIdx = y * targetStride;
+        var mx = 0;
+
+        for (var x = 0; x < width; ++x, ++targetIdx, mx = ++mx < matrixSize ? mx : 0) {
+          // Read pre-decoded source pixel from the working buffer.
+          var color = rowSource[x];
+
+          // First check if this color is very close to a palette entry (exact or near-exact match)
+          // In that case, skip threshold adjustment to preserve exact matches
+          var nearestIdx = lookup.FindNearest(color, out var nearestColor);
+          var (c1, c2, c3, a) = color.ToNormalized();
+          var (n1, n2, n3, na) = nearestColor.ToNormalized();
+          var distToNearest = Math.Abs(c1.ToFloat() - n1.ToFloat()) +
+                              Math.Abs(c2.ToFloat() - n2.ToFloat()) +
+                              Math.Abs(c3.ToFloat() - n3.ToFloat()) +
+                              Math.Abs(a.ToFloat() - na.ToFloat());
+
+          // If the color is very close to the nearest palette entry, use it directly
+          // Threshold of 0.02 allows for minor rounding/quantization differences
+          if (distToNearest < 0.02f) {
+            indices[targetIdx] = (byte)nearestIdx;
+            continue;
+          }
+
+          // Get threshold from matrix (mx wraps via increment logic above)
+          var threshold = thresholds[thresholdRowOffset + mx] * strength;
+
+          // Apply threshold to color components
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(c1.ToFloat() + threshold),
+            UNorm32.FromFloatClamped(c2.ToFloat() + threshold),
+            UNorm32.FromFloatClamped(c3.ToFloat() + threshold),
+            a
+          );
+
+          // Find nearest palette color and store index
+          nearestIdx = lookup.FindNearest(adjustedColor);
+          indices[targetIdx] = (byte)nearestIdx;
+        }
       }
     }
   }

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Guard;
 
 namespace Hawkynt.Drawing.ColorDomain;
 
@@ -44,10 +45,12 @@ public sealed class KMeansColorRefinementWrapper : IColorQuantizer {
   private readonly Func<Color, Color, int> _metric;
 
   public KMeansColorRefinementWrapper(IColorQuantizer inner, int iterations, Func<Color, Color, int> metric) {
-    this._inner = inner ?? throw new ArgumentNullException(nameof(inner));
-    if (iterations < 0) throw new ArgumentOutOfRangeException(nameof(iterations), "Iterations must be non-negative");
+    Against.ArgumentIsNull(inner);
+    Against.CountBelowZero(iterations);
+    Against.ArgumentIsNull(metric);
+    this._inner = inner;
     this._iterations = iterations;
-    this._metric = metric ?? throw new ArgumentNullException(nameof(metric));
+    this._metric = metric;
   }
 
   public Color[] ReduceColorsTo(ushort numberOfColors, IEnumerable<Color> usedColors)

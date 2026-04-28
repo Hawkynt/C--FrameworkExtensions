@@ -19,8 +19,11 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
+#if SUPPORTS_INTRINSICS
+using System.Runtime.Intrinsics.X86;
+#endif
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -109,20 +112,17 @@ public readonly struct GoldNoiseDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
     in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
@@ -130,24 +130,94 @@ public readonly struct GoldNoiseDitherer : IDitherer {
     var seed = this._seed;
     var endY = startY + height;
 
-    for (var y = startY; y < endY; ++y)
-    for (int x = 0, sourceIdx = y * sourceStride, targetIdx = y * targetStride; x < width; ++x, ++sourceIdx, ++targetIdx) {
-      var color = decoder.Decode(source[sourceIdx]);
-      var (c1, c2, c3, alpha) = color.ToNormalized();
+#if SUPPORTS_INTRINSICS
+    // float-domain SIMD across 4 pixels of B/G/R add+clamp; scalar quantize.
+    // Eligibility check is loop-invariant — hoisted out of the y-loop so the JIT sees
+    // two distinct hot loops, and so legacy TFMs (net35/40/45/48) don't pay a per-row
+    // Sse2.IsSupported field load.
+    var simdEligible = Sse2.IsSupported && typeof(TWork) == typeof(Bgra8888) && width >= 4;
+    if (simdEligible) {
+      var simdEnd = width & ~3;
+      var bChannels = stackalloc float[4];
+      var gChannels = stackalloc float[4];
+      var rChannels = stackalloc float[4];
+      var alphaBytes = stackalloc byte[4];
+      var thresholds4 = stackalloc float[4];
 
-      // Gold-noise formula: fract( sin( dot((x,y)+seed, (φ⁻¹, π)) ) · 43758.5453 )
-      // Produces a deterministic value in [0,1) with near-blue-noise spectrum.
-      var n = _GoldNoise(x + seed, y, seed);
-      var noise = (n - 0.5f) * strength;
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var x = 0;
+        var targetIdx = y * targetStride;
 
-      var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
-        UNorm32.FromFloatClamped(c1.ToFloat() + noise),
-        UNorm32.FromFloatClamped(c2.ToFloat() + noise),
-        UNorm32.FromFloatClamped(c3.ToFloat() + noise),
-        alpha
-      );
+        var srcBase = (byte*)rowSource;
+        for (; x < simdEnd; x += 4) {
+          ThresholdDithererSimd.DecodeBgra4Pixels(srcBase + x * 4, bChannels, gChannels, rChannels, alphaBytes);
 
-      indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+          // Compute 4 per-pixel gold-noise thresholds (sin/floor in double, scalar).
+          for (var lane = 0; lane < 4; ++lane) {
+            var n = _GoldNoise(x + lane + seed, y, seed);
+            thresholds4[lane] = (n - 0.5f) * strength;
+          }
+
+          ThresholdDithererSimd.AddThresholdAndClamp_4Pixels(bChannels, gChannels, rChannels, thresholds4);
+
+          for (var lane = 0; lane < 4; ++lane) {
+            // Bgra8888 component convention: (C1, C2, C3, A) = (R, G, B, A).
+            var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+              UNorm32.FromFloatClamped(rChannels[lane]),
+              UNorm32.FromFloatClamped(gChannels[lane]),
+              UNorm32.FromFloatClamped(bChannels[lane]),
+              UNorm32.FromByte(alphaBytes[lane])
+            );
+            indices[targetIdx + x + lane] = (byte)lookup.FindNearest(adjustedColor);
+          }
+        }
+        targetIdx += x;
+
+        // Tail: width-mod-4 leftover lanes.
+        for (; x < width; ++x, ++targetIdx) {
+          var color = rowSource[x];
+          var (c1, c2, c3, alpha) = color.ToNormalized();
+
+          var n = _GoldNoise(x + seed, y, seed);
+          var noise = (n - 0.5f) * strength;
+
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(c1.ToFloat() + noise),
+            UNorm32.FromFloatClamped(c2.ToFloat() + noise),
+            UNorm32.FromFloatClamped(c3.ToFloat() + noise),
+            alpha
+          );
+
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
+      }
+    } else
+#endif
+    {
+      for (var y = startY; y < endY; ++y) {
+        var rowSource = source + y * sourceStride;
+        var targetIdx = y * targetStride;
+
+        for (var x = 0; x < width; ++x, ++targetIdx) {
+          var color = rowSource[x];
+          var (c1, c2, c3, alpha) = color.ToNormalized();
+
+          // Gold-noise formula: fract( sin( dot((x,y)+seed, (φ⁻¹, π)) ) · 43758.5453 )
+          // Produces a deterministic value in [0,1) with near-blue-noise spectrum.
+          var n = _GoldNoise(x + seed, y, seed);
+          var noise = (n - 0.5f) * strength;
+
+          var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
+            UNorm32.FromFloatClamped(c1.ToFloat() + noise),
+            UNorm32.FromFloatClamped(c2.ToFloat() + noise),
+            UNorm32.FromFloatClamped(c3.ToFloat() + noise),
+            alpha
+          );
+
+          indices[targetIdx] = (byte)lookup.FindNearest(adjustedColor);
+        }
+      }
     }
   }
 

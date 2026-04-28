@@ -19,7 +19,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
@@ -117,38 +116,35 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Dither<TWork, TPixel, TDecode, TMetric>(
-    TPixel* source,
+  public unsafe void Dither<TWork, TMetric>(
+    TWork* source,
     byte* indices,
     int width,
     int height,
     int sourceStride,
     int targetStride,
     int startY,
-    in TDecode decoder,
-    in TMetric metric,
+        in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
-    where TPixel : unmanaged, IStorageSpace
-    where TDecode : struct, IDecode<TPixel, TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
     var localHeight = height;
 
-    // Store source pixels in normalized form for analysis
-    var sourceColors = new (float c1, float c2, float c3, float a)[localHeight, width];
+    // Store grayscale pixels for analysis. The full sourceColors[height,width] tuple buffer is
+    // gone -- the only callers that read color data are _AnalyzeBlock (averages + variance) and
+    // the per-pixel dither loop, both of which can decode on the fly. Saves 16B/px.
     var grayscale = new float[localHeight, width];
 
     for (var y = startY; y < endY; ++y)
     for (var x = 0; x < width; ++x) {
-      var pixel = decoder.Decode(source[y * sourceStride + x]);
-      var (c1, c2, c3, alpha) = pixel.ToNormalized();
+      var pixel = source[y * sourceStride + x];
+      var (c1, c2, c3, _) = pixel.ToNormalized();
       var c1f = c1.ToFloat();
       var c2f = c2.ToFloat();
       var c3f = c3.ToFloat();
-      sourceColors[y - startY, x] = (c1f, c2f, c3f, alpha.ToFloat());
       grayscale[y - startY, x] = 0.299f * c1f + 0.587f * c2f + 0.114f * c3f;
     }
 
@@ -162,7 +158,8 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
     // Create analysis maps
     var edgeMap = _CreateEdgeMap(grayscale, width, localHeight, this._config.EdgeThreshold / 255f);
     var gradientMap = _CreateGradientDirectionMap(grayscale, width, localHeight);
-    var contentMap = _AnalyzeContent(grayscale, sourceColors, width, localHeight);
+    var contentMap = _AnalyzeContentStreaming(
+      grayscale, source, width, localHeight, sourceStride, startY);
 
     // Error buffers
     var errorC1 = new float[width, localHeight];
@@ -174,18 +171,25 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
       var localY = y - startY;
 
       for (var x = 0; x < width; ++x) {
-        var pixel = sourceColors[localY, x];
+        // Decode source pixel on the fly (matches the original byte-for-byte: same same
+        // ToNormalized, same ToFloat invocation order).
+        var srcPixel = source[y * sourceStride + x];
+        var (sc1, sc2, sc3, salpha) = srcPixel.ToNormalized();
+        var pC1 = sc1.ToFloat();
+        var pC2 = sc2.ToFloat();
+        var pC3 = sc3.ToFloat();
+        var pA = salpha.ToFloat();
 
         // Apply accumulated error
-        var newC1 = Math.Max(0f, Math.Min(1f, pixel.c1 + errorC1[x, localY]));
-        var newC2 = Math.Max(0f, Math.Min(1f, pixel.c2 + errorC2[x, localY]));
-        var newC3 = Math.Max(0f, Math.Min(1f, pixel.c3 + errorC3[x, localY]));
+        var newC1 = Math.Max(0f, Math.Min(1f, pC1 + errorC1[x, localY]));
+        var newC2 = Math.Max(0f, Math.Min(1f, pC2 + errorC2[x, localY]));
+        var newC3 = Math.Max(0f, Math.Min(1f, pC3 + errorC3[x, localY]));
 
         var correctedColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(newC1),
           UNorm32.FromFloatClamped(newC2),
           UNorm32.FromFloatClamped(newC3),
-          UNorm32.FromFloatClamped(pixel.a)
+          UNorm32.FromFloatClamped(pA)
         );
 
         var closestIndex = lookup.FindNearest(correctedColor);
@@ -271,20 +275,42 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
     return gradientMap;
   }
 
-  private static ContentStrategy[,] _AnalyzeContent(
+  private static unsafe ContentStrategy[,] _AnalyzeContentStreaming<TWork>(
     float[,] grayscale,
-    (float c1, float c2, float c3, float a)[,] sourceColors,
+    TWork* source,
     int width,
-    int height
-  ) {
+    int height,
+    int sourceStride,
+    int startY
+  )
+    where TWork : unmanaged, IColorSpace4<TWork> {
     var strategies = new ContentStrategy[width, height];
     const int blockSize = 8;
+
+    // Reusable per-block scratch (max blockSize x blockSize). Avoids retaining the full
+    // sourceColors buffer just so _AnalyzeBlock can compute block-local sums and variance.
+    var blockC1 = new float[blockSize * blockSize];
+    var blockC2 = new float[blockSize * blockSize];
+    var blockC3 = new float[blockSize * blockSize];
 
     for (var by = 0; by < height; by += blockSize)
     for (var bx = 0; bx < width; bx += blockSize) {
       var blockWidth = Math.Min(blockSize, width - bx);
       var blockHeight = Math.Min(blockSize, height - by);
-      var strategy = _AnalyzeBlock(grayscale, sourceColors, bx, by, blockWidth, blockHeight);
+
+      // Decode this block's source pixels into the scratch arrays. Matches the original
+      // ToNormalized + ToFloat order so byte-exactness is preserved.
+      for (var by2 = 0; by2 < blockHeight; ++by2)
+      for (var bx2 = 0; bx2 < blockWidth; ++bx2) {
+        var pixel = source[(startY + by + by2) * sourceStride + (bx + bx2)];
+        var (c1, c2, c3, _) = pixel.ToNormalized();
+        var idx = by2 * blockWidth + bx2;
+        blockC1[idx] = c1.ToFloat();
+        blockC2[idx] = c2.ToFloat();
+        blockC3[idx] = c3.ToFloat();
+      }
+
+      var strategy = _AnalyzeBlock(grayscale, blockC1, blockC2, blockC3, bx, by, blockWidth, blockHeight);
 
       for (var dy = 0; dy < blockHeight; ++dy)
       for (var dx = 0; dx < blockWidth; ++dx)
@@ -296,7 +322,7 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
 
   private static ContentStrategy _AnalyzeBlock(
     float[,] grayscale,
-    (float c1, float c2, float c3, float a)[,] sourceColors,
+    float[] blockC1, float[] blockC2, float[] blockC3,
     int startX, int startY,
     int blockWidth, int blockHeight
   ) {
@@ -309,10 +335,10 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
 
     for (var y = 0; y < blockHeight; ++y)
     for (var x = 0; x < blockWidth; ++x) {
-      var color = sourceColors[startY + y, startX + x];
-      sumC1 += color.c1;
-      sumC2 += color.c2;
-      sumC3 += color.c3;
+      var idx = y * blockWidth + x;
+      sumC1 += blockC1[idx];
+      sumC2 += blockC2[idx];
+      sumC3 += blockC3[idx];
       avgBrightness += grayscale[startY + y, startX + x];
 
       // Edge detection
@@ -344,10 +370,10 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
     var colorVariance = 0f;
     for (var y = 0; y < blockHeight; ++y)
     for (var x = 0; x < blockWidth; ++x) {
-      var color = sourceColors[startY + y, startX + x];
-      var d1 = color.c1 - avgC1;
-      var d2 = color.c2 - avgC2;
-      var d3 = color.c3 - avgC3;
+      var idx = y * blockWidth + x;
+      var d1 = blockC1[idx] - avgC1;
+      var d2 = blockC2[idx] - avgC2;
+      var d3 = blockC3[idx] - avgC3;
       colorVariance += d1 * d1 + d2 * d2 + d3 * d3;
     }
     colorVariance = (float)Math.Sqrt(colorVariance / pixelCount);

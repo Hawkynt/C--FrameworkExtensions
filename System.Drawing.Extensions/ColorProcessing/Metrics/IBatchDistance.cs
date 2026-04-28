@@ -50,6 +50,13 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// best only when <c>d &lt; best</c>, never on equal). This keeps the fast path
 /// bit-exactly equivalent to the scalar fallback.
 /// </para>
+/// <para>
+/// <b>Batch extensions.</b>
+/// <see cref="FindMinDistanceBatch"/> and <see cref="FindNClosest"/> are additive
+/// follow-ons: they let consumers express batch-shaped queries without writing per-
+/// metric SIMD themselves. Metrics that don't override them get a correctness-
+/// preserving scalar fallback (see <see cref="BatchDistanceDefaults"/>).
+/// </para>
 /// </remarks>
 public interface IBatchDistance<TKey> where TKey : unmanaged, IColorSpace {
 
@@ -71,4 +78,51 @@ public interface IBatchDistance<TKey> where TKey : unmanaged, IColorSpace {
   /// callers can compare/aggregate across batches without converting through
   /// <see cref="UNorm32"/>).</returns>
   int FindMinDistance(in TKey reference, ReadOnlySpan<byte> candidates, int count, out int minIndex);
+
+  /// <summary>
+  /// Finds, for each reference in <paramref name="references"/>, the index of the closest
+  /// candidate in <paramref name="candidates"/>. The default implementation (provided via
+  /// <see cref="BatchDistanceDefaults.FindMinDistanceBatchScalar{TKey,TMetric}"/>) is a
+  /// straightforward loop calling <see cref="FindMinDistance"/> per reference; SSE2
+  /// implementations override to fan out across multiple references in lockstep.
+  /// </summary>
+  /// <param name="references">Reference colours; one closest-candidate index is produced
+  /// per entry.</param>
+  /// <param name="candidates">Candidate colours, packed per the per-metric contract.</param>
+  /// <param name="candidateCount">Number of candidates laid out in
+  /// <paramref name="candidates"/>.</param>
+  /// <param name="outIndices">Receives one zero-based candidate-index per reference.
+  /// Length must be at least <c>references.Length</c>.</param>
+  /// <remarks>
+  /// <para>Tie-break: first-occurrence on equal distance, matching the scalar
+  /// <see cref="FindMinDistance"/> contract.</para>
+  /// </remarks>
+  void FindMinDistanceBatch(
+    ReadOnlySpan<TKey> references,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    Span<int> outIndices);
+
+  /// <summary>
+  /// Finds the indices of the <paramref name="k"/> closest candidates to
+  /// <paramref name="reference"/>. Result is sorted ascending by distance; ties resolve
+  /// to first-occurrence order. The default implementation (provided via
+  /// <see cref="BatchDistanceDefaults.FindNClosestScalar{TKey,TMetric}"/>) is a partial
+  /// selection sort (O(N·k)); SIMD overrides may vectorise for small <paramref name="k"/>.
+  /// </summary>
+  /// <param name="reference">The target colour.</param>
+  /// <param name="candidates">Candidate colours packed per the per-metric contract.</param>
+  /// <param name="candidateCount">Number of candidates.</param>
+  /// <param name="k">How many closest candidates to return; clamped to
+  /// <c>min(k, candidateCount)</c>.</param>
+  /// <param name="outIndices">Receives the indices of the k closest candidates,
+  /// sorted ascending by distance. Must have at least <c>k</c> entries.</param>
+  /// <param name="outDistances">Receives the corresponding raw squared distances
+  /// (same units as the <see cref="FindMinDistance"/> return value), aligned with
+  /// <paramref name="outIndices"/>. Must have at least <c>k</c> entries.</param>
+  /// <returns>The actual number of indices written (= <c>min(k, candidateCount)</c>).</returns>
+  int FindNClosest(
+    in TKey reference,
+    ReadOnlySpan<byte> candidates, int candidateCount,
+    int k,
+    Span<int> outIndices, Span<int> outDistances);
 }

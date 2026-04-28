@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Guard;
 
 namespace Hawkynt.ColorProcessing.Filtering;
 
@@ -98,6 +99,30 @@ public static partial class FilterRegistry {
   public static FilterDescriptor? GetDescriptor<TFilter>() where TFilter : struct, IPixelFilter
     => All.FirstOrDefault(d => d.Type == typeof(TFilter));
 
+  private static readonly List<FilterDescriptor> _ParametricVariants = [];
+
+  /// <summary>
+  /// Registers an additional parametric variant of an existing filter type. The
+  /// variant appears in <see cref="All"/> alongside the fixed-default entry. Its
+  /// parameter surface is looked up from <see cref="ParameterMetadata"/> via the
+  /// supplied key.
+  /// </summary>
+  public static void RegisterParametric(
+    Type type,
+    string name,
+    string parameterKey,
+    string? author = null,
+    string? description = null,
+    string? url = null,
+    int year = 0,
+    FilterCategory category = FilterCategory.Enhancement) {
+    Against.ArgumentIsNull(type);
+    Against.ArgumentIsNullOrEmpty(name);
+    Against.ArgumentIsNullOrEmpty(parameterKey);
+    lock (_ParametricVariants)
+      _ParametricVariants.Add(FilterDescriptor.__CreateParametric(type, name, author, description, url, year, category, parameterKey));
+  }
+
   private static List<FilterDescriptor> DiscoverFilters() {
     var descriptors = new List<FilterDescriptor>();
 
@@ -118,8 +143,14 @@ public static partial class FilterRegistry {
       }
     }
 
+    // Touch each parametric filter type so its static constructor runs and registers itself.
+    ParametricFilters.EnsureRegistered();
+
+    lock (_ParametricVariants)
+      descriptors.AddRange(_ParametricVariants);
+
     return descriptors
-      .GroupBy(d => d.Type)
+      .GroupBy(d => (d.Type, d.Name))
       .Select(g => g.First())
       .OrderBy(d => d.Name)
       .ToList();
