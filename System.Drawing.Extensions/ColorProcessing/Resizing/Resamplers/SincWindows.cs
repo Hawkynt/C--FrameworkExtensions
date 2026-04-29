@@ -1561,6 +1561,428 @@ public readonly struct Rectangular : IKernelResampler, IResamplerWithSafePath {
 
 #endregion
 
+#region Mobius
+
+/// <summary>
+/// Mobius-windowed sinc resampler — raised-cosine raised to a configurable power α.
+/// </summary>
+/// <remarks>
+/// <para>Window weight: w(x) = (0.5·(1 + cos(πx/R)))^α.</para>
+/// <para>α=1 reproduces Hann; α&gt;1 concentrates the window (less ringing, slightly more
+/// blurring); α&lt;1 flattens it (more ringing, sharper detail). The 1-parameter family is
+/// useful for trading ringing vs. blurring continuously.</para>
+/// </remarks>
+[ScalerInfo("Mobius",
+  Description = "Mobius-windowed sinc resampler (parametric Hann power)", Category = ScalerCategory.Resampler)]
+public readonly struct Mobius : IKernelResampler, IResamplerWithSafePath {
+
+  /// <summary>
+  /// Default α parameter (2.0 — slightly more concentrated than Hann).
+  /// </summary>
+  public const float DefaultAlpha = 2f;
+
+  private readonly int _radius;
+  private readonly float _alpha;
+
+  /// <summary>
+  /// Creates a Mobius resampler with radius 3 and default α.
+  /// </summary>
+  public Mobius() : this(3, DefaultAlpha) { }
+
+  /// <summary>
+  /// Creates a Mobius resampler with custom radius and default α.
+  /// </summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  public Mobius(int radius) : this(radius, DefaultAlpha) { }
+
+  /// <summary>
+  /// Creates a Mobius resampler with custom radius and α.
+  /// </summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  /// <param name="alpha">Power exponent applied to the raised-cosine envelope (positive).</param>
+  public Mobius(int radius, float alpha) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(alpha);
+    this._radius = radius;
+    this._alpha = alpha;
+  }
+
+  /// <summary>
+  /// Gets the α parameter.
+  /// </summary>
+  public float Alpha => this._alpha == 0f ? DefaultAlpha : this._alpha;
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Mobius, this.Alpha, useCenteredGrid));
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Mobius, this.Alpha);
+
+  /// <summary>
+  /// Gets the default configuration.
+  /// </summary>
+  public static Mobius Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Mobius, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
+#region SineTaper
+
+/// <summary>
+/// Sine-taper windowed sinc resampler — Tukey-like with a quarter-sine (cos) edge taper.
+/// </summary>
+/// <remarks>
+/// <para>Flat plateau for |x|/R ≤ 1−α, then a quarter-sine cos(π·y/(2α)) taper where
+/// y = |x|/R − (1−α). Distinct from Tukey, which uses cos² (= (1+cos)/2) for the same taper:
+/// the sine-taper has a shallower decay near the plateau edge and a steeper one near the radius.</para>
+/// <para>Useful for tuning the rolloff sharpness independently of the cosine-squared profile.</para>
+/// </remarks>
+[ScalerInfo("SineTaper",
+  Description = "Sine-tapered windowed sinc resampler (Tukey-like with quarter-sine edges)", Category = ScalerCategory.Resampler)]
+public readonly struct SineTaper : IKernelResampler, IResamplerWithSafePath {
+
+  /// <summary>
+  /// Default α parameter (0.5 — half-tapered).
+  /// </summary>
+  public const float DefaultAlpha = 0.5f;
+
+  private readonly int _radius;
+  private readonly float _alpha;
+
+  /// <summary>
+  /// Creates a SineTaper resampler with radius 3 and default α.
+  /// </summary>
+  public SineTaper() : this(3, DefaultAlpha) { }
+
+  /// <summary>
+  /// Creates a SineTaper resampler with custom radius and default α.
+  /// </summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  public SineTaper(int radius) : this(radius, DefaultAlpha) { }
+
+  /// <summary>
+  /// Creates a SineTaper resampler with custom radius and α.
+  /// </summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  /// <param name="alpha">Taper fraction (0 = rectangular, 1 = pure cos taper).</param>
+  public SineTaper(int radius, float alpha) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    ArgumentOutOfRangeException.ThrowIfNegative(alpha);
+    ArgumentOutOfRangeException.ThrowIfGreaterThan(alpha, 1f);
+    this._radius = radius;
+    this._alpha = alpha;
+  }
+
+  /// <summary>
+  /// Gets the α parameter.
+  /// </summary>
+  public float Alpha => this._alpha == 0f ? DefaultAlpha : this._alpha;
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.SineTaper, this.Alpha, useCenteredGrid));
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.SineTaper, this.Alpha);
+
+  /// <summary>
+  /// Gets the default configuration.
+  /// </summary>
+  public static SineTaper Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.SineTaper, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
+#region Hyperbolic
+
+/// <summary>
+/// Hyperbolic-windowed sinc resampler — sech(α · x / R) envelope.
+/// </summary>
+/// <remarks>
+/// <para>Smooth bell-shaped window. Larger α concentrates the window (sharper roll-off, less
+/// ringing); smaller α flattens it (more passband, more ringing).</para>
+/// </remarks>
+[ScalerInfo("Hyperbolic",
+  Description = "Hyperbolic (sech) windowed sinc resampler", Category = ScalerCategory.Resampler)]
+public readonly struct Hyperbolic : IKernelResampler, IResamplerWithSafePath {
+
+  /// <summary>Default α parameter (2.0).</summary>
+  public const float DefaultAlpha = 2f;
+
+  private readonly int _radius;
+  private readonly float _alpha;
+
+  /// <summary>Creates a Hyperbolic resampler with radius 3 and default α.</summary>
+  public Hyperbolic() : this(3, DefaultAlpha) { }
+
+  /// <summary>Creates a Hyperbolic resampler with custom radius and default α.</summary>
+  public Hyperbolic(int radius) : this(radius, DefaultAlpha) { }
+
+  /// <summary>Creates a Hyperbolic resampler with custom radius and α.</summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  /// <param name="alpha">Bell width parameter (positive). Larger = narrower bell.</param>
+  public Hyperbolic(int radius, float alpha) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(alpha);
+    this._radius = radius;
+    this._alpha = alpha;
+  }
+
+  /// <summary>Gets the α parameter.</summary>
+  public float Alpha => this._alpha == 0f ? DefaultAlpha : this._alpha;
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Hyperbolic, this.Alpha, useCenteredGrid));
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Hyperbolic, this.Alpha);
+
+  /// <summary>Gets the default configuration.</summary>
+  public static Hyperbolic Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Hyperbolic, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
+#region Sphinx
+
+/// <summary>
+/// Sphinx-windowed sinc resampler — Gaussian × Hann combination envelope.
+/// </summary>
+/// <remarks>
+/// <para>w(x) = exp(-α·(x/R)²) · 0.5·(1 + cos(πx/R)). Combines Gaussian's smooth roll-off with
+/// Hann's hard cutoff at the radius — better sidelobe suppression than either alone.</para>
+/// </remarks>
+[ScalerInfo("Sphinx",
+  Description = "Sphinx-windowed sinc resampler (Gaussian × Hann)", Category = ScalerCategory.Resampler)]
+public readonly struct Sphinx : IKernelResampler, IResamplerWithSafePath {
+
+  /// <summary>Default α parameter (2.0).</summary>
+  public const float DefaultAlpha = 2f;
+
+  private readonly int _radius;
+  private readonly float _alpha;
+
+  /// <summary>Creates a Sphinx resampler with radius 3 and default α.</summary>
+  public Sphinx() : this(3, DefaultAlpha) { }
+
+  /// <summary>Creates a Sphinx resampler with custom radius and default α.</summary>
+  public Sphinx(int radius) : this(radius, DefaultAlpha) { }
+
+  /// <summary>Creates a Sphinx resampler with custom radius and α.</summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  /// <param name="alpha">Gaussian-decay parameter (positive). Larger = narrower Gaussian.</param>
+  public Sphinx(int radius, float alpha) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(alpha);
+    this._radius = radius;
+    this._alpha = alpha;
+  }
+
+  /// <summary>Gets the α parameter.</summary>
+  public float Alpha => this._alpha == 0f ? DefaultAlpha : this._alpha;
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.Sphinx, this.Alpha, useCenteredGrid));
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.Sphinx, this.Alpha);
+
+  /// <summary>Gets the default configuration.</summary>
+  public static Sphinx Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.Sphinx, this.Alpha, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
+#region QuadraticSinc
+
+/// <summary>
+/// Quadratic-sinc resampler — squared-Welch envelope (1 − (x/R)²)².
+/// </summary>
+/// <remarks>
+/// <para>Sharper cutoff than the existing Welch window; less ringing than Rectangular.</para>
+/// </remarks>
+[ScalerInfo("QuadraticSinc",
+  Description = "Quadratic-sinc resampler (squared Welch envelope)", Category = ScalerCategory.Resampler)]
+public readonly struct QuadraticSinc : IKernelResampler, IResamplerWithSafePath {
+
+  private readonly int _radius;
+
+  /// <summary>Creates a QuadraticSinc resampler with radius 3 (default).</summary>
+  public QuadraticSinc() : this(3) { }
+
+  /// <summary>Creates a QuadraticSinc resampler with custom radius.</summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  public QuadraticSinc(int radius) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    this._radius = radius;
+  }
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, WindowType.QuadraticSinc, 0f, useCenteredGrid));
+
+  /// <inheritdoc />
+  public float EvaluateWeight(float distance) => SincWindowMath.Weight(distance, this.Radius, WindowType.QuadraticSinc);
+
+  /// <summary>Gets the default configuration.</summary>
+  public static QuadraticSinc Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _SincWindowSafePath.Dispatch(this.Radius, WindowType.QuadraticSinc, 0f, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
 #region Shared Kernel Infrastructure
 
 internal enum WindowType {
@@ -1582,7 +2004,12 @@ internal enum WindowType {
   HanningPoisson,
   Bohman,
   Cauchy,
-  Rectangular
+  Rectangular,
+  Mobius,
+  SineTaper,
+  Hyperbolic,
+  Sphinx,
+  QuadraticSinc
 }
 
 internal static class SincWindowMath {
@@ -1622,6 +2049,11 @@ internal static class SincWindowMath {
     WindowType.Bohman => _Bohman(x, radius),
     WindowType.Cauchy => _Cauchy(x, radius, param == 0f ? Cauchy.DefaultAlpha : param),
     WindowType.Rectangular => 1f,
+    WindowType.Mobius => _Mobius(x, radius, param == 0f ? Mobius.DefaultAlpha : param),
+    WindowType.SineTaper => _SineTaper(x, radius, param == 0f ? SineTaper.DefaultAlpha : param),
+    WindowType.Hyperbolic => _Hyperbolic(x, radius, param == 0f ? Hyperbolic.DefaultAlpha : param),
+    WindowType.Sphinx => _Sphinx(x, radius, param == 0f ? Sphinx.DefaultAlpha : param),
+    WindowType.QuadraticSinc => _QuadraticSinc(x, radius),
     _ => 1f
   };
 
@@ -1711,6 +2143,51 @@ internal static class SincWindowMath {
   private static float _Cauchy(float x, int radius, float alpha) {
     var ratio = alpha * x / radius;
     return 1f / (1f + ratio * ratio);
+  }
+
+  // Mobius window: raised-cosine raised to a power α. With α=1 this is exactly Hann;
+  // α>1 concentrates the window (sharper roll-off, less ringing); α<1 flattens it
+  // (closer to rectangular, more ringing). Smoothly interpolates Hann ↔ rectangular ↔ delta.
+  private static float _Mobius(float x, int radius, float alpha) {
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * x / radius));
+    if (hann <= 0f) return 0f;
+    return MathF.Pow(hann, alpha);
+  }
+
+  // Sine-taper window: Tukey-like with a quarter-sine (cos, NOT cos²) edge taper. The flat
+  // plateau covers |x|/r ≤ 1-α; the taper is cos(π · y / (2α)) where y = |x|/r - (1-α).
+  // Distinct from Tukey, which uses cos² (= (1+cos)/2). Default α = 0.5 (50 % taper).
+  private static float _SineTaper(float x, int radius, float alpha) {
+    var absX = MathF.Abs(x);
+    var r = absX / radius;
+    if (r <= 1f - alpha) return 1f;
+    if (r <= 1f) return MathF.Cos(MathF.PI * (r - (1f - alpha)) / (2f * alpha));
+    return 0f;
+  }
+
+  // Hyperbolic (sech) window: w(x) = sech(α · x / r) = 1 / cosh(α · x / r). Smooth bell shape;
+  // larger α concentrates the window (sharper roll-off, less ringing); smaller α flattens it.
+  private static float _Hyperbolic(float x, int radius, float alpha) {
+    var t = alpha * x / radius;
+    return 1f / MathF.Cosh(t);
+  }
+
+  // Sphinx window: w(x) = exp(-α · (x/r)²) · (1 + cos(πx/r))/2. Gaussian envelope multiplied
+  // by Hann; produces a smoother roll-off than pure Hann with stronger sidelobe suppression.
+  private static float _Sphinx(float x, int radius, float alpha) {
+    var t = x / radius;
+    var gauss = MathF.Exp(-alpha * t * t);
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * t));
+    return gauss * hann;
+  }
+
+  // Quadratic-sinc window: w(x) = (1 − (x/r)²)². Squared Welch — sharper cutoff than Welch
+  // with less ringing than Rectangular.
+  private static float _QuadraticSinc(float x, int radius) {
+    var t = x / (float)radius;
+    var q = 1f - t * t;
+    if (q <= 0f) return 0f;
+    return q * q;
   }
 
   private static float _BesselI0(float x) {
@@ -1864,6 +2341,11 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     WindowType.Bohman => this.BohmanWindow(x),
     WindowType.Cauchy => this.CauchyWindow(x, param == 0f ? Cauchy.DefaultAlpha : param),
     WindowType.Rectangular => 1f, // No windowing - pure sinc
+    WindowType.Mobius => this.MobiusWindow(x, param == 0f ? Mobius.DefaultAlpha : param),
+    WindowType.SineTaper => this.SineTaperWindow(x, param == 0f ? SineTaper.DefaultAlpha : param),
+    WindowType.Hyperbolic => this.HyperbolicWindow(x, param == 0f ? Hyperbolic.DefaultAlpha : param),
+    WindowType.Sphinx => this.SphinxWindow(x, param == 0f ? Sphinx.DefaultAlpha : param),
+    WindowType.QuadraticSinc => this.QuadraticSincWindow(x),
     _ => 1f
   };
 
@@ -2071,6 +2553,67 @@ file readonly struct SincWindowKernel<TPixel, TWork, TKey, TDecode, TProject, TE
   private float CauchyWindow(float x, float alpha) {
     var r = alpha * x / radius;
     return 1f / (1f + r * r);
+  }
+
+  /// <summary>
+  /// Mobius window: raised-cosine to the power α — (0.5·(1 + cos(πx/R)))^α.
+  /// </summary>
+  /// <remarks>
+  /// α=1 reproduces Hann; α&gt;1 concentrates the window (sharper roll-off, less ringing);
+  /// α&lt;1 flattens it (more ringing, closer to rectangular).
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float MobiusWindow(float x, float alpha) {
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * x / radius));
+    if (hann <= 0f) return 0f;
+    return MathF.Pow(hann, alpha);
+  }
+
+  /// <summary>
+  /// Sine-taper window: Tukey-like with a quarter-sine (cos, not cos²) edge taper.
+  /// </summary>
+  /// <remarks>
+  /// Flat plateau for |x|/R ≤ 1−α, then cos(π·y/(2α)) where y = |x|/R − (1−α).
+  /// Distinct from Tukey, which uses cos² for the same taper.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float SineTaperWindow(float x, float alpha) {
+    var absX = MathF.Abs(x);
+    var r = absX / radius;
+    if (r <= 1f - alpha) return 1f;
+    if (r <= 1f) return MathF.Cos(MathF.PI * (r - (1f - alpha)) / (2f * alpha));
+    return 0f;
+  }
+
+  /// <summary>
+  /// Hyperbolic (sech) window: 1 / cosh(α · x / R).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float HyperbolicWindow(float x, float alpha) {
+    var t = alpha * x / radius;
+    return 1f / MathF.Cosh(t);
+  }
+
+  /// <summary>
+  /// Sphinx window: Gaussian × Hann — exp(-α · (x/R)²) · (1 + cos(πx/R))/2.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float SphinxWindow(float x, float alpha) {
+    var t = x / radius;
+    var gauss = MathF.Exp(-alpha * t * t);
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * t));
+    return gauss * hann;
+  }
+
+  /// <summary>
+  /// Quadratic-sinc window (Welch²): (1 − (x/R)²)². Sharper cutoff than Welch.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float QuadraticSincWindow(float x) {
+    var t = x / (float)radius;
+    var q = 1f - t * t;
+    if (q <= 0f) return 0f;
+    return q * q;
   }
 
   /// <summary>

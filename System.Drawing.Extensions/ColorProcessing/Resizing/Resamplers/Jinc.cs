@@ -197,11 +197,91 @@ public readonly struct EwaLanczos : IKernelResampler, IResamplerWithSafePath {
 
 #endregion
 
+#region EWAHanning
+
+/// <summary>
+/// EWA Hanning resampler — Elliptical Weighted Average with Hanning-windowed Jinc.
+/// </summary>
+/// <remarks>
+/// <para>Like <see cref="EwaLanczos"/> but uses a raised-cosine (Hanning) window instead of a
+/// Lanczos jinc window. Softer roll-off, slightly more blur, less ringing on high-contrast
+/// edges. Useful as a lower-ringing alternative when Lanczos is too sharp for the content.</para>
+/// </remarks>
+[ScalerInfo("EWA Hanning", Year = 2000,
+  Description = "Elliptical Weighted Average with Hanning-windowed Jinc", Category = ScalerCategory.Resampler)]
+public readonly struct EwaHanning : IKernelResampler, IResamplerWithSafePath {
+
+  private readonly int _radius;
+
+  /// <summary>Creates an EWA Hanning resampler with radius 3 (default).</summary>
+  public EwaHanning() : this(3) { }
+
+  /// <summary>Creates an EWA Hanning resampler with custom radius.</summary>
+  /// <param name="radius">The filter radius (typically 2, 3, or 4).</param>
+  public EwaHanning(int radius) {
+    ArgumentOutOfRangeException.ThrowIfLessThan(radius, 1);
+    this._radius = radius;
+  }
+
+  /// <inheritdoc />
+  public ScaleFactor Scale => default;
+
+  /// <inheritdoc />
+  public int Radius => this._radius == 0 ? 3 : this._radius;
+
+  /// <inheritdoc />
+  public PrefilterInfo? Prefilter => null;
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// Returns the radial profile jinc(|x|) · hann(|x|/radius) for charting.
+  /// </remarks>
+  public float EvaluateWeight(float distance) {
+    var r = MathF.Abs(distance);
+    var radius = this.Radius;
+    if (r >= radius) return 0f;
+    var t = r / radius;
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * t));
+    return JincMath.Jinc(r) * hann;
+  }
+
+  /// <inheritdoc />
+  public TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
+    IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback,
+    int sourceWidth,
+    int sourceHeight,
+    int targetWidth,
+    int targetHeight,
+    bool useCenteredGrid = true)
+    where TWork : unmanaged, IColorSpace4F<TWork>
+    where TKey : unmanaged, IColorSpace
+    where TPixel : unmanaged, IStorageSpace
+    where TDecode : struct, IDecode<TPixel, TWork>
+    where TProject : struct, IProject<TWork, TKey>
+    where TEncode : struct, IEncode<TWork, TPixel>
+    => callback.Invoke(new JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
+      sourceWidth, sourceHeight, targetWidth, targetHeight, this.Radius, JincType.EwaHanning, useCenteredGrid));
+
+  /// <summary>Gets the default configuration.</summary>
+  public static EwaHanning Default => new();
+
+  /// <inheritdoc />
+  public Bitmap ResampleWithSafePath(
+    Bitmap source, int targetWidth, int targetHeight,
+    OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode,
+    Color canvasColor, bool useCenteredGrid)
+    => _JincSafePath.Dispatch(this.Radius, JincType.EwaHanning, source, targetWidth, targetHeight,
+      horizontalMode, verticalMode, canvasColor, useCenteredGrid);
+}
+
+#endregion
+
 #region Shared Kernel Infrastructure
 
 file enum JincType {
   Jinc,
-  EwaLanczos
+  EwaLanczos,
+  EwaHanning
 }
 
 file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -253,7 +333,11 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
       var dx = fx - kx;
       var dy = fy - ky;
       var r = MathF.Sqrt(dx * dx + dy * dy);
-      var weight = jincType == JincType.EwaLanczos ? this.EwaLanczosWeight(r) : this.JincWeight(r);
+      var weight = jincType switch {
+        JincType.EwaLanczos => this.EwaLanczosWeight(r),
+        JincType.EwaHanning => this.EwaHanningWeight(r),
+        _ => this.JincWeight(r),
+      };
       if (weight == 0f) continue;
       acc.AddMul(frame[srcXi + kx, srcYi + ky].Work, weight);
     }
@@ -282,7 +366,11 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
       var dx = fx - kx;
       var dy = fy - ky;
       var r = MathF.Sqrt(dx * dx + dy * dy);
-      var weight = jincType == JincType.EwaLanczos ? this.EwaLanczosWeight(r) : this.JincWeight(r);
+      var weight = jincType switch {
+        JincType.EwaLanczos => this.EwaLanczosWeight(r),
+        JincType.EwaHanning => this.EwaHanningWeight(r),
+        _ => this.JincWeight(r),
+      };
       if (weight == 0f) continue;
       acc.AddMul(frame.GetUnchecked(srcXi + kx, srcYi + ky).Work, weight);
     }
@@ -314,6 +402,18 @@ file readonly struct JincKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
     if (r >= radius)
       return 0f;
     return JincFunction(r) * JincFunction(r / radius);
+  }
+
+  /// <summary>
+  /// EWA Hanning weight: jinc(r) * hann(r/a) where hann(t) = 0.5·(1 + cos(πt)).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float EwaHanningWeight(float r) {
+    if (r >= radius)
+      return 0f;
+    var t = r / radius;
+    var hann = 0.5f * (1f + MathF.Cos(MathF.PI * t));
+    return JincFunction(r) * hann;
   }
 
   /// <summary>
