@@ -859,10 +859,22 @@ internal static class Hq2xPatterns {
         e01 = !equality.Equals(c1, c5) ? w4 : lerp.Lerp(w4, w1, w5, 14, 1, 1);
         break;
       case 168:
-      case 169:
       case 172:
+        // Reference (Cameron Zemek hq2x.c) groups {40, 44, 168, 172}:
+        // PIXEL00_21, PIXEL01_20, PIXEL10_11, PIXEL11_20.
+        // Cross-validated against FFmpeg vf_hqx.c (hq2x_interp_1x1 4-rotation invocation).
+        // Lib previously grouped 168-173 with PIXEL00_20 (=Interp2(c,W,N)); ref splits
+        // 168/172 → PIXEL00_21 (=Interp2(c,NW,N)) from 169/173 → PIXEL00_12 (=Interp1(c,N)).
+        e00 = lerp.Lerp(w4, w0, w1, 2, 1, 1);
+        e01 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
+        e10 = lerp.Lerp(w4, w7, 3, 1);
+        e11 = lerp.Lerp(w4, w5, w7, 2, 1, 1);
+        break;
+      case 169:
       case 173:
-        e00 = lerp.Lerp(w4, w1, w3, 2, 1, 1);
+        // Reference (Cameron Zemek hq2x.c) groups {41, 45, 169}, plus standalone {173}:
+        // PIXEL00_12, PIXEL01_20, PIXEL10_11, PIXEL11_20.
+        e00 = lerp.Lerp(w4, w1, 3, 1);
         e01 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
         e10 = lerp.Lerp(w4, w7, 3, 1);
         e11 = lerp.Lerp(w4, w5, w7, 2, 1, 1);

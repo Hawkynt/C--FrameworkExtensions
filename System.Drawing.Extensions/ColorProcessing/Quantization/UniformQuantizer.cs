@@ -60,9 +60,12 @@ public struct UniformQuantizer : IQuantizer {
         ];
 
       // Calculate optimal levels per channel to get close to colorCount colors
-      // Try to find r×g×b that is as close to colorCount as possible without exceeding it
+      // Try to find r×g×b that is as close to colorCount as possible without exceeding it.
+      // Min-clamp at 1 (not 2): for colorCount ∈ {3..7}, a 2³ = 8 cube already exceeds the
+      // requested count. Starting at (1,1,1) lets the ratchet loop find a non-cubic
+      // decomposition like (4,1,1) for k=4 or (3,2,1) for k=6 that satisfies the ≤k contract.
       var baseLevels = (int)Math.Floor(Math.Cbrt(colorCount));
-      baseLevels = Math.Max(2, Math.Min(baseLevels, 8));
+      baseLevels = Math.Max(1, Math.Min(baseLevels, 8));
 
       // Find the best combination of levels that gives us <= colorCount colors
       int rLevels = baseLevels, gLevels = baseLevels, bLevels = baseLevels;

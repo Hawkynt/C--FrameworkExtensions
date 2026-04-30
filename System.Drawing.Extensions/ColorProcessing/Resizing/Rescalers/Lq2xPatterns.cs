@@ -112,6 +112,7 @@ internal static class Lq2xPatterns {
         break;
       case 11:
       case 27:
+      case 75:
         e01 = w2;
         e10 = w2;
         e11 = w2;
@@ -309,7 +310,6 @@ internal static class Lq2xPatterns {
         e10 = !equality.Equals(c7, c3) ? w0 : lerp.Lerp(w0, w3, w7, 2, 1, 1);
         e00 = !equality.Equals(c1, c3) ? w0 : lerp.Lerp(w0, w1, w3, 2, 1, 1);
         break;
-      case 75:
       case 123:
         e01 = w2;
         e11 = w2;

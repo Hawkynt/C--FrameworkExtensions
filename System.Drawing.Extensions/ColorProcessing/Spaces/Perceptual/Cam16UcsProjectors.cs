@@ -212,34 +212,54 @@ public readonly struct Cam16UcsFToLinearRgbF : IProject<Cam16UcsF, LinearRgbF> {
     var j = jPrime / (1f + _Cam16ViewingConditions.Ucs_C1 * (100f - jPrime));
     var h = MathF.Atan2(bPrime, aPrime); // radians
 
-    // M → C, t, alpha.
-    var cChroma = m / _Cam16ViewingConditions.FL025;
+    // Lightness recovery.
     var jLin01 = MathF.Max(j / 100f, 0f);
-    var sqrtJ = MathF.Sqrt(jLin01);
-    var alpha = sqrtJ > 1e-6f ? cChroma / sqrtJ : 0f;
-    var et = 0.25f * (MathF.Cos(h + 2f) + 3.8f);
-    var t = MathF.Pow(alpha / MathF.Pow(1.64f - MathF.Pow(0.29f, _Cam16ViewingConditions.N), 0.73f), 1f / 0.9f);
-
-    // Solve for opponent (a, b) and adapted-cone responses.
     var aResp = _Cam16ViewingConditions.Aw * MathF.Pow(jLin01, 1f / (_Cam16ViewingConditions.C * _Cam16ViewingConditions.Z));
-    var p1 = (50000f / 13f * _Cam16ViewingConditions.Nc * _Cam16ViewingConditions.Ncb * et) / MathF.Max(t, 1e-9f);
     var p2 = aResp / _Cam16ViewingConditions.Nbb + 0.305f;
-    var sinH = MathF.Sin(h);
-    var cosH = MathF.Cos(h);
 
+    // Opponent recovery. Canonical Li/Luo CAM16 inverse:
+    //   t = (α / [(1.64 − 0.29ⁿ)^0.73])^(1/0.9), where α = C/√(J/100)
+    //   p1 = (50000/13)·Nc·Ncb·et / t
+    //   hr = h (radians)
+    //   if |sin hr| ≥ |cos hr|: p4 = p1/sin hr; b = p2·(2+21/20)·460/1403 / (p4 + (2+21/20)·(220/1403)·(cos hr/sin hr) − (27/1403) − (6300/1403)); a = b·(cos hr/sin hr)
+    //   else:                   p5 = p1/cos hr; a = p2·(2+21/20)·460/1403 / (p5 + (2+21/20)·(220/1403) − (27/1403)·(sin hr/cos hr) − (6300/1403)·(sin hr/cos hr)); b = a·(sin hr/cos hr)
+    // The earlier code dropped the p4/p5 terms from the denominators — that's the bug.
+    // Achromatic short-circuit: when chroma → 0 the canonical formulas degenerate
+    // (t → 0, α → 0); detect upfront via mPrime and skip the opponent recovery.
     float aOp, bOp;
-    if (MathF.Abs(sinH) >= MathF.Abs(cosH)) {
-      var p4 = p1 / sinH;
-      bOp = p2 * (2f + 21f / 20f) / (460f / 1403f + 220f / 1403f * (cosH / sinH) - 27f / 1403f - 6300f / 1403f);
-      aOp = bOp * (cosH / sinH);
-    } else {
-      var p5 = p1 / cosH;
-      aOp = p2 * (2f + 21f / 20f) / (460f / 1403f + 220f / 1403f - 27f / 1403f * (sinH / cosH) - 6300f / 1403f * (sinH / cosH));
-      bOp = aOp * (sinH / cosH);
-    }
-    if (t == 0f) {
+    if (mPrime < 1e-4f) {
       aOp = 0f;
       bOp = 0f;
+    } else {
+      var cChroma = m / _Cam16ViewingConditions.FL025;
+      var sqrtJ = MathF.Sqrt(jLin01);
+      var alpha = sqrtJ > 1e-6f ? cChroma / sqrtJ : 0f;
+      var et = 0.25f * (MathF.Cos(h + 2f) + 3.8f);
+      var k = MathF.Pow(1.64f - MathF.Pow(0.29f, _Cam16ViewingConditions.N), 0.73f);
+      var t = MathF.Pow(alpha / k, 1f / 0.9f);
+      var sinH = MathF.Sin(h);
+      var cosH = MathF.Cos(h);
+
+      if (t < 1e-6f) {
+        aOp = 0f;
+        bOp = 0f;
+      } else {
+        var p1 = 50000f / 13f * _Cam16ViewingConditions.Nc * _Cam16ViewingConditions.Ncb * et / t;
+        const float c1 = 460f / 1403f;
+        const float c2 = 220f / 1403f;
+        const float c3 = 27f / 1403f;
+        const float c4 = 6300f / 1403f;
+        const float c5 = 2f + 21f / 20f;
+        if (MathF.Abs(sinH) >= MathF.Abs(cosH)) {
+          var p4 = p1 / sinH;
+          bOp = p2 * c5 * c1 / (p4 + c5 * c2 * (cosH / sinH) - c3 - c4);
+          aOp = bOp * (cosH / sinH);
+        } else {
+          var p5 = p1 / cosH;
+          aOp = p2 * c5 * c1 / (p5 + c5 * c2 - c3 * (sinH / cosH) - c4 * (sinH / cosH));
+          bOp = aOp * (sinH / cosH);
+        }
+      }
     }
 
     // Recover adapted cone responses.

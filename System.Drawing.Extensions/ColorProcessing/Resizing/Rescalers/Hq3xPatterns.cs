@@ -50,6 +50,19 @@ internal static class Hq3xPatterns {
       case 33:
       case 36:
       case 37:
+      // Cases 128-165 with bit-7 (SE-corner) set are equivalent to "no special pattern"
+      // per Cameron Zemek hq3x.c reference (group {0,1,4,32,128,5,132,160,33,129,36,133,
+      // 164,161,37,165}). Lib previously omitted these; without them, pattern bytes 128-
+      // 165 fall through the switch leaving e00..e22 = center, which produces nearest-
+      // neighbour-like output instead of the smoothed corners the algorithm specifies.
+      case 128:
+      case 129:
+      case 132:
+      case 133:
+      case 160:
+      case 161:
+      case 164:
+      case 165:
         e00 = lerp.Lerp(w4, w1, w3, 2, 1, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
@@ -62,6 +75,8 @@ internal static class Hq3xPatterns {
         break;
       case 2:
       case 34:
+      case 130:
+      case 162:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e01 = w4;
         e02 = lerp.Lerp(w4, w2, 3, 1);
@@ -74,6 +89,8 @@ internal static class Hq3xPatterns {
         break;
       case 3:
       case 35:
+      case 131:
+      case 163:
         e00 = lerp.Lerp(w4, w3, 3, 1);
         e01 = w4;
         e02 = lerp.Lerp(w4, w2, 3, 1);
@@ -86,6 +103,8 @@ internal static class Hq3xPatterns {
         break;
       case 6:
       case 38:
+      case 134:
+      case 166:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e01 = w4;
         e02 = lerp.Lerp(w4, w5, 3, 1);
@@ -98,6 +117,8 @@ internal static class Hq3xPatterns {
         break;
       case 7:
       case 39:
+      case 135:
+      case 167:
         e00 = lerp.Lerp(w4, w3, 3, 1);
         e01 = w4;
         e02 = lerp.Lerp(w4, w5, 3, 1);
@@ -110,6 +131,8 @@ internal static class Hq3xPatterns {
         break;
       case 8:
       case 12:
+      case 136:
+      case 140:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
@@ -122,6 +145,8 @@ internal static class Hq3xPatterns {
         break;
       case 9:
       case 13:
+      case 137:
+      case 141:
         e00 = lerp.Lerp(w4, w1, 3, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
@@ -133,6 +158,7 @@ internal static class Hq3xPatterns {
         e22 = lerp.Lerp(w4, w5, w7, 2, 1, 1);
         break;
       case 10:
+      case 138:
         e02 = lerp.Lerp(w4, w2, 3, 1);
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
@@ -150,6 +176,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 11:
+      case 139:
         e02 = lerp.Lerp(w4, w2, 3, 1);
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
@@ -167,6 +194,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 14:
+      case 142:
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
         e20 = lerp.Lerp(w4, w6, 3, 1);
@@ -185,6 +213,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 15:
+      case 143:
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
         e20 = lerp.Lerp(w4, w6, 3, 1);
@@ -406,6 +435,8 @@ internal static class Hq3xPatterns {
         break;
       case 40:
       case 44:
+      case 168:
+      case 172:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
@@ -418,6 +449,8 @@ internal static class Hq3xPatterns {
         break;
       case 41:
       case 45:
+      case 169:
+      case 173:
         e00 = lerp.Lerp(w4, w1, 3, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w1, w5, 2, 1, 1);
@@ -429,6 +462,7 @@ internal static class Hq3xPatterns {
         e22 = lerp.Lerp(w4, w5, w7, 2, 1, 1);
         break;
       case 42:
+      case 170:
         e02 = lerp.Lerp(w4, w2, 3, 1);
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
@@ -447,6 +481,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 43:
+      case 171:
         e02 = lerp.Lerp(w4, w2, 3, 1);
         e11 = w4;
         e12 = lerp.Lerp(w4, w5, 3, 1);
@@ -465,6 +500,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 46:
+      case 174:
         e01 = w4;
         e02 = lerp.Lerp(w4, w5, 3, 1);
         e10 = w4;
@@ -476,6 +512,7 @@ internal static class Hq3xPatterns {
         e00 = !equality.Equals(c1, c3) ? lerp.Lerp(w4, w0, 3, 1) : lerp.Lerp(w4, w1, w3, 2, 1, 1);
         break;
       case 47:
+      case 175:
         e01 = w4;
         e02 = lerp.Lerp(w4, w5, 3, 1);
         e10 = w4;
@@ -772,6 +809,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 82:
+      case 214:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e10 = lerp.Lerp(w4, w3, 3, 1);
         e11 = w4;
@@ -857,6 +895,7 @@ internal static class Hq3xPatterns {
         }
         break;
       case 88:
+      case 248:
         e00 = lerp.Lerp(w4, w0, 3, 1);
         e01 = lerp.Lerp(w4, w1, 3, 1);
         e02 = lerp.Lerp(w4, w2, 3, 1);

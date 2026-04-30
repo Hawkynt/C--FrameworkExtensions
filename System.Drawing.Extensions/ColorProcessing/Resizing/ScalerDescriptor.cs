@@ -197,8 +197,18 @@ public sealed class ScalerDescriptor {
   /// The returned instance is a boxed struct cast to <see cref="IScalerInfo"/>.
   /// For strongly-typed usage, cast to the concrete type.
   /// </para>
+  /// <para>
+  /// Prefers the type's static <c>Default</c> property (the documented default
+  /// configuration) over <see cref="Activator.CreateInstance(System.Type)"/>. For value
+  /// types with parametric constructors that use <c>parameter = defaultValue</c> syntax,
+  /// <see cref="Activator.CreateInstance(System.Type)"/> creates an all-zero-fields
+  /// instance, ignoring the constructor's documented defaults — e.g.,
+  /// <see cref="Hawkynt.ColorProcessing.Resizing.Rescalers.Xbr"/> would silently default
+  /// to <c>allowAlphaBlending=false</c> (the value-type zero) instead of the documented
+  /// <c>true</c>, producing pixel-perfect output instead of the expected smoothed output.
+  /// </para>
   /// </remarks>
-  public IScalerInfo CreateDefault() => (IScalerInfo)Activator.CreateInstance(this.Type)!;
+  public IScalerInfo CreateDefault() => (IScalerInfo)_GetDocumentedDefault();
 
   /// <summary>
   /// Creates a default instance of this scaler as the specified type.
@@ -207,7 +217,16 @@ public sealed class ScalerDescriptor {
   /// <returns>A new instance of the scaler with default configuration.</returns>
   /// <exception cref="InvalidCastException">Thrown if the scaler is not of type <typeparamref name="TScaler"/>.</exception>
   public TScaler CreateDefault<TScaler>() where TScaler : struct, IScalerInfo
-    => (TScaler)Activator.CreateInstance(this.Type)!;
+    => (TScaler)_GetDocumentedDefault();
+
+  private object _GetDocumentedDefault() {
+    var defaultProp = this.Type.GetProperty("Default", BindingFlags.Public | BindingFlags.Static);
+    if (defaultProp != null && defaultProp.PropertyType == this.Type) {
+      var value = defaultProp.GetValue(null);
+      if (value != null) return value;
+    }
+    return Activator.CreateInstance(this.Type)!;
+  }
 
   /// <inheritdoc />
   public override string ToString() => $"{this.Name} ({this.Category})";

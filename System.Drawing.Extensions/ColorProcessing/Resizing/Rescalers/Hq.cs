@@ -463,14 +463,57 @@ file static class HqHelpers {
   }
 
   /// <summary>
-  /// Determines if Smart mode should use Bold filtering.
+  /// Determines if Smart mode should use the brightness-only ("nosame") branch.
   /// Returns true if no corners match the center pixel.
   /// </summary>
+  /// <remarks>
+  /// Reference: Snes9xRX <c>FILTER_HQ2XS</c> in <c>source/filter.cpp</c>.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool ShouldUseBold<TKey, TEquality>(in TKey c0, in TKey c2, in TKey c4, in TKey c6, in TKey c8, TEquality equality)
     where TKey : unmanaged
     where TEquality : struct, IColorEquality<TKey>
     => !equality.Equals(c0, c4) && !equality.Equals(c2, c4) && !equality.Equals(c6, c4) && !equality.Equals(c8, c4);
+
+  /// <summary>
+  /// Computes pattern byte using only brightness comparison — no equality check at all.
+  /// Used by Smart mode when no corners match the center (the "nosame" branch in the
+  /// Snes9x reference). Differs from <see cref="ComputePatternBold{TWork,TKey,TEquality}"/>
+  /// which additionally requires the neighbour to be unequal to the center.
+  /// </summary>
+  /// <remarks>
+  /// Reference: Snes9xRX <c>FILTER_HQ2XS</c> in <c>source/filter.cpp</c>:
+  /// the <c>nosame</c> branch sets each pattern bit purely from
+  /// <c>(brightness(neighbour) > avg) != (brightness(center) > avg)</c>.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static byte ComputePatternBrightnessOnly<TWork>(
+    in TWork w0, in TWork w1, in TWork w2, in TWork w3, in TWork w4, in TWork w5, in TWork w6, in TWork w7, in TWork w8)
+    where TWork : unmanaged {
+
+    var b0 = GetBrightness(w0);
+    var b1 = GetBrightness(w1);
+    var b2 = GetBrightness(w2);
+    var b3 = GetBrightness(w3);
+    var b4 = GetBrightness(w4);
+    var b5 = GetBrightness(w5);
+    var b6 = GetBrightness(w6);
+    var b7 = GetBrightness(w7);
+    var b8 = GetBrightness(w8);
+    var avg = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + b7 + b8) / 9f;
+    var dc4 = b4 > avg;
+
+    byte pattern = 0;
+    if ((b0 > avg) != dc4) pattern |= 1;
+    if ((b1 > avg) != dc4) pattern |= 2;
+    if ((b2 > avg) != dc4) pattern |= 4;
+    if ((b3 > avg) != dc4) pattern |= 8;
+    if ((b5 > avg) != dc4) pattern |= 16;
+    if ((b6 > avg) != dc4) pattern |= 32;
+    if ((b7 > avg) != dc4) pattern |= 64;
+    if ((b8 > avg) != dc4) pattern |= 128;
+    return pattern;
+  }
 
   /// <summary>
   /// Computes perceptual lightness from a color value using Oklab L component.
@@ -679,8 +722,13 @@ file readonly struct Hq2xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
 
     // Smart mode: use Bold if no corners match center
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
 
     TWork e00, e01, e10, e11;
@@ -841,8 +889,13 @@ file readonly struct Lq2xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
 
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
 
     TWork e00, e01, e10, e11;
@@ -932,8 +985,13 @@ file readonly struct Hq3xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e02, e10, e11, e12, e20, e21, e22;
     e00 = e01 = e02 = e10 = e11 = e12 = e20 = e21 = e22 = w4;
@@ -1020,8 +1078,13 @@ file readonly struct Hq4xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e02, e03, e10, e11, e12, e13, e20, e21, e22, e23, e30, e31, e32, e33;
     e00 = e01 = e02 = e03 = e10 = e11 = e12 = e13 = e20 = e21 = e22 = e23 = e30 = e31 = e32 = e33 = w4;
@@ -1106,8 +1169,13 @@ file readonly struct Lq3xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e02, e10, e11, e12, e20, e21, e22;
     e00 = e01 = e02 = e10 = e11 = e12 = e20 = e21 = e22 = w4;
@@ -1194,8 +1262,13 @@ file readonly struct Lq4xSmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEnc
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e02, e03, e10, e11, e12, e13, e20, e21, e22, e23, e30, e31, e32, e33;
     e00 = e01 = e02 = e03 = e10 = e11 = e12 = e13 = e20 = e21 = e22 = e23 = e30 = e31 = e32 = e33 = w4;
@@ -1280,8 +1353,13 @@ file readonly struct Hq2x3SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e10, e11, e20, e21;
     e00 = e01 = e10 = e11 = e20 = e21 = w4;
@@ -1366,8 +1444,13 @@ file readonly struct Hq2x4SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e10, e11, e20, e21, e30, e31;
     e00 = e01 = e10 = e11 = e20 = e21 = e30 = e31 = w4;
@@ -1451,8 +1534,13 @@ file readonly struct Lq2x3SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e10, e11, e20, e21;
     e00 = e01 = e10 = e11 = e20 = e21 = w4;
@@ -1537,8 +1625,13 @@ file readonly struct Lq2x4SmartKernel<TWork, TKey, TPixel, TEquality, TLerp, TEn
     var c5 = n5.Key; var c6 = n6.Key; var c7 = n7.Key; var c8 = n8.Key;
     var w0 = n0.Work; var w1 = n1.Work; var w2 = n2.Work; var w3 = n3.Work; var w4 = n4.Work;
     var w5 = n5.Work; var w6 = n6.Work; var w7 = n7.Work; var w8 = n8.Work;
+    // Smart-mode reference (Snes9xRX FILTER_HQ2XS): when no corners match center, use a
+    // pure brightness-comparison pattern (no equality check); otherwise fall back to the
+    // standard YUV-threshold pattern. Earlier the lib called Bold here, but Bold additionally
+    // requires neighbours to be unequal to the center — that diverged from the reference's
+    // intent of letting brightness alone drive the pattern in the "all-different-corners" case.
     var pattern = HqHelpers.ShouldUseBold(c0, c2, c4, c6, c8, equality)
-      ? HqHelpers.ComputePatternBold(w0, w1, w2, w3, w4, w5, w6, w7, w8, c0, c1, c2, c3, c4, c5, c6, c7, c8, equality)
+      ? HqHelpers.ComputePatternBrightnessOnly(w0, w1, w2, w3, w4, w5, w6, w7, w8)
       : HqHelpers.ComputePatternNormal(c0, c1, c2, c3, c4, c5, c6, c7, c8, equality);
     TWork e00, e01, e10, e11, e20, e21, e30, e31;
     e00 = e01 = e10 = e11 = e20 = e21 = e30 = e31 = w4;

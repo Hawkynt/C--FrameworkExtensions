@@ -996,8 +996,13 @@ file readonly struct Xbr5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     int destStride,
     in TEncode encoder
   ) {
-    // 3x3 neighbourhood (a..i) — only the immediate 8-neighbours + center are consulted.
-    // (Hyllian 5xbr.cg reference uses no further-away samples.)
+    // Full 3×3 neighbourhood including all 4 corners. The reference Hyllian 5xbr.cg shader
+    // performs its edge-detection rule once per output sub-pixel using a rotated
+    // coordinate frame (`dir = sign(pos)`); that rotation effectively cycles through the 4
+    // diagonal orientations of the input neighbourhood. We mirror that behaviour by
+    // invoking _ComputeCorner four times with rotated argument tuples — the same pattern
+    // Xbr2x/3x/4x already use to stay rotation-symmetric.
+    var a = window.M1M1;  // top-left
     var b = window.M1P0;  // top
     var c = window.M1P1;  // top-right
     var d = window.P0M1;  // left
@@ -1007,40 +1012,53 @@ file readonly struct Xbr5xKernel<TWork, TKey, TPixel, TEquality, TMetric, TLerp,
     var h = window.P1P0;  // bottom
     var i = window.P1P1;  // bottom-right
 
-    var center = e.Work;
-    var E24 = center;
-    var E19 = center;
-    var E14 = center;
+    // Per-quadrant edge detection (BR, TR, BL, TL). Each tuple is (e24, e19, e14) — the
+    // outer-corner, edge, and inner-mid blend for that quadrant. See the rotation table
+    // below (shader b/c/d/f/g/h/i ↔ lib neighbour mapping):
+    //   BR (+,+): b,c,d,f,g,h,i = b,c,d,f,g,h,i        (identity)
+    //   TR (+,-): b,c,d,f,g,h,i = h,i,d,f,a,b,c
+    //   BL (-,+): b,c,d,f,g,h,i = b,a,f,d,i,h,g
+    //   TL (-,-): b,c,d,f,g,h,i = h,g,f,d,c,b,a
+    var (br24, br19, br14) = this._ComputeCorner(e, b, c, d, f, g, h, i);
+    var (tr24, tr19, tr14) = this._ComputeCorner(e, h, i, d, f, a, b, c);
+    var (bl24, bl19, bl14) = this._ComputeCorner(e, b, a, f, d, i, h, g);
+    var (tl24, tl19, tl14) = this._ComputeCorner(e, h, g, f, d, c, b, a);
 
-    // Reference single-rotation condition (bottom-right edge):
-    //   if (h==f && h!=e && ( e==g && (h==i || e==d) || e==c && (h==i || e==b) ))
-    if (equality.Equals(h.Key, f.Key)
-        && !equality.Equals(h.Key, e.Key)
-        && (equality.Equals(e.Key, g.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, d.Key))
-            || equality.Equals(e.Key, c.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, b.Key)))) {
-      E24 = f.Work;
-      // E19 ≈ 0.875·F + 0.125·e ; E14 ≈ 0.125·F + 0.875·e
-      this._AlphaBlend224W(ref E19, f.Work);
-      this._AlphaBlend32W(ref E14, f.Work);
-    }
-
-    // Distribute E24/E19/E14/e across the 5×5 block with 4-fold symmetry.
     var r0 = destTopLeft;
     var r1 = destTopLeft + destStride;
     var r2 = destTopLeft + destStride * 2;
     var r3 = destTopLeft + destStride * 3;
     var r4 = destTopLeft + destStride * 4;
 
-    var eCorner = encoder.Encode(E24);
-    var eEdge = encoder.Encode(E19);
-    var eMid = encoder.Encode(E14);
-    var eCenter = encoder.Encode(center);
+    var ec = encoder.Encode(e.Work);
+    // 5×5 layout: row 2 and column 2 are pure center (the shader's `dir.x=0` or `dir.y=0`
+    // sub-pixels collapse the rotated lookups to identity, so edge detection cannot fire).
+    // Each 2×2 corner region uses its own (e24, e19, e14) triple.
+    r0[0] = encoder.Encode(tl24); r0[1] = encoder.Encode(tl19); r0[2] = ec;                   r0[3] = encoder.Encode(tr19); r0[4] = encoder.Encode(tr24);
+    r1[0] = encoder.Encode(tl19); r1[1] = encoder.Encode(tl14); r1[2] = ec;                   r1[3] = encoder.Encode(tr14); r1[4] = encoder.Encode(tr19);
+    r2[0] = ec;                   r2[1] = ec;                   r2[2] = ec;                   r2[3] = ec;                   r2[4] = ec;
+    r3[0] = encoder.Encode(bl19); r3[1] = encoder.Encode(bl14); r3[2] = ec;                   r3[3] = encoder.Encode(br14); r3[4] = encoder.Encode(br19);
+    r4[0] = encoder.Encode(bl24); r4[1] = encoder.Encode(bl19); r4[2] = ec;                   r4[3] = encoder.Encode(br19); r4[4] = encoder.Encode(br24);
+  }
 
-    r0[0] = eCorner; r0[1] = eEdge;   r0[2] = eMid;    r0[3] = eEdge;   r0[4] = eCorner;
-    r1[0] = eEdge;   r1[1] = eMid;    r1[2] = eCenter; r1[3] = eMid;    r1[4] = eEdge;
-    r2[0] = eMid;    r2[1] = eCenter; r2[2] = eCenter; r2[3] = eCenter; r2[4] = eMid;
-    r3[0] = eEdge;   r3[1] = eMid;    r3[2] = eCenter; r3[3] = eMid;    r3[4] = eEdge;
-    r4[0] = eCorner; r4[1] = eEdge;   r4[2] = eMid;    r4[3] = eEdge;   r4[4] = eCorner;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private (TWork e24, TWork e19, TWork e14) _ComputeCorner(
+    in NeighborPixel<TWork, TKey> e,
+    in NeighborPixel<TWork, TKey> b, in NeighborPixel<TWork, TKey> c, in NeighborPixel<TWork, TKey> d,
+    in NeighborPixel<TWork, TKey> f, in NeighborPixel<TWork, TKey> g, in NeighborPixel<TWork, TKey> h,
+    in NeighborPixel<TWork, TKey> i) {
+    var e24 = e.Work;
+    var e19 = e.Work;
+    var e14 = e.Work;
+    if (equality.Equals(h.Key, f.Key)
+        && !equality.Equals(h.Key, e.Key)
+        && (equality.Equals(e.Key, g.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, d.Key))
+            || equality.Equals(e.Key, c.Key) && (equality.Equals(h.Key, i.Key) || equality.Equals(e.Key, b.Key)))) {
+      e24 = f.Work;
+      this._AlphaBlend224W(ref e19, f.Work);
+      this._AlphaBlend32W(ref e14, f.Work);
+    }
+    return (e24, e19, e14);
   }
 
   // Start from e (==initial E14/E19), so lerp(current, src, t) = (current*(1-t) + src*t).
