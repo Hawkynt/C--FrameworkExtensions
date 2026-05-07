@@ -202,7 +202,11 @@ public struct SomQuantizer : IQuantizer {
           var sampleWeight = Math.Sqrt(Math.Max(1, sw[si]));
 
           // Pull BMU and its grid-topology neighbours. Radius cap at 3·σ.
-          var rCap = (int)Math.Ceiling(3 * radius);
+          // Math.Pow drift across TFMs (legacy CLR vs RyuJIT) can flip Ceiling at
+          // integer-half boundaries, producing different palette training. Adding
+          // a small epsilon absorbs sub-LSB drift so rCap is deterministic for the
+          // common case where (3*radius) is nominally integer-or-near-integer.
+          var rCap = (int)Math.Ceiling(3 * radius + 1e-6);
           for (var off = -rCap; off <= rCap; ++off) {
             var gd = Math.Abs(off);
             var h = Math.Exp(-(gd * gd) / twoSigma2);

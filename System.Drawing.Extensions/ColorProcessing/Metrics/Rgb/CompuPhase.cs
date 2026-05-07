@@ -30,13 +30,20 @@ using static Hawkynt.ColorProcessing.Constants.ColorConstants;
 namespace Hawkynt.ColorProcessing.Metrics.Rgb;
 
 /// <summary>
-/// Calculates color distance using the CompuPhase low-cost approximation algorithm.
+/// Calculates color distance using the CompuPhase low-cost perceptual approximation.
 /// </summary>
 /// <remarks>
-/// <para>This algorithm provides a fast approximation of perceptual color difference
-/// by weighting RGB components based on the mean red value.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
-/// <para>Reference: https://www.compuphase.com/cmetric.htm</para>
+/// <para>Thiadmer Riemersma's RGB colour-distance approximation, designed to give an
+/// inexpensive perceptual proxy without converting to Lab. Weights the squared RGB
+/// differences by mean-red-dependent coefficients to model the human eye's
+/// red-channel sensitivity at warm chromaticities.</para>
+/// <code>
+///   r̄ = (a.R + b.R) / 2
+///   ΔE² = (2 + r̄)·ΔR² + 4·ΔG² + (3 − r̄)·ΔB²
+/// </code>
+/// <para>Reference: T. Riemersma, "Colour metric — a low-cost approximation",
+/// CompuPhase, <see href="https://www.compuphase.com/cmetric.htm"/>.</para>
+/// <para>Returns UNorm32 normalised against max squared distance = 9 (max weights × max diffs).</para>
 /// </remarks>
 public readonly struct CompuPhase : IColorMetric<LinearRgbF>, INormalizedMetric {
 

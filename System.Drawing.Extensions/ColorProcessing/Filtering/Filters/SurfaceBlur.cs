@@ -29,10 +29,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Surface blur — edge-preserving smoothing based on color distance thresholding.
-/// Averages only neighbors whose color distance from the center pixel is below a threshold.
-/// Always uses frame-level random access for neighborhood sampling.
+/// Surface blur — Photoshop-style edge-preserving smoothing via colour-distance threshold.
 /// </summary>
+/// <remarks>
+/// <para>For each pixel, averages only neighbours whose colour distance from the centre
+/// is below a hard threshold; neighbours beyond the threshold are excluded. A
+/// hard-threshold simplification of the bilateral filter (which uses a soft
+/// Gaussian range weight): faster and easier to tune, but with ringing artefacts
+/// near sharp edges where the threshold cuts in/out.</para>
+/// <para>Reference: Adobe Photoshop "Filter → Blur → Surface Blur" tool documentation.
+/// For the soft-weighted alternative see <see cref="BilateralFilter"/>; for
+/// patch-similarity-based smoothing see <see cref="NonLocalMeans"/>.</para>
+/// </remarks>
 [FilterInfo("SurfaceBlur",
   Description = "Edge-preserving surface blur using color distance threshold", Category = FilterCategory.Enhancement)]
 public readonly struct SurfaceBlur(int radius, float threshold) : IPixelFilter, IFrameFilter {
@@ -56,7 +64,7 @@ public readonly struct SurfaceBlur(int radius, float threshold) : IPixelFilter, 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new SurfaceBlurPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("SurfaceBlur requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +80,6 @@ public readonly struct SurfaceBlur(int radius, float threshold) : IPixelFilter, 
       this._radius, this._threshold, sourceWidth, sourceHeight));
 
   public static SurfaceBlur Default => new();
-}
-
-file readonly struct SurfaceBlurPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct SurfaceBlurFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

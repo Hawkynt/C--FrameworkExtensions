@@ -30,11 +30,17 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Median Cut color quantizer with configurable parameters.
+/// Median Cut color quantizer — Heckbert 1980/1982 population-weighted variant.
 /// </summary>
 /// <remarks>
-/// Recursively subdivides the color space along the axis with the largest range,
-/// splitting at the median point.
+/// <para>Recursively subdivides the colour cube: at each step pick the box with the
+/// longest axis (max − min) and split it at the population-weighted MEDIAN along
+/// that axis, so each half holds half the pixel population. After K-1 splits, the
+/// K resulting boxes' centroids form the palette.</para>
+/// <para>Reference: P. Heckbert, "Color Image Quantization for Frame Buffer Display",
+/// SIGGRAPH '82 Proceedings, ACM Computer Graphics 16(3):297-307, July 1982.
+/// Splits at cumulative-pixel-count median (not unique-color median) per §3.2 of
+/// the paper.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Splitting, DisplayName = "Median Cut", Author = "Paul Heckbert", Year = 1982, QualityRating = 6)]
 public struct MedianCutQuantizer : IQuantizer {

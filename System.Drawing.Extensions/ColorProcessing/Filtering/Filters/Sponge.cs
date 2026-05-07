@@ -25,6 +25,7 @@ using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -56,7 +57,7 @@ public readonly struct Sponge(int brushSize = 2, float definition = 5f, float sm
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new SpongePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Sponge requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +73,6 @@ public readonly struct Sponge(int brushSize = 2, float definition = 5f, float sm
       this._brushSize, this._definition, this._smoothness, sourceWidth, sourceHeight));
 
   public static Sponge Default => new(2, 5f, 5f);
-}
-
-file readonly struct SpongePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct SpongeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -153,9 +135,11 @@ file readonly struct SpongeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var outG = binG[maxBin] * inv;
     var outB = binB[maxBin] * inv;
 
-    outR = 0.5f + (outR - 0.5f) * (1f + smoothness * 0.2f);
-    outG = 0.5f + (outG - 0.5f) * (1f + smoothness * 0.2f);
-    outB = 0.5f + (outB - 0.5f) * (1f + smoothness * 0.2f);
+    // Pivot on perceptual mid-grey — see Contrast.cs for the cross-domain bias rationale.
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    outR = pivot + (outR - pivot) * (1f + smoothness * 0.2f);
+    outG = pivot + (outG - pivot) * (1f + smoothness * 0.2f);
+    outB = pivot + (outB - pivot) * (1f + smoothness * 0.2f);
 
     outR = ColorConverter.Saturate(outR);
     outG = ColorConverter.Saturate(outG);

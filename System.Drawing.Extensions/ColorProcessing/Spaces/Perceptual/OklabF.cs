@@ -30,12 +30,20 @@ namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
 /// Represents a color in the Oklab perceptual color space with float components.
 /// </summary>
 /// <remarks>
-/// Oklab is a perceptually uniform color space designed by Björn Ottosson in 2020.
-/// It provides excellent results for color interpolation, gradients, and color manipulation.
-/// L (lightness): 0.0-1.0 (0 = black, 1 = white)
-/// A (green-red): approximately -0.4 to +0.4
-/// B (blue-yellow): approximately -0.4 to +0.4
-/// Reference: https://bottosson.github.io/posts/oklab/
+/// <para>Oklab is a perceptually-uniform colour space designed by Björn Ottosson in 2020,
+/// fitted via least-squares to the IPT and CAM16 colour-difference data sets. It
+/// outperforms CIELAB at hue-uniformity (no chroma-induced hue shifts under linear
+/// interpolation) while retaining a closed-form polynomial transform. Pairs with
+/// <see cref="OklchF"/> for cylindrical access and is the basis of OKHSL/OKHSV
+/// (<see cref="OkhslF"/>, <see cref="OkhsvF"/>).</para>
+/// <code>
+///   linear sRGB → LMS' (3×3 matrix M1) → cube-root → Oklab (3×3 matrix M2)
+/// </code>
+/// <para>Reference: B. Ottosson, "A perceptual color space for image processing", 2020.
+/// <see href="https://bottosson.github.io/posts/oklab/"/>. Specified in CSS Color
+/// Module Level 4.</para>
+/// <para>L (lightness): 0.0-1.0 (0 = black, 1 = white). a (green-red): ~-0.4 to +0.4.
+/// b (blue-yellow): ~-0.4 to +0.4.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0.0-1.0).</param>
 /// <param name="A">Green-red component (approximately -0.4 to +0.4).</param>

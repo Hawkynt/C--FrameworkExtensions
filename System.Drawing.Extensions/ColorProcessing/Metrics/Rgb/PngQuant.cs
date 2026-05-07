@@ -26,14 +26,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Metrics.Rgb;
 
 /// <summary>
-/// Calculates color distance using the PNGQuant algorithm.
+/// Calculates color distance using the PNGQuant luma-weighted RGB algorithm.
 /// </summary>
 /// <remarks>
-/// <para>This algorithm considers how colors appear when blended on both black and white backgrounds,
-/// making it particularly effective for color quantization in images with gradients.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
-/// <para>Maximum raw distance: 1.0 (sqrt of sum of weights), normalized to UNorm32.One.</para>
-/// <para>Reference: https://github.com/pornel/pngquant</para>
+/// <para>Kornel Lesiński's PNGQuant uses a Rec.601 luma-weighted squared RGB difference
+/// (rW=0.299, gW=0.587, bW=0.114) instead of unweighted Euclidean. The weights match
+/// the human-eye photopic-sensitivity ratio, giving green-channel mismatches more
+/// influence on the distance — the same principle as BT.601 luma. Cheap to compute
+/// and a good practical proxy for perceptual difference in palette quantisation.</para>
+/// <code>
+///   ΔE² = 0.299·ΔR² + 0.587·ΔG² + 0.114·ΔB²
+/// </code>
+/// <para>Reference: K. Lesiński, "pngquant — lossy PNG compressor",
+/// <see href="https://github.com/kornelski/pngquant"/>;
+/// the colour-difference function is in <c>libimagequant/pam.c</c>. Weight constants
+/// from ITU-R BT.601-7 §2.5.1.</para>
 /// </remarks>
 public readonly struct PngQuant : IColorMetric<LinearRgbF>, INormalizedMetric {
 
@@ -79,12 +86,18 @@ public readonly struct PngQuantSquared : IColorMetric<LinearRgbF>, INormalizedMe
 }
 
 /// <summary>
-/// Calculates color distance using the PNGQuant algorithm with alpha support.
+/// Calculates color distance using PNGQuant's alpha-aware blend-distance algorithm.
 /// </summary>
 /// <remarks>
-/// <para>This version considers alpha blending on both black and white backgrounds,
-/// which is the original PNGQuant behavior for semi-transparent colors.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
+/// <para>PNGQuant's RGBA distance: rather than treating alpha as a 4th independent
+/// channel, this metric measures how the colour would appear when alpha-composited
+/// on a black background and on a white background, then sums the squared differences.
+/// Two semi-transparent colours that look identical on both backgrounds are considered
+/// equal regardless of their straight-RGBA values — which is the right notion for
+/// quantising images with antialiasing or gradients.</para>
+/// <para>Reference: K. Lesiński, "pngquant — lossy PNG compressor",
+/// <see href="https://github.com/kornelski/pngquant"/>; original blend-distance
+/// algorithm in libimagequant.</para>
 /// </remarks>
 public readonly struct PngQuantRgba : IColorMetric<LinearRgbaF>, INormalizedMetric {
 

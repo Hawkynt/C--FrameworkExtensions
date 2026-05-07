@@ -53,7 +53,7 @@ public readonly struct GlassTile(int tileWidth = 10, int tileHeight = 10) : IPix
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new GlassTilePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("GlassTile requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,25 +69,6 @@ public readonly struct GlassTile(int tileWidth = 10, int tileHeight = 10) : IPix
       tileWidth, tileHeight, sourceWidth, sourceHeight));
 
   public static GlassTile Default => new(10, 10);
-}
-
-file readonly struct GlassTilePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct GlassTileFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -122,8 +103,8 @@ file readonly struct GlassTileFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     var dist = (float)Math.Sqrt(dx * dx + dy * dy);
     var scale = dist < 1f ? 1f - 0.3f * dist * dist : 1f;
 
-    var sx = (int)(tileX + dx * scale * tw * 0.5f);
-    var sy = (int)(tileY + dy * scale * th * 0.5f);
+    var sx = (int)Math.Floor(tileX + dx * scale * tw * 0.5f);
+    var sy = (int)Math.Floor(tileY + dy * scale * th * 0.5f);
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

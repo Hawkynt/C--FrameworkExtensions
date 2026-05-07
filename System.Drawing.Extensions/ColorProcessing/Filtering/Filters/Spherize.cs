@@ -53,7 +53,7 @@ public readonly struct Spherize(float amount) : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new SpherizePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Spherize requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,25 +69,6 @@ public readonly struct Spherize(float amount) : IPixelFilter, IFrameFilter {
       this._amount, sourceWidth, sourceHeight));
 
   public static Spherize Default => new();
-}
-
-file readonly struct SpherizePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct SpherizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -122,8 +103,8 @@ file readonly struct SpherizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     if (dist < 1f && dist > 0f) {
       var newDist = (float)Math.Pow(dist, 1f / (1f + amount));
       var scale = newDist / dist;
-      sx = (int)(cx + nx * scale * cx);
-      sy = (int)(cy + ny * scale * cy);
+      sx = (int)Math.Floor(cx + nx * scale * cx);
+      sy = (int)Math.Floor(cy + ny * scale * cy);
     } else {
       sx = destX;
       sy = destY;

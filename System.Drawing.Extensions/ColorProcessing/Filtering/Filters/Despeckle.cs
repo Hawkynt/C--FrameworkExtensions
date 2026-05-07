@@ -30,10 +30,17 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Hybrid median filter for speckle noise removal.
-/// Computes medians along horizontal, vertical, and both diagonal axes,
-/// then takes the per-channel median of those four sub-medians.
+/// Hybrid median (Despeckle) — edge-preserving median variant.
 /// </summary>
+/// <remarks>
+/// <para>Sub-median variant designed to preserve thin lines and corners that the plain
+/// median filter blurs. Computes medians along horizontal, vertical, and both
+/// diagonals, then outputs the median of those four sub-medians (plus the centre
+/// pixel). Salt-and-pepper noise is suppressed while diagonal edges remain crisp.</para>
+/// <para>Reference: A. Nieminen, P. Heinonen &amp; Y. Neuvo, "A new class of detail-
+/// preserving filters for image processing", IEEE Trans. Pattern Analysis and
+/// Machine Intelligence 9(1):74-90, 1987 (the "FIR-median hybrid filter" family).</para>
+/// </remarks>
 [FilterInfo("Despeckle",
   Description = "Hybrid median filter for speckle noise removal", Category = FilterCategory.Noise)]
 public readonly struct Despeckle(int radius) : IPixelFilter, IFrameFilter {
@@ -56,7 +63,7 @@ public readonly struct Despeckle(int radius) : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new DespecklePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Despeckle requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +79,6 @@ public readonly struct Despeckle(int radius) : IPixelFilter, IFrameFilter {
       this._radius, sourceWidth, sourceHeight));
 
   public static Despeckle Default => new();
-}
-
-file readonly struct DespecklePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct DespeckleFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

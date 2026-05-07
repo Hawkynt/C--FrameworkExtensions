@@ -29,10 +29,15 @@ namespace Hawkynt.ColorProcessing.Metrics.Lab;
 /// Calculates the CIE76 delta E (ΔE*ab) between two Lab colors.
 /// </summary>
 /// <remarks>
-/// <para>CIE76 is the simplest and fastest Lab distance formula.
-/// It's simply the Euclidean distance in Lab space.
-/// While not perfectly perceptually uniform, it's adequate for many uses.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>CIE76 is the simplest CIE colour-difference: plain Euclidean distance between two
+/// CIELAB triples. Defined alongside CIELAB itself in CIE 015 (1976). Adequate for
+/// large differences but loses perceptual uniformity for saturated chroma; superseded
+/// by <see cref="CIE94"/> (1995) and <see cref="CIEDE2000"/> (2000) for industrial use.</para>
+/// <code>
+///   ΔE*ab = sqrt( ΔL² + Δa² + Δb² )
+/// </code>
+/// <para>Reference: CIE 015:2018 §8.2.1.1; ISO/CIE 11664-4.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CIE76 : IColorMetric<LabF>, INormalizedMetric {
 

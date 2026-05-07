@@ -27,15 +27,22 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Yuv;
 
 /// <summary>
-/// Represents a color in YCbCr (Y'CbCr) color space with float components.
+/// Represents a color in Y'CbCr digital video color space with float components.
 /// </summary>
 /// <remarks>
-/// YCbCr is the digital video color encoding used in ITU-R BT.601 (SDTV) and BT.709 (HDTV).
-/// Y' (luma): 0.0-1.0 (gamma-corrected luminance)
-/// Cb (blue-difference chroma): -0.5 to 0.5
-/// Cr (red-difference chroma): -0.5 to 0.5
-/// Unlike YUV (analog), YCbCr uses gamma-corrected (non-linear) RGB input.
-/// Reference: https://en.wikipedia.org/wiki/YCbCr
+/// <para>Y'CbCr is the digital-video chroma encoding used by ITU-R BT.601 (SDTV) and
+/// BT.709 (HDTV). The lib uses BT.601 (Kr=0.299, Kg=0.587, Kb=0.114). Distinct from
+/// the analogue <see cref="YuvF"/> in that the input is gamma-corrected (non-linear)
+/// R'G'B' rather than linear RGB. Cb/Cr stored centred at 0 (range −0.5..+0.5);
+/// the +0.5 offset is added only at byte-encoding time.</para>
+/// <code>
+///   Y' = Kr·R' + Kg·G' + Kb·B'           (BT.601: 0.299/0.587/0.114)
+///   Cb = (B' − Y') / (2·(1 − Kb))
+///   Cr = (R' − Y') / (2·(1 − Kr))
+/// </code>
+/// <para>Reference: ITU-R BT.601-7 (03/2011) §2.5.1 (SDTV); ITU-R BT.709-6 (06/2015) §3
+/// (HDTV). Used as the colour-encoding for JPEG, MPEG, H.264/AVC, etc.</para>
+/// <para>Y' (luma): 0.0-1.0. Cb (blue-diff chroma): -0.5 to 0.5. Cr (red-diff): -0.5 to 0.5.</para>
 /// </remarks>
 /// <param name="Y">Luma component (0.0-1.0).</param>
 /// <param name="Cb">Blue-difference chroma component (-0.5 to 0.5).</param>

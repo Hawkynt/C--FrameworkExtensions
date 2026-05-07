@@ -37,6 +37,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Uses a Gaussian bell curve as the filter kernel.</para>
 /// <para>Produces very smooth results with controllable blur via sigma parameter.</para>
+/// <para>Reference: C. F. Gauss, <i>Theoria motus corporum coelestium</i>, 1809 (normal-distribution
+/// PDF). Standard reconstruction filter for low-pass / blur applications; see G. Wolberg,
+/// <i>Digital Image Warping</i>, 1990 §5.4.6.</para>
+/// <code>f(x) = exp(-x² / (2σ²)) for |x| &lt; radius, else 0</code>
 /// </remarks>
 [ScalerInfo("Gaussian", Author = "Carl Friedrich Gauss", Year = 1809,
   Description = "Gaussian-weighted smooth interpolation", Category = ScalerCategory.Resampler)]

@@ -30,8 +30,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Print-style circular dot pattern. Simulates newspaper/magazine printing.
+/// Halftone — amplitude-modulated (AM) circular dot screen.
 /// </summary>
+/// <remarks>
+/// <para>Simulates classical photo-mechanical halftone printing (Talbot 1850s, Meisenbach
+/// 1882): tonal value is encoded by varying the SIZE of dots on a fixed grid rather
+/// than dot density (frequency modulation). Default rotation angle is 45° to minimise
+/// perceived dot patterns. Each output pixel is black when the local luminance
+/// dictates a dot covering that location, otherwise white.</para>
+/// <para>Reference: any reprographics textbook; e.g. M. Yule, "Principles of Color
+/// Reproduction" (Wiley 1967), Chapter 9. For the FM-halftone alternative
+/// (stochastic / blue-noise screening), see <see cref="HalftonePattern"/>.</para>
+/// </remarks>
 [FilterInfo("Halftone",
   Description = "Print-style halftone dot pattern effect", Category = FilterCategory.Artistic)]
 public readonly struct Halftone : IPixelFilter, IFrameFilter {
@@ -63,7 +73,7 @@ public readonly struct Halftone : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new HalftonePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Halftone requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -79,25 +89,6 @@ public readonly struct Halftone : IPixelFilter, IFrameFilter {
       this._dotSize, this._cos, this._sin, sourceWidth, sourceHeight));
 
   public static Halftone Default => new();
-}
-
-file readonly struct HalftonePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct HalftoneFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

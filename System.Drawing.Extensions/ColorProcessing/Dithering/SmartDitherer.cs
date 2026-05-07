@@ -89,6 +89,8 @@ public sealed class SmartDitheringConfig {
 /// <para>Analyzes image content to classify regions by edge strength, color variance, and brightness.</para>
 /// <para>Applies specialized ditherers to different region types for optimal results.</para>
 /// <para>Composites results from multiple ditherers based on region classification.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Wraps existing reference-grounded
+/// ditherers (Atkinson, Stucki, JarvisJudiceNinke) selected by region classifier.</para>
 /// </remarks>
 [Ditherer("Smart", Description = "Content-aware region-based dithering", Type = DitheringType.Custom)]
 public readonly struct SmartDitherer : IDitherer {

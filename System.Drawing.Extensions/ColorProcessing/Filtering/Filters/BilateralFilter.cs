@@ -29,10 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Bilateral filter — edge-preserving smoothing.
-/// Weights pixels by both spatial distance (Gaussian) and color similarity (range Gaussian).
-/// Always uses frame-level random access due to configurable radius.
+/// Bilateral filter — edge-preserving smoothing (Tomasi &amp; Manduchi 1998).
 /// </summary>
+/// <remarks>
+/// <para>Combines a spatial Gaussian (favouring nearby pixels) with a range Gaussian
+/// (favouring pixels of similar colour) to smooth flat regions while preserving edges.</para>
+/// <code>
+///   I'(p) = (1/Wp) · Σ_q I(q) · g_s(‖p − q‖) · g_r(|I(p) − I(q)|)
+///   Wp    =       Σ_q       g_s(‖p − q‖) · g_r(|I(p) − I(q)|)
+/// </code>
+/// <para>Reference: C. Tomasi &amp; R. Manduchi, "Bilateral Filtering for Gray and Color
+/// Images", Proceedings of ICCV 1998, pp. 839-846. See also S. Paris et al.,
+/// "Bilateral Filtering: Theory and Applications", Foundations and Trends in
+/// Computer Graphics and Vision 4(1), 2008.</para>
+/// </remarks>
 [FilterInfo("BilateralFilter",
   Description = "Edge-preserving bilateral smoothing filter", Category = FilterCategory.Enhancement)]
 public readonly struct BilateralFilter(int radius, float spatialSigma = 3f, float rangeSigma = 0.1f)
@@ -56,7 +66,7 @@ public readonly struct BilateralFilter(int radius, float spatialSigma = 3f, floa
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new PassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("BilateralFilter requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +82,6 @@ public readonly struct BilateralFilter(int radius, float spatialSigma = 3f, floa
       this._radius, spatialSigma, rangeSigma, sourceWidth, sourceHeight));
 
   public static BilateralFilter Default => new();
-}
-
-file readonly struct PassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct BilateralFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

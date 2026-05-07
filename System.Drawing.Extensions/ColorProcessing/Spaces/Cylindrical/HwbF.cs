@@ -30,10 +30,16 @@ namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
 /// Represents a color in HWB (Hue, Whiteness, Blackness) color space with float components.
 /// </summary>
 /// <remarks>
-/// H (hue): 0.0-1.0 (maps to 0-360 degrees)
-/// W (whiteness): 0.0-1.0
-/// B (blackness): 0.0-1.0
-/// HWB is an alternative cylindrical representation where W + B can equal 1.0 for grays.
+/// <para>HWB is an intuitive cylindrical re-mapping of HSV where the user picks a pure hue
+/// and then mixes in white and/or black. When W + B &gt; 1 the colour is a pure grey
+/// (W/(W+B)). Introduced by A. R. Smith &amp; E. Ray Lyons, "HWB - A More Intuitive
+/// Hue-Based Color Model", Journal of Graphics Tools 1(1):3-17, 1996; standardised
+/// in CSS Color Module Level 4 (W3C).</para>
+/// <code>
+///   W = min(R,G,B);  B = 1 - max(R,G,B);  H from HSV
+///   inverse: V = 1 - B,  S = 1 - W/V (when V > 0)
+/// </code>
+/// <para>H (hue): 0.0-1.0 (maps to 0-360°). W (whiteness): 0.0-1.0. B (blackness): 0.0-1.0.</para>
 /// </remarks>
 /// <param name="H">Hue component (0.0-1.0, maps to 0-360 degrees).</param>
 /// <param name="W">Whiteness component (0.0-1.0).</param>

@@ -54,7 +54,7 @@ public readonly struct Twirl(float angle, float radius = 0.5f) : IPixelFilter, I
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new TwirlPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Twirl requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -70,25 +70,6 @@ public readonly struct Twirl(float angle, float radius = 0.5f) : IPixelFilter, I
       this._angle, this._radius, sourceWidth, sourceHeight));
 
   public static Twirl Default => new();
-}
-
-file readonly struct TwirlPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct TwirlFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -126,8 +107,8 @@ file readonly struct TwirlFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
       var rot = angle * (float)(Math.PI / 180.0) * t;
       var cos = (float)Math.Cos(rot);
       var sin = (float)Math.Sin(rot);
-      sx = (int)(cx + cos * dx - sin * dy);
-      sy = (int)(cy + sin * dx + cos * dy);
+      sx = (int)Math.Floor(cx + cos * dx - sin * dy);
+      sy = (int)Math.Floor(cy + sin * dx + cos * dy);
     } else {
       sx = destX;
       sy = destY;

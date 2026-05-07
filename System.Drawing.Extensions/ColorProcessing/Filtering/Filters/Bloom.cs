@@ -30,11 +30,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Bloom filter — adds a soft radial glow around bright areas.
-/// Identifies pixels above a luminance threshold and accumulates
-/// distance-weighted bright contributions to produce a bloom effect.
-/// Always uses frame-level random access for neighborhood scanning.
+/// Bloom — soft radial glow around bright areas (light-bleed effect).
 /// </summary>
+/// <remarks>
+/// <para>Simulates the optical blooming that occurs when bright light overwhelms a
+/// camera sensor or eye: pixels above a luminance threshold contribute Gaussian-
+/// weighted radial glow to surrounding pixels, additively combined with the
+/// original. Standard real-time-rendering technique; basis of HDR display
+/// "exposure feel" in modern game engines.</para>
+/// <para>Reference: M. Mittring, "A bit more deferred — CryEngine 3" (GDC 2009);
+/// J. Jimenez, "Next-Gen Post-Processing" (SIGGRAPH 2014); also any modern
+/// rendering textbook, e.g. T. Akenine-Möller et al., "Real-Time Rendering"
+/// (4th ed., CRC Press 2018), §10.5.4.</para>
+/// </remarks>
 [FilterInfo("Bloom",
   Description = "Soft glow bloom effect around bright areas", Category = FilterCategory.Artistic)]
 public readonly struct Bloom(float threshold = 0.7f, float intensity = 1f, int radius = 3)
@@ -60,7 +68,7 @@ public readonly struct Bloom(float threshold = 0.7f, float intensity = 1f, int r
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new BloomPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Bloom requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -76,25 +84,6 @@ public readonly struct Bloom(float threshold = 0.7f, float intensity = 1f, int r
       this._threshold, this._intensity, this._radius, sourceWidth, sourceHeight));
 
   public static Bloom Default => new();
-}
-
-file readonly struct BloomPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct BloomFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

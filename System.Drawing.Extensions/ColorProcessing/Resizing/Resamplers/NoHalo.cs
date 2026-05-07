@@ -36,6 +36,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses LBB (Locally Bounded Bicubic) with Nohalo subdivision for upsampling.</para>
 /// <para>Uses Clamped EWA with Teepee kernel for downsampling.</para>
 /// <para>Developed by Nicolas Robidoux for GIMP/GEGL.</para>
+/// <para>Reference: Nicolas Robidoux et al., GEGL 0.2's NoHalo / LoHalo subdivision schemes;
+/// see GEGL source <c>gegl/operations/transform/transform-core.c</c> and Robidoux's
+/// blog posts at robidoux.ca. Algorithm structure documented in the GIMP-GEGL
+/// developer notes (GIMP wiki).</para>
 /// </remarks>
 [ScalerInfo("NoHalo", Author = "Nicolas Robidoux", Year = 2009,
   Description = "Jacobian-adaptive LBB-Nohalo and Clamped EWA blend", Category = ScalerCategory.Resampler)]
@@ -85,6 +89,8 @@ public readonly struct NoHalo : IResampler {
 /// <para>Uses Mitchell-Netravali (Robidoux parameters) for upsampling.</para>
 /// <para>Uses Robidoux EWA for downsampling.</para>
 /// <para>Developed by Nicolas Robidoux for GIMP/GEGL.</para>
+/// <para>Reference: see <see cref="NoHalo"/>. LoHalo is the lower-cost / lower-halo cousin
+/// of NoHalo in the GEGL transform pipeline.</para>
 /// </remarks>
 [ScalerInfo("LoHalo", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Sigmoidized Mitchell with Robidoux EWA", Category = ScalerCategory.Resampler)]

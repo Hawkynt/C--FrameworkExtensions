@@ -30,10 +30,16 @@ namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
 /// Represents a color in HSV (Hue, Saturation, Value) color space with float components.
 /// </summary>
 /// <remarks>
-/// H (hue): 0.0-1.0 (maps to 0-360 degrees)
-/// S (saturation): 0.0-1.0
-/// V (value/brightness): 0.0-1.0
-/// HSV is a cylindrical representation where value 1.0 gives the brightest colors.
+/// <para>HSV (also called HSB) is a cylindrical re-mapping of the RGB cube where V=1
+/// corresponds to the brightest in-gamut colour for the given hue and S=0 yields a pure
+/// achromatic grey. Introduced by A. R. Smith, "Color gamut transform pairs",
+/// SIGGRAPH 1978; standardised in CSS Color Module Level 4.</para>
+/// <code>
+///   max = max(R,G,B);  min = min(R,G,B);  V = max
+///   S = (max - min) / max     (S = 0 if max = 0)
+///   H computed from which channel is max (60° sector per channel)
+/// </code>
+/// <para>H (hue): 0.0-1.0 (maps to 0-360°). S (saturation): 0.0-1.0. V (value): 0.0-1.0.</para>
 /// </remarks>
 /// <param name="H">Hue component (0.0-1.0, maps to 0-360 degrees).</param>
 /// <param name="S">Saturation component (0.0-1.0).</param>

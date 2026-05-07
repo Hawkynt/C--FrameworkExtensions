@@ -29,9 +29,22 @@ namespace Hawkynt.ColorProcessing.Metrics.Lab;
 /// Calculates the CMC l:c color difference (perceptibility variant, l=1, c=1).
 /// </summary>
 /// <remarks>
-/// <para>CMC (Color Measurement Committee) l:c is widely used in the textile industry.
-/// l=1, c=1 is used for perceptibility (detecting if colors differ).</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>CMC l:c is the textile-industry colour difference adopted by the Society of Dyers
+/// and Colourists' Color Measurement Committee. Standardised as British Standard
+/// BS 6923:1988 ("Method for calculation of small colour differences") and ISO 105-J03.
+/// The l:c parameters tune the lightness:chroma weighting; (1, 1) is the
+/// PERCEPTIBILITY threshold variant (just-noticeable difference).</para>
+/// <code>
+///   ΔE_CMC = sqrt( (ΔL/(l·SL))² + (ΔC/(c·SC))² + (ΔH/SH)² )
+///   SL = 0.040975·L1 / (1 + 0.01765·L1)        if L1 ≥ 16
+///   SC = 0.0638·C1 / (1 + 0.0131·C1) + 0.638
+///   SH = SC · (T·F + (1 − F))
+/// </code>
+/// where F, T are chroma- and hue-dependent functions per Clarke, McDonald &amp; Rigg 1984.
+/// <para>Reference: F. J. J. Clarke, R. McDonald &amp; B. Rigg, "Modification to the JPC79
+/// colour-difference formula", Journal of the Society of Dyers and Colourists
+/// 100(4):128-132, 1984; ISO 105-J03:2009.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CMC : IColorMetric<LabF>, INormalizedMetric {
 
@@ -92,8 +105,11 @@ public readonly struct CMC : IColorMetric<LabF>, INormalizedMetric {
 /// Calculates the CMC l:c color difference (acceptability variant, l=2, c=1).
 /// </summary>
 /// <remarks>
-/// <para>l=2, c=1 is used for acceptability (determining if color differences are acceptable in production).</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>CMC (2:1) is the production-acceptability variant: lightness differences are
+/// weighted half as heavily as chroma to better predict whether a textile dye match is
+/// commercially acceptable (vs the (1:1) perceptibility variant).
+/// Reference: Clarke, McDonald &amp; Rigg 1984 (see <see cref="CMC"/>); ISO 105-J03.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CMCAcceptability : IColorMetric<LabF>, INormalizedMetric {
 

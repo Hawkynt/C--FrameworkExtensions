@@ -43,6 +43,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// Unlike B-splines, Lagrange interpolation passes exactly through sample points,
 /// making it suitable for applications requiring exact value preservation.
 /// </para>
+/// <para>Reference: J.-L. Lagrange, <i>Leçons élémentaires sur les mathématiques</i>, 1795
+/// (Lagrange basis polynomials). For numerical use see Burden &amp; Faires, <i>Numerical
+/// Analysis</i> §3.1, or Wikipedia "Lagrange polynomial".</para>
+/// <code>L_k(t) = ∏_{j≠k} (t - x_j) / (x_k - x_j);  f(t) = Σ_k y_k · L_k(t)</code>
 /// </remarks>
 [ScalerInfo("Lagrange-3", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Cubic polynomial interpolation through 4 points", Category = ScalerCategory.Resampler)]
@@ -103,6 +107,7 @@ public readonly struct Lagrange3 : IKernelResampler, IResamplerWithSafePath {
 /// Provides sharper results than Lagrange-3 but may exhibit more ringing
 /// near high-contrast edges.
 /// </para>
+/// <para>Reference: see <see cref="Lagrange3"/>. Quintic order extension of the same basis.</para>
 /// </remarks>
 [ScalerInfo("Lagrange-5", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Quintic polynomial interpolation through 6 points", Category = ScalerCategory.Resampler)]
@@ -163,6 +168,8 @@ public readonly struct Lagrange5 : IKernelResampler, IResamplerWithSafePath {
 /// Highest-quality Lagrange variant but with potential for significant
 /// ringing artifacts. Best for smooth, low-contrast images.
 /// </para>
+/// <para>Reference: see <see cref="Lagrange3"/>. Septic order extension; tends toward Runge's
+/// phenomenon on high-contrast edges (use windowed sinc or splines if ringing is objectionable).</para>
 /// </remarks>
 [ScalerInfo("Lagrange-7", Author = "Joseph-Louis Lagrange", Year = 1795,
   Description = "Septic polynomial interpolation through 8 points", Category = ScalerCategory.Resampler)]

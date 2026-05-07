@@ -34,6 +34,9 @@ namespace Hawkynt.ColorProcessing.Metrics;
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
+/// <para>Standard L2 norm: ΔE = sqrt(Σ(aᵢ − bᵢ)²). Best-known colour-difference proxy
+/// when used in a perceptually-uniform space (Lab, Oklab, CAM16-UCS); naive in raw RGB
+/// because RGB is not perceptually uniform.</para>
 /// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
 /// <para>Maximum raw distance: sqrt(3) ≈ 1.732.</para>
 /// </remarks>

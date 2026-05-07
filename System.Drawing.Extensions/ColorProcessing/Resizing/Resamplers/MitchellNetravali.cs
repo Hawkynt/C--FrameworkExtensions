@@ -37,6 +37,12 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>A family of cubic filters parameterized by B and C.</para>
 /// <para>B=C=1/3 provides a good balance between blurring and ringing.</para>
+/// <para>Reference: D. P. Mitchell &amp; A. N. Netravali, <i>Reconstruction filters in computer
+/// graphics</i>, ACM SIGGRAPH Computer Graphics 22(4):221-228, 1988.</para>
+/// <code>
+/// |x| &lt; 1: ((12-9B-6C)|x|³ + (-18+12B+6C)|x|² + (6-2B)) / 6
+/// |x| &lt; 2: ((-B-6C)|x|³ + (6B+30C)|x|² + (-12B-48C)|x| + (8B+24C)) / 6
+/// </code>
 /// </remarks>
 [ScalerInfo("Mitchell-Netravali", Author = "Don P. Mitchell, Arun N. Netravali", Year = 1988,
   Description = "Cubic filter with B=1/3, C=1/3", Category = ScalerCategory.Resampler)]
@@ -105,6 +111,9 @@ public readonly struct MitchellNetravali : IKernelResampler, IResamplerWithSafeP
 /// <remarks>
 /// <para>A cubic spline that passes through control points.</para>
 /// <para>Produces sharp results with some overshoot on edges.</para>
+/// <para>Reference: E. Catmull &amp; R. Rom, <i>A class of local interpolating splines</i>,
+/// in Computer Aided Geometric Design, R. E. Barnhill &amp; R. F. Riesenfeld eds., Academic Press
+/// 1974. Equivalent to Mitchell-Netravali with B=0, C=1/2.</para>
 /// </remarks>
 [ScalerInfo("Catmull-Rom", Author = "Edwin Catmull, Raphael Rom", Year = 1974,
   Description = "Cubic spline with B=0, C=0.5", Category = ScalerCategory.Resampler)]
@@ -160,6 +169,10 @@ public readonly struct CatmullRom : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline3"/>.
 /// </para>
+/// <para>Reference: I. J. Schoenberg, <i>Contributions to the problem of approximation of
+/// equidistant data by analytic functions</i>, Quarterly of Applied Mathematics 4, 1946.
+/// Cubic B-spline = Mitchell-Netravali with B=1, C=0; see also Unser, Aldroubi &amp; Eden,
+/// <i>B-spline signal processing</i>, IEEE Trans. Signal Processing 41(2), 1993.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 3", Author = "Standard Algorithm",
   Description = "Cubic B-spline with B=1, C=0 (degree 3)", Category = ScalerCategory.Resampler)]
@@ -211,6 +224,9 @@ public readonly struct BSpline : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Optimized B, C parameters (B=0.3782, C=0.3109) by Nicolas Robidoux.</para>
 /// <para>Designed to minimize error when resampling photographic images.</para>
+/// <para>Reference: Nicolas Robidoux's analytical EWA-equivalence derivation, used by
+/// ImageMagick as the default cylindrical filter; see ImageMagick's
+/// <c>resize.c</c> filter table comments.</para>
 /// </remarks>
 [ScalerInfo("Robidoux", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Optimized Mitchell variant with B=0.3782, C=0.3109", Category = ScalerCategory.Resampler)]
@@ -268,6 +284,7 @@ public readonly struct Robidoux : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Sharper B, C parameters (B=0.2620, C=0.3690) by Nicolas Robidoux.</para>
 /// <para>Produces sharper results than standard Robidoux while maintaining quality.</para>
+/// <para>Reference: Nicolas Robidoux's sharper EWA tuning, ImageMagick filter table.</para>
 /// </remarks>
 [ScalerInfo("RobidouxSharp", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Sharper Robidoux variant with B=0.2620, C=0.3690", Category = ScalerCategory.Resampler)]
@@ -325,6 +342,7 @@ public readonly struct RobidouxSharp : IKernelResampler, IResamplerWithSafePath 
 /// <remarks>
 /// <para>Smoother B, C parameters (B=0.6796, C=0.1602) by Nicolas Robidoux.</para>
 /// <para>Produces smoother results than standard Robidoux with reduced sharpening.</para>
+/// <para>Reference: Nicolas Robidoux's softer EWA tuning, ImageMagick filter table.</para>
 /// </remarks>
 [ScalerInfo("RobidouxSoft", Author = "Nicolas Robidoux", Year = 2011,
   Description = "Smoother Robidoux variant with B=0.6796, C=0.1602", Category = ScalerCategory.Resampler)]
@@ -499,18 +517,41 @@ internal static class _MitchellSafePath {
 }
 
 internal static class MitchellMath {
+  /// <summary>
+  /// Computes the Mitchell-Netravali cubic weight for a given distance.
+  /// </summary>
+  /// <remarks>
+  /// Evaluated in Horner form with explicit <see cref="MathF.FusedMultiplyAdd"/>
+  /// on every <c>mul + add</c> pattern. This makes the float-rounding sequence
+  /// identical on net48 (polyfilled FMA goes through double — bit-exact for
+  /// float operands) and net6+ (hardware FMA). Without it, net6+'s JIT-emitted
+  /// FMA produces several LSB drift versus net48's two-rounding sequence at
+  /// edge pixels where OOB samples participate in the 4×4 convolution.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static float Weight(float x, float b, float c) {
     x = MathF.Abs(x);
-    if (x < 1f)
-      return ((12f - 9f * b - 6f * c) * x * x * x
-              + (-18f + 12f * b + 6f * c) * x * x
-              + (6f - 2f * b)) / 6f;
-    if (x < 2f)
-      return ((-b - 6f * c) * x * x * x
-              + (6f * b + 30f * c) * x * x
-              + (-12f * b - 48f * c) * x
-              + (8f * b + 24f * c)) / 6f;
+    if (x < 1f) {
+      // Polynomial: ((12 - 9b - 6c) x³ + (-18 + 12b + 6c) x² + (6 - 2b)) / 6
+      // (no x¹ term) -> evaluated as ((C*x + B)*x)*x + A
+      var coeffC = MathF.FusedMultiplyAdd(-9f, b, MathF.FusedMultiplyAdd(-6f, c, 12f));
+      var coeffB = MathF.FusedMultiplyAdd(12f, b, MathF.FusedMultiplyAdd(6f, c, -18f));
+      var coeffA = MathF.FusedMultiplyAdd(-2f, b, 6f);
+      var t = MathF.FusedMultiplyAdd(coeffC, x, coeffB);  // C*x + B
+      t = t * x;                                           // *x  (no x¹ term)
+      return MathF.FusedMultiplyAdd(t, x, coeffA) / 6f;    // (...) *x + A
+    }
+    if (x < 2f) {
+      // Polynomial: ((-b - 6c) x³ + (6b + 30c) x² + (-12b - 48c) x + (8b + 24c)) / 6
+      // -> Horner: ((C*x + B)*x + A)*x + D
+      var coeffC = MathF.FusedMultiplyAdd(-6f, c, -b);
+      var coeffB = MathF.FusedMultiplyAdd(30f, c, 6f * b);
+      var coeffA = MathF.FusedMultiplyAdd(-48f, c, -12f * b);
+      var coeffD = MathF.FusedMultiplyAdd(24f, c, 8f * b);
+      var t = MathF.FusedMultiplyAdd(coeffC, x, coeffB);  // C*x + B
+      t = MathF.FusedMultiplyAdd(t, x, coeffA);            // *x + A
+      return MathF.FusedMultiplyAdd(t, x, coeffD) / 6f;    // *x + D
+    }
     return 0f;
   }
 }

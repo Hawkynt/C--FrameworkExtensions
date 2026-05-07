@@ -52,7 +52,7 @@ public readonly struct Tiles(int tileSize = 20, int gapWidth = 3, float gapBrigh
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new TilesPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Tiles requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -68,25 +68,6 @@ public readonly struct Tiles(int tileSize = 20, int gapWidth = 3, float gapBrigh
       tileSize, gapWidth, gapBrightness, sourceWidth, sourceHeight));
 
   public static Tiles Default => new(20, 3, 0.1f);
-}
-
-file readonly struct TilesPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct TilesFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

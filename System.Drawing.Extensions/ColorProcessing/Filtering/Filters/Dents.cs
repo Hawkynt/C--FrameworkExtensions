@@ -53,7 +53,7 @@ public readonly struct Dents(float amount = 5f, float scale = 0.05f, int seed = 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new DentsPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Dents requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,25 +69,6 @@ public readonly struct Dents(float amount = 5f, float scale = 0.05f, int seed = 
       this._amount, this._scale, this._seed, sourceWidth, sourceHeight));
 
   public static Dents Default => new(5f, 0.05f, 0);
-}
-
-file readonly struct DentsPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct DentsFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -122,8 +103,8 @@ file readonly struct DentsFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     in TEncode encoder) {
     var nx = _Hash((int)(destX * scale), (int)(destY * scale), seed);
     var ny = _Hash((int)(destX * scale), (int)(destY * scale), seed + 1);
-    var sx = (int)(destX + amount * nx);
-    var sy = (int)(destY + amount * ny);
+    var sx = (int)Math.Floor(destX + amount * nx);
+    var sy = (int)Math.Floor(destY + amount * ny);
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

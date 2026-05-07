@@ -24,10 +24,23 @@ namespace Hawkynt.ColorProcessing.FrequencyDomain;
 /// <summary>
 /// 1D Fast Fourier Transform using Cooley-Tukey radix-2 algorithm.
 /// </summary>
+/// <remarks>
+/// <para>Uses the standard DFT sign convention (Cooley-Tukey 1965; matches NumPy
+/// <c>np.fft.fft</c>, MATLAB <c>fft</c>, SciPy):</para>
+/// <code>
+/// Forward:  X[k] = Σ x[n] · exp(−2πi · k·n / N)
+/// Inverse:  x[n] = (1/N) Σ X[k] · exp(+2πi · k·n / N)
+/// </code>
+/// <para>The forward exponent is <em>negative</em>; the <see cref="Inverse"/> applies the
+/// <c>1/N</c> normalisation. This matches the sign of <c>F(D_x)(u) = exp(−2πi·u/N) − 1</c>
+/// for the forward-difference operator <c>D_x x[n] = x[n+1] − x[n]</c> used by frequency-
+/// domain consumers (e.g., <c>L0SmoothingFftHqs</c>).</para>
+/// </remarks>
 public static class Fft1D {
 
   /// <summary>
-  /// Computes the forward FFT in-place. Input array length must be a power of 2 (zero-padded if needed).
+  /// Computes the forward FFT in-place using <c>X[k] = Σ x[n]·exp(−2πi·k·n/N)</c>.
+  /// Input array length must be a power of 2 (zero-padded if needed).
   /// </summary>
   /// <param name="data">The complex data array to transform in-place.</param>
   public static void Forward(Complex[] data) {
@@ -36,7 +49,7 @@ public static class Fft1D {
   }
 
   /// <summary>
-  /// Computes the inverse FFT in-place.
+  /// Computes the inverse FFT in-place using <c>x[n] = (1/N) Σ X[k]·exp(+2πi·k·n/N)</c>.
   /// </summary>
   /// <param name="data">The complex data array to transform in-place.</param>
   public static void Inverse(Complex[] data) {
@@ -96,7 +109,10 @@ public static class Fft1D {
     // Cooley-Tukey iterative FFT
     for (var len = 2; len <= n; len <<= 1) {
       var halfLen = len >> 1;
-      var angle = (float)(2.0 * Math.PI / len) * (inverse ? -1f : 1f);
+      // Standard DFT sign convention: forward uses −2π/N, inverse uses +2π/N.
+      // (Cooley-Tukey 1965; NumPy/MATLAB/SciPy.) The inverse 1/N normalisation
+      // is applied separately in <see cref="Inverse"/>.
+      var angle = (float)(2.0 * Math.PI / len) * (inverse ? 1f : -1f);
       var wBase = Complex.FromPolar(1f, angle);
 
       for (var i = 0; i < n; i += len) {

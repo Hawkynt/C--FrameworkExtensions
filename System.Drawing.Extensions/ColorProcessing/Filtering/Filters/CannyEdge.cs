@@ -30,11 +30,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Canny edge detection with hysteresis thresholding.
-/// Computes Sobel gradient magnitude and direction, applies simplified non-maximum suppression,
-/// and uses dual thresholds (low/high) for hysteresis: strong edges are white, weak edges are gray,
-/// and non-edges are black.
+/// Canny edge detection — multi-stage edge detector (J. Canny 1986).
 /// </summary>
+/// <remarks>
+/// <para>Five-stage pipeline:
+/// (1) Gaussian smoothing,
+/// (2) Sobel-gradient magnitude and direction,
+/// (3) Non-maximum suppression (compares each pixel's gradient magnitude vs the two
+/// neighbours along the gradient direction; only local maxima survive),
+/// (4) Hysteresis thresholding (high-threshold pixels are strong edges; low-threshold
+/// pixels survive only if connected to a strong edge via 8-connectivity),
+/// (5) Edge tracing.</para>
+/// <para>Reference: J. Canny, "A Computational Approach to Edge Detection",
+/// IEEE Transactions on Pattern Analysis and Machine Intelligence PAMI-8(6):679-698,
+/// November 1986. The de-facto reference edge detector for ~40 years.</para>
+/// </remarks>
 [FilterInfo("CannyEdge",
   Description = "Canny edge detection with hysteresis thresholding", Category = FilterCategory.Analysis)]
 public readonly struct CannyEdge(float lowThreshold = 0.1f, float highThreshold = 0.3f) : IPixelFilter, IFrameFilter {
@@ -56,7 +66,7 @@ public readonly struct CannyEdge(float lowThreshold = 0.1f, float highThreshold 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new CannyEdgePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("CannyEdge requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +82,6 @@ public readonly struct CannyEdge(float lowThreshold = 0.1f, float highThreshold 
       this._lowThreshold, this._highThreshold, sourceWidth, sourceHeight));
 
   public static CannyEdge Default => new(0.1f, 0.3f);
-}
-
-file readonly struct CannyEdgePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct CannyEdgeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -205,21 +196,37 @@ file readonly struct CannyEdgeFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     // three. Simplified to one-pixel-step sampling (no sub-pixel interpolation along the
     // gradient direction; OpenCV uses linear interpolation between adjacent neighbours
     // — a defensible simplification for an integer-grid filter).
-    var dir = (float)Math.Atan2(gy, gx);
-    var absDir = dir < 0 ? dir + (float)Math.PI : dir;
+    //
+    // Sector classification via cross-multiplied tangent comparison rather than Atan2:
+    // Math.Atan2 is not specified to be correctly-rounded across CLRs, so the cascade
+    // against π/8, 3π/8, 5π/8, 7π/8 can flip sectors at boundaries between TFMs. The
+    // four sectors of the gradient direction map directly to ratios of |gy|/|gx|:
+    //   horizontal       |gy|/|gx| <  tan(π/8)  ≈ 0.41421356
+    //   diagonal         tan(π/8) ≤ |gy|/|gx| < tan(3π/8) ≈ 2.41421356
+    //   vertical         |gy|/|gx| ≥ tan(3π/8)
+    // Sign of gx*gy distinguishes NE-SW (+) from NW-SE (-) for the diagonal sector.
+    // Float multiply/compare is IEEE-754 deterministic, so this is TFM-stable.
+    const float TAN_22_5 = 0.41421356f; // tan(π/8) = √2 - 1
+    const float TAN_67_5 = 2.41421356f; // tan(3π/8) = √2 + 1
+    var absGx = gx < 0 ? -gx : gx;
+    var absGy = gy < 0 ? -gy : gy;
     int nx1, ny1, nx2, ny2;
-    if (absDir < Math.PI / 8 || absDir >= 7 * Math.PI / 8) {
+    if (absGy < absGx * TAN_22_5) {
       // Gradient horizontal → neighbours at (-1, 0) and (+1, 0)
       nx1 = -1; ny1 = 0; nx2 = 1; ny2 = 0;
-    } else if (absDir < 3 * Math.PI / 8) {
-      // Gradient diagonal NE-SW → neighbours at (+1, -1) and (-1, +1)
-      nx1 = 1; ny1 = -1; nx2 = -1; ny2 = 1;
-    } else if (absDir < 5 * Math.PI / 8) {
+    } else if (absGy < absGx * TAN_67_5) {
+      // Diagonal sector: same-sign gx,gy ↔ original NE-SW branch (absDir ∈ [π/8, 3π/8));
+      // opposite-sign ↔ original NW-SE branch (absDir ∈ [5π/8, 7π/8)).
+      if (gx * gy >= 0f) {
+        // gx*gy ≥ 0 (gradient runs NE-SW) → neighbours at (+1, -1) and (-1, +1)
+        nx1 = 1; ny1 = -1; nx2 = -1; ny2 = 1;
+      } else {
+        // gx*gy < 0 (gradient runs NW-SE) → neighbours at (-1, -1) and (+1, +1)
+        nx1 = -1; ny1 = -1; nx2 = 1; ny2 = 1;
+      }
+    } else {
       // Gradient vertical → neighbours at (0, -1) and (0, +1)
       nx1 = 0; ny1 = -1; nx2 = 0; ny2 = 1;
-    } else {
-      // Gradient diagonal NW-SE → neighbours at (-1, -1) and (+1, +1)
-      nx1 = -1; ny1 = -1; nx2 = 1; ny2 = 1;
     }
     var mag1 = _SobelMag(frame, destX + nx1, destY + ny1);
     var mag2 = _SobelMag(frame, destX + nx2, destY + ny2);

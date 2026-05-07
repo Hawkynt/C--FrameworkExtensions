@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Guard;
+using Hawkynt.ColorProcessing.Internal;
 
 namespace Hawkynt.ColorProcessing.LookupTable;
 
@@ -186,8 +187,10 @@ public static class Lut3DReader {
     if (triples.Count == 0)
       throw new FormatException("No sample triples found.");
     var sampleCount = triples.Count / 3;
-    var sizef = Math.Round(Math.Cbrt(sampleCount));
-    var size = (int)sizef;
+    // Integer cube-root rounding — `Math.Cbrt(sampleCount)` is platform-dependent
+    // (e.g. net48 returns 3.9999... vs net6+ exact 4.0 for sampleCount=64), which can
+    // flip Math.Round's result and cause the perfect-cube check below to misfire on net48.
+    var size = DeterministicMath.IntCbrtRound(sampleCount);
     if (size * size * size != sampleCount)
       throw new FormatException($"Sample count {sampleCount} is not a perfect cube.");
     if (size < 2 || size > 256)

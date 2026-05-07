@@ -39,7 +39,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Uses the Bessel function J₁ for radially symmetric filtering.</para>
 /// <para>Better suited for 2D resampling than separable sinc filters.</para>
-/// <para>Formula: jinc(x) = J₁(πx)/(πx) where J₁ is the first-order Bessel function.</para>
+/// <para>Reference: P. S. Heckbert, <i>Fundamentals of texture mapping and image warping</i>,
+/// M.S. thesis, U.C. Berkeley, 1989, §3.6 (EWA filtering); the Jinc/Sombrero function is the
+/// 2-D rotationally-symmetric analogue of sinc, with first zero at ≈1.2197 instead of 1.</para>
+/// <code>jinc(x) = 2·J₁(πx) / (πx),  J₁ = first-order Bessel function</code>
 /// </remarks>
 [ScalerInfo("Jinc", Year = 1990,
   Description = "2D Bessel-based resampler using J₁(πx)/(πx)", Category = ScalerCategory.Resampler)]
@@ -123,6 +126,10 @@ public readonly struct Jinc : IKernelResampler, IResamplerWithSafePath {
 /// <para>Combines the Jinc function with Lanczos windowing for high-quality resampling.</para>
 /// <para>Better handles rotations and non-uniform scaling than separable filters.</para>
 /// <para>EWA (Elliptical Weighted Average) provides proper filtering for geometric transformations.</para>
+/// <para>Reference: P. S. Heckbert, <i>Fundamentals of texture mapping and image warping</i>,
+/// M.S. thesis, U.C. Berkeley, 1989. Standard mpv / madVR shader, default cylindrical filter
+/// of ImageMagick.</para>
+/// <code>f(r) = jinc(r) · jinc(r/radius)  for r &lt; radius, else 0</code>
 /// </remarks>
 [ScalerInfo("EWA Lanczos", Year = 2000,
   Description = "Elliptical Weighted Average with Lanczos-windowed Jinc", Category = ScalerCategory.Resampler)]
@@ -206,6 +213,8 @@ public readonly struct EwaLanczos : IKernelResampler, IResamplerWithSafePath {
 /// <para>Like <see cref="EwaLanczos"/> but uses a raised-cosine (Hanning) window instead of a
 /// Lanczos jinc window. Softer roll-off, slightly more blur, less ringing on high-contrast
 /// edges. Useful as a lower-ringing alternative when Lanczos is too sharp for the content.</para>
+/// <para>Reference: standard mpv shader (<c>scale=ewa_hanning</c>); see
+/// <see cref="EwaLanczos"/> for the EWA framework citation.</para>
 /// </remarks>
 [ScalerInfo("EWA Hanning", Year = 2000,
   Description = "Elliptical Weighted Average with Hanning-windowed Jinc", Category = ScalerCategory.Resampler)]

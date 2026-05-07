@@ -29,8 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Lens distortion — applies Brown-Conrady barrel/pincushion distortion model.
+/// Lens distortion — Brown-Conrady barrel / pincushion radial-distortion model.
 /// </summary>
+/// <remarks>
+/// <para>Forward radial distortion model used by photogrammetry / camera-calibration
+/// pipelines (OpenCV, Hugin, Lensfun):</para>
+/// <code>
+///   r_distorted = r · (1 + k1·r² + k2·r⁴ + ...)
+/// </code>
+/// <para>k1 &gt; 0 produces pincushion distortion (telephoto-like edges pulled out);
+/// k1 &lt; 0 produces barrel distortion (wide-angle edges bowed out). Reference:
+/// D. C. Brown, "Decentering distortion of lenses", Photogrammetric Engineering
+/// 32(3):444-462, 1966; A. E. Conrady, "Decentred lens-systems", Monthly Notices
+/// of the Royal Astronomical Society 79(5):384-390, 1919.</para>
+/// </remarks>
 [FilterInfo("LensDistortion",
   Description = "Brown-Conrady barrel/pincushion lens distortion model", Category = FilterCategory.Distortion)]
 public readonly struct LensDistortion(float k1, float k2 = 0f) : IPixelFilter, IFrameFilter {
@@ -54,7 +66,7 @@ public readonly struct LensDistortion(float k1, float k2 = 0f) : IPixelFilter, I
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new LensDistortionPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("LensDistortion requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -70,25 +82,6 @@ public readonly struct LensDistortion(float k1, float k2 = 0f) : IPixelFilter, I
       this._k1, this._k2, sourceWidth, sourceHeight));
 
   public static LensDistortion Default => new();
-}
-
-file readonly struct LensDistortionPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct LensDistortionFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -121,8 +114,8 @@ file readonly struct LensDistortionFrameKernel<TPixel, TWork, TKey, TDecode, TPr
     var r4 = r2 * r2;
     var scale = 1f + k1 * r2 + k2 * r4;
 
-    var sx = (int)(cx + nx * scale * cx);
-    var sy = (int)(cy + ny * scale * cy);
+    var sx = (int)Math.Floor(cx + nx * scale * cx);
+    var sy = (int)Math.Floor(cy + ny * scale * cy);
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

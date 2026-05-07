@@ -71,10 +71,15 @@ file readonly struct PosterizeKernel<TWork, TKey, TPixel, TEncode>(int levels)
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
+    // Photoshop-style posterize: round-to-nearest of N evenly-spaced output
+    // levels in [0,1]. With N = levels, the levels are k/(N-1) for k=0..N-1,
+    // so the bucket index is round(c * (N-1)). The previous formula
+    // floor(c * N) / (N-1) produced N+1 distinct outputs at c=1.0 and was
+    // non-uniform near saturation.
     var div = levels - 1f;
-    r = (float)Math.Floor(r * levels) / div;
-    g = (float)Math.Floor(g * levels) / div;
-    b = (float)Math.Floor(b * levels) / div;
+    r = (float)Math.Floor(r * div + 0.5f) / div;
+    g = (float)Math.Floor(g * div + 0.5f) / div;
+    b = (float)Math.Floor(b * div + 0.5f) / div;
     r = ColorConverter.Saturate(r);
     g = ColorConverter.Saturate(g);
     b = ColorConverter.Saturate(b);

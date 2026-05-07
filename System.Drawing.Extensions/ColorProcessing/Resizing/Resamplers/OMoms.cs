@@ -47,7 +47,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// the source image with <see cref="PrefilterInfo.OMoms3"/>.
 /// </para>
 /// <para>
-/// Reference: "Least-Squares Polynomial Spline Approximation" by Blu, Thévenaz, and Unser.
+/// Reference: T. Blu, P. Thévenaz &amp; M. Unser, <i>MOMS: Maximal-Order Interpolation of Minimal
+/// Support</i>, IEEE Trans. Image Processing 10(7):1069-1080, 2001.
 /// </para>
 /// </remarks>
 [ScalerInfo("o-Moms 3", Year = 2001,
@@ -113,6 +114,7 @@ public readonly struct OMoms3 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.OMoms5"/>.
 /// </para>
+/// <para>Reference: see <see cref="OMoms3"/>. Quintic order extension.</para>
 /// </remarks>
 [ScalerInfo("o-Moms 5", Year = 2001,
   Description = "Quintic o-Moms interpolation", Category = ScalerCategory.Resampler)]
@@ -177,6 +179,7 @@ public readonly struct OMoms5 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.OMoms7"/>.
 /// </para>
+/// <para>Reference: see <see cref="OMoms3"/>. Septic order extension.</para>
 /// </remarks>
 [ScalerInfo("o-Moms 7", Year = 2001,
   Description = "Septic o-Moms interpolation", Category = ScalerCategory.Resampler)]

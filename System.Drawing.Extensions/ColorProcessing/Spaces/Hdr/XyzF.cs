@@ -27,15 +27,16 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
 
 /// <summary>
-/// Represents a color in CIE 1931 XYZ color space with float components.
+/// Represents a color in CIE 1931 XYZ tristimulus color space with float components.
 /// </summary>
 /// <remarks>
-/// X: typically 0.0-0.95047 (relative to D65 white)
-/// Y: 0.0-1.0 (luminance)
-/// Z: typically 0.0-1.08883 (relative to D65 white)
-/// Uses D65 illuminant as reference white point.
-/// XYZ is the fundamental CIE color space from which Lab, Luv, and other
-/// perceptual spaces are derived.
+/// <para>CIE 1931 XYZ is the fundamental device-independent colorimetric space defined by
+/// the CIE 1931 standard observer (Wright 1928 / Guild 1931 colour-matching experiments).
+/// All other CIE spaces (Lab, Luv, xyY, LCh) are derived from XYZ. The Y component is
+/// luminance; X and Z encode chromaticity. D65 illuminant: white = (0.95047, 1.0, 1.08883).</para>
+/// <para>Reference: CIE 015:2018 §7.1; ISO/CIE 11664-1. Linear sRGB → XYZ uses the
+/// IEC 61966-2-1 (D65) matrix.</para>
+/// <para>X: typically 0.0-0.95047. Y: 0.0-1.0 (luminance). Z: typically 0.0-1.08883.</para>
 /// </remarks>
 /// <param name="X">X tristimulus value (0.0-0.95047 for D65).</param>
 /// <param name="Y">Y tristimulus value / luminance (0.0-1.0).</param>

@@ -24,6 +24,7 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -77,10 +78,11 @@ file readonly struct OldPhotoKernel<TWork, TKey, TPixel, TEncode>(float intensit
     var sg = Math.Min(1f, r * 0.349f + g * 0.686f + b * 0.168f);
     var sb = Math.Min(1f, r * 0.272f + g * 0.534f + b * 0.131f);
 
-    // Reduce contrast
-    sr = (sr - 0.5f) * (1f - 0.3f * intensity) + 0.5f;
-    sg = (sg - 0.5f) * (1f - 0.3f * intensity) + 0.5f;
-    sb = (sb - 0.5f) * (1f - 0.3f * intensity) + 0.5f;
+    // Reduce contrast — pivot on perceptual mid-grey (see Contrast.cs).
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    sr = (sr - pivot) * (1f - 0.3f * intensity) + pivot;
+    sg = (sg - pivot) * (1f - 0.3f * intensity) + pivot;
+    sb = (sb - pivot) * (1f - 0.3f * intensity) + pivot;
 
     // Warm shift
     sr += 0.02f * intensity;

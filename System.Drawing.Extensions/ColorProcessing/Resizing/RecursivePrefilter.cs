@@ -256,6 +256,13 @@ public static class RecursivePrefilter {
   /// <summary>
   /// Computes the horizon (number of terms) for boundary initialization.
   /// </summary>
+  /// <remarks>
+  /// Uses double-precision <see cref="Math.Log"/> rather than <see cref="MathF.Log"/>
+  /// because <c>MathF.Log</c> is not specified to be correctly-rounded across CLRs and
+  /// drifts between TFMs at sector-boundary inputs. The IEEE-754-correctly-rounded
+  /// <see cref="Math.Log"/> is deterministic, and the final cast to <c>int</c> after
+  /// <c>Ceiling</c> produces a stable horizon value across every TFM the package targets.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static int ComputeHorizon(float alpha) {
     // horizon = ceil(log(tolerance) / log(|alpha|))
@@ -263,7 +270,7 @@ public static class RecursivePrefilter {
     if (absAlpha < 1e-10f)
       return 1;
 
-    return (int)MathF.Ceiling(MathF.Log(TOLERANCE) / MathF.Log(absAlpha));
+    return (int)Math.Ceiling(Math.Log(TOLERANCE) / Math.Log(absAlpha));
   }
 
   /// <summary>

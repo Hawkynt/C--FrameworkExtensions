@@ -22,8 +22,10 @@ using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -31,6 +33,11 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 /// <summary>
 /// Simulates cross-processed film (E6 film in C41 chemistry) with shifted color curves and boosted saturation.
 /// </summary>
+/// <remarks>
+/// On the linear-RGB (HQ) work path the saturation-boost stage gamma-encodes to sRGB
+/// before the HSL conversion and gamma-decodes after, so HSL math operates in its
+/// canonical sRGB display domain (linear-light fix).
+/// </remarks>
 [FilterInfo("CrossProcess",
   Description = "Simulate cross-processed film look with shifted color curves", Category = FilterCategory.Artistic)]
 public readonly struct CrossProcess(float intensity = 1f) : IPixelFilter {
@@ -76,12 +83,30 @@ file readonly struct CrossProcessKernel<TWork, TKey, TPixel, TEncode>(float inte
     var ng = g - intensity * 0.05f * (float)Math.Sin(g * Math.PI);
     var nb = b - intensity * 0.1f * (float)Math.Sin(b * Math.PI);
 
-    var (h, s, l) = HslMath.RgbToHsl(
-      ColorConverter.Saturate(nr),
-      ColorConverter.Saturate(ng),
-      ColorConverter.Saturate(nb));
+    nr = ColorConverter.Saturate(nr);
+    ng = ColorConverter.Saturate(ng);
+    nb = ColorConverter.Saturate(nb);
+
+    // HSL is defined on sRGB display values; on the linear-RGB (HQ) path the floats
+    // are linear-light, so encode→sRGB before HSL, decode after.
+    float hr, hg, hb;
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      hr = nr; hg = ng; hb = nb;
+    } else {
+      hr = FixedPointMath.GammaCompress((int)(nr * 65536f + 0.5f)) / 255f;
+      hg = FixedPointMath.GammaCompress((int)(ng * 65536f + 0.5f)) / 255f;
+      hb = FixedPointMath.GammaCompress((int)(nb * 65536f + 0.5f)) / 255f;
+    }
+
+    var (h, s, l) = HslMath.RgbToHsl(hr, hg, hb);
     s = Math.Min(1f, s * (1f + 0.3f * intensity));
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);
+
+    if (typeof(TWork) != typeof(Bgra8888)) {
+      or = FixedPointMath.GammaExpand((byte)(int)(or * 255f + 0.5f)) / 65536f;
+      og = FixedPointMath.GammaExpand((byte)(int)(og * 255f + 0.5f)) / 65536f;
+      ob = FixedPointMath.GammaExpand((byte)(int)(ob * 255f + 0.5f)) / 65536f;
+    }
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
       ColorConverter.Saturate(or),

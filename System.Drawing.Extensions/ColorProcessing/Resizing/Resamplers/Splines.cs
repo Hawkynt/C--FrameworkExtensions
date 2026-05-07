@@ -39,6 +39,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Standard cubic spline with radius 2, producing smooth results.</para>
 /// <para>Used by VLC media player for high-quality video scaling.</para>
+/// <para>Reference: F. Pańko (Panorama Tools / pano13), continuous-second-derivative cubic
+/// spline kernel; see Helmut Dersch's pano13 sources (<c>filter.c</c>) and the Hugin /
+/// libvips documentation. Also adopted by Avisynth's <c>Spline16Resize</c>.</para>
 /// </remarks>
 [ScalerInfo("Spline16", Year = 1990,
   Description = "4-tap spline interpolation filter", Category = ScalerCategory.Resampler)]
@@ -97,6 +100,9 @@ public readonly struct Spline16 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Higher-order spline with radius 3, sharper than Spline16.</para>
 /// <para>Used by FFmpeg for high-quality video scaling.</para>
+/// <para>Reference: 6-tap polynomial spline derived from the same continuous-second-derivative
+/// constraint as <see cref="Spline16"/>, extended to a 3-segment radius. Implemented in
+/// Avisynth's <c>Spline36Resize</c> and FFmpeg's <c>swscale</c>.</para>
 /// </remarks>
 [ScalerInfo("Spline36", Year = 1990,
   Description = "6-tap spline interpolation filter, sharper than Spline16", Category = ScalerCategory.Resampler)]
@@ -155,6 +161,8 @@ public readonly struct Spline36 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Highest-order spline with radius 4, very sharp results.</para>
 /// <para>Used by ImageMagick for high-quality image scaling.</para>
+/// <para>Reference: 8-tap polynomial spline; see <see cref="Spline16"/> for the spline-family
+/// derivation. Implemented in Avisynth's <c>Spline64Resize</c>.</para>
 /// </remarks>
 [ScalerInfo("Spline64", Year = 1990,
   Description = "8-tap spline interpolation filter, sharpest spline variant", Category = ScalerCategory.Resampler)]

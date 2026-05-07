@@ -56,7 +56,7 @@ public readonly struct AngledStrokes(float angle = 45f, int strokeLength = 15, f
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new AngledStrokesPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("AngledStrokes requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +72,6 @@ public readonly struct AngledStrokes(float angle = 45f, int strokeLength = 15, f
       this._angle, this._strokeLength, this._sharpness, sourceWidth, sourceHeight));
 
   public static AngledStrokes Default => new(45f, 15, 0.5f);
-}
-
-file readonly struct AngledStrokesPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct AngledStrokesFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -129,8 +110,8 @@ file readonly struct AngledStrokesFrameKernel<TPixel, TWork, TKey, TDecode, TPro
     var count = 0;
 
     for (var i = -half; i <= half; ++i) {
-      var sx = (int)(destX + i * cos);
-      var sy = (int)(destY + i * sin);
+      var sx = (int)Math.Floor(destX + i * cos);
+      var sy = (int)Math.Floor(destY + i * sin);
       var sp = frame[sx, sy].Work;
       var (sr, sg, sb, _) = ColorConverter.GetNormalizedRgba(in sp);
       sumR += sr;

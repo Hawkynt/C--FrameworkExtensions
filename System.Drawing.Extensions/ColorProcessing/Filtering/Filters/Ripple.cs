@@ -55,7 +55,7 @@ public readonly struct Ripple(float amplitude, float wavelength = 20f, float ang
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new RipplePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Ripple requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -71,25 +71,6 @@ public readonly struct Ripple(float amplitude, float wavelength = 20f, float ang
       this._amplitude, this._wavelength, this._angle, sourceWidth, sourceHeight));
 
   public static Ripple Default => new();
-}
-
-file readonly struct RipplePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct RippleFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -123,8 +104,8 @@ file readonly struct RippleFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var displacement = amplitude * (float)Math.Sin(2.0 * Math.PI * along / wavelength);
 
     // Displace perpendicular to angle
-    var sx = (int)(destX - sin * displacement);
-    var sy = (int)(destY + cos * displacement);
+    var sx = (int)Math.Floor(destX - sin * displacement);
+    var sy = (int)Math.Floor(destY + cos * displacement);
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

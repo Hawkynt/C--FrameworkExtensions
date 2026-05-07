@@ -31,6 +31,10 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <remarks>
 /// <para>Uses Bayer matrix thresholds to select from multiple candidate colors.</para>
 /// <para>Generates candidates by iteratively finding closest colors and accumulating error.</para>
+/// <para>Reference: Thomas Knoll's pattern-dither algorithm (Adobe Photoshop's "Pattern Dither"
+/// option, U.S. Patent 6,606,166 expired); algorithmic description published by Joel Yliluoma at
+/// https://bisqwit.iki.fi/story/howto/dither/jy/ as the "Knoll-Yliluoma" predecessor of his
+/// arbitrary-palette positional dithering algorithms.</para>
 /// </remarks>
 [Ditherer("Knoll", Description = "Pattern dithering with candidate generation", Type = DitheringType.Ordered, Author = "Thomas Knoll")]
 public readonly struct KnollDitherer : IDitherer {

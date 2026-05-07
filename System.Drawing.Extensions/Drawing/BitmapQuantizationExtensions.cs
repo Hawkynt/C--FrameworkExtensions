@@ -17,6 +17,7 @@
 
 #endregion
 
+using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing;
@@ -64,8 +65,12 @@ public static class BitmapQuantizationExtensions {
       bool isHighQuality = false
     )
       where TDitherer : struct, IDitherer
-      where TQuantizer : struct, IQuantizer
-      => @this.ReduceColors(quantizer, ditherer, colorCount, isHighQuality, true);
+      where TQuantizer : struct, IQuantizer {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(colorCount);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(colorCount, 256);
+      return @this.ReduceColors(quantizer, ditherer, colorCount, isHighQuality, true);
+    }
 
     /// <summary>
     /// Reduces colors in a bitmap with control over palette filling behavior.
@@ -88,12 +93,16 @@ public static class BitmapQuantizationExtensions {
       bool allowFillingColors
     )
       where TDitherer : struct, IDitherer
-      where TQuantizer : struct, IQuantizer
-      => isHighQuality
+      where TQuantizer : struct, IQuantizer {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(colorCount);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(colorCount, 256);
+      return isHighQuality
         ? QuantizationPipeline.Quantize<LinearRgbaF, Srgb32ToLinearRgbaF, LinearRgbaFToSrgb32, Euclidean4F<LinearRgbaF>>(
           @this, quantizer.CreateKernel<LinearRgbaF>(), ditherer, colorCount, allowFillingColors)
         : QuantizationPipeline.Quantize<Bgra8888, IdentityDecode<Bgra8888>, IdentityEncode<Bgra8888>, EuclideanSquared4B<Bgra8888>>(
           @this, quantizer.CreateKernel<Bgra8888>(), ditherer, colorCount, allowFillingColors);
+    }
     
     /// <summary>
     /// Reduces colors in a bitmap using default quantizer and ditherer instances.
@@ -104,8 +113,12 @@ public static class BitmapQuantizationExtensions {
       bool isHighQuality = false
     )
       where TDitherer : struct, IDitherer
-      where TQuantizer : struct, IQuantizer
-      => @this.ReduceColors(default(TQuantizer), default(TDitherer), colorCount, isHighQuality);
+      where TQuantizer : struct, IQuantizer {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(colorCount);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(colorCount, 256);
+      return @this.ReduceColors(default(TQuantizer), default(TDitherer), colorCount, isHighQuality);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap ReduceColors<TQuantizer, TDitherer>(
@@ -114,8 +127,12 @@ public static class BitmapQuantizationExtensions {
       bool isHighQuality = false
     )
       where TDitherer : struct, IDitherer
-      where TQuantizer : struct, IQuantizer
-      => @this.ReduceColors(quantizer, default(TDitherer), colorCount, isHighQuality);
+      where TQuantizer : struct, IQuantizer {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(colorCount);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(colorCount, 256);
+      return @this.ReduceColors(quantizer, default(TDitherer), colorCount, isHighQuality);
+    }
 
     /// <code>
     /// using var original = new Bitmap("photo.png");
@@ -129,8 +146,12 @@ public static class BitmapQuantizationExtensions {
       bool isHighQuality = false
     )
       where TDitherer : struct, IDitherer
-      where TQuantizer : struct, IQuantizer
-      => @this.ReduceColors(default(TQuantizer), ditherer, colorCount, isHighQuality);
+      where TQuantizer : struct, IQuantizer {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(colorCount);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(colorCount, 256);
+      return @this.ReduceColors(default(TQuantizer), ditherer, colorCount, isHighQuality);
+    }
 
 
 

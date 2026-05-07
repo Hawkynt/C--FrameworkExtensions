@@ -27,13 +27,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
 
 /// <summary>
-/// Represents a color in CIE LCh (cylindrical Lab) color space with float components.
+/// Represents a color in CIE LCh(ab) (cylindrical Lab) color space with float components.
 /// </summary>
 /// <remarks>
-/// L (lightness): 0-100
-/// C (chroma): 0-~128 (typical maximum)
-/// H (hue): 0.0-1.0 (normalized, maps to 0-360 degrees)
-/// LCh is the polar/cylindrical representation of CIE Lab.
+/// <para>LCh(ab) is the polar form of CIE 1976 L*a*b* — the industry default for
+/// surface-colour difference and gradient interpolation in perceptual lightness/chroma/hue
+/// terms. Distinct from <see cref="LchUvF"/> (polar L*u*v*, preferred for additive light).</para>
+/// <code>
+///   L = L*               (unchanged from Lab)
+///   C = sqrt(a*² + b*²)
+///   h = atan2(b*, a*)    (in degrees, normalised to [0, 360))
+/// </code>
+/// <para>Reference: CIE 015:2018 §8.2.1.2 ("Color metric coordinates"); ISO/CIE 11664-4.
+/// L (lightness): 0-100. C (chroma): 0 to ~128. h (hue): 0.0-1.0 normalised to 0-360°.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0-100).</param>
 /// <param name="C">Chroma component (0-~128).</param>

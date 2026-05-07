@@ -38,6 +38,12 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses a 4x4 kernel with cubic polynomial weights.</para>
 /// <para>Good balance between sharpness and smoothness.</para>
 /// <para>Default parameter a=-0.5 (Keys cubic).</para>
+/// <para>Reference: R. G. Keys, <i>Cubic convolution interpolation for digital image processing</i>,
+/// IEEE Trans. Acoustics, Speech, and Signal Processing 29(6):1153-1160, 1981.</para>
+/// <code>
+/// |x| &lt; 1: f(x) = (a+2)|x|³ - (a+3)|x|² + 1
+/// |x| &lt; 2: f(x) = a|x|³ - 5a|x|² + 8a|x| - 4a
+/// </code>
 /// </remarks>
 [ScalerInfo("Bicubic", Author = "Robert Keys", Year = 1981,
   Description = "4x4 cubic polynomial interpolation", Category = ScalerCategory.Resampler)]
@@ -69,10 +75,22 @@ public readonly struct Bicubic : IKernelResampler, IResamplerWithSafePath {
   public float EvaluateWeight(float distance) {
     var x = MathF.Abs(distance);
     var a = this._a;
-    if (x < 1f)
-      return ((a + 2f) * x - (a + 3f)) * x * x + 1f;
-    if (x < 2f)
-      return a * (((x - 5f) * x + 8f) * x - 4f);
+    if (x < 1f) {
+      // Original: ((a+2)*x - (a+3)) * x * x + 1
+      // Rewritten so every "mul-then-add" is an explicit MathF.FusedMultiplyAdd
+      // and every "mul" is its own statement. This makes the float-rounding
+      // sequence identical on net48 (polyfilled MathF.FusedMultiplyAdd) and
+      // net6+ (hardware FMA).
+      var t = MathF.FusedMultiplyAdd(a + 2f, x, -(a + 3f));   // (a+2)*x - (a+3)
+      t = t * x;                                               // *x  (no fma)
+      return MathF.FusedMultiplyAdd(t, x, 1f);                 // *x + 1
+    }
+    if (x < 2f) {
+      // Original: a * (((x-5)*x + 8)*x - 4)
+      var t = MathF.FusedMultiplyAdd(x - 5f, x, 8f);           // (x-5)*x + 8
+      var u = MathF.FusedMultiplyAdd(t, x, -4f);                // t*x - 4
+      return a * u;
+    }
     return 0f;
   }
 
@@ -234,13 +252,30 @@ file readonly struct BicubicKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
   /// <summary>
   /// Computes the cubic weight for a given distance.
   /// </summary>
+  /// <remarks>
+  /// Uses explicit <see cref="MathF.FusedMultiplyAdd"/> on every <c>mul + add</c>
+  /// pattern so the float-rounding sequence is identical on net48 (polyfilled FMA
+  /// goes through double precision — bit-exact for float operands) and net6+
+  /// (hardware FMA via Sse41/Fma intrinsics). Without this, JIT FMA-fusion in
+  /// net6+ disagrees byte-for-byte with the legacy CLR's two-rounding
+  /// <c>a*b + c</c> sequence at edge pixels where OOB samples participate in the
+  /// 4×4 convolution.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float CubicWeight(float x, float a) {
     x = MathF.Abs(x);
-    if (x < 1f)
-      return ((a + 2f) * x - (a + 3f)) * x * x + 1f;
-    if (x < 2f)
-      return a * (((x - 5f) * x + 8f) * x - 4f);
+    if (x < 1f) {
+      // ((a+2)*x - (a+3)) * x * x + 1
+      var t = MathF.FusedMultiplyAdd(a + 2f, x, -(a + 3f));
+      t = t * x;
+      return MathF.FusedMultiplyAdd(t, x, 1f);
+    }
+    if (x < 2f) {
+      // a * (((x-5)*x + 8)*x - 4)
+      var t = MathF.FusedMultiplyAdd(x - 5f, x, 8f);
+      var u = MathF.FusedMultiplyAdd(t, x, -4f);
+      return a * u;
+    }
     return 0f;
   }
 }

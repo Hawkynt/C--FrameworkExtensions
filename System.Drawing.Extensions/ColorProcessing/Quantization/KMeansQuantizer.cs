@@ -34,10 +34,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// K-Means clustering color quantizer with configurable parameters.
+/// K-Means clustering color quantizer (Lloyd's algorithm with K-means++ seeding).
 /// </summary>
 /// <remarks>
-/// Uses K-means++ initialization for better convergence.
+/// <para>Standard Lloyd-Forgy iteration: assign each pixel to the nearest cluster
+/// centre, then recompute centres as the mean of their assigned pixels; repeat
+/// until convergence. Initialised with K-means++ for fast convergence and
+/// near-optimal local minima.</para>
+/// <para>References:
+/// J. MacQueen, "Some methods for classification and analysis of multivariate
+/// observations", Proc. 5th Berkeley Symposium 1:281-297, 1967.
+/// S. P. Lloyd, "Least squares quantization in PCM", IEEE Trans. Information
+/// Theory 28(2):129-137, 1982.
+/// D. Arthur &amp; S. Vassilvitskii, "k-means++: The Advantages of Careful Seeding",
+/// SODA '07 Proceedings, pp. 1027-1035, 2007.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "K-Means", Author = "J. MacQueen", Year = 1967, QualityRating = 7)]
 public struct KMeansQuantizer : IQuantizer {

@@ -27,14 +27,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.WideGamut;
 
 /// <summary>
-/// Represents a color in ACEScg (ACES computer graphics) color space.
+/// Represents a color in ACEScg (ACES Compositing Color Space, AP1 primaries) color space.
 /// </summary>
 /// <remarks>
-/// ACEScg is the Academy Color Encoding System working space for CGI.
-/// It is a linear space designed for VFX and animation workflows.
-/// All components are linear (no gamma) and can exceed 0.0-1.0 range.
-/// Uses ACES white point (approximately D60).
-/// Reference: https://en.wikipedia.org/wiki/Academy_Color_Encoding_System
+/// <para>ACEScg is the Academy Color Encoding System "Working Space" for CGI rendering,
+/// compositing, and VFX, defined by AMPAS in S-2014-004 ("ACEScg, A Working Space for
+/// CGI Render and Compositing"). Linear scene-referred encoding with AP1 primaries
+/// (a slightly narrower variant of the AP0 primaries used by ACES2065-1) and the
+/// ACES D60 white point (CIE x=0.32168, y=0.33767).</para>
+/// <para>Reference: AMPAS Specification S-2014-004 (ACEScg). Bradford D65→D60 chromatic
+/// adaptation is applied during sRGB conversion (see audit memory: white drifts to
+/// ≈(1.0045, 0.998, 1.003) — a documented colorimetric divergence, not a bug).</para>
+/// <para>All components are linear (no gamma) and can exceed 0.0-1.0 for HDR signals.</para>
 /// </remarks>
 /// <param name="R">Red component (linear, scene-referred).</param>
 /// <param name="G">Green component (linear, scene-referred).</param>

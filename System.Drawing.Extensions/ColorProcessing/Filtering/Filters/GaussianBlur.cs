@@ -29,11 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Gaussian blur with configurable radii per axis.
-/// Supports both square (k x k) and rectangular (k x m) kernels of any size.
-/// For radii 0-2, uses the efficient 5x5 NeighborWindow.
-/// For larger radii, uses frame-level random access for single-pass computation.
+/// Gaussian blur — convolution with the 2-D Gaussian kernel, separable per axis.
 /// </summary>
+/// <remarks>
+/// <para>Standard low-pass filter using the discretised 2-D Gaussian
+/// G(x, y) = (1/(2π·σ²))·exp(−(x² + y²)/(2σ²)). Separable into a 1-D horizontal
+/// convolution followed by a 1-D vertical convolution, reducing cost from
+/// O(r²) to O(r) per pixel. The lib's IFrameFilter path runs the convolution
+/// in linear-light (gamma-correct), the IPixelFilter Fast path runs in sRGB
+/// (gamma-naive but faster) — see audit memory entry "BoxBlur / GaussianBlur
+/// path divergence" for the documented behavioural distinction.</para>
+/// <para>Reference: any signal-processing textbook, e.g. R. C. Gonzalez &amp;
+/// R. E. Woods, "Digital Image Processing" (4th ed., Pearson 2018), §3.5.2;
+/// formulation goes back to C. F. Gauss's 1809 work on least-squares.</para>
+/// </remarks>
 [FilterInfo("GaussianBlur",
   Description = "Gaussian blur convolution with configurable kernel size", Category = FilterCategory.Enhancement)]
 public readonly struct GaussianBlur : IPixelFilter, IFrameFilter {

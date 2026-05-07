@@ -32,6 +32,9 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Constructs a Voronoi diagram of palette colors.</para>
 /// <para>Calculates "stolen area" when inserting query point.</para>
 /// <para>Normalizes displaced areas as blend weights.</para>
+/// <para>Reference: R. Sibson, <i>A brief description of natural neighbour interpolation</i>,
+/// in <i>Interpreting Multivariate Data</i>, V. Barnett ed., Wiley 1981, pp. 21-36 — the
+/// "stolen area" weighting scheme. Combined here with Bayer 1973 ordered dither thresholds.</para>
 /// </remarks>
 [Ditherer("Natural Neighbour", Description = "Voronoi-based area-weighted interpolation dithering", Type = DitheringType.Ordered)]
 public readonly struct NaturalNeighbourDitherer : IDitherer {
@@ -187,7 +190,10 @@ public readonly struct NaturalNeighbourDitherer : IDitherer {
 
   private static double[,] _GenerateBayerMatrix(int size) {
     var matrix = new double[size, size];
-    var n = (int)Math.Log(size, 2);
+    // Integer log2 for power-of-two size — see BarycentricDitherer for the cross-TFM
+    // determinism rationale (Math.Log(4, 2) returns 1.999… on legacy CLR).
+    var n = 0;
+    for (var s = size; s > 1; s >>= 1) ++n;
 
     for (var y = 0; y < size; ++y)
     for (var x = 0; x < size; ++x) {

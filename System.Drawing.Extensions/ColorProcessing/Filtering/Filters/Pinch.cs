@@ -54,7 +54,7 @@ public readonly struct Pinch(float amount, float radius = 0.5f) : IPixelFilter, 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new PinchPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Pinch requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -70,25 +70,6 @@ public readonly struct Pinch(float amount, float radius = 0.5f) : IPixelFilter, 
       this._amount, this._radius, sourceWidth, sourceHeight));
 
   public static Pinch Default => new();
-}
-
-file readonly struct PinchPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct PinchFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -124,8 +105,8 @@ file readonly struct PinchFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     if (dist < maxDist && dist > 0f) {
       var t = 1f - dist / maxDist;
       var scale = 1f + amount * t;
-      sx = (int)(cx + dx * scale);
-      sy = (int)(cy + dy * scale);
+      sx = (int)Math.Floor(cx + dx * scale);
+      sy = (int)Math.Floor(cy + dy * scale);
     } else {
       sx = destX;
       sy = destY;

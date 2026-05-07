@@ -25,6 +25,7 @@ using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -52,7 +53,7 @@ public readonly struct WaterPaper(int fiberLength = 15, float brightness = 60f, 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new WaterPaperPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("WaterPaper requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -68,25 +69,6 @@ public readonly struct WaterPaper(int fiberLength = 15, float brightness = 60f, 
       fiberLength, brightness, contrast, seed, sourceWidth, sourceHeight));
 
   public static WaterPaper Default => new(15, 60f, 80f, 0);
-}
-
-file readonly struct WaterPaperPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct WaterPaperFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -140,8 +122,9 @@ file readonly struct WaterPaperFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
     var fiber = _Hash(destX, destY, seed) * 0.1f;
     var v = avgLum + fiber;
 
-    // Apply brightness/contrast
-    v = (v - 0.5f) * (contrast / 50f) + 0.5f + (brightness - 50f) / 100f;
+    // Apply brightness/contrast — pivot on perceptual mid-grey (see Contrast.cs).
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    v = (v - pivot) * (contrast / 50f) + pivot + (brightness - 50f) / 100f;
     v = ColorConverter.Saturate(v);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));

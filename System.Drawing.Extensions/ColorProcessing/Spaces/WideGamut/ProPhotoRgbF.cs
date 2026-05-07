@@ -27,14 +27,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.WideGamut;
 
 /// <summary>
-/// Represents a color in ProPhoto RGB (ROMM RGB) color space.
+/// Represents a color in ProPhoto RGB (Reference Output Medium Metric, ROMM RGB) color space.
 /// </summary>
 /// <remarks>
-/// ProPhoto RGB is an ultra-wide gamut space developed by Kodak.
-/// It encompasses ~90% of the visible colors (vs ~35% for sRGB).
-/// All components are linear (no gamma) and range from 0.0 to 1.0.
-/// Uses D50 illuminant as reference white point (adapted to D65 for conversion).
-/// Reference: https://en.wikipedia.org/wiki/ProPhoto_RGB_color_space
+/// <para>ProPhoto RGB is an ultra-wide-gamut RGB working space developed by Kodak for
+/// professional photography workflows. Encompasses ~90% of the CIE 1931 visible gamut
+/// (vs ~35% for sRGB) at the cost of having ~13% of imaginary primaries outside the
+/// horseshoe. Standardised as ISO 22028-2:2013 ROMM RGB. D50 reference white;
+/// gamma 1.8 transfer function with linear toe.</para>
+/// <para>Reference: ISO 22028-2:2013 "Photography and graphic technology – Extended
+/// colour encodings for digital image storage, manipulation and interchange –
+/// Part 2: Reference output medium metric RGB colour image encoding (ROMM RGB)".
+/// Primaries: R=(0.7347, 0.2653), G=(0.1596, 0.8404), B=(0.0366, 0.0001).</para>
+/// <para>All components linear, 0.0-1.0.</para>
 /// </remarks>
 /// <param name="R">Red component (0.0-1.0, linear).</param>
 /// <param name="G">Green component (0.0-1.0, linear).</param>

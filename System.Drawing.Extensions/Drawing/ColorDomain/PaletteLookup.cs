@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using Guard;
@@ -37,7 +38,11 @@ namespace Hawkynt.Drawing.ColorDomain;
 public sealed class PaletteLookup {
 
   private readonly Color[] _palette;
-  private readonly Dictionary<int, int> _cache;
+  // ConcurrentDictionary: read at line ~70 races with write at line ~85 in callers that
+  // dispatch palette lookups across threads (e.g. parallel ditherers / quantizer pipelines).
+  // System.Collections.Generic.Dictionary is not safe for concurrent read-during-write —
+  // a reader can return a wrong index, infinite-loop, or crash mid-rehash.
+  private readonly ConcurrentDictionary<int, int> _cache;
   private readonly Func<Color, Color, int> _metric;
 
   public PaletteLookup(IEnumerable<Color> palette, Func<Color, Color, int>? metric = null) {
@@ -46,7 +51,7 @@ public sealed class PaletteLookup {
     foreach (var c in palette)
       list.Add(c);
     this._palette = list.ToArray();
-    this._cache = new Dictionary<int, int>(512);
+    this._cache = new ConcurrentDictionary<int, int>(concurrencyLevel: Environment.ProcessorCount, capacity: 512);
     this._metric = metric ?? _DefaultCompuPhase;
   }
 
@@ -81,8 +86,8 @@ public sealed class PaletteLookup {
         break;
     }
 
-    lock (this._cache)
-      this._cache[key] = bestIndex;
+    // ConcurrentDictionary handles the write atomically; no lock needed.
+    this._cache[key] = bestIndex;
 
     return bestIndex;
   }

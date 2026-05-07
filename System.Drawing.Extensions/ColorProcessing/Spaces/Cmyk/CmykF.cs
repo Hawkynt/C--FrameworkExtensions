@@ -27,14 +27,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Cmyk;
 
 /// <summary>
-/// Represents a color in CMYK (Cyan, Magenta, Yellow, Key/Black) color space with float components.
+/// Represents a color in CMYK (Cyan, Magenta, Yellow, Key/Black) device color space.
 /// </summary>
 /// <remarks>
-/// C (cyan): 0.0-1.0
-/// M (magenta): 0.0-1.0
-/// Y (yellow): 0.0-1.0
-/// K (key/black): 0.0-1.0
-/// CMYK is a subtractive color model used in printing.
+/// <para>CMYK is the subtractive four-ink colour model used in process printing
+/// (offset, inkjet, laser). The lib uses the simple algebraic transformation
+/// (max-extracted black, no GCR / UCR ink-replacement):</para>
+/// <code>
+///   K = 1 − max(R, G, B)
+///   C = (1 − R − K) / (1 − K)         (= 0 if K = 1)
+///   M = (1 − G − K) / (1 − K)
+///   Y = (1 − B − K) / (1 − K)
+/// </code>
+/// <para>Real press CMYK requires an ICC profile (e.g. SWOP, FOGRA39, Japan Color 2001) for
+/// colorimetric output; this device-CMYK is the algebraic approximation used by most
+/// software previews. Reference: GATF Technical Notes; ICC.1:2010 §6.3.4.4.</para>
 /// </remarks>
 /// <param name="C">Cyan component (0.0-1.0).</param>
 /// <param name="M">Magenta component (0.0-1.0).</param>

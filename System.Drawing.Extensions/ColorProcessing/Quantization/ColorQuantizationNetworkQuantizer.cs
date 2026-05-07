@@ -29,9 +29,15 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// Color Quantization Network (CQN) using competitive learning with conscience mechanism.
 /// </summary>
 /// <remarks>
-/// <para>Uses Learning Vector Quantization (LVQ) with frequency-sensitive competitive learning.</para>
-/// <para>The conscience mechanism prevents dead neurons and ensures all palette entries are utilized.</para>
-/// <para>Produces well-distributed palette colors even for images with highly skewed color distributions.</para>
+/// <para>Variant of frequency-sensitive Learning Vector Quantisation (LVQ) for colour
+/// palette training. Each iteration, the winning neuron's weights are pulled toward the
+/// presented sample; the conscience mechanism ("anti-Matthew" bias) suppresses winners
+/// that have been winning too often, distributing palette utilisation across all
+/// neurons. Without conscience, dead-neurons (never selected as BMU) waste palette
+/// entries on highly-skewed colour distributions.</para>
+/// <para>References: T. Kohonen, "Improved versions of learning vector quantization",
+/// IJCNN 1990 (LVQ original). D. DeSieno, "Adding a conscience to competitive
+/// learning", IEEE ICNN 1988, vol. 1, pp. 117-124 (conscience mechanism).</para>
 /// </remarks>
 [Quantizer(QuantizationType.Neural, DisplayName = "Color Quantization Network", Author = "Various", Year = 1992, QualityRating = 8)]
 public struct ColorQuantizationNetworkQuantizer : IQuantizer {

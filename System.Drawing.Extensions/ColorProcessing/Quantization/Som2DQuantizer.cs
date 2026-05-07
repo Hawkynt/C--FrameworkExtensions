@@ -156,7 +156,8 @@ public struct Som2DQuantizer : IQuantizer {
           var radius = initRadius * Math.Pow(finRadius / initRadius, t);
           var twoSigma2 = 2 * radius * radius;
           var sampleWeight = Math.Sqrt(Math.Max(1, sw[si]));
-          var rCap = (int)Math.Ceiling(3 * radius);
+          // Math.Pow cross-TFM drift absorbed by small epsilon — see SomQuantizer.cs.
+          var rCap = (int)Math.Ceiling(3 * radius + 1e-6);
 
           for (var dr = -rCap; dr <= rCap; ++dr)
             for (var dc = -rCap; dc <= rCap; ++dc) {

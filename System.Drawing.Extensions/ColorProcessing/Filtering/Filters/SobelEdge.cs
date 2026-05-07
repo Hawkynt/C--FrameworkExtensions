@@ -30,8 +30,22 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Sobel edge detection using horizontal and vertical gradient kernels.
+/// Sobel edge detection — 3×3 gradient operator (Sobel &amp; Feldman 1968).
 /// </summary>
+/// <remarks>
+/// <para>Computes the discrete approximation to the image gradient using two 3×3 kernels:</para>
+/// <code>
+///   Gx = [-1,0,+1; -2,0,+2; -1,0,+1] / 8
+///   Gy = [-1,-2,-1; 0,0,0; +1,+2,+1] / 8
+///   G  = sqrt(Gx² + Gy²)
+/// </code>
+/// <para>The 1-2-1 weighting is a separable Gaussian-like smoothing that makes Sobel less
+/// noise-sensitive than the equal-weighted <see cref="PrewittEdge"/>. Reference:
+/// I. Sobel &amp; G. Feldman, "A 3×3 Isotropic Gradient Operator for Image Processing",
+/// presented at the Stanford AI Project (SAIL), 1968 (later published in
+/// R. O. Duda &amp; P. E. Hart, "Pattern Classification and Scene Analysis", Wiley
+/// 1973, p. 271).</para>
+/// </remarks>
 [FilterInfo("SobelEdge",
   Description = "Sobel edge detection (gradient magnitude)", Category = FilterCategory.Analysis)]
 public readonly struct SobelEdge : IPixelFilter {
@@ -90,7 +104,14 @@ file readonly struct SobelKernel<TWork, TKey, TPixel, TEncode>
     // Sobel Y: [-1,-2,-1; 0,0,0; 1,2,1]
     var gy = -tl - 2f * t - tr + bl + 2f * b + br;
 
-    var mag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy));
+    // Normalise by kernel sum-of-positives = 1+2+1 = 4 in each axis. The
+    // saturated-input bound for |gx| and |gy| is 4 (e.g. white column, black
+    // column → gx = 1+2+1 = 4), so dividing by 4 yields per-axis gradient in
+    // [-1,1] and magnitude in [0, sqrt(2)]. Divide by 4√2 ≈ 5.657 to map to
+    // [0,1] without clipping; using the more conservative 8 (4·2) keeps the
+    // historical "kernel-sum" framing in the docs and matches the Sobel-Feldman
+    // 1968 convention used throughout the literature.
+    var mag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy) / 8f);
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

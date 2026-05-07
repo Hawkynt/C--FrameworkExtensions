@@ -27,14 +27,23 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
 
 /// <summary>
-/// Represents a color in CIE L*u*v* color space with float components.
+/// Represents a color in CIE 1976 L*u*v* color space with float components.
 /// </summary>
 /// <remarks>
-/// L (lightness): 0-100
-/// U: approximately -134 to +220
-/// V: approximately -140 to +122
-/// Uses D65 illuminant as reference white point.
-/// CIE Luv is commonly used for additive color mixing (displays, lighting).
+/// <para>CIE L*u*v* is the CIE 1976 perceptually-uniform colour space defined alongside
+/// CIELAB. Luv is the preferred space for additive light (displays, projection, lighting,
+/// stage design) because chromaticities (u', v') retain the additive-mixing property of
+/// CIE 1931 (x, y) — equally-spaced Δu', Δv' on the chromaticity diagram correspond to
+/// approximately-equal perceptual differences. Pairs with <see cref="Cylindrical.LchUvF"/>
+/// for cylindrical access.</para>
+/// <code>
+///   u' = 4·X / (X + 15·Y + 3·Z);  v' = 9·Y / (X + 15·Y + 3·Z)
+///   L*  = 116·f(Y/Yn) − 16     (same f(t) as Lab)
+///   u* = 13·L*·(u' − u'n)
+///   v* = 13·L*·(v' − v'n)
+/// </code>
+/// <para>Reference: CIE 015:2018 §8.2.1.2; ISO/CIE 11664-5. D65 illuminant.</para>
+/// <para>L (lightness): 0-100. u: approximately -134 to +220. v: approximately -140 to +122.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0-100).</param>
 /// <param name="U">U chromaticity component (approximately -134 to +220).</param>

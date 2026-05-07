@@ -30,11 +30,13 @@ namespace Hawkynt.ColorProcessing.Spaces.Hdr;
 /// Represents a color in the JzCzhz cylindrical color space with float components.
 /// </summary>
 /// <remarks>
-/// JzCzhz is the cylindrical (polar) representation of JzAzBz.
-/// Jz (lightness): 0.0-1.0 (0 = black, 1 = white)
-/// Cz (chroma): 0.0 to ~0.5 (colorfulness/saturation)
-/// Hz (hue): 0.0-1.0 representing 0-360 degrees
-/// Reference: https://observablehq.com/@jrus/jzazbz
+/// <para>JzCzhz is the cylindrical (polar) representation of <see cref="JzAzBzF"/>,
+/// suitable for HDR-aware hue/chroma manipulation. Cz = sqrt(Az² + Bz²), hz = atan2(Bz, Az).</para>
+/// <para>Reference: M. Safdar, G. Cui, Y. J. Kim &amp; M. R. Luo, "Perceptually uniform
+/// color space for image signals including high dynamic range and wide gamut",
+/// Optics Express 25(13):15131-15151, 2017. See also
+/// <see href="https://observablehq.com/@jrus/jzazbz"/>.</para>
+/// <para>Jz (lightness): 0.0-1.0. Cz (chroma): 0.0 to ~0.5. Hz (hue): 0.0-1.0 (= 0-360°).</para>
 /// </remarks>
 /// <param name="Jz">Lightness component (0.0-1.0).</param>
 /// <param name="Cz">Chroma component (0.0-~0.5).</param>

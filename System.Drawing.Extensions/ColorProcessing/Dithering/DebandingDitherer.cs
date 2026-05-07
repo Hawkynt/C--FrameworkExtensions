@@ -43,6 +43,10 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// Areas with high variance (detailed regions, edges) receive normal or reduced
 /// dithering to preserve detail.
 /// </para>
+/// <para>Reference: Hawkynt's own design — no published source. Conceptually similar to
+/// the debanding shaders used by mpv (<c>--deband</c>, see
+/// https://github.com/mpv-player/mpv/wiki/Debanding) and AviSynth's <c>f3kdb</c>, but here
+/// integrated as a per-pixel ditherer rather than a frame-prefilter.</para>
 /// </remarks>
 [Ditherer("Debanding", Description = "Targets and reduces gradient banding artifacts", Type = DitheringType.ErrorDiffusion)]
 public readonly struct DebandingDitherer : IDitherer {

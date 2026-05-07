@@ -32,6 +32,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <remarks>
 /// <para>This ditherer analyzes local gradients to reduce dithering artifacts in smooth gradient areas</para>
 /// <para>while maintaining detail in edges and textured regions.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Edge-adaptive scaling of
+/// Floyd-Steinberg coefficients (Floyd &amp; Steinberg 1976).</para>
 /// </remarks>
 [Ditherer("Gradient Aware", Description = "Adapts error diffusion based on local gradients", Type = DitheringType.ErrorDiffusion)]
 public readonly struct GradientAwareDitherer : IDitherer {

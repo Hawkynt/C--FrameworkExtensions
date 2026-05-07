@@ -83,12 +83,16 @@ using var hq4x = source.Upscale(Hqnx.X4);
 
 #### Resampling
 
-- **`Resample<TResampler>(width, height)`** - Resample bitmap to arbitrary size using a resampler
+- **`Resample<TResampler>(width, height)`** - Resample bitmap to arbitrary size using a resampler (high-quality, linear-light path through `Srgb32ToLinearRgbaF` codec)
 - **`Resample(IResampler, width, height)`** - Resample with parameterized resampler instance
+- **`ResampleFast(width, height, FastResampleMode = Bilinear)`** - Int-only fast path (NearestNeighbor / Bilinear / Box) operating directly on Bgra8888 with Q16/Q24 fixed-point weights — no codec round-trip, gamma-naive but ~10× faster
 
 ```csharp
 using var photo = bitmap.Resample<Lanczos3>(newWidth, newHeight);
 using var sharp = bitmap.Resample(new Bicubic(-0.75f), newWidth, newHeight);
+
+// Fast int-only path (no float arithmetic, no gamma correction)
+using var thumb = bitmap.ResampleFast(160, 90, FastResampleMode.Bilinear);
 ```
 
 ---

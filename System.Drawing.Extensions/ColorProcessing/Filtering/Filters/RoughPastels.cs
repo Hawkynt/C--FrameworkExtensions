@@ -25,6 +25,7 @@ using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -53,7 +54,7 @@ public readonly struct RoughPastels(int strokeLength = 6, float detail = 4f, flo
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new RoughPastelsPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("RoughPastels requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,25 +70,6 @@ public readonly struct RoughPastels(int strokeLength = 6, float detail = 4f, flo
       strokeLength, detail, textureAmount, seed, sourceWidth, sourceHeight));
 
   public static RoughPastels Default => new(6, 4f, 0.5f, 0);
-}
-
-file readonly struct RoughPastelsPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct RoughPastelsFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -146,11 +128,12 @@ file readonly struct RoughPastelsFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     avgG += tex;
     avgB += tex;
 
-    // Detail contrast factor
+    // Detail contrast factor — pivot on perceptual mid-grey (see Contrast.cs).
     var detailFactor = detail / 4f;
-    var outR = ColorConverter.Saturate(0.5f + (avgR - 0.5f) * detailFactor);
-    var outG = ColorConverter.Saturate(0.5f + (avgG - 0.5f) * detailFactor);
-    var outB = ColorConverter.Saturate(0.5f + (avgB - 0.5f) * detailFactor);
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    var outR = ColorConverter.Saturate(pivot + (avgR - pivot) * detailFactor);
+    var outG = ColorConverter.Saturate(pivot + (avgG - pivot) * detailFactor);
+    var outB = ColorConverter.Saturate(pivot + (avgB - pivot) * detailFactor);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, avgA));
   }

@@ -55,7 +55,7 @@ public readonly struct SmartBlur(int radius = 3, float threshold = 0.2f) : IPixe
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new SmartBlurPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("SmartBlur requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -71,25 +71,6 @@ public readonly struct SmartBlur(int radius = 3, float threshold = 0.2f) : IPixe
       this._radius, this._threshold, sourceWidth, sourceHeight));
 
   public static SmartBlur Default => new(3, 0.2f);
-}
-
-file readonly struct SmartBlurPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct SmartBlurFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

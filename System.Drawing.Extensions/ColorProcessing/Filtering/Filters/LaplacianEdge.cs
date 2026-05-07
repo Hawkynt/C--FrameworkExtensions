@@ -30,8 +30,22 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Laplacian edge detection using [0,1,0;1,-4,1;0,1,0] kernel.
+/// Laplacian edge detection — 4-neighbour discrete second-derivative operator.
 /// </summary>
+/// <remarks>
+/// <para>Approximates the continuous Laplacian ∇²I = ∂²I/∂x² + ∂²I/∂y² with the standard
+/// 4-neighbour kernel:</para>
+/// <code>
+///   [ 0  1  0 ]
+///   [ 1 -4  1 ]
+///   [ 0  1  0 ]
+/// </code>
+/// <para>Detects rapid second-derivative changes (zero-crossings indicate edges); pure
+/// Laplacian is noise-sensitive and is normally combined with Gaussian pre-smoothing
+/// (see <see cref="LaplacianOfGaussian"/>). Reference: standard discrete-Laplacian
+/// formulation, e.g. R. C. Gonzalez &amp; R. E. Woods, "Digital Image Processing"
+/// (4th ed., Pearson 2018), §3.6.2.</para>
+/// </remarks>
 [FilterInfo("LaplacianEdge",
   Description = "Laplacian edge detection", Category = FilterCategory.Analysis)]
 public readonly struct LaplacianEdge : IPixelFilter {

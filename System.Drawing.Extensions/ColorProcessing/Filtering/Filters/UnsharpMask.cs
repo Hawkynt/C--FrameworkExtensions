@@ -29,11 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Unsharp mask sharpening: enhances edges by subtracting a Gaussian-blurred version.
-/// Supports configurable blur radius per axis.
-/// For radii 0-2, uses the efficient 5x5 NeighborWindow.
-/// For larger radii, uses frame-level random access for single-pass computation.
+/// Unsharp mask — classical sharpening via Gaussian-blur subtraction.
 /// </summary>
+/// <remarks>
+/// <para>The technique originates in 19th-century darkroom photography, where a defocused
+/// "mask" negative was sandwiched with the original to enhance edges. The digital
+/// formula is:</para>
+/// <code>
+///   sharpened = original + amount · (original − Gaussian(σ, original))
+/// </code>
+/// <para>The optional threshold suppresses sharpening of low-contrast areas (typically
+/// noise). Reference: e.g. R. C. Gonzalez &amp; R. E. Woods, "Digital Image Processing"
+/// (4th ed., Pearson 2018), §3.7.3; ImageMagick's <c>-unsharp radius×sigma+amount+threshold</c>
+/// uses the same formula.</para>
+/// </remarks>
 [FilterInfo("UnsharpMask",
   Description = "Unsharp mask sharpening with threshold", Category = FilterCategory.Enhancement)]
 public readonly struct UnsharpMask : IPixelFilter, IFrameFilter {

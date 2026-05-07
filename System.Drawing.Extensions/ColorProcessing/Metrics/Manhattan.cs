@@ -27,12 +27,14 @@ namespace Hawkynt.ColorProcessing.Metrics;
 #region 3-Component Float
 
 /// <summary>
-/// Manhattan (L1) distance metric for 3-component float color spaces.
+/// Manhattan (L1, taxicab) distance metric for 3-component float color spaces.
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// <para>Sum of absolute differences. Faster than Euclidean and suitable for
-/// some perceptual comparisons.</para>
+/// <para>L1 / taxicab norm: ΔE = Σ|aᵢ − bᵢ|. Originated as Hermann Minkowski's "ℓ₁
+/// metric" in 1910; named for the grid-walking distance on Manhattan's street layout.
+/// Faster than Euclidean (no multiply, no sqrt) and a reasonable approximation for
+/// nearest-neighbour palette matching when speed matters more than perceptual fit.</para>
 /// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
 /// <para>Maximum raw distance: 3.0.</para>
 /// </remarks>

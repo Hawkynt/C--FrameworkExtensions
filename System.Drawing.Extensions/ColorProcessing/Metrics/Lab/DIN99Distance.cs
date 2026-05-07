@@ -26,12 +26,16 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Metrics.Lab;
 
 /// <summary>
-/// Calculates the Euclidean distance in DIN99 color space.
+/// Calculates the DIN99 color-difference (Euclidean distance in DIN99 space).
 /// </summary>
 /// <remarks>
-/// <para>DIN99 is designed to be perceptually uniform, so Euclidean distance
-/// in this space is a good approximation of perceived color difference.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance of 100.</para>
+/// <para>DIN99 is a perceptually-uniform Lab remapping designed so that plain Euclidean
+/// distance approximates perceived colour difference. Standardised in DIN 6176:2001.
+/// Faster to compute than CIEDE2000 with comparable perceptual fit for moderate ΔE.</para>
+/// <para>Reference: G. Cui, M. R. Luo, B. Rigg, G. Roesler &amp; K. Witt, "Uniform colour
+/// spaces based on the DIN99 colour-difference formula", Color Research &amp;
+/// Application 27(4):282-290, 2002.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct DIN99Distance : IColorMetric<Din99F>, INormalizedMetric {
 

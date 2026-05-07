@@ -33,7 +33,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses edge direction detection via structure tensor (eigenvalue analysis).</para>
 /// <para>Interpolates along detected edge directions for sharp edge preservation.</para>
 /// <para>Falls back to bicubic interpolation in low-coherence areas.</para>
-/// <para>Based on "New Edge-Directed Interpolation" by Xin Li and Michael T. Orchard (2001).</para>
+/// <para>Reference: D. Zhou, X. Shen &amp; W. Dong, <i>Image zooming using directional cubic
+/// convolution interpolation</i>, IET Image Processing 6(6):627-634, 2012. The technique was
+/// inspired by Li &amp; Orchard's NEDI (2001) but uses local diagonal-direction detection.</para>
 /// </remarks>
 [ScalerInfo("DCCI", Author = "Xin Li, Michael T. Orchard", Year = 2001,
   Description = "Edge-directed cubic convolution interpolation", Category = ScalerCategory.Resampler)]

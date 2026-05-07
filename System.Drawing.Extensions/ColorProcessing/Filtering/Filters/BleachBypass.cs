@@ -25,6 +25,7 @@ using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -78,9 +79,11 @@ file readonly struct BleachBypassKernel<TWork, TKey, TPixel, TEncode>(float inte
     var dg = g + (lum - g) * 0.5f * intensity;
     var db = b + (lum - b) * 0.5f * intensity;
 
-    var or = (dr - 0.5f) * (1f + 0.5f * intensity) + 0.5f;
-    var og = (dg - 0.5f) * (1f + 0.5f * intensity) + 0.5f;
-    var ob = (db - 0.5f) * (1f + 0.5f * intensity) + 0.5f;
+    // Pivot on perceptual mid-grey — see Contrast.cs for the cross-domain bias rationale.
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    var or = (dr - pivot) * (1f + 0.5f * intensity) + pivot;
+    var og = (dg - pivot) * (1f + 0.5f * intensity) + pivot;
+    var ob = (db - pivot) * (1f + 0.5f * intensity) + pivot;
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
       ColorConverter.Saturate(or),

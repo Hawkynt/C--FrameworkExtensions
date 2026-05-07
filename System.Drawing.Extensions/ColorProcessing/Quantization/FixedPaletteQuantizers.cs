@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 
 namespace Hawkynt.ColorProcessing.Quantization;
@@ -67,7 +68,10 @@ public struct WebSafeQuantizer : IQuantizer {
 
       // Subsample the 6×6×6 cube to get well-distributed colors
       // Calculate optimal levels per channel for requested color count
-      var levelsPerChannel = (int)Math.Ceiling(Math.Cbrt(colorCount));
+      // Integer cube-root ceiling — `Math.Cbrt(colorCount)` is platform-dependent
+      // (e.g. net48 may yield 3.9999... vs net6+ exact 4.0), which flips ceiling
+      // and produces different palette structures across TFMs.
+      var levelsPerChannel = DeterministicMath.IntCbrtCeil(colorCount);
       levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 6));
 
       var result = new List<TWork>(colorCount);
@@ -226,7 +230,8 @@ public struct Vga256Quantizer : IQuantizer {
       // Add evenly distributed colors from web-safe portion (indices 16-231)
       var webSafeCount = Math.Max(0, colorCount - 6); // Reserve 6 slots for EGA primaries + grays
       if (webSafeCount > 0) {
-        var levelsPerChannel = (int)Math.Ceiling(Math.Cbrt(webSafeCount));
+        // Integer cube-root ceiling — see WebSafeQuantizer for rationale.
+        var levelsPerChannel = DeterministicMath.IntCbrtCeil(webSafeCount);
         levelsPerChannel = Math.Max(2, Math.Min(levelsPerChannel, 6));
         var stepIndices = _GetEvenlySpacedIndices(6, levelsPerChannel);
 
@@ -321,10 +326,19 @@ public struct Mac8BitQuantizer : IQuantizer {
       // Subsample the 8×8×4 cube to get well-distributed colors
       // Calculate optimal levels for each channel based on requested color count
       // Target: rLevels * gLevels * bLevels ≈ colorCount, with r:g:b ratio similar to 8:8:4
-      var totalRatio = Math.Cbrt(colorCount);
-      var rLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 1.26), RgLevels)); // 8/6.35 ≈ 1.26
-      var gLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 1.26), RgLevels));
-      var bLevels = Math.Max(2, Math.Min((int)Math.Ceiling(totalRatio * 0.63), BlueLevels)); // 4/6.35 ≈ 0.63
+      //
+      // Original float formula (platform-dependent via Math.Cbrt):
+      //   rLevels = gLevels = ceil( cbrt(n) * 1.26 )   // 8/6.35
+      //   bLevels =          ceil( cbrt(n) * 0.63 )   // 4/6.35
+      //
+      // Integer-only equivalent (deterministic across TFMs):
+      //   1.26³ ≈ 2.0  → rLevels = smallest k with k³ ≥ 2·n
+      //   0.63³ ≈ 0.25 → bLevels = smallest k with k³ ≥ n/4  ⇔  4·k³ ≥ n
+      var rCeil = DeterministicMath.IntCbrtCeil(2 * colorCount);
+      var bCeil = DeterministicMath.IntCbrtCeil((colorCount + 3) / 4); // ceil(n/4)
+      var rLevels = Math.Max(2, Math.Min(rCeil, RgLevels));
+      var gLevels = Math.Max(2, Math.Min(rCeil, RgLevels));
+      var bLevels = Math.Max(2, Math.Min(bCeil, BlueLevels));
 
       var result = new List<TWork>(colorCount);
       var rIndices = _GetEvenlySpacedIndices(RgLevels, rLevels);

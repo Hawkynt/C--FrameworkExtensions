@@ -27,14 +27,16 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Lab;
 
 /// <summary>
-/// Represents a color in CIE L*a*b* color space with alpha and float components.
+/// Represents a color in CIE 1976 L*a*b* color space with straight alpha — the 4F variant
+/// of <see cref="LabF"/>.
 /// </summary>
 /// <remarks>
-/// L (lightness): 0-100
-/// A (green-red): approximately -128 to +127
-/// B (blue-yellow): approximately -128 to +127
-/// Alpha: 0.0-1.0 (straight, non-premultiplied)
-/// Uses D65 illuminant as reference white point.
+/// <para>CIELAB is the CIE's perceptually-uniform colour space (CIE 015:2018 §8.2.1.1);
+/// see <see cref="LabF"/> for the colorimetric formulas. This variant carries a straight
+/// (non-premultiplied) alpha channel for transparent-image pipelines; chromatic math is
+/// identical and alpha is preserved exactly through forward/inverse projection.</para>
+/// <para>L (lightness): 0-100. a (green-red): approximately -128 to +127.
+/// b (blue-yellow): approximately -128 to +127. Alpha: 0.0-1.0 (straight).</para>
 /// </remarks>
 /// <param name="L">Lightness component (0-100).</param>
 /// <param name="A">Green-red component (approximately -128 to +127).</param>

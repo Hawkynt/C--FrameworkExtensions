@@ -24,6 +24,7 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -76,9 +77,11 @@ file readonly struct BrightnessContrastKernel<TWork, TKey, TPixel, TEncode>(floa
     g += brightness;
     b += brightness;
     var factor = 1f + contrast;
-    r = ColorConverter.Saturate((r - 0.5f) * factor + 0.5f);
-    g = ColorConverter.Saturate((g - 0.5f) * factor + 0.5f);
-    b = ColorConverter.Saturate((b - 0.5f) * factor + 0.5f);
+    // Pivot on perceptual mid-grey — see Contrast.cs for the cross-domain bias rationale.
+    var pivot = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    r = ColorConverter.Saturate((r - pivot) * factor + pivot);
+    g = ColorConverter.Saturate((g - pivot) * factor + pivot);
+    b = ColorConverter.Saturate((b - pivot) * factor + pivot);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

@@ -30,6 +30,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// </summary>
 /// <remarks>
 /// <para>Supports multiple selection strategies: Random, WeightedRandom, RoundRobin, Luminance, and BlueNoise.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Generalisation of the
+/// closest-vs-second-closest selection used in pattern ditherers (Knoll, Yliluoma).</para>
 /// </remarks>
 [Ditherer("N-Closest", Description = "Selection from N closest palette colors", Type = DitheringType.Random)]
 public readonly struct NClosestDitherer : IDitherer {

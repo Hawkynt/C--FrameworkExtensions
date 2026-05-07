@@ -36,7 +36,13 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Mosaic tile effect with dark grout lines between tiles", Category = FilterCategory.Artistic)]
 public readonly struct Mosaic(int tileSize, int groutWidth = 2) : IPixelFilter, IFrameFilter {
   private readonly int _tileSize = Math.Max(2, tileSize);
-  private readonly int _groutWidth = Math.Max(0, groutWidth);
+  // Clamp grout to (tileSize-1)/2 — the grout test in MosaicFrameKernel.Resample
+  // marks a pixel as grout when localX < groutWidth OR localX >= tileSize-groutWidth
+  // (and same for Y). If 2*groutWidth >= tileSize the two grout bands meet/overlap
+  // and every pixel is grout, producing an all-grey image (e.g. Mosaic(2,2) → fully
+  // dark). Clamping to (tileSize-1)/2 guarantees at least one row/column of tile
+  // pixels exists between grout bands for any tileSize >= 2.
+  private readonly int _groutWidth = Math.Min(Math.Max(0, groutWidth), (Math.Max(2, tileSize) - 1) / 2);
 
   public Mosaic() : this(15, 2) { }
 
@@ -55,7 +61,7 @@ public readonly struct Mosaic(int tileSize, int groutWidth = 2) : IPixelFilter, 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new MosaicPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Mosaic requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -71,25 +77,6 @@ public readonly struct Mosaic(int tileSize, int groutWidth = 2) : IPixelFilter, 
       this._tileSize, this._groutWidth, sourceWidth, sourceHeight));
 
   public static Mosaic Default => new();
-}
-
-file readonly struct MosaicPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct MosaicFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

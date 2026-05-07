@@ -39,6 +39,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Very low sidelobe response, making it excellent for reducing aliasing artifacts.</para>
 /// <para>Named after Ralph Blackman who developed this window function in 1958.</para>
+/// <para>Reference: R. B. Blackman &amp; J. W. Tukey, <i>The Measurement of Power Spectra</i>,
+/// Dover, 1958. The exact-Blackman window has -58 dB peak sidelobe.</para>
+/// <code>w(x) = 0.42 + 0.5·cos(πx/N) + 0.08·cos(2πx/N);  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Blackman", Author = "Ralph Blackman", Year = 1958,
   Description = "Blackman-windowed sinc resampler with very low sidelobes", Category = ScalerCategory.Resampler)]
@@ -113,6 +116,9 @@ public readonly struct Blackman : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Cosine taper window, commonly used in audio and spectral analysis.</para>
 /// <para>Named after Julius von Hann who developed this window function in 1903.</para>
+/// <para>Reference: R. B. Blackman &amp; J. W. Tukey, <i>The Measurement of Power Spectra</i>,
+/// Dover, 1958, §B.5 (raised-cosine window).</para>
+/// <code>w(x) = ½(1 + cos(πx/N));  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Hann", Author = "Julius von Hann", Year = 1903,
   Description = "Hann-windowed sinc resampler with cosine taper", Category = ScalerCategory.Resampler)]
@@ -187,6 +193,9 @@ public readonly struct Hann : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Similar to Hann but with less sidelobe suppression and a non-zero edge value.</para>
 /// <para>Named after Richard Hamming who developed this window function in 1977.</para>
+/// <para>Reference: R. W. Hamming, <i>Digital Filters</i>, Prentice-Hall, 1977. Tuned variant
+/// of the Hann window (0.54 / 0.46 vs 0.5 / 0.5) that nulls the first sidelobe.</para>
+/// <code>w(x) = 0.54 + 0.46·cos(πx/N);  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Hamming", Author = "Richard Hamming", Year = 1977,
   Description = "Hamming-windowed sinc resampler", Category = ScalerCategory.Resampler)]
@@ -262,6 +271,9 @@ public readonly struct Hamming : IKernelResampler, IResamplerWithSafePath {
 /// <para>Adjustable window using modified Bessel function I₀ with parameter β.</para>
 /// <para>Higher β values give better sidelobe suppression at the cost of wider main lobe.</para>
 /// <para>Named after James Kaiser who developed this window function in 1974.</para>
+/// <para>Reference: J. F. Kaiser, "Nonrecursive digital filter design using the I₀-sinh window
+/// function", in <i>Proc. IEEE Int. Symp. Circuits and Systems</i>, 1974, pp. 20-23.</para>
+/// <code>w(x) = I₀(β·√(1-(x/N)²)) / I₀(β);  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Kaiser", Author = "James Kaiser", Year = 1974,
   Description = "Kaiser-windowed sinc resampler with adjustable β parameter", Category = ScalerCategory.Resampler)]
@@ -356,6 +368,9 @@ public readonly struct Kaiser : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Simple parabolic window with decent sidelobe suppression.</para>
 /// <para>Named after Peter Welch who developed this window function in 1967.</para>
+/// <para>Reference: P. D. Welch, "The use of fast Fourier transform for the estimation of power
+/// spectra", <i>IEEE Trans. Audio and Electroacoustics</i> 15(2):70-73, 1967.</para>
+/// <code>w(x) = 1 − (x/N)²;  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Welch", Author = "Peter Welch", Year = 1967,
   Description = "Welch-windowed sinc resampler with parabolic taper", Category = ScalerCategory.Resampler)]
@@ -430,6 +445,9 @@ public readonly struct Welch : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>Simple triangular window with linear taper.</para>
 /// <para>Named after M.S. Bartlett who developed this window function in 1950.</para>
+/// <para>Reference: M. S. Bartlett, "Periodogram analysis and continuous spectra", <i>Biometrika</i>
+/// 37(1/2):1-16, 1950.</para>
+/// <code>w(x) = 1 − |x|/N;  f(x) = sinc(x)·w(x) for |x| &lt; N</code>
 /// </remarks>
 [ScalerInfo("Bartlett", Author = "M.S. Bartlett", Year = 1950,
   Description = "Bartlett-windowed sinc resampler with triangular taper", Category = ScalerCategory.Resampler)]
@@ -504,6 +522,9 @@ public readonly struct Bartlett : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>4-term cosine sum with very low sidelobes.</para>
 /// <para>Coefficients: a₀=0.355768, a₁=0.487396, a₂=0.144232, a₃=0.012604.</para>
+/// <para>Reference: A. H. Nuttall, "Some windows with very good sidelobe behavior",
+/// <i>IEEE Trans. Acoustics, Speech, and Signal Processing</i> 29(1):84-91, 1981.
+/// Continuous-first-derivative variant of Blackman-Harris (-93 dB sidelobe).</para>
 /// </remarks>
 [ScalerInfo("Nuttal", Year = 1981,
   Description = "Nuttal-windowed sinc resampler with 4-term cosine sum", Category = ScalerCategory.Resampler)]
@@ -578,6 +599,9 @@ public readonly struct Nuttal : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>4-term cosine sum combining Blackman and Nuttal characteristics.</para>
 /// <para>Coefficients: a₀=0.3635819, a₁=0.4891775, a₂=0.1365995, a₃=0.0106411.</para>
+/// <para>Reference: A. H. Nuttall, "Some windows with very good sidelobe behavior",
+/// <i>IEEE Trans. ASSP</i> 29(1):84-91, 1981 (variant minimising sidelobe energy
+/// rather than peak; -98 dB peak sidelobe).</para>
 /// </remarks>
 [ScalerInfo("BlackmanNuttal", Year = 1981,
   Description = "Blackman-Nuttal-windowed sinc resampler", Category = ScalerCategory.Resampler)]
@@ -652,6 +676,9 @@ public readonly struct BlackmanNuttal : IKernelResampler, IResamplerWithSafePath
 /// <remarks>
 /// <para>4-term cosine sum with minimum sidelobe level.</para>
 /// <para>Coefficients: a₀=0.35875, a₁=0.48829, a₂=0.14128, a₃=0.01168.</para>
+/// <para>Reference: F. J. Harris, "On the use of windows for harmonic analysis with the
+/// discrete Fourier transform", <i>Proceedings of the IEEE</i> 66(1):51-83, 1978
+/// (-92 dB minimum-sidelobe 4-term variant).</para>
 /// </remarks>
 [ScalerInfo("BlackmanHarris", Author = "Fredric Harris", Year = 1978,
   Description = "Blackman-Harris-windowed sinc resampler with minimum sidelobes", Category = ScalerCategory.Resampler)]
@@ -727,6 +754,10 @@ public readonly struct BlackmanHarris : IKernelResampler, IResamplerWithSafePath
 /// <para>5-term cosine sum with very flat passband response.</para>
 /// <para>Excellent for amplitude measurement applications.</para>
 /// <para>Coefficients: a₀=1.0, a₁=1.93, a₂=1.29, a₃=0.388, a₄=0.0322.</para>
+/// <para>Reference: 5-term flat-top window family commonly attributed to Hewlett-Packard's
+/// 1990s spectrum-analyser firmware (G. Heinzel et al., "Spectrum and spectral density
+/// estimation by the DFT including a comprehensive list of window functions and some
+/// new flat-top windows", Max-Planck-Institut für Gravitationsphysik, 2002, §10).</para>
 /// </remarks>
 [ScalerInfo("FlatTop", Year = 1990,
   Description = "FlatTop-windowed sinc resampler with flat passband", Category = ScalerCategory.Resampler)]

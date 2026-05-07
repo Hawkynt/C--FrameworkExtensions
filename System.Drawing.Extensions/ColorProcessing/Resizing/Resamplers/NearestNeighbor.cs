@@ -36,6 +36,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>The fastest resampler with no interpolation.</para>
 /// <para>Produces blocky output but preserves hard edges.</para>
+/// <para>Reference: Standard zero-order-hold reconstruction; see G. Wolberg, <i>Digital Image
+/// Warping</i>, IEEE Computer Society Press, 1990 §5.4.1, or Wikipedia
+/// "Nearest-neighbor interpolation".</para>
+/// <code>f(x) = 1 if |x| &lt; 0.5, else 0  (half-open window per lib convention)</code>
 /// </remarks>
 [ScalerInfo("Nearest Neighbor", Author = "Standard Algorithm",
   Description = "Fastest resampling with no interpolation", Category = ScalerCategory.Resampler)]

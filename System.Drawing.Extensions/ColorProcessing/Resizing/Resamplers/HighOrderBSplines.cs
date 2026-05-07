@@ -45,6 +45,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline2"/>.
 /// </para>
+/// <para>Reference: I. J. Schoenberg, <i>Cardinal Spline Interpolation</i>, SIAM, 1973;
+/// see also Unser, Aldroubi &amp; Eden, <i>B-spline signal processing</i>, IEEE Trans. Signal
+/// Processing 41(2), 1993. B-splines of order n are obtained by n-fold convolution of the box.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 2", Year = 1978,
   Description = "Quadratic B-spline interpolation (degree 2)", Category = ScalerCategory.Resampler)]
@@ -112,6 +115,8 @@ public readonly struct BSpline2 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline4"/>.
 /// </para>
+/// <para>Reference: see <see cref="BSpline2"/> for the B-spline derivation. Used as Parzen window
+/// in spectral density estimation; ImageMagick exposes it under that name.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 4", Year = 1978,
   Description = "Quartic B-spline interpolation (degree 4) / Parzen window", Category = ScalerCategory.Resampler)]
@@ -176,6 +181,7 @@ public readonly struct BSpline4 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline5"/>.
 /// </para>
+/// <para>Reference: see <see cref="BSpline2"/>.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 5", Year = 1978,
   Description = "Quintic B-spline interpolation (degree 5)", Category = ScalerCategory.Resampler)]
@@ -240,6 +246,7 @@ public readonly struct BSpline5 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline7"/>.
 /// </para>
+/// <para>Reference: see <see cref="BSpline2"/>.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 7", Year = 1978,
   Description = "Septic B-spline interpolation (degree 7)", Category = ScalerCategory.Resampler)]
@@ -304,6 +311,7 @@ public readonly struct BSpline7 : IKernelResampler, IResamplerWithSafePath {
 /// <b>Note:</b> For proper interpolation, this filter requires prefiltering
 /// the source image with <see cref="PrefilterInfo.BSpline9"/>.
 /// </para>
+/// <para>Reference: see <see cref="BSpline2"/>.</para>
 /// </remarks>
 [ScalerInfo("B-Spline 9", Year = 1978,
   Description = "Nonic B-spline interpolation (degree 9)", Category = ScalerCategory.Resampler)]

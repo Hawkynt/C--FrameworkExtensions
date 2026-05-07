@@ -51,6 +51,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// resampler does not implement <see cref="IKernelResampler"/> — the kernel chart is hidden in
 /// consumer UIs that test for it.
 /// </para>
+/// <para>Reference: L. Williams, <i>Pyramidal parametrics</i>, ACM SIGGRAPH Computer Graphics
+/// 17(3):1-11, 1983 (mip-map definition and trilinear blend); see also OpenGL ES spec
+/// <c>GL_LINEAR_MIPMAP_LINEAR</c> filtering.</para>
 /// </remarks>
 [ScalerInfo("Trilinear", Description = "Two-level mipmap pyramid blend — GPU-style trilinear filter",
   Category = ScalerCategory.Resampler)]

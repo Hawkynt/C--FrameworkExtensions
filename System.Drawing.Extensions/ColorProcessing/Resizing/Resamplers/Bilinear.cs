@@ -37,6 +37,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Simple and fast interpolation using 4 neighboring pixels.</para>
 /// <para>Produces smooth output but can blur sharp edges.</para>
+/// <para>Reference: Standard textbook tensor-product linear interpolation; see e.g. Press et al.,
+/// <i>Numerical Recipes</i> §3.6, or Wikipedia "Bilinear interpolation". Public domain.</para>
+/// <code>f(x, y) = (1-fx)(1-fy)·c00 + fx(1-fy)·c10 + (1-fx)fy·c01 + fx·fy·c11</code>
 /// </remarks>
 [ScalerInfo("Bilinear", Author = "Standard Algorithm",
   Description = "2x2 weighted average interpolation", Category = ScalerCategory.Resampler)]

@@ -27,20 +27,25 @@ namespace Hawkynt.ColorProcessing.ColorMath;
 /// </summary>
 /// <typeparam name="TColor">The color type implementing <see cref="IColorSpace3B{TColor}"/>.</typeparam>
 /// <remarks>
-/// <para>Uses 32-bit integer accumulation - safe for up to ~16 million weighted samples.</para>
+/// <para>Uses 64-bit (long) accumulators — safe well past 4 G weighted-byte samples (a 65535×65535
+/// image with weight 256 maximally accumulates ~7e14, well within long range).</para>
+/// <para>Originally used int with documented "~16 M weighted samples" — but the float-AddMul
+/// scales weights by 256, so each addend is byte (255) × int-weight (256) = 65280, hitting
+/// int.MaxValue at ~33 K samples (1000× lower than documented). Long-widening eliminates
+/// the silent-overflow class entirely with no measurable perf cost on 64-bit JITs.</para>
 /// <para>No float arithmetic is used. Integer division with rounding in <see cref="Result"/>.</para>
 /// </remarks>
 public struct Accum3I<TColor> : IAccumInt<Accum3I<TColor>, TColor>, IAccum<Accum3I<TColor>, TColor>
   where TColor : unmanaged, IColorSpace3B<TColor> {
 
-  private int _c1, _c2, _c3, _weightSum;
+  private long _c1, _c2, _c3, _weightSum;
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void AddMul(in TColor color, int weight) {
-    this._c1 += color.C1 * weight;
-    this._c2 += color.C2 * weight;
-    this._c3 += color.C3 * weight;
+    this._c1 += (long)color.C1 * weight;
+    this._c2 += (long)color.C2 * weight;
+    this._c3 += (long)color.C3 * weight;
     this._weightSum += weight;
   }
 
@@ -80,21 +85,24 @@ public struct Accum3I<TColor> : IAccumInt<Accum3I<TColor>, TColor>, IAccum<Accum
 /// </summary>
 /// <typeparam name="TColor">The color type implementing <see cref="IColorSpace4B{TColor}"/>.</typeparam>
 /// <remarks>
-/// <para>Uses 32-bit integer accumulation - safe for up to ~16 million weighted samples.</para>
+/// <para>Uses 64-bit (long) accumulators — see <see cref="Accum3I{TColor}"/> for the rationale.
+/// Originally documented as "~16 M weighted samples" with int storage; actual int.MaxValue
+/// hit at ~33 K samples once `AddMul(float)` rescaled weight by 256. Long widening eliminates
+/// the silent-overflow class.</para>
 /// <para>No float arithmetic is used. Integer division with rounding in <see cref="Result"/>.</para>
 /// </remarks>
 public struct Accum4I<TColor> : IAccumInt<Accum4I<TColor>, TColor>, IAccum<Accum4I<TColor>, TColor>
   where TColor : unmanaged, IColorSpace4B<TColor> {
 
-  private int _c1, _c2, _c3, _a, _weightSum;
+  private long _c1, _c2, _c3, _a, _weightSum;
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void AddMul(in TColor color, int weight) {
-    this._c1 += color.C1 * weight;
-    this._c2 += color.C2 * weight;
-    this._c3 += color.C3 * weight;
-    this._a += color.A * weight;
+    this._c1 += (long)color.C1 * weight;
+    this._c2 += (long)color.C2 * weight;
+    this._c3 += (long)color.C3 * weight;
+    this._a += (long)color.A * weight;
     this._weightSum += weight;
   }
 
@@ -136,22 +144,22 @@ public struct Accum4I<TColor> : IAccumInt<Accum4I<TColor>, TColor>, IAccum<Accum
 /// </summary>
 /// <typeparam name="TColor">The color type implementing <see cref="IColorSpace5B{TColor}"/>.</typeparam>
 /// <remarks>
-/// <para>Uses 32-bit integer accumulation - safe for up to ~16 million weighted samples.</para>
+/// <para>Uses 64-bit (long) accumulators — see <see cref="Accum3I{TColor}"/> for the rationale.</para>
 /// <para>No float arithmetic is used. Integer division with rounding in <see cref="Result"/>.</para>
 /// </remarks>
 public struct Accum5I<TColor> : IAccumInt<Accum5I<TColor>, TColor>, IAccum<Accum5I<TColor>, TColor>
   where TColor : unmanaged, IColorSpace5B<TColor> {
 
-  private int _c1, _c2, _c3, _c4, _a, _weightSum;
+  private long _c1, _c2, _c3, _c4, _a, _weightSum;
 
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public void AddMul(in TColor color, int weight) {
-    this._c1 += color.C1 * weight;
-    this._c2 += color.C2 * weight;
-    this._c3 += color.C3 * weight;
-    this._c4 += color.C4 * weight;
-    this._a += color.A * weight;
+    this._c1 += (long)color.C1 * weight;
+    this._c2 += (long)color.C2 * weight;
+    this._c3 += (long)color.C3 * weight;
+    this._c4 += (long)color.C4 * weight;
+    this._a += (long)color.A * weight;
     this._weightSum += weight;
   }
 

@@ -25,11 +25,14 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Metrics;
 
 /// <summary>
-/// Chebyshev (L-infinity) distance metric for 3-component color spaces.
+/// Chebyshev (L∞, chessboard) distance metric for 3-component color spaces.
 /// </summary>
 /// <typeparam name="TKey">The key color type implementing IColorSpace3F.</typeparam>
 /// <remarks>
-/// <para>Maximum absolute difference. Measures the worst-case channel difference.</para>
+/// <para>L∞ / chessboard norm: ΔE = max|aᵢ − bᵢ|. Named for Pafnuty Chebyshev (the
+/// related uniform-approximation theory). Useful when a single dominant-channel
+/// difference should drive the colour-distance metric — e.g. red-channel mismatches
+/// matter regardless of green/blue agreement.</para>
 /// <para>Returns UNorm32 normalized distance where UNorm32.One = max distance.</para>
 /// <para>Maximum raw distance: 1.0.</para>
 /// </remarks>

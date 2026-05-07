@@ -26,17 +26,18 @@ using Hawkynt.ColorProcessing.Metrics;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Variance Cut color quantizer using maximum variance splitting.
+/// Variance Cut color quantizer — Wan-Wong-Prusinkiewicz variance-priority cut.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Recursively splits the color cube with the highest sum of squared error (SSE),
-/// subdividing along the axis with maximum variance.
-/// </para>
-/// <para>
-/// This produces better visual quality than simple median cut by prioritizing
-/// regions with the most color variation.
-/// </para>
+/// <para>Recursively splits the colour cube, but unlike <see cref="MedianCutQuantizer"/>
+/// (which always picks the box with the longest axis), Variance Cut picks the box
+/// with the highest weighted SSE (sum of squared error) and splits it along its
+/// principal-variance axis at the median position. Tends to allocate more palette
+/// slots to high-variance regions than Median Cut.</para>
+/// <para>Reference: S. J. Wan, P. Wong &amp; P. Prusinkiewicz, "An algorithm for
+/// multidimensional data clustering", ACM Trans. Mathematical Software 14(2):153-162,
+/// 1988. Conceptually similar to (but simpler than) Wu's variance-reduction
+/// optimisation.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Variance, DisplayName = "Variance Cut", QualityRating = 7)]
 public struct VarianceCutQuantizer : IQuantizer {

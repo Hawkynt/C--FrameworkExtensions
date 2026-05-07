@@ -74,7 +74,7 @@ public readonly struct Fisheye : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new FisheyePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Fisheye requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -90,25 +90,6 @@ public readonly struct Fisheye : IPixelFilter, IFrameFilter {
       this._strength, sourceWidth, sourceHeight));
 
   public static Fisheye Default => new();
-}
-
-file readonly struct FisheyePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct FisheyeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -167,8 +148,8 @@ file readonly struct FisheyeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     } else if (r > 1f) {
       // Outside unit disk → clamp to nearest valid sample on circle edge.
       var inv = r > 0f ? 1f / r : 0f;
-      sx = (int)(cx + dx * inv * maxR);
-      sy = (int)(cy + dy * inv * maxR);
+      sx = (int)Math.Floor(cx + dx * inv * maxR);
+      sy = (int)Math.Floor(cy + dy * inv * maxR);
       if (sx < 0) sx = 0; else if (sx >= sourceWidth) sx = sourceWidth - 1;
       if (sy < 0) sy = 0; else if (sy >= sourceHeight) sy = sourceHeight - 1;
     } else {

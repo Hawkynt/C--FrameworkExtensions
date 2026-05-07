@@ -27,14 +27,27 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
 
 /// <summary>
-/// Represents a color in the DIN99 color space with float components.
+/// Represents a color in the DIN99 perceptually-uniform color space with float components.
 /// </summary>
 /// <remarks>
-/// DIN99 is a German standard (DIN 6176) optimized for small color differences.
-/// It transforms Lab coordinates into a more perceptually uniform space.
-/// L (lightness): 0 to ~105.509
-/// A (a99): approximately -40 to +40
-/// B (b99): approximately -40 to +40
+/// <para>DIN99 is a non-linear remapping of CIELAB designed to give better perceptual
+/// uniformity than CIELAB across small-to-moderate colour differences. Standardised in
+/// DIN 6176:2001. The Euclidean distance in DIN99 is the DIN99 colour-difference, an
+/// industrial alternative to CIEDE2000.</para>
+/// <code>
+///   L99 = (100/ln(1.0039)) · ln(1 + 0.0039·L*)
+///   e   =  a*·cos(16°) + b*·sin(16°)
+///   f   =  0.7 · (-a*·sin(16°) + b*·cos(16°))
+///   G   =  sqrt(e² + f²)
+///   C99 = ln(1 + 0.045·G) / (0.045·0.7)
+///   h99 = atan2(f, e) + 16°
+///   a99 = C99·cos(h99);  b99 = C99·sin(h99)
+/// </code>
+/// <para>Reference: G. Cui, M. R. Luo, B. Rigg, G. Roesler &amp; K. Witt,
+/// "Uniform colour spaces based on the DIN99 colour-difference formula",
+/// Color Research &amp; Application 27(4):282-290, 2002. DIN 6176:2001.</para>
+/// <para>L (lightness): 0 to ~105.509. a99: approximately -40 to +40.
+/// b99: approximately -40 to +40.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0 to ~105.509).</param>
 /// <param name="A">a99 component (approximately -40 to +40).</param>

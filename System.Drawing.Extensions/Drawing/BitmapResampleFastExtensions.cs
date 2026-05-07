@@ -238,7 +238,13 @@ public static class BitmapResampleFastExtensions {
     var stepY_q16 = ((long)srcHeight << 16) / targetHeight;
 
     // Total weight per destination pixel = stepX_q16 * stepY_q16 (Q32).
+    // Guard against pathological-ratio long-overflow: stepX/stepY individually fit in 47 bits
+    // (16-bit fractional × max-int dimension) but their product can hit 94 bits. With Bitmap
+    // dimensions capped at ~2^31 (int) the realistic upper bound is 2^62, well within long —
+    // but a defensive negative-check catches future input-validation regressions cheaply.
     var totalWeight = stepX_q16 * stepY_q16;
+    if (totalWeight <= 0)
+      throw new ArgumentOutOfRangeException(nameof(source), "Source dimensions × ratio overflow long Q32 weight; reduce source size or target ratio.");
     // Round-to-nearest constant for the final divide.
     var roundDivide = totalWeight >> 1;
 

@@ -33,6 +33,9 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Analyzes image for color complexity, edge density, gradient smoothness, and noise.</para>
 /// <para>Supports multiple strategies: Quality, Balanced, Performance, and Smart selection.</para>
 /// <para>Delegates to appropriate ditherer based on analysis results.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Wraps existing reference-grounded
+/// ditherers (Floyd-Steinberg, Atkinson, Bayer, Ordered) selected via a heuristic scoring of
+/// image characteristics.</para>
 /// </remarks>
 [Ditherer("Adaptive", Description = "Auto-selects optimal dithering algorithm based on image analysis", Type = DitheringType.Custom)]
 public readonly struct AdaptiveDitherer : IDitherer {

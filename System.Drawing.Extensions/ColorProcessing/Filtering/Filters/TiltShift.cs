@@ -59,7 +59,7 @@ public readonly struct TiltShift(float focusPosition, float focusWidth = 0.2f, i
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new TiltShiftPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("TiltShift requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -75,25 +75,6 @@ public readonly struct TiltShift(float focusPosition, float focusWidth = 0.2f, i
       this._focusPosition, this._focusWidth, this._blurRadius, sourceWidth, sourceHeight));
 
   public static TiltShift Default => new();
-}
-
-file readonly struct TiltShiftPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct TiltShiftFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

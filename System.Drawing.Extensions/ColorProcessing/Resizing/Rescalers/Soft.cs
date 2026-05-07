@@ -106,7 +106,11 @@ file readonly struct Soft4xKernel<TWork, TKey, TPixel, TDistance, TLerp, TEncode
   public int ScaleX => 4;
   public int ScaleY => 4;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  // Workaround: NoInlining on net6 — under the net6 RyuJIT, AggressiveInlining of this
+  // kernel into ScalerPipeline's hot loop triggers an AccessViolation on the
+  // BoundaryPixelTests.Rescaler_BrightLeftColumn_PreservesNearLeft_4xSoft path. Net8+ JITs
+  // emit safe code regardless. NoInlining sacrifices a small perf cost to keep net6 stable.
+  [MethodImpl(MethodImplOptions.NoInlining)]
   public unsafe void Scale(
     in NeighborWindow<TWork, TKey> window,
     TPixel* dest,

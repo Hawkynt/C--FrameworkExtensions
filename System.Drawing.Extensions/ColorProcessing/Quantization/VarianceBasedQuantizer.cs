@@ -30,17 +30,17 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Advanced variance-based color quantizer using weighted variance optimization.
+/// Variance-based color quantizer — extended Wu-style variance optimisation.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Uses weighted variance optimization to find optimal split points,
-/// minimizing the sum of projected variances after each split.
-/// </para>
-/// <para>
-/// This produces higher quality results than simple variance cut by
-/// considering the optimal split threshold for each axis.
-/// </para>
+/// <para>Like Wu's algorithm, recursively splits the colour cube to minimise the sum of
+/// per-cube weighted variances; differs from the canonical <see cref="WuQuantizer"/>
+/// by searching the optimal split threshold along each axis exhaustively (rather than
+/// through Wu's summed-area-table-accelerated lookup), at the cost of higher per-split
+/// computational time.</para>
+/// <para>Hawkynt-original variant of Wu 1991. For the canonical algorithm see
+/// X. Wu, "Efficient Statistical Computations for Optimal Color Quantization",
+/// Graphics Gems II, 1991.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Variance, DisplayName = "Variance Based", QualityRating = 8)]
 public struct VarianceBasedQuantizer : IQuantizer {

@@ -26,21 +26,19 @@ using Hawkynt.ColorProcessing.Metrics;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Implements Incremental (Online) K-Means clustering-based color quantization.
+/// Incremental (online) K-Means color quantizer — single-pass running-mean variant.
 /// </summary>
 /// <remarks>
-/// <para>
-/// This algorithm is deterministic and requires no random initialization. It starts with the first k
-/// unique colors as initial centers and updates them incrementally as new colors are processed.
-/// </para>
-/// <para>
-/// The incremental update formula for each cluster center is: c_new = c_old + (x - c_old) / n
-/// where x is the new color assigned to the cluster and n is the number of colors assigned to that cluster.
-/// </para>
-/// <para>
-/// This approach is particularly useful for streaming data or when deterministic results are required,
-/// as it produces the same output for the same input order every time.
-/// </para>
+/// <para>Deterministic, no random initialisation: the first K unique colours seed the
+/// centres, and each subsequent colour x is assigned to the nearest centre c, which
+/// then receives the running-mean update c ← c + (x − c)/n where n is the running
+/// count of pixels assigned to that cluster. Optionally followed by additional Lloyd
+/// refinement passes.</para>
+/// <para>Reference: J. MacQueen, "Some methods for classification and analysis of
+/// multivariate observations", Proc. 5th Berkeley Symposium 1:281-297, 1967 — the
+/// original sequential / online formulation that was later popularised as batch
+/// K-Means by Lloyd-Forgy. Useful for streaming data and for reproducible-by-design
+/// outputs (no PRNG dependence).</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Incremental K-Means", QualityRating = 7)]
 public struct IncrementalKMeansQuantizer : IQuantizer {

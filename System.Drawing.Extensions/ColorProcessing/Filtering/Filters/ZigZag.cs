@@ -52,7 +52,7 @@ public readonly struct ZigZag(float amount = 5f, int ridges = 5) : IPixelFilter,
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new ZigZagPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("ZigZag requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -68,25 +68,6 @@ public readonly struct ZigZag(float amount = 5f, int ridges = 5) : IPixelFilter,
       this._amount, this._ridges, sourceWidth, sourceHeight));
 
   public static ZigZag Default => new(5f, 5);
-}
-
-file readonly struct ZigZagPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct ZigZagFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -119,8 +100,8 @@ file readonly struct ZigZagFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var angle = (float)Math.Atan2(dy, dx);
     var halfMax = Math.Max(1, Math.Max(sourceWidth, sourceHeight) / 2);
     var offset = amount * (float)Math.Sin(dist * ridges * 2.0 * Math.PI / halfMax);
-    var sx = (int)(destX + (float)Math.Cos(angle) * offset);
-    var sy = (int)(destY + (float)Math.Sin(angle) * offset);
+    var sx = (int)Math.Floor(destX + (float)Math.Cos(angle) * offset);
+    var sy = (int)Math.Floor(destY + (float)Math.Sin(angle) * offset);
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

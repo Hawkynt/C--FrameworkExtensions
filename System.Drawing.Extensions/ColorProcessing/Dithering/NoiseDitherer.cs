@@ -69,6 +69,10 @@ public enum NoiseType {
 /// <para>Noise dithering adds random threshold values before quantization.</para>
 /// <para>White noise is simple but may show clumping. Blue noise produces more even distribution.</para>
 /// <para>Unlike error diffusion, pixels can be processed independently (parallelizable).</para>
+/// <para>Reference: classical noise-modulated thresholding; for the spectral colour taxonomy see
+/// J. R. Pierce, <i>An Introduction to Information Theory</i>, Dover 1980, ch.7. The
+/// 1/f^β power-law family (white/pink/brown/violet) follows Mandelbrot &amp; Van Ness 1968,
+/// "Fractional Brownian motions, fractional noises and applications", SIAM Review 10(4).</para>
 /// </remarks>
 [Ditherer("Noise Dithering", Description = "Random noise-based dithering", Type = DitheringType.Random)]
 public readonly struct NoiseDitherer : IDitherer {

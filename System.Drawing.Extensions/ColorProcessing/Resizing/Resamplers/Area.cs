@@ -49,6 +49,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// For upsampling (target &gt; source) the footprint is smaller than one source pixel and Area
 /// degenerates into nearest-neighbour — use Bilinear/Bicubic/Lanczos for upsampling instead.
 /// </para>
+/// <para>Reference: standard area-averaging / pixel-box-overlap integration; documented in the
+/// OpenCV <c>resize</c> reference (<c>INTER_AREA</c>) and Pillow / libvips
+/// (PIL/<c>BOX</c>). Public domain.</para>
 /// </remarks>
 [ScalerInfo("Area", Description = "Source-box area-averaging filter (INTER_AREA / PIL BOX) for arbitrary-ratio downsampling",
   Category = ScalerCategory.Resampler)]

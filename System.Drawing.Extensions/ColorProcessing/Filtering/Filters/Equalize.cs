@@ -30,11 +30,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Local histogram equalization.
-/// Builds a luminance histogram within a neighborhood and remaps the center pixel
-/// using the cumulative distribution function for enhanced local contrast.
-/// Always uses frame-level random access.
+/// Local histogram equalisation — adaptive contrast enhancement.
 /// </summary>
+/// <remarks>
+/// <para>For each pixel, builds the luminance histogram within a square neighbourhood
+/// and remaps the centre pixel via the local cumulative distribution function:</para>
+/// <code>
+///   I'(p) = (cdf(I(p)) − cdf_min) / (N − cdf_min) · 255
+/// </code>
+/// <para>Stretches the local tonal range so flat-but-dark regions reveal hidden detail
+/// at the cost of amplifying noise. For an artefact-limited variant see
+/// <see cref="Clahe"/> (Contrast-Limited Adaptive Histogram Equalisation).</para>
+/// <para>Reference: R. C. Gonzalez &amp; R. E. Woods, "Digital Image Processing"
+/// (4th ed., Pearson 2018), §3.3.1 (global) / §3.3.3 (local). The cdf_min term
+/// is the standard correction to ensure output range starts at 0.</para>
+/// </remarks>
 [FilterInfo("Equalize",
   Description = "Local histogram equalization", Category = FilterCategory.ColorCorrection)]
 public readonly struct Equalize(int radius = 10) : IPixelFilter, IFrameFilter {
@@ -55,7 +65,7 @@ public readonly struct Equalize(int radius = 10) : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new EqualizePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Equalize requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -71,25 +81,6 @@ public readonly struct Equalize(int radius = 10) : IPixelFilter, IFrameFilter {
       this._radius, sourceWidth, sourceHeight));
 
   public static Equalize Default => new(10);
-}
-
-file readonly struct EqualizePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct EqualizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

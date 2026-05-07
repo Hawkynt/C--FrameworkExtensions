@@ -39,6 +39,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// The spiral pattern rotates based on position, creating a more chaotic but
 /// visually pleasing distribution of quantization errors.
 /// </para>
+/// <para>Reference: Hawkynt's own design — no published source. Position-rotated variant
+/// of standard 4-neighbour error diffusion (Floyd-Steinberg 1976).</para>
 /// </remarks>
 [Ditherer("Dizzy", Description = "Spiral-based error distribution dithering", Type = DitheringType.ErrorDiffusion)]
 public readonly struct DizzyDitherer : IDitherer {

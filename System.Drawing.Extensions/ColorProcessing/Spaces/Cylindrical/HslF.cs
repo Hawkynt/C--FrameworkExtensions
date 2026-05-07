@@ -30,10 +30,17 @@ namespace Hawkynt.ColorProcessing.Spaces.Cylindrical;
 /// Represents a color in HSL (Hue, Saturation, Lightness) color space with float components.
 /// </summary>
 /// <remarks>
-/// H (hue): 0.0-1.0 (maps to 0-360 degrees)
-/// S (saturation): 0.0-1.0
-/// L (lightness): 0.0-1.0
-/// HSL is a cylindrical representation where lightness 0.5 gives the most saturated colors.
+/// <para>HSL is a cylindrical re-mapping of the RGB cube where lightness 0.5 corresponds to
+/// the most saturated in-gamut colour for a given hue. Originally introduced by
+/// G. H. Joblove &amp; D. Greenberg, "Color spaces for computer graphics", SIGGRAPH 1978;
+/// formalised in CSS3 Color Module Level 3.</para>
+/// <code>
+///   max = max(R,G,B);  min = min(R,G,B);  L = (max+min)/2
+///   if max == min:  H = 0,  S = 0
+///   else: S = (max-min) / (max+min)            if L &lt; 0.5
+///         S = (max-min) / (2 - max - min)      if L >= 0.5
+/// </code>
+/// <para>H (hue): 0.0-1.0 (maps to 0-360°). S (saturation): 0.0-1.0. L (lightness): 0.0-1.0.</para>
 /// </remarks>
 /// <param name="H">Hue component (0.0-1.0, maps to 0-360 degrees).</param>
 /// <param name="S">Saturation component (0.0-1.0).</param>

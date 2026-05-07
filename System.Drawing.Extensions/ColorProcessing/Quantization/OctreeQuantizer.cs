@@ -30,11 +30,17 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Octree-based color quantizer with configurable parameters.
+/// Octree-based color quantizer — Gervautz-Purgathofer 1988.
 /// </summary>
 /// <remarks>
-/// Builds a tree where each node represents a region of color space,
-/// then merges leaves with lowest reference counts to reduce palette size.
+/// <para>Builds a depth-8 octree where each level subdivides the RGB cube into 8 octants
+/// keyed by the next-most-significant bit of (R, G, B). Leaves accumulate
+/// (count, ΣR, ΣG, ΣB). When the leaf budget is exceeded, the deepest, lowest-count
+/// internal node is reduced (its 8 children merged into the parent), producing a
+/// monotonically-shrinking palette.</para>
+/// <para>Reference: M. Gervautz &amp; W. Purgathofer, "A Simple Method for Color
+/// Quantization: Octree Quantization", in Graphics Gems I (Academic Press, 1990),
+/// pp. 287-293; originally published as TU Vienna technical report TR-186-2-88-3 (1988).</para>
 /// </remarks>
 [Quantizer(QuantizationType.Tree, DisplayName = "Octree", Year = 1988, QualityRating = 7)]
 public struct OctreeQuantizer : IQuantizer {

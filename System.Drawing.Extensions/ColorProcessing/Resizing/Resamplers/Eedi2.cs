@@ -34,6 +34,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses directional interpolation based on local edge orientation.</para>
 /// <para>Evaluates multiple directions and selects best match for sharp edges.</para>
 /// <para>Based on tritical's EEDI2 algorithm.</para>
+/// <para>Reference: tritical's EEDI2 Avisynth/VapourSynth plugin
+/// (https://github.com/HomeOfAviSynthPlusEvolution/EEDI2). Algorithm derived from the
+/// edge-directed-interpolation literature; described in the plugin documentation. This
+/// implementation is from the published algorithm (not the GPL source).</para>
 /// </remarks>
 [ScalerInfo("EEDI2", Author = "tritical", Year = 2007,
   Description = "Enhanced edge-directed interpolation", Category = ScalerCategory.Resampler)]

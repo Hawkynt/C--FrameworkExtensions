@@ -30,12 +30,21 @@ namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
 /// Represents a color in the Hunter Lab color space with float components.
 /// </summary>
 /// <remarks>
-/// Hunter Lab is a color space developed by Richard S. Hunter in 1948.
-/// It was the predecessor to the CIELAB color space, using simpler formulas.
-/// L (lightness): 0-100 (0 = black, 100 = white)
-/// A (red-green): negative = green, positive = red
-/// B (yellow-blue): negative = blue, positive = yellow
-/// Uses D65 illuminant.
+/// <para>Hunter Lab is the original opponent-coordinate Lab space, developed by Richard S.
+/// Hunter in 1948 as a square-root-based approximation that pre-dated the CIE 1976 cube-root
+/// CIELAB formulation by 28 years. Still used in some food, paint, and textile-industry
+/// instruments (HunterLab company colorimeters).</para>
+/// <code>
+///   L = 100 · sqrt(Y / Yn)
+///   a = Ka · (X/Xn − Y/Yn) / sqrt(Y / Yn)
+///   b = Kb · (Y/Yn − Z/Zn) / sqrt(Y / Yn)
+/// </code>
+/// where Ka, Kb are illuminant-dependent constants (D65: Ka=172.30, Kb=67.20).
+/// <para>Reference: R. S. Hunter, "Photoelectric color difference meter", J. Opt. Soc. Am.
+/// 38(7):661, 1948. Note: lib uses Y∈[0,1] white = (Xn, 1, Zn) so L = 10 at white,
+/// not the published L=100 convention (documented divergence — see audit memory).</para>
+/// <para>L (lightness): 0-100. a (red-green): negative = green, positive = red.
+/// b (yellow-blue): negative = blue, positive = yellow. D65 illuminant.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0-100).</param>
 /// <param name="A">Red-green component (negative = green, positive = red).</param>

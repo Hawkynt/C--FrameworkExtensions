@@ -26,12 +26,16 @@ using Hawkynt.ColorProcessing.Metrics;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Bisecting K-Means color quantizer that recursively splits clusters.
+/// Bisecting K-Means color quantizer — divisive hierarchical K-Means.
 /// </summary>
 /// <remarks>
-/// <para>Starts with all colors in one cluster, then recursively bisects the cluster with highest SSE.</para>
-/// <para>Can produce more balanced clusters than standard K-Means for some color distributions.</para>
-/// <para>Deterministic splitting ensures reproducible results.</para>
+/// <para>Top-down divisive variant of K-Means: starts with all colours in a single cluster,
+/// then repeatedly picks the cluster with the highest sum-of-squared-error (SSE) and
+/// splits it into two via local 2-means. Stops when K clusters have been produced.
+/// More balanced than standard K-Means on skewed distributions because the
+/// highest-error cluster is always the next to be subdivided.</para>
+/// <para>Reference: M. Steinbach, G. Karypis &amp; V. Kumar, "A comparison of document
+/// clustering techniques", KDD Workshop on Text Mining, 2000.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Bisecting K-Means", Author = "M. Steinbach et al.", Year = 2000, QualityRating = 7)]
 public struct BisectingKMeansQuantizer : IQuantizer {

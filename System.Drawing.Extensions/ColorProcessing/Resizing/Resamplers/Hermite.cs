@@ -37,6 +37,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Uses cubic Hermite polynomial for smooth interpolation.</para>
 /// <para>Produces smoother results than bilinear without the ringing of higher-order filters.</para>
+/// <para>Reference: Standard cubic Hermite basis (smoothstep-cubed). Equivalent to Mitchell-Netravali
+/// with B=0, C=0. See G. Wolberg, <i>Digital Image Warping</i>, IEEE Computer Society Press, 1990 §5.4.</para>
+/// <code>|x| ≤ 1: f(x) = 2|x|³ - 3|x|² + 1; else 0</code>
 /// </remarks>
 [ScalerInfo("Hermite", Author = "Charles Hermite", Year = 1878,
   Description = "Cubic interpolation with smooth falloff", Category = ScalerCategory.Resampler)]
@@ -54,7 +57,14 @@ public readonly struct Hermite : IKernelResampler, IResamplerWithSafePath {
   /// <inheritdoc />
   public float EvaluateWeight(float distance) {
     var x = MathF.Abs(distance);
-    return x < 1f ? (2f * x - 3f) * x * x + 1f : 0f;
+    if (x >= 1f)
+      return 0f;
+    // Original: (2*x - 3) * x * x + 1
+    // Explicit MathF.FusedMultiplyAdd makes the rounding sequence identical
+    // on net48 (polyfill via double) and net6+ (hardware FMA).
+    var t = MathF.FusedMultiplyAdd(2f, x, -3f);   // 2*x - 3
+    t = t * x;                                     // *x  (no fma)
+    return MathF.FusedMultiplyAdd(t, x, 1f);       // *x + 1
   }
 
   /// <inheritdoc />
@@ -201,11 +211,19 @@ file readonly struct HermiteKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
   /// <summary>
   /// Computes the Hermite weight for a given distance.
   /// </summary>
+  /// <remarks>
+  /// Explicit <see cref="MathF.FusedMultiplyAdd"/> ensures the float-rounding
+  /// sequence is identical on net48 (polyfilled FMA via double) and net6+
+  /// (hardware FMA). See Bicubic.CubicWeight for the same rationale.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float HermiteWeight(float x) {
     x = MathF.Abs(x);
-    if (x < 1f)
-      return (2f * x - 3f) * x * x + 1f;
-    return 0f;
+    if (x >= 1f)
+      return 0f;
+    // (2*x - 3) * x * x + 1
+    var t = MathF.FusedMultiplyAdd(2f, x, -3f);
+    t = t * x;
+    return MathF.FusedMultiplyAdd(t, x, 1f);
   }
 }

@@ -53,7 +53,7 @@ public readonly struct Charcoal(float thickness = 1f, float detail = 0.5f) : IPi
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new CharcoalPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Charcoal requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -69,25 +69,6 @@ public readonly struct Charcoal(float thickness = 1f, float detail = 0.5f) : IPi
       thickness, detail, sourceWidth, sourceHeight));
 
   public static Charcoal Default => new(1f, 0.5f);
-}
-
-file readonly struct CharcoalPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct CharcoalFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

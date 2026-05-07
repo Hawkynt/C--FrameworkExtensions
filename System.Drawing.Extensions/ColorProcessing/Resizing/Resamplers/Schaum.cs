@@ -40,6 +40,8 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Quadratic interpolation kernel with radius ~1.5.</para>
 /// <para>Has discontinuities at x=0.5 and x=1.5.</para>
 /// <para>Provides sharper results than bilinear but with some artifacts.</para>
+/// <para>Reference: A. Schaum, <i>Theory and design of local interpolators</i>, CVGIP: Graphical
+/// Models and Image Processing 55(6):464-481, 1993 — quadratic Schaum order-2 family.</para>
 /// </remarks>
 [ScalerInfo("Schaum2",
   Description = "Quadratic Schaum interpolation kernel", Category = ScalerCategory.Resampler)]
@@ -99,6 +101,8 @@ public readonly struct Schaum2 : IKernelResampler, IResamplerWithSafePath {
 /// <para>Cubic interpolation kernel with radius 2.</para>
 /// <para>Provides smooth interpolation with good sharpness.</para>
 /// <para>Related to Catmull-Rom spline family.</para>
+/// <para>Reference: A. Schaum, <i>Theory and design of local interpolators</i>, CVGIP: Graphical
+/// Models and Image Processing 55(6):464-481, 1993 — cubic Schaum order-3 family.</para>
 /// </remarks>
 [ScalerInfo("Schaum3",
   Description = "Cubic Schaum interpolation kernel", Category = ScalerCategory.Resampler)]

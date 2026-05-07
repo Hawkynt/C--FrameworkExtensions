@@ -30,11 +30,15 @@ namespace Hawkynt.ColorProcessing.Spaces.WideGamut;
 /// Represents a color in Adobe RGB (1998) color space.
 /// </summary>
 /// <remarks>
-/// Adobe RGB (1998) is a wide gamut space designed for print reproduction.
-/// It covers approximately 50% of visible colors (vs 35% for sRGB).
-/// All components are linear (no gamma) and range from 0.0 to 1.0.
-/// Uses D65 illuminant as reference white point.
-/// Reference: https://en.wikipedia.org/wiki/Adobe_RGB_color_space
+/// <para>Adobe RGB (1998) is a wide-gamut RGB working space developed by Adobe Systems
+/// for print reproduction. Primaries chosen to encompass most colours achievable on
+/// CMYK presses (covers ~50% of CIE 1931 visible gamut vs ~35% for sRGB). Standard
+/// gamma 2.19921875 (= 563/256) — applied at byte-encoding boundaries; this struct
+/// holds linear values.</para>
+/// <para>Reference: Adobe Systems, "Adobe RGB (1998) Color Image Encoding", Version
+/// 2005-05 (<see href="https://www.adobe.com/digitalimag/pdfs/AdobeRGB1998.pdf"/>).
+/// Primaries: R=(0.6400, 0.3300), G=(0.2100, 0.7100), B=(0.1500, 0.0600). D65 white.</para>
+/// <para>All components linear, 0.0-1.0.</para>
 /// </remarks>
 /// <param name="R">Red component (0.0-1.0, linear).</param>
 /// <param name="G">Green component (0.0-1.0, linear).</param>

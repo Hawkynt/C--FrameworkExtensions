@@ -34,6 +34,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Analyzes local gradients using Sobel operator.</para>
 /// <para>Distributes error using a circular kernel with gradient-adjusted weights.</para>
 /// <para>Optionally uses priority ordering for error distribution.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Combines Sobel edge detection
+/// (Sobel 1968) with a radial-symmetric variant of Floyd-Steinberg error diffusion (1976).</para>
 /// </remarks>
 [Ditherer("Structure-Aware", Description = "Edge-aware error diffusion with circular kernel", Type = DitheringType.ErrorDiffusion)]
 public readonly struct StructureAwareDitherer : IDitherer {

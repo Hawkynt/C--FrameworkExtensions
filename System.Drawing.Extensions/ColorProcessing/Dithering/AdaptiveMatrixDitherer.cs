@@ -91,6 +91,8 @@ public sealed class AdaptiveMatrixConfig {
 ///   <item><description>Adaptive matrix scaling based on content type</description></item>
 ///   <item><description>Edge-aware blocking to prevent error diffusion across edges</description></item>
 /// </list>
+/// <para>Reference: Hawkynt's own design — no published source. Combines Sobel-based edge
+/// detection (Sobel 1968) with content-aware Floyd-Steinberg matrix scaling.</para>
 /// </remarks>
 [Ditherer("Adaptive Matrix", Description = "Edge-aware adaptive matrix scaling with diffusion blocking", Type = DitheringType.ErrorDiffusion)]
 public readonly struct AdaptiveMatrixDitherer : IDitherer {

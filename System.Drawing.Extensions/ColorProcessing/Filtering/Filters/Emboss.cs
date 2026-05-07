@@ -24,6 +24,7 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -84,9 +85,13 @@ file readonly struct EmbossKernel<TWork, TKey, TPixel, TEncode>
     var (br, bg, bb) = _GetRgb(window.P1P0);
     var (brr, brg, brb) = _GetRgb(window.P1P1);
 
-    var or = ColorConverter.Saturate(-2f * tlr - tr - lr + cr + rr + br + 2f * brr + 0.5f);
-    var og = ColorConverter.Saturate(-2f * tlg - tg - lg + cg + rg + bg + 2f * brg + 0.5f);
-    var ob = ColorConverter.Saturate(-2f * tlb - tb - lb + cb + rb + bb + 2f * brb + 0.5f);
+    // Bias to "neutral grey" — see HighPass.cs for the cross-TFM bias rationale.
+    // 0.5f for byte-typed work (sRGB byte 128); 0.21404114f for linear-RGB work
+    // (the linear value that gamma-encodes to sRGB byte 128).
+    var bias = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    var or = ColorConverter.Saturate(-2f * tlr - tr - lr + cr + rr + br + 2f * brr + bias);
+    var og = ColorConverter.Saturate(-2f * tlg - tg - lg + cg + rg + bg + 2f * brg + bias);
+    var ob = ColorConverter.Saturate(-2f * tlb - tb - lb + cb + rb + bb + 2f * brb + bias);
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

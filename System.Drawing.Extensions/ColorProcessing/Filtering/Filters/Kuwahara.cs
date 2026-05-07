@@ -29,11 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Kuwahara filter — painterly effect.
-/// Divides neighborhood into 4 quadrants, computes mean and variance for each,
-/// outputs the mean of the quadrant with lowest variance.
-/// Always uses frame-level random access.
+/// Kuwahara filter — edge-preserving painterly smoothing (Kuwahara et al. 1976).
 /// </summary>
+/// <remarks>
+/// <para>Divides a square neighbourhood into four overlapping quadrants. For each, the
+/// mean and variance of luminance are computed; the output pixel takes the colour
+/// mean of the quadrant with the LOWEST variance. Because edges and texture
+/// boundaries lie inside high-variance quadrants, the filter selectively averages
+/// only within smoothly-varying regions, producing a painterly look that preserves
+/// sharp edges far better than mean / median filtering.</para>
+/// <para>Reference: M. Kuwahara, K. Hachimura, S. Eiho &amp; M. Kinoshita, "Processing
+/// of RI-Angiocardiographic Images", in Digital Processing of Biomedical Images
+/// (Plenum Press 1976), pp. 187-202. Modern variants (Papari et al. 2007) use
+/// circular weighting kernels for better rotation invariance.</para>
+/// </remarks>
 [FilterInfo("Kuwahara",
   Description = "Painterly Kuwahara filter using quadrant variance analysis", Category = FilterCategory.Artistic)]
 public readonly struct Kuwahara(int radius) : IPixelFilter, IFrameFilter {
@@ -56,7 +65,7 @@ public readonly struct Kuwahara(int radius) : IPixelFilter, IFrameFilter {
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new KuwaharaPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Kuwahara requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -72,25 +81,6 @@ public readonly struct Kuwahara(int radius) : IPixelFilter, IFrameFilter {
       this._radius, sourceWidth, sourceHeight));
 
   public static Kuwahara Default => new();
-}
-
-file readonly struct KuwaharaPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct KuwaharaFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

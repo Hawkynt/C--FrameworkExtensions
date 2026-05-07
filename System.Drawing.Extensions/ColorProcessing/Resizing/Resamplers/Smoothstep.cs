@@ -53,6 +53,11 @@ public enum SmoothstepMode {
 /// <para>Uses a 2x2 kernel with Hermite polynomial weighting.</para>
 /// <para>Standard mode uses 3rd-degree polynomial: t² * (3 - 2t)</para>
 /// <para>Smoothest mode uses 7th-degree polynomial for C² continuity.</para>
+/// <para>Reference: K. Perlin, <i>An image synthesizer</i>, ACM SIGGRAPH Computer Graphics
+/// 19(3):287-296, 1985 (cubic smoothstep); the smootherstep / 5th-degree variant appeared
+/// in Perlin's improved noise (2002 SIGGRAPH course notes). Standardised in OpenGL ES /
+/// HLSL as the <c>smoothstep</c> intrinsic.</para>
+/// <code>standard: t²(3-2t);  smoothest: t³(t(6t-15)+10) (5th deg) and t⁴(...) (7th deg)</code>
 /// </remarks>
 [ScalerInfo("Smoothstep", Description = "2x2 Hermite polynomial interpolation", Category = ScalerCategory.Resampler)]
 public readonly struct Smoothstep : IKernelResampler, IResamplerWithSafePath {

@@ -32,6 +32,10 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Finds 4 closest palette colors to form a tetrahedron in color space.</para>
 /// <para>Uses barycentric/inverse distance weights for color selection.</para>
 /// <para>Combines with Bayer ordered dithering for smooth transitions.</para>
+/// <para>Reference: Hawkynt's own design — no published source. The TIN concept is from
+/// Peucker, Fowler, Little &amp; Mark, <i>The triangulated irregular network</i>, AutoCarto IV
+/// 1979 (cartography); the per-pixel barycentric reconstruction here is a 4-vertex
+/// tetrahedron extension of <see cref="BarycentricDitherer"/>.</para>
 /// </remarks>
 [Ditherer("TIN", Description = "Tetrahedral interpolation with Bayer pattern", Type = DitheringType.Ordered)]
 public readonly struct TinDitherer : IDitherer {
@@ -236,7 +240,10 @@ public readonly struct TinDitherer : IDitherer {
 
   private static double[,] _GenerateBayerMatrix(int size) {
     var matrix = new double[size, size];
-    var n = (int)Math.Log(size, 2);
+    // Integer log2 for power-of-two size — see BarycentricDitherer for the cross-TFM
+    // determinism rationale (Math.Log(4, 2) returns 1.999… on legacy CLR).
+    var n = 0;
+    for (var s = size; s > 1; s >>= 1) ++n;
 
     for (var y = 0; y < size; ++y)
     for (var x = 0; x < size; ++x) {

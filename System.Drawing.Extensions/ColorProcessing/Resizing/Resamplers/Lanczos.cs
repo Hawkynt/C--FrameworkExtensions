@@ -37,6 +37,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>High-quality resampling using windowed sinc function.</para>
 /// <para>Good balance between sharpness and ringing artifacts.</para>
+/// <para>Reference: C. Lanczos, <i>Applied Analysis</i>, Prentice-Hall, 1956 (sigma factor /
+/// windowed sinc); see also K. Turkowski, "Filters for common resampling tasks", <i>Graphics
+/// Gems I</i>, 1990, pp. 147-165.</para>
+/// <code>f(x) = sinc(x) · sinc(x/a) for |x| &lt; a, else 0;  sinc(x) = sin(πx)/(πx)</code>
 /// </remarks>
 [ScalerInfo("Lanczos-2", Author = "Cornelius Lanczos", Year = 1950,
   Description = "Windowed sinc resampler with a=2", Category = ScalerCategory.Resampler)]
@@ -88,6 +92,8 @@ public readonly struct Lanczos2 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>High-quality resampling using windowed sinc function.</para>
 /// <para>Sharper than Lanczos-2 but may produce more ringing on high-contrast edges.</para>
+/// <para>Reference: see <see cref="Lanczos2"/>. The de-facto standard high-quality image-resize
+/// kernel (used by GIMP, ImageMagick, mpv defaults).</para>
 /// </remarks>
 [ScalerInfo("Lanczos-3", Author = "Cornelius Lanczos", Year = 1950,
   Description = "Windowed sinc resampler with a=3", Category = ScalerCategory.Resampler)]
@@ -139,6 +145,7 @@ public readonly struct Lanczos3 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>High-quality resampling using windowed sinc function.</para>
 /// <para>Very sharp results but may produce more ringing on high-contrast edges.</para>
+/// <para>Reference: see <see cref="Lanczos2"/>.</para>
 /// </remarks>
 [ScalerInfo("Lanczos-4", Author = "Cornelius Lanczos", Year = 1950,
   Description = "Windowed sinc resampler with a=4", Category = ScalerCategory.Resampler)]
@@ -190,6 +197,7 @@ public readonly struct Lanczos4 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>High-quality resampling using windowed sinc function.</para>
 /// <para>Extremely sharp results with significant ringing on high-contrast edges.</para>
+/// <para>Reference: see <see cref="Lanczos2"/>.</para>
 /// </remarks>
 [ScalerInfo("Lanczos-5", Author = "Cornelius Lanczos", Year = 1950,
   Description = "Windowed sinc resampler with a=5", Category = ScalerCategory.Resampler)]
@@ -241,6 +249,7 @@ public readonly struct Lanczos5 : IKernelResampler, IResamplerWithSafePath {
 /// <remarks>
 /// <para>High-quality resampling using windowed sinc function.</para>
 /// <para>Larger values of 'a' produce sharper results but more ringing.</para>
+/// <para>Reference: see <see cref="Lanczos2"/> for formula and citation.</para>
 /// </remarks>
 [ScalerInfo("Lanczos", Author = "Cornelius Lanczos", Year = 1950,
   Description = "Configurable windowed sinc resampler", Category = ScalerCategory.Resampler)]

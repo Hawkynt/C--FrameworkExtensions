@@ -30,10 +30,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// S-curve sigmoid contrast adjustment.
-/// Applies a logistic sigmoid function per channel to remap intensities,
-/// producing smooth contrast enhancement centered around a configurable midpoint.
+/// Sigmoid contrast — ImageMagick-compatible S-curve contrast (logistic sigmoid).
 /// </summary>
+/// <remarks>
+/// <para>Applies a normalised logistic sigmoid per channel, producing a smooth tonal
+/// S-curve that increases mid-tone contrast while preserving the [0, 1] endpoints
+/// (no shadow lift or highlight crush at default parameters):</para>
+/// <code>
+///   σ(x) = 1 / (1 + exp(−c·(x − m)))
+///   y = (σ(x) − σ(0)) / (σ(1) − σ(0))
+/// </code>
+/// <para>where c = contrast (sharpness of the S-curve) and m = midpoint (centre of
+/// the S). Endpoint normalisation matches ImageMagick's <c>-sigmoidal-contrast</c>
+/// operator. Reference: ImageMagick documentation,
+/// <see href="https://www.imagemagick.org/Usage/color_mods/#sigmoidal"/>.</para>
+/// </remarks>
 [FilterInfo("SigmoidContrast",
   Description = "S-curve sigmoid contrast adjustment", Category = FilterCategory.ColorCorrection)]
 public readonly struct SigmoidContrast(float contrast = 5f, float midpoint = 0.5f) : IPixelFilter, IFrameFilter {

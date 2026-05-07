@@ -27,15 +27,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Hdr;
 
 /// <summary>
-/// Represents a color in the ICtCp perceptual color space with float components.
+/// Represents a color in the ICtCp HDR color space with float components.
 /// </summary>
 /// <remarks>
-/// ICtCp is Dolby's HDR color space specified in ITU-R BT.2100.
-/// It uses the Perceptual Quantizer (PQ) transfer function.
-/// I (intensity): 0.0-1.0 (luma-like component)
-/// Ct (blue-yellow): approximately -0.5 to +0.5
-/// Cp (green-magenta): approximately -0.5 to +0.5
-/// Reference: https://professional.dolby.com/siteassets/pdfs/ictcp_dolbywhitepaper_v071.pdf
+/// <para>ICtCp is Dolby's perceptually-aligned colour space for HDR / wide-gamut imaging,
+/// standardised in ITU-R BT.2100-2 §3 (2018) for both Rec.2020 primaries and the PQ
+/// (SMPTE ST 2084) or HLG transfer functions. Designed to outperform Y'CbCr in chroma
+/// quantisation and to give approximately-perceptually-uniform colour-difference
+/// when paired with Δ ICtCp.</para>
+/// <para>Reference: ITU-R BT.2100-2 §3 ("ICtCp signal format"); Dolby ICtCp white paper
+/// <see href="https://professional.dolby.com/siteassets/pdfs/ictcp_dolbywhitepaper_v071.pdf"/>.</para>
+/// <para>I (intensity): 0.0-1.0 (PQ-encoded luma). Ct (blue-yellow): approximately -0.5 to +0.5.
+/// Cp (green-magenta): approximately -0.5 to +0.5.</para>
 /// </remarks>
 /// <param name="I">Intensity/lightness component (0.0-1.0).</param>
 /// <param name="Ct">Blue-yellow chrominance (approximately -0.5 to +0.5).</param>

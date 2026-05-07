@@ -59,7 +59,7 @@ public readonly struct Cartoon(int levels, float edgeThreshold, int blurRadius =
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new CartoonPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Cartoon requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -75,25 +75,6 @@ public readonly struct Cartoon(int levels, float edgeThreshold, int blurRadius =
       this._levels, this._edgeThreshold, this._blurRadius, sourceWidth, sourceHeight));
 
   public static Cartoon Default => new();
-}
-
-file readonly struct CartoonPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct CartoonFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -128,11 +109,14 @@ file readonly struct CartoonFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
 
-    // Quantize each channel to the configured number of levels
+    // Quantize each channel to the configured number of levels using a
+    // round-to-nearest scheme (Photoshop posterize). This matches the
+    // behaviour of the Posterize filter and avoids the off-by-one
+    // overflow at c=1.0 that the previous floor(c*levels)/(levels-1) had.
     var div = levels - 1f;
-    var qr = (float)Math.Floor(cr * levels) / div;
-    var qg = (float)Math.Floor(cg * levels) / div;
-    var qb = (float)Math.Floor(cb * levels) / div;
+    var qr = (float)Math.Floor(cr * div + 0.5f) / div;
+    var qg = (float)Math.Floor(cg * div + 0.5f) / div;
+    var qb = (float)Math.Floor(cb * div + 0.5f) / div;
     qr = ColorConverter.Saturate(qr);
     qg = ColorConverter.Saturate(qg);
     qb = ColorConverter.Saturate(qb);
@@ -149,7 +133,8 @@ file readonly struct CartoonFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
 
     var gx = -tl + tr - 2f * l + 2f * r - bl + br;
     var gy = -tl - 2f * t - tr + bl + 2f * b + br;
-    var edgeMag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy));
+    // Sobel kernel sum = 8 (4 per axis); normalise to [0,1] like SobelEdge does.
+    var edgeMag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy) / 8f);
 
     // Darken at edges exceeding the threshold
     if (edgeMag > edgeThreshold) {

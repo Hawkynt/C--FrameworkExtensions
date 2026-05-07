@@ -29,8 +29,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Applies a sepia tone effect using the standard sepia matrix.
+/// Sepia tone — vintage photographic warm-brown colour cast via Microsoft's standard
+/// 3×3 sepia transform matrix.
 /// </summary>
+/// <remarks>
+/// <para>Linear RGB transform that simulates the orange-brown chemical-toning process
+/// historically used in silver-gelatin photography (1880s onward). Coefficients
+/// match Microsoft's published sepia matrix (Q14998 / .NET ColorMatrix sample):</para>
+/// <code>
+///   R' = 0.393·R + 0.769·G + 0.189·B
+///   G' = 0.349·R + 0.686·G + 0.168·B
+///   B' = 0.272·R + 0.534·G + 0.131·B
+/// </code>
+/// <para>Reference: Microsoft Knowledge Base Q14998, "Apply Sepia tone to images".
+/// Same matrix used by ImageMagick's <c>-sepia-tone</c> at threshold 80%.</para>
+/// </remarks>
 [FilterInfo("Sepia",
   Description = "Apply sepia tone using standard color matrix", Category = FilterCategory.ColorCorrection)]
 public readonly struct Sepia(float intensity = 1f) : IPixelFilter {

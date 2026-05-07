@@ -30,11 +30,12 @@ namespace Hawkynt.ColorProcessing.Spaces.Perceptual;
 /// Represents a color in the OkLCh cylindrical color space with float components.
 /// </summary>
 /// <remarks>
-/// OkLCh is the cylindrical (polar) representation of Oklab.
-/// L (lightness): 0.0-1.0 (0 = black, 1 = white)
-/// C (chroma): 0.0 to ~0.4 (colorfulness/saturation)
-/// H (hue): 0.0-1.0 representing 0-360 degrees
-/// Reference: https://bottosson.github.io/posts/oklab/
+/// <para>OkLCh is the cylindrical (polar) representation of <see cref="OklabF"/>:
+/// C = sqrt(a² + b²), h = atan2(b, a). Specified in CSS Color Module Level 4 as the
+/// recommended space for hue-preserving gradient interpolation between web colours.</para>
+/// <para>Reference: B. Ottosson, "A perceptual color space for image processing", 2020.
+/// <see href="https://bottosson.github.io/posts/oklab/"/>.</para>
+/// <para>L (lightness): 0.0-1.0. C (chroma): 0.0 to ~0.4. h (hue): 0.0-1.0 (= 0-360°).</para>
 /// </remarks>
 /// <param name="L">Lightness component (0.0-1.0).</param>
 /// <param name="C">Chroma component (0.0-~0.4).</param>

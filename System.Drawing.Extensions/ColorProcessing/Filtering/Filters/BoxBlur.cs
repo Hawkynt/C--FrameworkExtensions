@@ -29,11 +29,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Box blur with configurable radii per axis.
-/// Supports both square (k x k) and rectangular (k x m) kernels of any size.
-/// For radii 0-2, uses the efficient 5x5 NeighborWindow.
-/// For larger radii, uses frame-level random access for single-pass computation.
+/// Box blur — uniform-weight rectangular-kernel low-pass filter.
 /// </summary>
+/// <remarks>
+/// <para>Replaces each pixel with the unweighted mean of pixels in a rectangular window.
+/// Cheaper than <see cref="GaussianBlur"/> (no per-tap weight multiplication) and
+/// can be implemented in O(1) per pixel via summed-area tables or sliding-window
+/// updates. Three iterated box blurs approximate a Gaussian to within a few
+/// percent (Wells 1986 / Kovesi 2010), giving the fastest practical Gaussian
+/// approximation.</para>
+/// <para>References: textbook box-filter formulation; W. M. Wells III, "Efficient
+/// synthesis of Gaussian filters by cascaded uniform filters", IEEE TPAMI
+/// 8(2):234-239, 1986. P. Kovesi, "Fast Almost-Gaussian Filtering",
+/// Int. Conf. on Digital Image Computing: Techniques and Applications, 2010.</para>
+/// </remarks>
 [FilterInfo("BoxBlur",
   Description = "Uniform box blur with configurable kernel size", Category = FilterCategory.Artistic)]
 public readonly struct BoxBlur : IPixelFilter, IFrameFilter {

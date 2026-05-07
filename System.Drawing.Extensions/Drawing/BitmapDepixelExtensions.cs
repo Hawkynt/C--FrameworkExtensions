@@ -62,6 +62,7 @@ public static class BitmapDepixelExtensions {
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Depixelize(int targetWidth, int targetHeight) {
+      ArgumentNullException.ThrowIfNull(@this);
       ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetWidth);
       ArgumentOutOfRangeException.ThrowIfNegativeOrZero(targetHeight);
       return DepixelPipeline.Run(@this, targetWidth, targetHeight);
@@ -73,6 +74,7 @@ public static class BitmapDepixelExtensions {
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap Depixelize(int scaleFactor) {
+      ArgumentNullException.ThrowIfNull(@this);
       ArgumentOutOfRangeException.ThrowIfNegativeOrZero(scaleFactor);
       return DepixelPipeline.Run(@this, @this.Width * scaleFactor, @this.Height * scaleFactor);
     }

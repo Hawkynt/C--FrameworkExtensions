@@ -27,12 +27,24 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Yuv;
 
 /// <summary>
-/// Represents a color in YUV color space with float components.
+/// Represents a color in YUV (PAL/BT.601) analogue luma-chroma color space.
 /// </summary>
 /// <remarks>
-/// Y (luminance): 0.0-1.0
-/// U (blue chrominance): -0.5 to 0.5
-/// V (red chrominance): -0.5 to 0.5
+/// <para>YUV is the colour-encoding standard for PAL analogue television, also used by
+/// SECAM (with chroma rescaling, see <see cref="YDbDrF"/>). Distinct from
+/// <see cref="YCbCrF"/>, which is the digital-video equivalent. U and V are
+/// scaled-down equivalents of (B'−Y') and (R'−Y') chosen to fit within the
+/// composite-signal modulation envelope.</para>
+/// <code>
+///   Y = 0.299·R + 0.587·G + 0.114·B           (BT.601 luma)
+///   U = 0.492·(B − Y)                          (≈ U_max ≈ 0.436)
+///   V = 0.877·(R − Y)                          (≈ V_max ≈ 0.615)
+/// </code>
+/// <para>Reference: ITU-R BT.470-7 §3.1 (PAL); EBU Tech 3213 (PAL/SECAM source primaries).
+/// The lib's stored U/V range is normalised to [-0.5, +0.5] for ease of pixel arithmetic;
+/// the +0.5 offset is added only at byte-encoding time (documented divergence from raw
+/// composite spec).</para>
+/// <para>Y (luma): 0.0-1.0. U (blue chroma): -0.5 to 0.5. V (red chroma): -0.5 to 0.5.</para>
 /// </remarks>
 /// <param name="Y">Luminance component (0.0-1.0).</param>
 /// <param name="U">Blue chrominance component (-0.5 to 0.5).</param>

@@ -26,13 +26,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Metrics.Lab;
 
 /// <summary>
-/// Calculates the CIE94 delta E between two Lab colors.
+/// Calculates the CIE94 delta E (ΔE*₉₄) between two Lab colors with graphic-arts parameters.
 /// </summary>
 /// <remarks>
-/// <para>CIE94 improves on CIE76 by accounting for perceptual non-uniformity
-/// in chroma and hue at different lightness levels.
-/// This version uses graphic arts parameters (kL=1, K1=0.045, K2=0.015).</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>CIE94 (CIE 116-1995) improves on CIE76 by weighting chroma and hue differences with
+/// the chroma-dependent S_C, S_H functions, which corrects the over-sensitivity to chroma
+/// in saturated colours.</para>
+/// <code>
+///   ΔE*₉₄ = sqrt( (ΔL/(kL·SL))² + (ΔC/(kC·SC))² + (ΔH/(kH·SH))² )
+///   SL = 1;   SC = 1 + K1·C1;   SH = 1 + K2·C1
+/// </code>
+/// <para>This struct uses graphic-arts parameters: kL=1, kC=kH=1, K1=0.045, K2=0.015.
+/// Reference: CIE 116-1995 "Industrial Colour-Difference Evaluation"; superseded by
+/// CIEDE2000 (Sharma 2005) but still in industrial use.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CIE94 : IColorMetric<LabF>, INormalizedMetric {
 
@@ -71,12 +78,14 @@ public readonly struct CIE94 : IColorMetric<LabF>, INormalizedMetric {
 }
 
 /// <summary>
-/// Calculates the CIE94 delta E with textile parameters.
+/// Calculates the CIE94 delta E (ΔE*₉₄) between two Lab colors with textile parameters.
 /// </summary>
 /// <remarks>
-/// <para>Uses textile parameters (kL=2, K1=0.048, K2=0.014) which give
-/// more weight to lightness differences.</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>Textile-industry CIE94 variant: kL=2 (lightness weight halved relative to chroma),
+/// K1=0.048, K2=0.014 — calibrated to perceptual matching on woven/dyed fabrics, where
+/// chromatic differences dominate over lightness shifts. Reference: CIE 116-1995
+/// §4.2 ("Application to textiles").</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CIE94Textile : IColorMetric<LabF>, INormalizedMetric {
 

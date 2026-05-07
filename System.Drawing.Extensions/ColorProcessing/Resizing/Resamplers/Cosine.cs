@@ -38,6 +38,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses a 2x2 kernel with cosine-weighted interpolation.</para>
 /// <para>The cosine function creates a natural S-curve transition.</para>
 /// <para>Smoother than bilinear with natural acceleration/deceleration.</para>
+/// <para>Reference: Common animator's "ease-in/out" cosine-blend curve, popularised by
+/// Paul Bourke's interpolation notes (paulbourke.net/miscellaneous/interpolation/). No formal
+/// publication — a textbook trigonometric S-curve.</para>
+/// <code>f(x) = (1 + cos(πx)) / 2  for |x| &lt; 1, else 0</code>
 /// </remarks>
 [ScalerInfo("Cosine Interpolation", Description = "2x2 cosine-weighted interpolation", Category = ScalerCategory.Resampler)]
 public readonly struct CosineInterpolation : IKernelResampler, IResamplerWithSafePath {

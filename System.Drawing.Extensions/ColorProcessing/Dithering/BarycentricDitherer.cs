@@ -32,6 +32,8 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Projects each pixel color into a triangle formed by the 3 closest palette colors.</para>
 /// <para>Uses barycentric coordinates (sub-triangle area ratios) as blend weights.</para>
 /// <para>Combines with ordered dithering patterns for smooth color transitions.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Uses Möbius's barycentric
+/// coordinates (1827) with Bayer 1973 ordered-dither matrix for thresholding.</para>
 /// </remarks>
 [Ditherer("Barycentric", Description = "Triangle-based interpolation with Bayer pattern", Type = DitheringType.Ordered)]
 public readonly struct BarycentricDitherer : IDitherer {
@@ -219,7 +221,11 @@ public readonly struct BarycentricDitherer : IDitherer {
 
   private static double[,] _GenerateBayerMatrix(int size) {
     var matrix = new double[size, size];
-    var n = (int)Math.Log(size, 2);
+    // Integer log2 for power-of-two size. `Math.Log(size, 2)` returns 1.999… on legacy CLR
+    // for size=4, which `(int)`-truncates to 1 and produces a smaller-than-intended matrix
+    // (palette decision boundaries shift). Power-of-two iteration is deterministic.
+    var n = 0;
+    for (var s = size; s > 1; s >>= 1) ++n;
 
     for (var y = 0; y < size; ++y)
     for (var x = 0; x < size; ++x) {

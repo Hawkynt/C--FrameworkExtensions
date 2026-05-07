@@ -30,12 +30,17 @@ namespace Hawkynt.ColorProcessing.Spaces.Hdr;
 /// Represents a color in the JzAzBz perceptual color space with float components.
 /// </summary>
 /// <remarks>
-/// JzAzBz is an HDR-capable perceptual color space designed by Safdar et al. in 2017.
-/// It uses the Perceptual Quantizer (PQ) transfer function for HDR support.
-/// Jz (lightness): 0.0-1.0 (0 = black, 1 = white at reference luminance)
-/// Az (green-red): approximately -0.5 to +0.5
-/// Bz (blue-yellow): approximately -0.5 to +0.5
-/// Reference: https://observablehq.com/@jrus/jzazbz
+/// <para>JzAzBz is an HDR-capable, perceptually-uniform colour space designed for high
+/// dynamic range and wide-gamut imaging. Built on top of the Perceptual Quantizer (PQ)
+/// transfer function (SMPTE ST 2084 / ITU-R BT.2100) so it scales correctly across
+/// the SDR-to-HDR luminance range.</para>
+/// <para>Reference: M. Safdar, G. Cui, Y. J. Kim &amp; M. R. Luo, "Perceptually uniform
+/// color space for image signals including high dynamic range and wide gamut",
+/// Optics Express 25(13):15131-15151, 2017.
+/// Implementation notes: <see href="https://observablehq.com/@jrus/jzazbz"/>.
+/// The lib uses 203 cd/m² (BT.2408 SDR-reference) for normalisation.</para>
+/// <para>Jz (lightness): 0.0-1.0. Az (green-red): approximately -0.5 to +0.5.
+/// Bz (blue-yellow): approximately -0.5 to +0.5.</para>
 /// </remarks>
 /// <param name="Jz">Lightness component (0.0-1.0).</param>
 /// <param name="Az">Green-red component (approximately -0.5 to +0.5).</param>

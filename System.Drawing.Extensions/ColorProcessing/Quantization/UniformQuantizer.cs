@@ -25,10 +25,16 @@ using Hawkynt.ColorProcessing.Metrics;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Uniform grid color quantizer with configurable parameters.
+/// Uniform grid color quantizer — fixed lattice in RGB space.
 /// </summary>
 /// <remarks>
-/// Divides color space into uniform cells and averages colors in each cell.
+/// <para>Subdivides each colour axis into N equal-width slices to form an N³ lattice
+/// of cubic cells; the palette colour for each cell is its centroid. Crude but
+/// content-independent, instant, and useful as a baseline for benchmarking
+/// adaptive quantisers (Median Cut, Wu, Octree). The "websafe 216" palette is the
+/// 6×6×6 special case.</para>
+/// <para>Reference: classical fixed-palette quantisation; see e.g. R. C. Gonzalez &amp;
+/// R. E. Woods, "Digital Image Processing" (4th ed., Pearson 2018), §6.4.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Fixed, DisplayName = "Uniform", QualityRating = 2)]
 public struct UniformQuantizer : IQuantizer {

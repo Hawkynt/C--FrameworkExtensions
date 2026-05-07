@@ -31,10 +31,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Wu's color quantizer with configurable parameters.
+/// Wu's color quantizer — variance-minimising recursive box-splitting.
 /// </summary>
 /// <remarks>
-/// Minimizes the weighted variance of color distribution.
+/// <para>Wu's algorithm builds a 3D summed-area histogram (M0 = pixel-count, M1 = ΣC,
+/// M2 = ΣC²) and recursively splits the colour-cube box that has the highest
+/// weighted variance, choosing the split position along the axis and at the offset
+/// that maximises the variance reduction. Generally produces palettes equal to or
+/// better than Median Cut at modest cost.</para>
+/// <para>Reference: Xiaolin Wu, "Efficient Statistical Computations for Optimal Color
+/// Quantization", in Graphics Gems II (Academic Press, 1991), pp. 126-133.
+/// Cube-selection by variance (not just volume) and split-position by full
+/// variance-reduction maximisation per the published algorithm.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Splitting, DisplayName = "Wu", Author = "Xiaolin Wu", Year = 1991, QualityRating = 9)]
 public struct WuQuantizer : IQuantizer {
@@ -240,7 +248,11 @@ public struct WuQuantizer : IQuantizer {
     private static int _FloatToIndex(float value) => Math.Max(0, Math.Min(31, (int)(value * 31.0f + 0.5f)));
 
     private struct HistogramEntry {
-      public uint Count;
+      // ulong (not uint) — pathological inputs (streamed histograms, >4.29G-pixel images,
+      // adversarial duplicate-entry feeds) can wrap a uint per-cube count. The downstream
+      // PixelCount and Aggregate readers already accumulate into ulong, so this widens the
+      // narrow link in the chain.
+      public ulong Count;
       public double C1Sum;
       public double C2Sum;
       public double C3Sum;

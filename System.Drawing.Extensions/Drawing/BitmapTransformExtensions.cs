@@ -37,6 +37,7 @@ public static class BitmapTransformExtensions {
     /// </summary>
     /// <returns>A new bitmap with horizontally flipped content.</returns>
     public Bitmap FlipHorizontal() {
+      ArgumentNullException.ThrowIfNull(@this);
       var w = @this.Width;
       var h = @this.Height;
       var result = new Bitmap(w, h, PixelFormat.Format32bppArgb);
@@ -54,6 +55,7 @@ public static class BitmapTransformExtensions {
     /// </summary>
     /// <returns>A new bitmap with vertically flipped content.</returns>
     public Bitmap FlipVertical() {
+      ArgumentNullException.ThrowIfNull(@this);
       var w = @this.Width;
       var h = @this.Height;
       var result = new Bitmap(w, h, PixelFormat.Format32bppArgb);
@@ -73,6 +75,7 @@ public static class BitmapTransformExtensions {
     /// <param name="p2">Second point defining the mirror axis.</param>
     /// <returns>A new bitmap with pixels reflected across the axis.</returns>
     public Bitmap MirrorAlongAxis(PointF p1, PointF p2) {
+      ArgumentNullException.ThrowIfNull(@this);
       var w = @this.Width;
       var h = @this.Height;
       var result = new Bitmap(w, h, PixelFormat.Format32bppArgb);
@@ -111,6 +114,8 @@ public static class BitmapTransformExtensions {
     /// <param name="factor">Zoom factor (values greater than 1 zoom in).</param>
     /// <returns>A new bitmap with the zoomed content.</returns>
     public Bitmap ZoomToPoint(PointF center, float factor) {
+      ArgumentNullException.ThrowIfNull(@this);
+      ArgumentOutOfRangeException.ThrowIfNegativeOrZero(factor);
       factor = Math.Max(0.01f, factor);
       var w = @this.Width;
       var h = @this.Height;
@@ -134,7 +139,28 @@ public static class BitmapTransformExtensions {
     /// </summary>
     /// <param name="angle">The rotation angle in degrees to straighten.</param>
     /// <returns>A new bitmap with the straightened and cropped content.</returns>
+    /// <remarks>
+    /// <para>The crop dimensions use the canonical "largest axis-aligned rectangle inscribed
+    /// in a rotated rectangle" formula (two-case form). For a rectangle <c>w × h</c>
+    /// rotated by angle <c>θ</c>, with <c>L = max(w,h)</c>, <c>S = min(w,h)</c>,
+    /// <c>c = |cosθ|</c>, <c>s = |sinθ|</c>:</para>
+    /// <list type="bullet">
+    ///   <item><description><b>Half-constrained</b> (when <c>S ≤ 2·s·c·L</c>): the long
+    ///   side limits the crop. Two corners of the inscribed rect lie on the long sides of
+    ///   the rotated rectangle and the other two on the perpendicular mid-line:
+    ///   <c>x = S/2; cropLong = x/s; cropShort = x/c</c>.</description></item>
+    ///   <item><description><b>Fully constrained</b> (otherwise): all four corners of the
+    ///   inscribed rect touch all four sides:
+    ///   <c>cropW = (w·c - h·s)/cos(2θ); cropH = (h·c - w·s)/cos(2θ)</c>.</description></item>
+    /// </list>
+    /// <para>Reference: Andri Rost / "Calculate largest inscribed rectangle in a rotated
+    /// rectangle" (also commonly attributed to Coffin/Larson). See e.g.
+    /// https://stackoverflow.com/a/16778797 — derivation matches B. Larson, "Universal
+    /// Image Rotation", and is verifiable by elementary trig on the rotated-rectangle
+    /// edge equations.</para>
+    /// </remarks>
     public Bitmap Straighten(float angle) {
+      ArgumentNullException.ThrowIfNull(@this);
       if (Math.Abs(angle) < 0.001f)
         return (Bitmap)@this.Clone();
 
@@ -143,24 +169,39 @@ public static class BitmapTransformExtensions {
       var w = @this.Width;
       var h = @this.Height;
       var rad = Math.Abs(angle * Math.PI / 180.0);
+      // Reduce to first-quadrant equivalent: solutions for ±θ and 180°−θ are identical.
       var sinA = Math.Abs(Math.Sin(rad));
       var cosA = Math.Abs(Math.Cos(rad));
 
-      int cropW, cropH;
-      if (w <= h) {
-        cropW = (int)(w * cosA - h * sinA);
-        cropH = (int)(h * cosA - w * sinA);
+      var widthIsLonger = w >= h;
+      double sideLong = widthIsLonger ? w : h;
+      double sideShort = widthIsLonger ? h : w;
+
+      double cropWd, cropHd;
+      // Half-constrained case: long side dominates → inscribed rect is bounded by the
+      // short side; one pair of corners sits on the long edges, the other pair on the
+      // mid-line. Also covers the 45° degenerate (sin = cos) where cos(2θ) = 0.
+      if (sideShort <= 2.0 * sinA * cosA * sideLong || Math.Abs(sinA - cosA) < 1e-10) {
+        var x = 0.5 * sideShort;
+        // The crop's long side is x/sinA and short side is x/cosA in the rotated frame.
+        if (widthIsLonger) {
+          cropWd = x / sinA;
+          cropHd = x / cosA;
+        } else {
+          cropWd = x / cosA;
+          cropHd = x / sinA;
+        }
       } else {
-        cropW = (int)(h * cosA - w * sinA);
-        cropH = (int)(w * cosA - h * sinA);
+        // Fully constrained: all four corners of the inscribed rect touch all four
+        // sides of the rotated source rectangle.
+        var cos2A = cosA * cosA - sinA * sinA; // = cos(2θ)
+        cropWd = (w * cosA - h * sinA) / cos2A;
+        cropHd = (h * cosA - w * sinA) / cos2A;
       }
 
-      // Fallback: if the angle is too large for a valid inscribed rect, just use original dimensions scaled down
-      if (cropW <= 0 || cropH <= 0) {
-        var scale = 1.0 / (sinA + cosA);
-        cropW = Math.Max(1, (int)(w * scale));
-        cropH = Math.Max(1, (int)(h * scale));
-      }
+      // Clamp to the rotated bitmap; never allow zero/negative on degenerate input.
+      var cropW = Math.Max(1, Math.Min(rotated.Width, (int)cropWd));
+      var cropH = Math.Max(1, Math.Min(rotated.Height, (int)cropHd));
 
       var cx = (rotated.Width - cropW) / 2;
       var cy = (rotated.Height - cropH) / 2;
@@ -174,6 +215,7 @@ public static class BitmapTransformExtensions {
     /// <param name="angleY">Vertical shear angle in degrees.</param>
     /// <returns>A new bitmap with the skewed content.</returns>
     public Bitmap Skew(float angleX, float angleY) {
+      ArgumentNullException.ThrowIfNull(@this);
       var tanX = (float)Math.Tan(angleX * Math.PI / 180.0);
       var tanY = (float)Math.Tan(angleY * Math.PI / 180.0);
       var w = @this.Width;
@@ -223,6 +265,7 @@ public static class BitmapTransformExtensions {
     /// </summary>
     /// <returns>A new bitmap with the EXIF orientation applied, or a clone if no EXIF data is present.</returns>
     public Bitmap AutoRotate() {
+      ArgumentNullException.ThrowIfNull(@this);
       const int ORIENTATION_TAG = 0x0112;
       int orientation;
       try {
@@ -263,6 +306,16 @@ public static class BitmapTransformExtensions {
     }
   }
 
+  /// <summary>
+  /// Bilinear sample from <paramref name="src"/> at floating-point coordinate (<paramref name="x"/>, <paramref name="y"/>).
+  /// Decodes through sRGB EOTF, interpolates in linear-light, encodes via sRGB OETF —
+  /// produces correct edge fringing on bright/saturated boundaries (gamma-naive interpolation
+  /// of sRGB bytes produces dark fringes on red↔white edges).
+  /// </summary>
+  /// <remarks>
+  /// Used by <see cref="MirrorAlongAxis"/>, <see cref="ZoomToPoint"/>, and <see cref="Skew"/>.
+  /// Reference: ITU-R BT.709-6 §1.2 (sRGB EOTF/OETF).
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Color _BilinearSample(Hawkynt.Drawing.Lockers.IBitmapLocker src, float x, float y, int w, int h) {
     var x0 = (int)Math.Floor(x);
@@ -283,15 +336,35 @@ public static class BitmapTransformExtensions {
     var c01 = src[x0, y1];
     var c11 = src[x1, y1];
 
-    var a = (int)(c00.A * (1 - fx) * (1 - fy) + c10.A * fx * (1 - fy) + c01.A * (1 - fx) * fy + c11.A * fx * fy + 0.5f);
-    var r = (int)(c00.R * (1 - fx) * (1 - fy) + c10.R * fx * (1 - fy) + c01.R * (1 - fx) * fy + c11.R * fx * fy + 0.5f);
-    var g = (int)(c00.G * (1 - fx) * (1 - fy) + c10.G * fx * (1 - fy) + c01.G * (1 - fx) * fy + c11.G * fx * fy + 0.5f);
-    var b = (int)(c00.B * (1 - fx) * (1 - fy) + c10.B * fx * (1 - fy) + c01.B * (1 - fx) * fy + c11.B * fx * fy + 0.5f);
+    // Bilinear weights (continuous; arithmetic, no transcendental → cross-TFM deterministic).
+    var w00 = (1 - fx) * (1 - fy);
+    var w10 = fx * (1 - fy);
+    var w01 = (1 - fx) * fy;
+    var w11 = fx * fy;
 
-    return Color.FromArgb(
-      Math.Max(0, Math.Min(255, a)),
-      Math.Max(0, Math.Min(255, r)),
-      Math.Max(0, Math.Min(255, g)),
-      Math.Max(0, Math.Min(255, b)));
+    // Alpha is unaffected by gamma — straight bilinear in byte space.
+    var a = (int)(c00.A * w00 + c10.A * w10 + c01.A * w01 + c11.A * w11 + 0.5f);
+
+    // RGB: gamma-decode (sRGB byte → linear 16.16) → bilinear in linear → gamma-encode.
+    // GammaExpand returns Q16 linear (0..65536). Float weighting is fine — keeps the existing
+    // float arithmetic, just changes the input/output domain to linear.
+    var lr = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c00.R) * w00
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c10.R) * w10
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c01.R) * w01
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c11.R) * w11;
+    var lg = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c00.G) * w00
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c10.G) * w10
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c01.G) * w01
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c11.G) * w11;
+    var lb = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c00.B) * w00
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c10.B) * w10
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c01.B) * w01
+           + Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaExpand(c11.B) * w11;
+
+    var r = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaCompress((int)(lr + 0.5f));
+    var g = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaCompress((int)(lg + 0.5f));
+    var b = Hawkynt.ColorProcessing.Internal.FixedPointMath.GammaCompress((int)(lb + 0.5f));
+
+    return Color.FromArgb(Math.Max(0, Math.Min(255, a)), r, g, b);
   }
 }

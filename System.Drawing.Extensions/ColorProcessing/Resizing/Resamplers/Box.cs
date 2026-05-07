@@ -37,6 +37,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <remarks>
 /// <para>Simple averaging filter with uniform weights within the radius.</para>
 /// <para>Particularly useful for downscaling where it acts as an anti-aliasing filter.</para>
+/// <para>Reference: Standard rectangular reconstruction filter; see G. Wolberg, <i>Digital Image
+/// Warping</i>, IEEE Computer Society Press, 1990 §5.4.1, or Wikipedia "Box function".</para>
+/// <code>f(x) = 1 if |x| ≤ 0.5, else 0</code>
 /// </remarks>
 [ScalerInfo("Box", Description = "Box/averaging filter for simple interpolation", Category = ScalerCategory.Resampler)]
 public readonly struct Box : IKernelResampler, IResamplerWithSafePath {

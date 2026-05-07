@@ -34,8 +34,9 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <remarks>
 /// <para>Ordered dithering adds a position-dependent threshold before quantization.</para>
 /// <para>Unlike error diffusion, pixels can be processed independently (parallelizable).</para>
-/// <para>Reference: B. Bayer 1973 "An optimum method for two-level rendition of continuous-tone pictures"</para>
-/// <para>IEEE Int. Conf. on Communications, vol. 1, pp. 26-11 to 26-15</para>
+/// <para>Reference: B. E. Bayer, <i>An optimum method for two-level rendition of continuous-tone
+/// pictures</i>, IEEE Int. Conf. on Communications, vol. 1, pp. 26-11 to 26-15, 1973.</para>
+/// <code>output(x, y) = quantise( source(x, y) + (M[x mod N, y mod N] / N² − 0.5) · scale )</code>
 /// </remarks>
 [Ditherer("Ordered Dithering", Description = "Threshold matrix dithering with Bayer and other patterns", Type = DitheringType.Ordered, Author = "Bryce Bayer", Year = 1973)]
 public readonly struct OrderedDitherer : IDitherer {

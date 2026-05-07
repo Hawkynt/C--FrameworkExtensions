@@ -29,8 +29,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Applies input/output level remapping with midtone gamma adjustment.
+/// Levels — Photoshop-style input/output level remapping with midtone gamma.
 /// </summary>
+/// <remarks>
+/// <para>Three-stage remap per channel:
+/// (1) clip to [inBlack, inWhite] and rescale to [0, 1];
+/// (2) apply midtone gamma correction;
+/// (3) rescale to [outBlack, outWhite].</para>
+/// <code>
+///   y = pow((clip(x, inBlack, inWhite) − inBlack) / (inWhite − inBlack), 1/midtone)
+///       · (outWhite − outBlack) + outBlack
+/// </code>
+/// <para>Reference: Adobe Photoshop "Image → Adjustments → Levels" tool; fundamental
+/// tonal-range adjustment covered in any digital-photography textbook (e.g.
+/// K. Eismann, "The Adobe Photoshop CS6 Book").</para>
+/// </remarks>
 [FilterInfo("Levels",
   Description = "Input/output level remapping with midtone gamma", Category = FilterCategory.ColorCorrection)]
 public readonly struct Levels(

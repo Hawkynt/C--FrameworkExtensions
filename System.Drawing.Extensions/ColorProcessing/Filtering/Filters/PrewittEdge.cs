@@ -30,8 +30,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Prewitt edge detection using horizontal and vertical gradient kernels with equal weights.
+/// Prewitt edge detection — 3×3 equal-weight gradient operator (J. M. S. Prewitt 1970).
 /// </summary>
+/// <remarks>
+/// <para>Discrete gradient approximation with equal weighting in the orthogonal direction
+/// (no Gaussian smoothing in the kernel):</para>
+/// <code>
+///   Gx = [-1,0,+1; -1,0,+1; -1,0,+1] / 6
+///   Gy = [-1,-1,-1; 0,0,0; +1,+1,+1] / 6
+/// </code>
+/// <para>Cheaper than Sobel and adequate for clean inputs; more noise-sensitive on real
+/// photographs because its kernel has no smoothing. Reference: J. M. S. Prewitt,
+/// "Object Enhancement and Extraction", in Picture Processing and Psychopictorics
+/// (Academic Press 1970), pp. 75-149.</para>
+/// </remarks>
 [FilterInfo("PrewittEdge",
   Description = "Prewitt edge detection (equal-weight gradient)", Category = FilterCategory.Analysis)]
 public readonly struct PrewittEdge : IPixelFilter {
@@ -90,7 +102,10 @@ file readonly struct PrewittKernel<TWork, TKey, TPixel, TEncode>
     // Prewitt Y: [-1,-1,-1; 0,0,0; 1,1,1]
     var gy = -tl - t - tr + bl + b + br;
 
-    var mag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy));
+    // Normalise by kernel sum-of-positives = 1+1+1 = 3 per axis (Prewitt 1970
+    // sums the three rows/cols equally). Using 6 here matches the "kernel sum"
+    // convention shown in the XML doc above (Gx / 6, Gy / 6).
+    var mag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy) / 6f);
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

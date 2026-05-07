@@ -46,6 +46,10 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// - Screen-space dithering with good spatial distribution
 /// - Reducing banding in gradients with minimal pattern visibility
 /// </para>
+/// <para>Reference: J. Jiménez, <i>Next Generation Post Processing in Call of Duty Advanced
+/// Warfare</i>, ACM SIGGRAPH 2014 Course Notes (Activision); the IGN formula appears on
+/// slide 122 of the "Advances in Real-Time Rendering" course. Widely adopted in real-time
+/// rendering for its near-blue-noise spectrum at trivial per-pixel cost.</para>
 /// </remarks>
 [Ditherer("Interleaved Gradient Noise", Description = "Deterministic noise for smooth dithering", Type = DitheringType.Noise)]
 public readonly struct InterleavedGradientNoiseDitherer : IDitherer {

@@ -52,7 +52,7 @@ public readonly struct Shear(float amount = 10f, bool horizontal = true) : IPixe
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new ShearPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Shear requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -68,25 +68,6 @@ public readonly struct Shear(float amount = 10f, bool horizontal = true) : IPixe
       this._amount, this._horizontal, sourceWidth, sourceHeight));
 
   public static Shear Default => new(10f, true);
-}
-
-file readonly struct ShearPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct ShearFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -113,11 +94,11 @@ file readonly struct ShearFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     in TEncode encoder) {
     int sx, sy;
     if (horizontal) {
-      sx = (int)(destX + amount * ((float)destY / Math.Max(1, sourceHeight) - 0.5f));
+      sx = (int)Math.Floor(destX + amount * ((float)destY / Math.Max(1, sourceHeight) - 0.5f));
       sy = destY;
     } else {
       sx = destX;
-      sy = (int)(destY + amount * ((float)destX / Math.Max(1, sourceWidth) - 0.5f));
+      sy = (int)Math.Floor(destY + amount * ((float)destX / Math.Max(1, sourceWidth) - 0.5f));
     }
 
     var px = frame[sx, sy].Work;

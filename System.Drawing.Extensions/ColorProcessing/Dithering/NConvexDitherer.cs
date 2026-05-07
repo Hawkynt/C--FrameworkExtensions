@@ -32,6 +32,9 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <para>Finds N closest palette colors forming a convex hull in color space.</para>
 /// <para>Supports multiple selection strategies: Barycentric, Projection, SpatialPattern, WeightedRandom.</para>
 /// <para>Barycentric uses inverse distance weighting; Projection projects onto geometry.</para>
+/// <para>Reference: Hawkynt's own design — no published source. Builds on the standard convex-hull
+/// nearest-point projection from computational geometry (de Berg et al., <i>Computational
+/// Geometry</i>, Springer 3rd ed. §11).</para>
 /// </remarks>
 [Ditherer("N-Convex", Description = "Convex hull color mixing with multiple strategies", Type = DitheringType.Random)]
 public readonly struct NConvexDitherer : IDitherer {

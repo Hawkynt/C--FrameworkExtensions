@@ -126,10 +126,18 @@ public static class GaussianPyramid {
   /// property when intermediate reconstruction values exceed [0, 255].
   /// </summary>
   /// <remarks>
-  /// Burt &amp; Adelson 1983 §II.B "expand" form: insert zeros (upsample 2×), then convolve
+  /// <para>Burt &amp; Adelson 1983 §II.B "expand" form: insert zeros (upsample 2×), then convolve
   /// with the 5-tap binomial kernel scaled by 4 (one factor of 2 per axis to compensate
-  /// for the zero-insertion energy loss). Source `src` is a 4-channel BGRA float buffer
-  /// of size <c>w × h</c>; output is <c>targetWidth × targetHeight</c> 4-channel float.
+  /// for the zero-insertion energy loss). Source <c>src</c> is a 4-channel BGRA float buffer
+  /// of size <c>w × h</c>; output is <c>targetWidth × targetHeight</c> 4-channel float.</para>
+  /// <para>Concretely: this implementation does (a) zero-insert, (b) multiply non-zero
+  /// samples by 4, then (c) apply <see cref="_BlurSeparable"/> which uses the
+  /// <em>normalised</em> kernel <c>[1, 4, 6, 4, 1] / 16</c> per axis. Trace on a constant
+  /// input <c>c</c>: zero-insert produces a checkerboard with values {c, 0}; the H-pass
+  /// blur on a row "c, 0, c, 0, c" gives <c>(0+4c+0+4c+0)/16 = c/2</c>; the V-pass on
+  /// a column of {c/2, 0, c/2, 0, c/2} likewise gives <c>c/4</c>. The explicit ×4 prefactor
+  /// restores <c>c</c>, matching the canonical Burt-Adelson EXPAND specification
+  /// <c>EXPAND(g_l)(i,j) = 4 · Σ w(m,n) · g_l((i−m)/2, (j−n)/2)</c>.</para>
   /// </remarks>
   internal static float[] ExpandOnceFloat(float[] src, int w, int h, int targetWidth, int targetHeight) {
     var upsampled = new float[targetWidth * targetHeight * 4];

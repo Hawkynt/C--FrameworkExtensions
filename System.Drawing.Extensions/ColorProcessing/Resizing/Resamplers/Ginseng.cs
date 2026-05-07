@@ -46,6 +46,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// Well-known in the HTPC / video-upscaling community; ships with mpv as <c>scale=ewa_ginseng</c>
 /// and is widely used for film / anime upscaling where Lanczos ringing is objectionable.
 /// </para>
+/// <para>Reference: mpv's <c>filter_kernels.c</c>
+/// (https://github.com/mpv-player/mpv/blob/master/video/out/filter_kernels.c) —
+/// <c>ewa_ginseng</c> entry; the Jinc-windowed-Jinc kernel was popularised in mpv / madVR
+/// as a low-ringing EWA option.</para>
 /// </remarks>
 [ScalerInfo("Ginseng", Year = 2015,
   Description = "EWA Jinc-windowed Jinc — lower-ringing relative to EWA Lanczos",

@@ -26,13 +26,23 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Metrics.Lab;
 
 /// <summary>
-/// Calculates the CIEDE2000 delta E (ΔE00) between two Lab colors.
+/// Calculates the CIEDE2000 delta E (ΔE₀₀) between two Lab colors.
 /// </summary>
 /// <remarks>
-/// <para>CIEDE2000 is the current CIE recommendation for calculating color differences.
-/// It's the most accurate perceptual color difference formula, accounting for:
-/// Lightness (L'), Chroma (C'), Hue (H'), and interaction between chroma and hue (rotation term).</para>
-/// <para>Returns UNorm32 normalized distance where UNorm32.One = max delta E of 100.</para>
+/// <para>CIEDE2000 is the current CIE recommendation for calculating perceptual colour
+/// differences (CIE 142:2001). The most accurate published colour-difference formula,
+/// adding to CIE94 a chroma-rescaling factor, a hue-rotation term R_T (which corrects
+/// the blue-region perceptual non-uniformity), and an L*-dependent S_L weighting.</para>
+/// <code>
+///   ΔE₀₀ = sqrt( (ΔL'/(kL·SL))² + (ΔC'/(kC·SC))² + (ΔH'/(kH·SH))²
+///                + R_T·(ΔC'/(kC·SC))·(ΔH'/(kH·SH)) )
+/// </code>
+/// <para>Reference: G. Sharma, W. Wu &amp; E. N. Dalal, "The CIEDE2000 color-difference
+/// formula: implementation notes, supplementary test data, and mathematical
+/// observations", Color Research &amp; Application 30(1):21-30, 2005.
+/// Verified against the 34 published test pairs from
+/// <see href="http://www2.ece.rochester.edu/~gsharma/ciede2000/"/>.</para>
+/// <para>Returns UNorm32 normalised against ΔE = 100.</para>
 /// </remarks>
 public readonly struct CIEDE2000 : IColorMetric<LabF>, INormalizedMetric {
 

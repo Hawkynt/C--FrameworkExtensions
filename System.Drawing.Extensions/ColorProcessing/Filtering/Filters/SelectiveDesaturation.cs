@@ -22,8 +22,10 @@ using System.Drawing.Extensions.ColorProcessing.Resizing;
 using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -31,6 +33,11 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 /// <summary>
 /// Desaturates all colors except a chosen hue range, producing a "grayscale with selective coloring" effect.
 /// </summary>
+/// <remarks>
+/// On the linear-RGB (HQ) work path the RGB triplet is gamma-encoded to sRGB before
+/// the HSL conversion and gamma-decoded after, so HSL math operates in its
+/// canonical sRGB display domain (linear-light fix).
+/// </remarks>
 [FilterInfo("SelectiveDesaturation",
   Description = "Desaturate all colors except a chosen hue range", Category = FilterCategory.Artistic)]
 public readonly struct SelectiveDesaturation(float targetHue, float hueRange = 30f, float strength = 1f) : IPixelFilter {
@@ -77,7 +84,19 @@ file readonly struct SelectiveDesaturationKernel<TWork, TKey, TPixel, TEncode>(
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var (h, s, l) = HslMath.RgbToHsl(r, g, b);
+
+    // HSL is defined on sRGB display values; on the linear-RGB (HQ) path the floats
+    // from GetNormalizedRgba are linear-light, so encode→sRGB before HSL, decode after.
+    float hr, hg, hb;
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      hr = r; hg = g; hb = b;
+    } else {
+      hr = FixedPointMath.GammaCompress((int)(r * 65536f + 0.5f)) / 255f;
+      hg = FixedPointMath.GammaCompress((int)(g * 65536f + 0.5f)) / 255f;
+      hb = FixedPointMath.GammaCompress((int)(b * 65536f + 0.5f)) / 255f;
+    }
+
+    var (h, s, l) = HslMath.RgbToHsl(hr, hg, hb);
 
     var hueDeg = h * 360f;
     var dist = Math.Abs(hueDeg - targetHue);
@@ -87,6 +106,12 @@ file readonly struct SelectiveDesaturationKernel<TWork, TKey, TPixel, TEncode>(
     var keep = 1f - ColorConverter.Saturate((dist - hueRange * 0.5f) / Math.Max(hueRange * 0.5f, 0.001f));
     var newS = s * (1f - strength * (1f - keep));
     var (or, og, ob) = HslMath.HslToRgb(h, newS, l);
+
+    if (typeof(TWork) != typeof(Bgra8888)) {
+      or = FixedPointMath.GammaExpand((byte)(int)(or * 255f + 0.5f)) / 65536f;
+      og = FixedPointMath.GammaExpand((byte)(int)(og * 255f + 0.5f)) / 65536f;
+      ob = FixedPointMath.GammaExpand((byte)(int)(ob * 255f + 0.5f)) / 65536f;
+    }
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, a));
   }

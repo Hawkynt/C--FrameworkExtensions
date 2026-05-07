@@ -24,8 +24,10 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Constants;
 using Hawkynt.ColorProcessing.Filtering;
+using Hawkynt.ColorProcessing.Internal;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
@@ -36,6 +38,11 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 /// edge strength, and converts back to RGB.
 /// Always uses frame-level random access due to configurable pencil width.
 /// </summary>
+/// <remarks>
+/// On the linear-RGB (HQ) work path the centre RGB triplet is gamma-encoded to sRGB
+/// before the HSL conversion and gamma-decoded after, so HSL math operates in its
+/// canonical sRGB display domain (linear-light fix).
+/// </remarks>
 [FilterInfo("ColoredPencil",
   Description = "Colored pencil sketch preserving hue with edge-modulated lightness", Category = FilterCategory.Artistic)]
 public readonly struct ColoredPencil(float edgeStrength, int pencilWidth = 1) : IPixelFilter, IFrameFilter {
@@ -59,7 +66,7 @@ public readonly struct ColoredPencil(float edgeStrength, int pencilWidth = 1) : 
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new ColoredPencilPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("ColoredPencil requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -75,25 +82,6 @@ public readonly struct ColoredPencil(float edgeStrength, int pencilWidth = 1) : 
       this._edgeStrength, this._pencilWidth, sourceWidth, sourceHeight));
 
   public static ColoredPencil Default => new();
-}
-
-file readonly struct ColoredPencilPassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct ColoredPencilFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -128,8 +116,19 @@ file readonly struct ColoredPencilFrameKernel<TPixel, TWork, TKey, TDecode, TPro
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
 
+    // HSL is defined on sRGB display values; on the linear-RGB (HQ) path the floats
+    // from GetNormalizedRgba are linear-light, so encode→sRGB before HSL, decode after.
+    float hr, hg, hb;
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      hr = cr; hg = cg; hb = cb;
+    } else {
+      hr = FixedPointMath.GammaCompress((int)(cr * 65536f + 0.5f)) / 255f;
+      hg = FixedPointMath.GammaCompress((int)(cg * 65536f + 0.5f)) / 255f;
+      hb = FixedPointMath.GammaCompress((int)(cb * 65536f + 0.5f)) / 255f;
+    }
+
     // Convert to HSL
-    var (h, s, l) = HslMath.RgbToHsl(cr, cg, cb);
+    var (h, s, l) = HslMath.RgbToHsl(hr, hg, hb);
 
     // Sobel edge detection
     var tl = _Lum(frame[destX - 1, destY - 1]);
@@ -150,6 +149,12 @@ file readonly struct ColoredPencilFrameKernel<TPixel, TWork, TKey, TDecode, TPro
 
     // Convert back to RGB
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);
+
+    if (typeof(TWork) != typeof(Bgra8888)) {
+      or = FixedPointMath.GammaExpand((byte)(int)(or * 255f + 0.5f)) / 65536f;
+      og = FixedPointMath.GammaExpand((byte)(int)(og * 255f + 0.5f)) / 65536f;
+      ob = FixedPointMath.GammaExpand((byte)(int)(ob * 255f + 0.5f)) / 65536f;
+    }
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

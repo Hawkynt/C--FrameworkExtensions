@@ -30,12 +30,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Median filter with configurable radius.
-/// Selects the pixel with the median luminance from the neighborhood.
-/// For radius 1, uses an optimized sorting network on the 3x3 window.
-/// For radius 2, uses the 5x5 window with sorting.
-/// For larger radii, uses frame-level random access.
+/// Median filter — non-linear noise reduction by neighbourhood median selection.
 /// </summary>
+/// <remarks>
+/// <para>For each pixel, selects the median-luminance neighbour from a square window of
+/// radius r. Excellent at removing salt-and-pepper noise while preserving edges
+/// (the median is robust to outliers, unlike the mean used by box / Gaussian
+/// blurs). Originated in Tukey's exploratory data analysis (1971); applied to
+/// images by Pratt 1978.</para>
+/// <para>References: J. W. Tukey, "Exploratory Data Analysis" (Addison-Wesley 1977);
+/// W. K. Pratt, "Digital Image Processing" (Wiley 1978), §10.3. For a constant-
+/// time histogram-based variant see Perreault &amp; Hébert 2007, "Median Filtering
+/// in Constant Time", IEEE TIP 16(9):2389-2394.</para>
+/// </remarks>
 [FilterInfo("MedianFilter",
   Description = "Median filter for noise reduction with configurable radius", Category = FilterCategory.Enhancement)]
 public readonly struct MedianFilter(int radius) : IPixelFilter, IFrameFilter {

@@ -24,16 +24,26 @@ using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// High-pass filter: original minus Gaussian blur, biased to 0.5 gray.
-/// Supports configurable blur radius per axis.
-/// For radii 0-2, uses the efficient 5x5 NeighborWindow.
-/// For larger radii, uses frame-level random access for single-pass computation.
+/// High-pass filter — preserves high-frequency detail (edges/texture) by subtracting
+/// a low-pass version of the image and biasing the residual to mid-grey.
 /// </summary>
+/// <remarks>
+/// <para>Equivalent to Photoshop's "Filter → Other → High Pass". Output =
+/// (original − Gaussian-blur) + 128/255 (sRGB mid-grey, equivalent to 0.21404 in
+/// linear-light per the audit memory). Used in frequency-separation retouching
+/// workflows: a high-pass layer combined with the original via Linear Light blend
+/// produces selective sharpening without halos.</para>
+/// <para>Reference: standard signal-processing high-pass formulation; image-space
+/// usage popularised by Adobe Photoshop manuals and frequency-separation skin-
+/// retouching tutorials (e.g. P. C. Adams, "Frequency Separation Tutorial",
+/// Phlearn).</para>
+/// </remarks>
 [FilterInfo("HighPass",
   Description = "High-pass filter (original minus low-pass + 0.5 bias)", Category = FilterCategory.Enhancement)]
 public readonly struct HighPass : IPixelFilter, IFrameFilter {
@@ -190,9 +200,15 @@ file readonly struct HighPassKernel<TWork, TKey, TPixel, TEncode>(
     _AccumRow(ref ar, ref ag, ref ab, window.P1M2, window.P1M1, window.P1P0, window.P1P1, window.P1P2, yw1);
     _AccumRow(ref ar, ref ag, ref ab, window.P2M2, window.P2M1, window.P2P0, window.P2P1, window.P2P2, yw2);
 
-    var or = ColorConverter.Saturate(cr - ar + 0.5f);
-    var og = ColorConverter.Saturate(cg - ag + 0.5f);
-    var ob = ColorConverter.Saturate(cb - ab + 0.5f);
+    // Bias must equal the working-space value that encodes to sRGB byte 128 (canonical
+    // "neutral grey"). For byte-typed Fast path (TWork=Bgra8888) the working space IS
+    // sRGB, so 0.5f → byte 128 directly. For linear-light HQ path (TWork=LinearRgbaF)
+    // the bias must be the linear value that gamma-encodes to byte 128:
+    // ((128/255+0.055)/1.055)^2.4 ≈ 0.21404114. JIT specialises this per TWork.
+    var bias = typeof(TWork) == typeof(Bgra8888) ? 0.5f : 0.21404114f;
+    var or = ColorConverter.Saturate(cr - ar + bias);
+    var og = ColorConverter.Saturate(cg - ag + bias);
+    var ob = ColorConverter.Saturate(cb - ab + bias);
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

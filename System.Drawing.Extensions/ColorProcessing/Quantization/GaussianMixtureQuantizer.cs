@@ -26,12 +26,19 @@ using Hawkynt.ColorProcessing.Metrics;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Gaussian Mixture Model (GMM) color quantizer using EM algorithm.
+/// Gaussian Mixture Model (GMM) color quantizer using the Expectation-Maximisation algorithm.
 /// </summary>
 /// <remarks>
-/// <para>Uses Expectation-Maximization to fit Gaussian distributions to color data.</para>
-/// <para>Provides soft clustering where colors can belong to multiple clusters probabilistically.</para>
-/// <para>Good for natural images with smooth color transitions.</para>
+/// <para>Fits a mixture of K Gaussian distributions to the colour histogram via the EM
+/// algorithm: alternates between an E-step (compute the soft per-pixel responsibility
+/// to each Gaussian) and M-step (re-estimate each Gaussian's mean, covariance, and
+/// mixing weight). Soft-assignment makes the result smoother than K-Means on natural
+/// images with continuous colour transitions; the per-Gaussian centroids form the
+/// palette.</para>
+/// <para>References: A. P. Dempster, N. M. Laird &amp; D. B. Rubin, "Maximum likelihood
+/// from incomplete data via the EM algorithm", J. Royal Statistical Society Series B
+/// 39(1):1-38, 1977. C. M. Bishop, "Pattern Recognition and Machine Learning"
+/// (Springer 2006), Chapter 9.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Gaussian Mixture", Author = "Various", Year = 1977, QualityRating = 8)]
 public struct GaussianMixtureQuantizer : IQuantizer {

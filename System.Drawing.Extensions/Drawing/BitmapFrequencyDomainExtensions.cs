@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using Hawkynt.ColorProcessing.FrequencyDomain;
+using Hawkynt.ColorProcessing.Internal;
 
 namespace Hawkynt.Drawing;
 
@@ -36,17 +37,28 @@ public static class BitmapFrequencyDomainExtensions {
     /// </summary>
     /// <returns>A 2D complex array containing the frequency spectrum.</returns>
     public Complex[,] ToFrequencyDomain() {
+      ArgumentNullException.ThrowIfNull(@this);
       var w = @this.Width;
       var h = @this.Height;
       var pw = Fft1D.NextPowerOf2(w);
       var ph = Fft1D.NextPowerOf2(h);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(pw * (long)ph, 64L * 1024 * 1024);
       var data = new Complex[ph, pw];
 
       using var locker = @this.Lock(ImageLockMode.ReadOnly);
       for (var y = 0; y < h; ++y)
       for (var x = 0; x < w; ++x) {
         var c = locker[x, y];
-        var gray = (c.R * 0.299f + c.G * 0.587f + c.B * 0.114f) / 255f;
+        // Gamma-decode RGB to linear before computing luma. Spectral processing (Wiener
+        // deconvolution, frequency-domain filtering) is mathematically valid only on
+        // linear intensity. BT.601 luma weights are kept (legacy convention; the library
+        // already uses BT.601 elsewhere — see audit memory "Architectural divergences").
+        // FixedPointMath.GammaExpand returns Q16 linear ([0..65536]); divide by 65536 to
+        // get [0..1] linear float for the FFT.
+        var lr = FixedPointMath.GammaExpand(c.R) * (1f / 65536f);
+        var lg = FixedPointMath.GammaExpand(c.G) * (1f / 65536f);
+        var lb = FixedPointMath.GammaExpand(c.B) * (1f / 65536f);
+        var gray = lr * 0.299f + lg * 0.587f + lb * 0.114f;
         data[y, x] = new Complex(gray, 0f);
       }
 
@@ -57,17 +69,23 @@ public static class BitmapFrequencyDomainExtensions {
     /// <summary>
     /// Converts a bitmap to DCT domain (grayscale).
     /// </summary>
+    /// <remarks>RGB is gamma-decoded to linear before BT.601 luma — see <see cref="ToFrequencyDomain"/>.</remarks>
     /// <returns>A 2D float array containing DCT coefficients.</returns>
     public float[,] ToDctDomain() {
+      ArgumentNullException.ThrowIfNull(@this);
       var w = @this.Width;
       var h = @this.Height;
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(w * (long)h, 64L * 1024 * 1024);
       var data = new float[h, w];
 
       using var locker = @this.Lock(ImageLockMode.ReadOnly);
       for (var y = 0; y < h; ++y)
       for (var x = 0; x < w; ++x) {
         var c = locker[x, y];
-        data[y, x] = (c.R * 0.299f + c.G * 0.587f + c.B * 0.114f) / 255f;
+        var lr = FixedPointMath.GammaExpand(c.R) * (1f / 65536f);
+        var lg = FixedPointMath.GammaExpand(c.G) * (1f / 65536f);
+        var lb = FixedPointMath.GammaExpand(c.B) * (1f / 65536f);
+        data[y, x] = lr * 0.299f + lg * 0.587f + lb * 0.114f;
       }
 
       Dct2D.Forward(data);
@@ -79,6 +97,7 @@ public static class BitmapFrequencyDomainExtensions {
     /// </summary>
     /// <returns>A new bitmap showing the magnitude spectrum.</returns>
     public Bitmap GetMagnitudeSpectrum() {
+      ArgumentNullException.ThrowIfNull(@this);
       var spectrum = @this.ToFrequencyDomain();
       var h = spectrum.GetLength(0);
       var w = spectrum.GetLength(1);
@@ -113,6 +132,7 @@ public static class BitmapFrequencyDomainExtensions {
     /// </summary>
     /// <returns>A new bitmap showing the phase spectrum.</returns>
     public Bitmap GetPhaseSpectrum() {
+      ArgumentNullException.ThrowIfNull(@this);
       var spectrum = @this.ToFrequencyDomain();
       var h = spectrum.GetLength(0);
       var w = spectrum.GetLength(1);
@@ -148,7 +168,10 @@ public static class BitmapFrequencyDomainExtensions {
     using var locker = result.Lock(ImageLockMode.WriteOnly);
     for (var y = 0; y < height; ++y)
     for (var x = 0; x < width; ++x) {
-      var v = (int)Math.Min(255, Math.Max(0, copy[y, x].Real * 255f + 0.5f));
+      // Forward path gamma-decoded; inverse must gamma-encode for the round-trip to
+      // produce a viewable sRGB-byte image. Q16 linear (clamped) → GammaCompress → byte.
+      var linearQ16 = (int)Math.Min(65536, Math.Max(0, copy[y, x].Real * 65536f + 0.5f));
+      var v = FixedPointMath.GammaCompress(linearQ16);
       locker[x, y] = Color.FromArgb(255, v, v, v);
     }
 
@@ -158,6 +181,7 @@ public static class BitmapFrequencyDomainExtensions {
   /// <summary>
   /// Reconstructs a bitmap from DCT coefficients using inverse DCT.
   /// </summary>
+  /// <remarks>Output is gamma-encoded — see <see cref="FromFrequencyDomain"/>.</remarks>
   /// <param name="coefficients">The DCT coefficients.</param>
   /// <param name="width">The target width.</param>
   /// <param name="height">The target height.</param>
@@ -170,7 +194,8 @@ public static class BitmapFrequencyDomainExtensions {
     using var locker = result.Lock(ImageLockMode.WriteOnly);
     for (var y = 0; y < height; ++y)
     for (var x = 0; x < width; ++x) {
-      var v = (int)Math.Min(255, Math.Max(0, copy[y, x] * 255f + 0.5f));
+      var linearQ16 = (int)Math.Min(65536, Math.Max(0, copy[y, x] * 65536f + 0.5f));
+      var v = FixedPointMath.GammaCompress(linearQ16);
       locker[x, y] = Color.FromArgb(255, v, v, v);
     }
 

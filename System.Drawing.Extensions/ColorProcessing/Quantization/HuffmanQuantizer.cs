@@ -29,9 +29,15 @@ namespace Hawkynt.ColorProcessing.Quantization;
 /// Huffman-inspired color quantizer using bottom-up hierarchical merging.
 /// </summary>
 /// <remarks>
-/// <para>Similar to Huffman coding, this algorithm builds a tree by progressively merging the least weighted nodes.</para>
-/// <para>Unlike traditional quantizers, it preserves dominant colors exactly, making it suitable for logos and graphics.</para>
-/// <para>The merge decision balances frequency (weight) with color similarity.</para>
+/// <para>Adapts Huffman's classic minimum-frequency-merge tree-construction (D. A. Huffman,
+/// "A method for the construction of minimum-redundancy codes", Proceedings of the IRE
+/// 40(9):1098-1101, 1952) to colour-palette construction: build a leaf for every unique
+/// colour, then iteratively merge the two least-weighted leaves into a parent until
+/// only K leaves remain. The merge decision is biased by colour similarity so that
+/// distant frequent colours don't fuse into a meaningless centroid; preserves dominant
+/// colours and is well suited to logos and graphics.</para>
+/// <para>Hawkynt-original adaptation — no published source for the colour-quantisation
+/// variant.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Clustering, DisplayName = "Huffman", QualityRating = 7)]
 public struct HuffmanQuantizer : IQuantizer {

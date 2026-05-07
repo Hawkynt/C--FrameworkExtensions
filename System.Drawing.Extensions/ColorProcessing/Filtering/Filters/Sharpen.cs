@@ -29,12 +29,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// 3x3 unsharp mask sharpening filter.
+/// Sharpen — fixed 3×3 cardinal-neighbour unsharp variant.
 /// </summary>
 /// <remarks>
-/// <para>Computes the average of cardinal neighbors, then extrapolates the center pixel
-/// away from that average: result = center + strength * (center - average).
-/// This enhances edges and fine detail.</para>
+/// <para>Cheap fixed-radius cousin of <see cref="UnsharpMask"/>: computes the average
+/// of 4 cardinal neighbours and extrapolates the centre away from that average.</para>
+/// <code>
+///   avg    = (N + S + E + W) / 4
+///   result = center + strength · (center − avg)
+/// </code>
+/// <para>For a configurable-radius / Gaussian-blur variant see <see cref="UnsharpMask"/>;
+/// for edge-aware sharpening see <see cref="SmartSharpen"/>. Reference: textbook
+/// unsharp-mask formulation, e.g. R. C. Gonzalez &amp; R. E. Woods, "Digital Image
+/// Processing" (4th ed., Pearson 2018), §3.6.3.</para>
 /// </remarks>
 [FilterInfo("Sharpen",
   Description = "3x3 unsharp mask sharpening", Category = FilterCategory.Enhancement)]

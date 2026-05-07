@@ -27,13 +27,26 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.Lab;
 
 /// <summary>
-/// Represents a color in CIE L*a*b* color space with float components.
+/// Represents a color in CIE 1976 L*a*b* color space with float components.
 /// </summary>
 /// <remarks>
-/// L (lightness): 0-100
-/// a (green-red): approximately -128 to +127
-/// b (blue-yellow): approximately -128 to +127
-/// Uses D65 illuminant as reference white point.
+/// <para>CIE L*a*b* (CIELAB) is the canonical perceptually-uniform colour space adopted
+/// by the CIE in 1976 to provide approximately-equal Euclidean distances for equal
+/// perceived colour differences. Derived from XYZ via a non-linear cube-root compression
+/// of the tristimulus values relative to the reference white. D65 illuminant.</para>
+/// <code>
+///   f(t) = t^(1/3)                     if t > (6/29)³
+///   f(t) = (t/3)·(29/6)² + 4/29        otherwise
+///   L* = 116·f(Y/Yn) - 16
+///   a* = 500·(f(X/Xn) - f(Y/Yn))
+///   b* = 200·(f(Y/Yn) - f(Z/Zn))
+/// </code>
+/// <para>Reference: CIE 015:2018 §8.2.1.1; ISO/CIE 11664-4:2019. Pairs with
+/// <see cref="Hawkynt.ColorProcessing.Metrics.Lab.CIE76"/>,
+/// <see cref="Hawkynt.ColorProcessing.Metrics.Lab.CIE94"/>, and
+/// <see cref="Hawkynt.ColorProcessing.Metrics.Lab.CIEDE2000"/> metrics.</para>
+/// <para>L (lightness): 0-100. a (green-red): approximately -128 to +127.
+/// b (blue-yellow): approximately -128 to +127.</para>
 /// </remarks>
 /// <param name="L">Lightness component (0-100).</param>
 /// <param name="A">Green-red component (approximately -128 to +127).</param>

@@ -33,7 +33,10 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>Uses local gradient analysis for adaptive directional filtering.</para>
 /// <para>Applies different interpolation based on local edge characteristics.</para>
 /// <para>Features robust anti-aliasing through gradient-aware weighting.</para>
-/// <para>Based on techniques from the mpv RAVU shader.</para>
+/// <para>Reference: bjin's RAVU mpv user shader
+/// (https://github.com/bjin/mpv-prescalers); the trained-weight RAISR-style variant cannot
+/// be ported without the binary weights, so this implementation captures only the
+/// gradient-adaptive filtering structure (NOT a faithful port of the trained kernel set).</para>
 /// </remarks>
 [ScalerInfo("RAVU", Year = 2017,
   Description = "Robust adaptive video upscaling", Category = ScalerCategory.Resampler)]

@@ -30,18 +30,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Quantization;
 
 /// <summary>
-/// Binary splitting color quantizer using variance-based principal axis splitting.
+/// Binary-splitting color quantizer using variance-based principal-axis splitting.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Splits color cubes along the principal axis (direction of maximum variance).
-/// This is a simplified implementation that uses the component with maximum variance
-/// as an approximation of the principal eigenvector.
-/// </para>
-/// <para>
-/// Full PCA-based binary splitting requires eigenvalue decomposition support.
-/// This simplified approach provides good results for most use cases.
-/// </para>
+/// <para>Splits the colour cube recursively, choosing at each step the box with the largest
+/// variance and splitting it perpendicular to its principal axis (direction of maximum
+/// variance). Conceptually similar to Linde-Buzo-Gray VQ design with a simpler per-box
+/// variance computation that approximates the principal eigenvector by the channel
+/// with maximum 1-D variance, instead of computing the full PCA decomposition.</para>
+/// <para>Reference: Y. Linde, A. Buzo &amp; R. M. Gray, "An Algorithm for Vector Quantizer
+/// Design", IEEE Trans. Communications COM-28(1):84-95, 1980. For the full
+/// PCA-based binary-splitting variant see X. Wu, "Color Quantization by Dynamic
+/// Programming and Principal Analysis", ACM Trans. Graphics 11(4):348-372, 1992.</para>
 /// </remarks>
 [Quantizer(QuantizationType.Splitting, DisplayName = "Binary Splitting", QualityRating = 6)]
 public struct BinarySplittingQuantizer : IQuantizer {

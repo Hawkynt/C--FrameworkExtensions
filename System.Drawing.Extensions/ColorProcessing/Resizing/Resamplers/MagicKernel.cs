@@ -36,6 +36,11 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// 4-tap form: f(0) = 9/16, weights [-1/16, 9/16, 9/16, -1/16].</para>
 /// <para>If you need the actual Magic Kernel Sharp (the deconvolution-iterated v3 with
 /// f(0) = 17/16 / 1.0625), see https://johncostella.com/magic/ — not yet implemented.</para>
+/// <para>Reference: J. Costella, <i>The Magic Kernel</i>, https://johncostella.com/magic/.</para>
+/// <code>
+/// |x| ≤ 0.5: f(x) = 0.75 - x²
+/// 0.5 &lt; |x| ≤ 1.5: f(x) = 0.5 · (|x| - 1.5)²
+/// </code>
 /// </remarks>
 [ScalerInfo("Magic Kernel Sharp", Author = "John Costella", Year = 1998,
   Description = "4-tap Magic Kernel (v1/v2) — peak 9/16. Despite the name, NOT the v3 sharp variant.", Category = ScalerCategory.Resampler)]

@@ -29,9 +29,14 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Pointillism effect — circular dots on a paper-colored background.
-/// Divides the image into a grid, placing colored dots at jittered cell centers.
+/// Pointillize — pointillist painting stylisation (Photoshop-style "Pointillize").
 /// </summary>
+/// <remarks>
+/// <para>Reproduces the technique of late-19th-century Pointillist painters (Seurat,
+/// Signac) by placing coloured dots on a paper-coloured background, sampling the
+/// dot colour from the source image at each jittered grid cell centre. Mirror of
+/// Adobe Photoshop's "Filter → Pixelate → Pointillize".</para>
+/// </remarks>
 [FilterInfo("Pointillize",
   Description = "Pointillism effect with circular dots on paper background", Category = FilterCategory.Artistic)]
 public readonly struct Pointillize(int dotSize, int seed = 0) : IPixelFilter, IFrameFilter {
@@ -54,7 +59,7 @@ public readonly struct Pointillize(int dotSize, int seed = 0) : IPixelFilter, IF
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new PointillizePassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => throw new NotSupportedException("Pointillize requires IFrameFilter dispatch (UsesFrameAccess=true); IPixelFilter direct invocation is not supported. Use Bitmap.ApplyFilter(...) which routes IFrameFilter filters through the resampler pipeline.");
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -70,25 +75,6 @@ public readonly struct Pointillize(int dotSize, int seed = 0) : IPixelFilter, IF
       this._dotSize, seed, sourceWidth, sourceHeight));
 
   public static Pointillize Default => new();
-}
-
-file readonly struct PointillizePassThroughKernel<TWork, TKey, TPixel, TEncode>
-  : IScaler<TWork, TKey, TPixel, TEncode>
-  where TWork : unmanaged, IColorSpace
-  where TKey : unmanaged, IColorSpace
-  where TPixel : unmanaged, IStorageSpace
-  where TEncode : struct, IEncode<TWork, TPixel> {
-
-  public int ScaleX => 1;
-  public int ScaleY => 1;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public unsafe void Scale(
-    in NeighborWindow<TWork, TKey> window,
-    TPixel* dest,
-    int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
 }
 
 file readonly struct PointillizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(

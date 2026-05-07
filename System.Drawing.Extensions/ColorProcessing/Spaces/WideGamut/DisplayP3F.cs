@@ -27,13 +27,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Spaces.WideGamut;
 
 /// <summary>
-/// Represents a color in Display P3 color space (DCI-P3 with D65 white point).
+/// Represents a color in Display P3 color space (DCI-P3 primaries with sRGB transfer
+/// function and D65 white point).
 /// </summary>
 /// <remarks>
-/// Display P3 is used by Apple devices and offers a wider gamut than sRGB.
-/// All components are linear (no gamma) and range from 0.0 to 1.0.
-/// Uses D65 illuminant as reference white point.
-/// Reference: https://en.wikipedia.org/wiki/DCI-P3
+/// <para>Display P3 is the wide-gamut colour space used by Apple devices since 2015 (iMac,
+/// iPhone 7+, iPad Pro). Defined by Apple with DCI-P3 primaries
+/// (R=(0.680, 0.320), G=(0.265, 0.690), B=(0.150, 0.060)) but using the sRGB transfer
+/// function and D65 white instead of DCI's gamma-2.6 / DCI-white. Standardised in ICC
+/// profile (Apple Display P3) and CSS Color Module Level 4.</para>
+/// <para>Reference: Apple ColorSync "Display P3" ICC profile;
+/// SMPTE EG 432-1 (DCI-P3 primaries). This struct stores LINEAR values; gamma is applied
+/// at byte-encoding boundaries by separate projectors.</para>
+/// <para>All components linear, 0.0-1.0.</para>
 /// </remarks>
 /// <param name="R">Red component (0.0-1.0, linear).</param>
 /// <param name="G">Green component (0.0-1.0, linear).</param>

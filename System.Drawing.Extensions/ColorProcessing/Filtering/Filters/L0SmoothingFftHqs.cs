@@ -126,8 +126,9 @@ internal static class L0SmoothingFftHqs {
 
       // (b) S-update in frequency domain:
       //   F(S) = (F(I) + β·(conj(F(Dx))·F(h) + conj(F(Dy))·F(v))) / (1 + β·denomBase)
-      // Forward-difference operator FFT: F(Dx)(u,v) = exp(2πi·u/pw) − 1, depends only on u;
-      // F(Dy)(u,v) = exp(2πi·v/ph) − 1, depends only on v.
+      // Forward-difference operator FFT (standard DFT sign convention):
+      //   F(Dx)(u,v) = exp(−2πi·u/pw) − 1, depends only on u;
+      //   F(Dy)(u,v) = exp(−2πi·v/ph) − 1, depends only on v.
       _SUpdate(sR, sG, sB, fIR, fIG, fIB, hR, hG, hB, vR, vG, vB, denomBase, ph, pw, beta);
 
       // Bring S back to spatial domain for the next auxiliary step.
@@ -208,17 +209,19 @@ internal static class L0SmoothingFftHqs {
     float[] denomBase, int ph, int pw, float beta) {
     // Precompute conj(F(Dx))(u) and conj(F(Dy))(v) once per axis (frequency only depends
     // on the axis index; constant per row / column).
+    // Under the standard DFT sign convention (Fft1D forward: exp(−2πi·u/N)),
+    // F(Dx)(u) = exp(−2πi·u/pw) − 1, so conj(F(Dx))(u) = exp(+2πi·u/pw) − 1.
     var dxConjRe = new float[pw];
     var dxConjIm = new float[pw];
     for (var u = 0; u < pw; ++u) {
-      var phase = -2f * MathF.PI * u / pw;
+      var phase = 2f * MathF.PI * u / pw;
       dxConjRe[u] = MathF.Cos(phase) - 1f;
       dxConjIm[u] = MathF.Sin(phase);
     }
     var dyConjRe = new float[ph];
     var dyConjIm = new float[ph];
     for (var v = 0; v < ph; ++v) {
-      var phase = -2f * MathF.PI * v / ph;
+      var phase = 2f * MathF.PI * v / ph;
       dyConjRe[v] = MathF.Cos(phase) - 1f;
       dyConjIm[v] = MathF.Sin(phase);
     }

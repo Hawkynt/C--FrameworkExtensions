@@ -48,12 +48,19 @@ public struct NeuquantQuantizer : IQuantizer {
   /// </summary>
   public float InitialAlpha { get; set; } = 0.1f;
 
+  /// <summary>
+  /// Gets or sets the seed for the random perturbation applied to neuron initialisation.
+  /// Default 42 — fixed-seed for reproducibility (other quantizers in the library use the
+  /// same convention). Set to <c>null</c> to use <see cref="Random.Shared"/> (non-reproducible).
+  /// </summary>
+  public int? Seed { get; set; } = 42;
+
   public NeuquantQuantizer() { }
 
   /// <inheritdoc />
-  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.MaxIterations, this.InitialAlpha);
+  IQuantizer<TWork> IQuantizer.CreateKernel<TWork>() => new Kernel<TWork>(this.MaxIterations, this.InitialAlpha, this.Seed);
 
-  internal sealed class Kernel<TWork>(int maxIterations, float initialAlpha) : IQuantizer<TWork>
+  internal sealed class Kernel<TWork>(int maxIterations, float initialAlpha, int? seed) : IQuantizer<TWork>
     where TWork : unmanaged, IColorSpace4<TWork> {
 
     private const int _NETWORK_SIZE = 256;
@@ -81,8 +88,10 @@ public struct NeuquantQuantizer : IQuantizer {
       var totalSamples = samples.Count;
 
       // Initialize network from input colors (sampled evenly across the histogram)
-      // This is crucial - starting from greyscale prevents proper color learning
-      var random = Random.Shared;
+      // This is crucial - starting from greyscale prevents proper color learning.
+      // Seeded by default for reproducibility — same convention as other quantizers
+      // (the library exposes a `Seed` property at the public type for opt-out).
+      var random = seed.HasValue ? new Random(seed.Value) : Random.Shared;
       var network = new double[networkSize][];
       for (var i = 0; i < networkSize; ++i) {
         var sampleIdx = (i * totalSamples / networkSize) % totalSamples;

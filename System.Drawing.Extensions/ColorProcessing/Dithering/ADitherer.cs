@@ -27,6 +27,12 @@ namespace Hawkynt.ColorProcessing.Dithering;
 /// <summary>
 /// XOR-based arithmetic dithering using Y×149 multiplier pattern.
 /// </summary>
+/// <remarks>
+/// <para>Reference: blackle's "a-dither" / "XOR-149" arithmetic dither, popularised in the
+/// pixel-art community via https://blog.42yeah.is/rendering/opengl/2023/02/13/dithering.html
+/// and the "1bitpix" / shadertoy ports. The Y·149 prime-multiplier breaks per-row coherence
+/// without a state buffer.</para>
+/// </remarks>
 [Ditherer("XOR Y×149", Description = "Arithmetic XOR dithering with Y×149 multiplier", Type = DitheringType.Ordered)]
 public readonly struct XorY149Ditherer : IDitherer {
 
@@ -115,6 +121,11 @@ public readonly struct XorY149Ditherer : IDitherer {
 /// <summary>
 /// XY Arithmetic-based dithering using addition and multiplication pattern.
 /// </summary>
+/// <remarks>
+/// <para>Reference: arithmetic-dither family popularised by retro-shader collections (see
+/// blackle's a-dither writeup and the "stateless dither" survey at
+/// https://surma.dev/things/ditherpunk/). No formal publication.</para>
+/// </remarks>
 [Ditherer("XY Arithmetic", Description = "Arithmetic dithering with XY addition pattern", Type = DitheringType.Ordered)]
 public readonly struct XYArithmeticDitherer : IDitherer {
 
@@ -203,6 +214,11 @@ public readonly struct XYArithmeticDitherer : IDitherer {
 /// <summary>
 /// Uniform threshold dithering with fixed 0.5 threshold.
 /// </summary>
+/// <remarks>
+/// <para>Reference: standard 1-bit threshold operator; see ITU-T T.4 facsimile encoding
+/// or any digital-imaging textbook (e.g. Gonzalez &amp; Woods, <i>Digital Image Processing</i>
+/// §10.3.1). Public domain.</para>
+/// </remarks>
 [Ditherer("Uniform", Description = "Simple threshold dithering at 0.5", Type = DitheringType.None)]
 public readonly struct UniformDitherer : IDitherer {
 
