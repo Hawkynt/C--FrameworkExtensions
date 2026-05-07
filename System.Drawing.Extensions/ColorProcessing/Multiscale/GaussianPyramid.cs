@@ -116,10 +116,22 @@ public static class GaussianPyramid {
     var w = source.Width;
     var h = source.Height;
     var src = _Read(source);
+    var blurred = ExpandOnceFloat(src, w, h, targetWidth, targetHeight);
+    return _Write(blurred, targetWidth, targetHeight);
+  }
 
-    // Upsample by inserting zeros, then blur with the same 5-tap kernel scaled by 4 (one
-    // factor of 2 per axis to compensate for the energy lost by the zero insertion). The
-    // standard Burt-Adelson "expand" form.
+  /// <summary>
+  /// Float-domain expand step for use in Laplacian-pyramid reconstruction. Avoids the
+  /// byte-clamping round-trip through Bitmap that destroys the float-exact lossless
+  /// property when intermediate reconstruction values exceed [0, 255].
+  /// </summary>
+  /// <remarks>
+  /// Burt &amp; Adelson 1983 §II.B "expand" form: insert zeros (upsample 2×), then convolve
+  /// with the 5-tap binomial kernel scaled by 4 (one factor of 2 per axis to compensate
+  /// for the zero-insertion energy loss). Source `src` is a 4-channel BGRA float buffer
+  /// of size <c>w × h</c>; output is <c>targetWidth × targetHeight</c> 4-channel float.
+  /// </remarks>
+  internal static float[] ExpandOnceFloat(float[] src, int w, int h, int targetWidth, int targetHeight) {
     var upsampled = new float[targetWidth * targetHeight * 4];
     for (var y = 0; y < h; ++y) {
       var ty = y * 2;
@@ -129,17 +141,13 @@ public static class GaussianPyramid {
         if (tx >= targetWidth) break;
         var s = (y * w + x) * 4;
         var d = (ty * targetWidth + tx) * 4;
-        // Multiply by 4 here so the post-blur energy matches the original bright-level
-        // (insertion zeros four out of every five samples per axis).
         upsampled[d + 0] = src[s + 0] * 4f;
         upsampled[d + 1] = src[s + 1] * 4f;
         upsampled[d + 2] = src[s + 2] * 4f;
         upsampled[d + 3] = src[s + 3] * 4f;
       }
     }
-
-    var blurred = _BlurSeparable(upsampled, targetWidth, targetHeight);
-    return _Write(blurred, targetWidth, targetHeight);
+    return _BlurSeparable(upsampled, targetWidth, targetHeight);
   }
 
   // ---- internals -------------------------------------------------------------

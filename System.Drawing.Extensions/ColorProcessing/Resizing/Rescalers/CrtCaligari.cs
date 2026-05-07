@@ -29,16 +29,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Caligari scaler - performance-focused CRT simulation with electron beam spot.
+/// Stylistic CRT-style upscale inspired by Caligari's CRT shader. NOT a port of the
+/// shader — the spot-weight `(1-r²)²` per-axis blend is NOT implemented; this filter
+/// uses fixed darkening percentages over each scaled block.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/slang-shaders/tree/master/crt/shaders</para>
-/// <para>Algorithm: Lightweight CRT with electron beam spot simulation and neighbor blending.</para>
-/// <para>A simplified CRT shader designed for performance while maintaining good visual quality.</para>
+/// <para>Reference (cited but not faithfully implemented):
+/// https://github.com/libretro/slang-shaders/tree/master/crt/shaders</para>
 /// </remarks>
 [ScalerInfo("CRT-Caligari", Author = "Caligari",
   Url = "https://github.com/libretro/slang-shaders/tree/master/crt/shaders",
-  Description = "Performance-focused CRT with electron beam spot simulation", Category = ScalerCategory.Resampler)]
+  Description = "Stylistic CRT-Caligari-inspired pattern (not a port of the GLSL shader)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct CrtCaligari : IRescaler {
   private readonly int _scale;
 

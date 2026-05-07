@@ -89,7 +89,7 @@ file readonly struct MorphologicalGradientKernel<TWork, TKey, TPixel, TEncode>(i
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,7 +139,7 @@ file readonly struct MorphologicalGradientKernel<TWork, TKey, TPixel, TEncode>(i
     if (radius >= 2)
       _MinMaxRow(ref minLum, ref maxLum, window.P2M2, window.P2M1, window.P2P0, window.P2P1, window.P2P2);
 
-    var grad = Math.Max(0f, Math.Min(1f, maxLum - minLum));
+    var grad = ColorConverter.Saturate(maxLum - minLum);
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(grad, grad, grad, ca));
@@ -175,14 +175,14 @@ file readonly struct MorphologicalGradientFrameKernel<TPixel, TWork, TKey, TDeco
     for (var dx = -radius; dx <= radius; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       if (lum < minLum)
         minLum = lum;
       if (lum > maxLum)
         maxLum = lum;
     }
 
-    var grad = Math.Max(0f, Math.Min(1f, maxLum - minLum));
+    var grad = ColorConverter.Saturate(maxLum - minLum);
     var center = frame[destX, destY].Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(grad, grad, grad, ca));

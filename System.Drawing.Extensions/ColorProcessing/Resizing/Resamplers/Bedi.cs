@@ -27,22 +27,23 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 
 /// <summary>
-/// Bilinear Edge-Directed Interpolation (BEDI) resampler.
+/// Sobel-gated diagonal-directed interpolation. In smooth regions (small Sobel gradient)
+/// uses bilinear; on edges, projects the edge-tangent onto the two cell diagonals and
+/// uses the 1-D linear blend along the diagonal more parallel to the edge.
 /// </summary>
 /// <remarks>
-/// <para>A hybrid algorithm that uses standard bilinear interpolation for smooth regions
-/// and edge-directed interpolation along detected edges.</para>
-/// <para>Algorithm steps:</para>
-/// <list type="number">
-/// <item>Compute gradient magnitude using Sobel operator</item>
-/// <item>Classify region as smooth, transition, or edge based on threshold</item>
-/// <item>Smooth: pure bilinear interpolation</item>
-/// <item>Edge: interpolate along edge direction, not across it</item>
-/// <item>Transition: smoothstep blend between bilinear and edge-directed</item>
-/// </list>
+/// <para>For axis-aligned edges the two diagonals are equally aligned and the result is
+/// equivalent to bilinear; for 45° / 135° edges the chosen diagonal preserves the edge
+/// sharply. A smoothstep in the transition band (0.5T &lt; |∇| &lt; 1.5T) blends
+/// bilinear and edge-directed to avoid abrupt visual switching.</para>
+/// <para>Note: this is a simple 2×2 directional-interpolation heuristic. For more
+/// sophisticated covariance-based edge-directed interpolation, see <c>NEDI</c>
+/// (Li &amp; Orchard 2001). No published "Bedi &amp; Hung" reference defines exactly
+/// this algorithm; the name is preserved for backwards compatibility.</para>
 /// </remarks>
-[ScalerInfo("BEDI", Year = 2010,
-  Description = "Bilinear edge-directed interpolation with Sobel gradient classification", Category = ScalerCategory.Resampler)]
+[ScalerInfo("BEDI",
+  Description = "Sobel-gated diagonal-directed bilinear (preserves diagonal edges; bilinear in flat regions)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct Bedi : IResampler {
 
   private readonly float _edgeThreshold;
@@ -213,57 +214,44 @@ file readonly struct BediKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>
   }
 
   /// <summary>
-  /// Edge-directed interpolation along edge direction.
+  /// Edge-directed interpolation: when a strong gradient is detected, interpolate
+  /// preferentially along the edge tangent (perpendicular to the gradient) rather
+  /// than across all 4 corners. This preserves diagonal edges that plain bilinear
+  /// blurs.
   /// </summary>
+  /// <remarks>
+  /// Selects the 2×2 cell diagonal that's MORE PARALLEL to the edge tangent and
+  /// uses a 1-D linear blend along that diagonal. For 45° edges this gives a
+  /// sharp result; for axis-aligned edges (gx=0 or gy=0) the two diagonals are
+  /// equally aligned and the choice degenerates gracefully toward bilinear.
+  /// Reference: standard 2×2 directional-interpolation heuristic; see Li &amp; Orchard
+  /// 2001 NEDI for the more sophisticated covariance-based variant.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static TWork EdgeDirectedInterpolate(
     in TWork c00, in TWork c10, in TWork c01, in TWork c11,
     float fx, float fy, float gradX, float gradY) {
-    // Determine edge orientation: how horizontal vs vertical
-    var absGradX = MathF.Abs(gradX);
-    var absGradY = MathF.Abs(gradY);
-    var horizontalness = absGradY / (absGradX + absGradY + 0.001f);
+    // Edge tangent direction (perpendicular to gradient): (-gradY, gradX).
+    // Project onto the two diagonal directions:
+    //   main diag (1, 1):     | -gradY + gradX |
+    //   anti diag (1, -1):    | -gradY - gradX |
+    var mainAlignment = MathF.Abs(gradX - gradY);
+    var antiAlignment = MathF.Abs(gradX + gradY);
 
-    // For horizontal edge (gradY dominant): interpolate along X, then blend rows
-    Accum4F<TWork> hAcc = default;
-    {
-      Accum4F<TWork> topAcc = default;
-      topAcc.AddMul(c00, 1f - fx);
-      topAcc.AddMul(c10, fx);
-      var topRow = topAcc.Result;
-
-      Accum4F<TWork> botAcc = default;
-      botAcc.AddMul(c01, 1f - fx);
-      botAcc.AddMul(c11, fx);
-      var bottomRow = botAcc.Result;
-
-      hAcc.AddMul(topRow, 1f - fy);
-      hAcc.AddMul(bottomRow, fy);
+    Accum4F<TWork> acc = default;
+    if (mainAlignment >= antiAlignment) {
+      // Edge tangent more parallel to main diagonal (NW-SE direction).
+      // Interpolate along c00 ↔ c11, parameterised by t = (fx + fy) / 2.
+      var t = (fx + fy) * 0.5f;
+      acc.AddMul(c00, 1f - t);
+      acc.AddMul(c11, t);
+    } else {
+      // Edge tangent more parallel to anti-diagonal (NE-SW direction).
+      // Interpolate along c10 ↔ c01, parameterised by t = (fx + (1 - fy)) / 2.
+      var t = (fx + 1f - fy) * 0.5f;
+      acc.AddMul(c10, 1f - t);
+      acc.AddMul(c01, t);
     }
-    var horizontalResult = hAcc.Result;
-
-    // For vertical edge (gradX dominant): interpolate along Y, then blend cols
-    Accum4F<TWork> vAcc = default;
-    {
-      Accum4F<TWork> leftAcc = default;
-      leftAcc.AddMul(c00, 1f - fy);
-      leftAcc.AddMul(c01, fy);
-      var leftCol = leftAcc.Result;
-
-      Accum4F<TWork> rightAcc = default;
-      rightAcc.AddMul(c10, 1f - fy);
-      rightAcc.AddMul(c11, fy);
-      var rightCol = rightAcc.Result;
-
-      vAcc.AddMul(leftCol, 1f - fx);
-      vAcc.AddMul(rightCol, fx);
-    }
-    var verticalResult = vAcc.Result;
-
-    // Blend based on edge orientation
-    Accum4F<TWork> finalAcc = default;
-    finalAcc.AddMul(verticalResult, 1f - horizontalness);
-    finalAcc.AddMul(horizontalResult, horizontalness);
-    return finalAcc.Result;
+    return acc.Result;
   }
 }

@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("GlowingEdges",
   Description = "Neon glowing edges on dark background", Category = FilterCategory.Artistic)]
 public readonly struct GlowingEdges(float edgeStrength, float glowIntensity = 2f) : IPixelFilter, IFrameFilter {
-  private readonly float _edgeStrength = Math.Max(0f, Math.Min(1f, edgeStrength));
+  private readonly float _edgeStrength = ColorConverter.Saturate(edgeStrength);
   private readonly float _glowIntensity = Math.Max(0f, Math.Min(5f, glowIntensity));
 
   public GlowingEdges() : this(0.8f, 2f) { }
@@ -112,7 +112,7 @@ file readonly struct GlowingEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TProj
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _Lum(in TWork px) {
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,9 +140,9 @@ file readonly struct GlowingEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TProj
 
     var edgeMag = (float)Math.Sqrt(gx * gx + gy * gy);
 
-    var or = Math.Max(0f, Math.Min(1f, edgeMag * cr * glowIntensity * edgeStrength));
-    var og = Math.Max(0f, Math.Min(1f, edgeMag * cg * glowIntensity * edgeStrength));
-    var ob = Math.Max(0f, Math.Min(1f, edgeMag * cb * glowIntensity * edgeStrength));
+    var or = ColorConverter.Saturate(edgeMag * cr * glowIntensity * edgeStrength);
+    var og = ColorConverter.Saturate(edgeMag * cg * glowIntensity * edgeStrength);
+    var ob = ColorConverter.Saturate(edgeMag * cb * glowIntensity * edgeStrength);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

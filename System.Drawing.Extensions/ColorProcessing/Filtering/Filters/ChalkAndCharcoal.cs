@@ -114,7 +114,7 @@ file readonly struct ChalkAndCharcoalFrameKernel<TPixel, TWork, TKey, TDecode, T
     in TEncode encoder) {
     var px = frame[destX, destY].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     float v;
     if (lum > 0.66f)

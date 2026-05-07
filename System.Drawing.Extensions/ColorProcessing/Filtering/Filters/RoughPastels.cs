@@ -148,9 +148,9 @@ file readonly struct RoughPastelsFrameKernel<TPixel, TWork, TKey, TDecode, TProj
 
     // Detail contrast factor
     var detailFactor = detail / 4f;
-    var outR = Math.Max(0f, Math.Min(1f, 0.5f + (avgR - 0.5f) * detailFactor));
-    var outG = Math.Max(0f, Math.Min(1f, 0.5f + (avgG - 0.5f) * detailFactor));
-    var outB = Math.Max(0f, Math.Min(1f, 0.5f + (avgB - 0.5f) * detailFactor));
+    var outR = ColorConverter.Saturate(0.5f + (avgR - 0.5f) * detailFactor);
+    var outG = ColorConverter.Saturate(0.5f + (avgG - 0.5f) * detailFactor);
+    var outB = ColorConverter.Saturate(0.5f + (avgB - 0.5f) * detailFactor);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, avgA));
   }

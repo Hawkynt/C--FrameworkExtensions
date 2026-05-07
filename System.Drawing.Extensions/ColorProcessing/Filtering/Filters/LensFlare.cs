@@ -39,8 +39,8 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 public readonly struct LensFlare(float brightness, float positionX = 0.5f, float positionY = 0.3f)
   : IPixelFilter, IFrameFilter {
   private readonly float _brightness = Math.Max(0f, Math.Min(5f, brightness));
-  private readonly float _positionX = Math.Max(0f, Math.Min(1f, positionX));
-  private readonly float _positionY = Math.Max(0f, Math.Min(1f, positionY));
+  private readonly float _positionX = ColorConverter.Saturate(positionX);
+  private readonly float _positionY = ColorConverter.Saturate(positionY);
 
   public LensFlare() : this(0.7f, 0.5f, 0.3f) { }
 

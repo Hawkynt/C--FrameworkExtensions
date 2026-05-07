@@ -35,7 +35,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("Vignette",
   Description = "Radial vignette darkening effect", Category = FilterCategory.Artistic)]
 public readonly struct Vignette(float strength, float radius = 0.75f) : IPixelFilter, IFrameFilter {
-  private readonly float _strength = Math.Max(0f, Math.Min(1f, strength));
+  private readonly float _strength = ColorConverter.Saturate(strength);
   private readonly float _radius = Math.Max(0.01f, Math.Min(1f, radius));
 
   public Vignette() : this(0.5f, 0.75f) { }
@@ -113,7 +113,7 @@ file readonly struct VignetteFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     if (edge1 <= edge0)
       return x >= edge0 ? 1f : 0f;
 
-    var t = Math.Max(0f, Math.Min(1f, (x - edge0) / (edge1 - edge0)));
+    var t = ColorConverter.Saturate((x - edge0) / (edge1 - edge0));
     return t * t * (3f - 2f * t);
   }
 

@@ -50,7 +50,7 @@ public readonly struct Posterize(int levels = 4) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new PosterizeKernel<TWork, TKey, TPixel, TEncode>(this._levels));
 
-  public static Posterize Default => new();
+  public static Posterize Default => new(4);
 }
 
 file readonly struct PosterizeKernel<TWork, TKey, TPixel, TEncode>(int levels)
@@ -75,9 +75,9 @@ file readonly struct PosterizeKernel<TWork, TKey, TPixel, TEncode>(int levels)
     r = (float)Math.Floor(r * levels) / div;
     g = (float)Math.Floor(g * levels) / div;
     b = (float)Math.Floor(b * levels) / div;
-    r = Math.Max(0f, Math.Min(1f, r));
-    g = Math.Max(0f, Math.Min(1f, g));
-    b = Math.Max(0f, Math.Min(1f, b));
+    r = ColorConverter.Saturate(r);
+    g = ColorConverter.Saturate(g);
+    b = ColorConverter.Saturate(b);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

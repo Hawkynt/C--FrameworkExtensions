@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -113,7 +115,7 @@ public readonly struct UlichneyDiffusionDotDitherer : IDitherer {
         var activity = _EstimateActivity(source, x, y, sourceStride, width, endY);
         // Weight ∈ [0, 1]: 0 = use pure halftone (flat), 1 = use pure FS
         // (textured). Smooth ramp centred on 0.04.
-        var edFrac = Math.Max(0f, Math.Min(1f, (activity - 0.02f) / 0.04f));
+        var edFrac = ColorConverter.Saturate((activity - 0.02f) / 0.04f);
         var halftoneFrac = 1f - edFrac;
 
         // Halftone contribution: ordered threshold.
@@ -122,9 +124,9 @@ public readonly struct UlichneyDiffusionDotDitherer : IDitherer {
         var pr = c1.ToFloat() + errR[x, localY] + halftoneBias;
         var pg = c2.ToFloat() + errG[x, localY] + halftoneBias;
         var pb = c3.ToFloat() + errB[x, localY] + halftoneBias;
-        var adjR = Math.Max(0f, Math.Min(1f, pr));
-        var adjG = Math.Max(0f, Math.Min(1f, pg));
-        var adjB = Math.Max(0f, Math.Min(1f, pb));
+        var adjR = ColorConverter.Saturate(pr);
+        var adjG = ColorConverter.Saturate(pg);
+        var adjB = ColorConverter.Saturate(pb);
 
         var adj = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(adjR),

@@ -56,18 +56,17 @@ public class BayerMatrixTests {
 
   [Test]
   public void Generate_Bayer2x2_MatchesKnownPattern() {
-    // Upstream uses bit-interleave convention producing:
-    // { 0, 1 }
-    // { 3, 2 }
-    // (Equivalent to the textbook {0,2},{3,1} transposed; both are valid
-    // Bayer orderings — the key property is even coverage of [0..N²-1].)
+    // Bayer 1973 / Wikipedia "Ordered dithering" canonical 2×2 matrix:
+    //   0  2
+    //   3  1
+    // (Verified byte-exact against published reference in BayerMatrixReferenceTests.)
     var m = BayerMatrix.Generate(2);
     Assert.That(m.GetLength(0), Is.EqualTo(2));
     Assert.That(m.GetLength(1), Is.EqualTo(2));
     Assert.That(m[0, 0], Is.EqualTo(0f));
-    Assert.That(m[0, 1], Is.EqualTo(1f));
+    Assert.That(m[0, 1], Is.EqualTo(2f));
     Assert.That(m[1, 0], Is.EqualTo(3f));
-    Assert.That(m[1, 1], Is.EqualTo(2f));
+    Assert.That(m[1, 1], Is.EqualTo(1f));
   }
 
   [Test]

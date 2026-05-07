@@ -84,9 +84,9 @@ file readonly struct EmbossKernel<TWork, TKey, TPixel, TEncode>
     var (br, bg, bb) = _GetRgb(window.P1P0);
     var (brr, brg, brb) = _GetRgb(window.P1P1);
 
-    var or = Math.Max(0f, Math.Min(1f, -2f * tlr - tr - lr + cr + rr + br + 2f * brr + 0.5f));
-    var og = Math.Max(0f, Math.Min(1f, -2f * tlg - tg - lg + cg + rg + bg + 2f * brg + 0.5f));
-    var ob = Math.Max(0f, Math.Min(1f, -2f * tlb - tb - lb + cb + rb + bb + 2f * brb + 0.5f));
+    var or = ColorConverter.Saturate(-2f * tlr - tr - lr + cr + rr + br + 2f * brr + 0.5f);
+    var og = ColorConverter.Saturate(-2f * tlg - tg - lg + cg + rg + bg + 2f * brg + 0.5f);
+    var ob = ColorConverter.Saturate(-2f * tlb - tb - lb + cb + rb + bb + 2f * brb + 0.5f);
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

@@ -82,13 +82,16 @@ public struct WuQuantizer : IQuantizer {
 
       var cubes = new List<ColorCube> { new(smallHistogram) };
       while (cubes.Count < colorCount) {
-        // Find the largest cube that actually has data
-        var largestCube = cubes.Where(c => c.HasData).OrderByDescending(c => c.Volume).FirstOrDefault();
-        if (largestCube == null || largestCube.Volume <= 0)
+        // Wu 1991 cube selection: pick the cube with maximum CURRENT VARIANCE (not just
+        // largest volume). Variance reflects the heterogeneity of the cube's colour
+        // contents — high-variance cubes contribute most to the total reconstruction error
+        // and should be split first.
+        var bestCube = cubes.Where(c => c.HasData && c.PixelCount > 1).OrderByDescending(c => c.Variance).FirstOrDefault();
+        if (bestCube == null || bestCube.Variance <= 0)
           break;
 
-        cubes.Remove(largestCube);
-        var splitCubes = largestCube.Split();
+        cubes.Remove(bestCube);
+        var splitCubes = bestCube.Split();
         // Only add cubes that contain actual color data
         cubes.AddRange(splitCubes.Where(c => c.HasData));
       }
@@ -107,16 +110,22 @@ public struct WuQuantizer : IQuantizer {
     private static void _HistogramBuildSlow(IEnumerable<(TWork color, uint count)> histogram, HistogramEntry[,,] smallHistogram) {
       foreach (var (color, count) in histogram) {
         var (c1N, c2N, c3N, aN) = color.ToNormalized();
-        var c1 = _FloatToIndex(c1N.ToFloat());
-        var c2 = _FloatToIndex(c2N.ToFloat());
-        var c3 = _FloatToIndex(c3N.ToFloat());
+        var c1F = c1N.ToFloat();
+        var c2F = c2N.ToFloat();
+        var c3F = c3N.ToFloat();
+        var c1 = _FloatToIndex(c1F);
+        var c2 = _FloatToIndex(c2F);
+        var c3 = _FloatToIndex(c3F);
 
         ref var entry = ref smallHistogram[c1, c2, c3];
         entry.Count += count;
-        entry.C1Sum += c1N.ToFloat() * count;
-        entry.C2Sum += c2N.ToFloat() * count;
-        entry.C3Sum += c3N.ToFloat() * count;
+        entry.C1Sum += c1F * count;
+        entry.C2Sum += c2F * count;
+        entry.C3Sum += c3F * count;
         entry.ASum += aN.ToFloat() * count;
+        entry.C1SquaredSum += c1F * c1F * count;
+        entry.C2SquaredSum += c2F * c2F * count;
+        entry.C3SquaredSum += c3F * c3F * count;
       }
     }
 
@@ -149,6 +158,9 @@ public struct WuQuantizer : IQuantizer {
         entry.C2Sum += c2F * count;
         entry.C3Sum += c3F * count;
         entry.ASum += aF * count;
+        entry.C1SquaredSum += c1F * c1F * count;
+        entry.C2SquaredSum += c2F * c2F * count;
+        entry.C3SquaredSum += c3F * c3F * count;
       }
     }
 
@@ -187,6 +199,9 @@ public struct WuQuantizer : IQuantizer {
           bucket.C2Sum += c2F * count;
           bucket.C3Sum += c3F * count;
           bucket.ASum += aF * count;
+          bucket.C1SquaredSum += c1F * c1F * count;
+          bucket.C2SquaredSum += c2F * c2F * count;
+          bucket.C3SquaredSum += c3F * c3F * count;
         }
         locals[p] = local;
       });
@@ -206,6 +221,9 @@ public struct WuQuantizer : IQuantizer {
           dst.C2Sum += src.C2Sum;
           dst.C3Sum += src.C3Sum;
           dst.ASum += src.ASum;
+          dst.C1SquaredSum += src.C1SquaredSum;
+          dst.C2SquaredSum += src.C2SquaredSum;
+          dst.C3SquaredSum += src.C3SquaredSum;
         }
       }
     }
@@ -227,6 +245,13 @@ public struct WuQuantizer : IQuantizer {
       public double C2Sum;
       public double C3Sum;
       public double ASum;
+      // Squared sums per channel — required for Wu 1991 variance computation:
+      //   Var = (M2_c - M1_c² / M0) summed across channels.
+      // Without these, cube selection and split-position selection cannot use
+      // variance-reduction maximization as Wu's paper specifies.
+      public double C1SquaredSum;
+      public double C2SquaredSum;
+      public double C3SquaredSum;
     }
 
     private sealed class ColorCube {
@@ -245,78 +270,164 @@ public struct WuQuantizer : IQuantizer {
 
       public int Volume => (this._c1Max - this._c1Min) * (this._c2Max - this._c2Min) * (this._c3Max - this._c3Min);
 
-      public bool HasData => this._GetPixelCount() > 0;
+      public bool HasData => this.PixelCount > 0;
 
       public TWork AverageColor => this._GetAverageColor();
 
-      private ulong _GetPixelCount() {
-        ulong count = 0;
-        for (var c1 = this._c1Min; c1 <= this._c1Max; ++c1)
-        for (var c2 = this._c2Min; c2 <= this._c2Max; ++c2)
-        for (var c3 = this._c3Min; c3 <= this._c3Max; ++c3)
-          count += this._histogram[c1, c2, c3].Count;
-        return count;
+      /// <summary>Total pixel count in this cube (sum of histogram bin counts).</summary>
+      public ulong PixelCount {
+        get {
+          ulong count = 0;
+          for (var c1 = this._c1Min; c1 <= this._c1Max; ++c1)
+          for (var c2 = this._c2Min; c2 <= this._c2Max; ++c2)
+          for (var c3 = this._c3Min; c3 <= this._c3Max; ++c3)
+            count += this._histogram[c1, c2, c3].Count;
+          return count;
+        }
+      }
+
+      /// <summary>
+      /// Per-channel statistics aggregated over the cube. Used by Wu's variance-reduction
+      /// split logic. Returns (M0=count, M1_c1, M1_c2, M1_c3, M2_c1, M2_c2, M2_c3).
+      /// </summary>
+      public (ulong m0, double m1c1, double m1c2, double m1c3, double m2c1, double m2c2, double m2c3, double aSum) Aggregate {
+        get {
+          ulong c = 0;
+          double s1 = 0, s2 = 0, s3 = 0, sA = 0;
+          double sq1 = 0, sq2 = 0, sq3 = 0;
+          for (var c1 = this._c1Min; c1 <= this._c1Max; ++c1)
+          for (var c2 = this._c2Min; c2 <= this._c2Max; ++c2)
+          for (var c3 = this._c3Min; c3 <= this._c3Max; ++c3) {
+            ref var e = ref this._histogram[c1, c2, c3];
+            c += e.Count; s1 += e.C1Sum; s2 += e.C2Sum; s3 += e.C3Sum; sA += e.ASum;
+            sq1 += e.C1SquaredSum; sq2 += e.C2SquaredSum; sq3 += e.C3SquaredSum;
+          }
+          return (c, s1, s2, s3, sq1, sq2, sq3, sA);
+        }
+      }
+
+      /// <summary>
+      /// Wu 1991 variance: <c>Var = Σ_c (M2_c − M1_c² / M0)</c> across the three channels.
+      /// Used to PICK THE CUBE TO SPLIT (highest-variance one wins) and to optimise the
+      /// SPLIT POSITION (maximise per-axis variance reduction).
+      /// </summary>
+      public double Variance {
+        get {
+          var (m0, m1c1, m1c2, m1c3, m2c1, m2c2, m2c3, _) = this.Aggregate;
+          if (m0 == 0) return 0;
+          var inv = 1.0 / m0;
+          return (m2c1 - m1c1 * m1c1 * inv)
+               + (m2c2 - m1c2 * m1c2 * inv)
+               + (m2c3 - m1c3 * m1c3 * inv);
+        }
       }
 
       private TWork _GetAverageColor() {
-        double c1Sum = 0, c2Sum = 0, c3Sum = 0, aSum = 0;
-        ulong count = 0;
-
-        for (var c1 = this._c1Min; c1 <= this._c1Max; ++c1)
-        for (var c2 = this._c2Min; c2 <= this._c2Max; ++c2)
-        for (var c3 = this._c3Min; c3 <= this._c3Max; ++c3) {
-          ref var entry = ref this._histogram[c1, c2, c3];
-          c1Sum += entry.C1Sum;
-          c2Sum += entry.C2Sum;
-          c3Sum += entry.C3Sum;
-          aSum += entry.ASum;
-          count += entry.Count;
-        }
-
-        return count == 0
+        var (m0, m1c1, m1c2, m1c3, _, _, _, aSum) = this.Aggregate;
+        return m0 == 0
           ? default
           : ColorFactory.FromNormalized_4<TWork>(
-            UNorm32.FromFloatClamped((float)(c1Sum / count)),
-            UNorm32.FromFloatClamped((float)(c2Sum / count)),
-            UNorm32.FromFloatClamped((float)(c3Sum / count)),
-            UNorm32.FromFloatClamped((float)(aSum / count))
+            UNorm32.FromFloatClamped((float)(m1c1 / m0)),
+            UNorm32.FromFloatClamped((float)(m1c2 / m0)),
+            UNorm32.FromFloatClamped((float)(m1c3 / m0)),
+            UNorm32.FromFloatClamped((float)(aSum / m0))
           );
       }
 
+      /// <summary>
+      /// Wu 1991 variance-reduction split. Trial every candidate split position along
+      /// every axis; pick the (axis, position) combination that maximises
+      /// <c>Var_left + Var_right − Var_total</c> (equivalently the "between-cluster"
+      /// variance). This is the algorithm's defining contribution over plain median-cut.
+      /// </summary>
       public IEnumerable<ColorCube> Split() {
-        var c1Range = this._c1Max - this._c1Min;
-        var c2Range = this._c2Max - this._c2Min;
-        var c3Range = this._c3Max - this._c3Min;
+        var bestAxis = -1;
+        var bestSplit = 0;
+        var bestReduction = double.NegativeInfinity;
 
-        // Branchless argmax preserving the original tie-break semantics:
-        //   original: c1 wins ties vs c2 and vs c3; c2 wins ties vs c3.
-        //   axis 0 unless c2 strictly beats c1, then axis 1; then axis 2 only if c3 strictly beats current.
-        var axis = c2Range > c1Range ? 1 : 0;
-        var currentMax = axis == 0 ? c1Range : c2Range;
-        if (c3Range > currentMax)
-          axis = 2;
+        // For each axis, enumerate split positions and compute the reduction in
+        // total variance achieved by partitioning at that position.
+        for (var axis = 0; axis < 3; ++axis) {
+          int min, max;
+          switch (axis) {
+            case 0: min = this._c1Min; max = this._c1Max; break;
+            case 1: min = this._c2Min; max = this._c2Max; break;
+            default: min = this._c3Min; max = this._c3Max; break;
+          }
+          for (var split = min; split < max; ++split) {
+            var reduction = this._VarianceReduction(axis, split);
+            if (reduction > bestReduction) {
+              bestReduction = reduction;
+              bestAxis = axis;
+              bestSplit = split;
+            }
+          }
+        }
 
-        int mid;
-        switch (axis) {
+        if (bestAxis < 0) {
+          // Cube has no internal variation to exploit (all data in one bin).
+          return [this];
+        }
+
+        switch (bestAxis) {
           case 0:
-            mid = this._c1Min + (c1Range >> 1);
             return [
-              new(this._histogram, this._c1Min, mid, this._c2Min, this._c2Max, this._c3Min, this._c3Max),
-              new(this._histogram, mid + 1, this._c1Max, this._c2Min, this._c2Max, this._c3Min, this._c3Max)
+              new(this._histogram, this._c1Min, bestSplit, this._c2Min, this._c2Max, this._c3Min, this._c3Max),
+              new(this._histogram, bestSplit + 1, this._c1Max, this._c2Min, this._c2Max, this._c3Min, this._c3Max)
             ];
           case 1:
-            mid = this._c2Min + (c2Range >> 1);
             return [
-              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, mid, this._c3Min, this._c3Max),
-              new(this._histogram, this._c1Min, this._c1Max, mid + 1, this._c2Max, this._c3Min, this._c3Max)
+              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, bestSplit, this._c3Min, this._c3Max),
+              new(this._histogram, this._c1Min, this._c1Max, bestSplit + 1, this._c2Max, this._c3Min, this._c3Max)
             ];
           default:
-            mid = this._c3Min + (c3Range >> 1);
             return [
-              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, this._c3Min, mid),
-              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, mid + 1, this._c3Max)
+              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, this._c3Min, bestSplit),
+              new(this._histogram, this._c1Min, this._c1Max, this._c2Min, this._c2Max, bestSplit + 1, this._c3Max)
             ];
         }
+      }
+
+      /// <summary>
+      /// Variance-reduction quantity = ratio-balanced: how much total variance is
+      /// REMOVED by splitting this cube into [min..split] and [split+1..max] along the
+      /// given axis. Wu 1991 maximises this quantity to find the best split.
+      /// Mathematically equivalent (up to constants):
+      ///   reduction(split) = (M1²/M0)_left + (M1²/M0)_right − (M1²/M0)_whole
+      /// </summary>
+      private double _VarianceReduction(int axis, int split) {
+        // Aggregate (M0, M1) over [min..split] for this axis, holding the other two axes
+        // at the cube's full extent.
+        var (lm0, lm1c1, lm1c2, lm1c3, _, _, _, _) = _AggregateSlice(axis, this._c1Min, axis == 0 ? split : this._c1Max,
+          this._c2Min, axis == 1 ? split : this._c2Max, this._c3Min, axis == 2 ? split : this._c3Max);
+        var (tm0, tm1c1, tm1c2, tm1c3, _, _, _, _) = this.Aggregate;
+        var rm0 = tm0 - lm0;
+        var rm1c1 = tm1c1 - lm1c1;
+        var rm1c2 = tm1c2 - lm1c2;
+        var rm1c3 = tm1c3 - lm1c3;
+
+        if (lm0 == 0 || rm0 == 0) return double.NegativeInfinity;
+
+        double Sq(double m1, ulong m0) => m1 * m1 / m0;
+
+        var leftSum = Sq(lm1c1, lm0) + Sq(lm1c2, lm0) + Sq(lm1c3, lm0);
+        var rightSum = Sq(rm1c1, rm0) + Sq(rm1c2, rm0) + Sq(rm1c3, rm0);
+        var totalSum = Sq(tm1c1, tm0) + Sq(tm1c2, tm0) + Sq(tm1c3, tm0);
+        return leftSum + rightSum - totalSum;
+      }
+
+      private (ulong m0, double m1c1, double m1c2, double m1c3, double m2c1, double m2c2, double m2c3, double aSum) _AggregateSlice(
+          int splitAxis, int c1Min, int c1Max, int c2Min, int c2Max, int c3Min, int c3Max) {
+        ulong c = 0;
+        double s1 = 0, s2 = 0, s3 = 0, sA = 0, sq1 = 0, sq2 = 0, sq3 = 0;
+        for (var c1 = c1Min; c1 <= c1Max; ++c1)
+        for (var c2 = c2Min; c2 <= c2Max; ++c2)
+        for (var c3 = c3Min; c3 <= c3Max; ++c3) {
+          ref var e = ref this._histogram[c1, c2, c3];
+          c += e.Count; s1 += e.C1Sum; s2 += e.C2Sum; s3 += e.C3Sum; sA += e.ASum;
+          sq1 += e.C1SquaredSum; sq2 += e.C2SquaredSum; sq3 += e.C3SquaredSum;
+        }
+        return (c, s1, s2, s3, sq1, sq2, sq3, sA);
       }
     }
   }

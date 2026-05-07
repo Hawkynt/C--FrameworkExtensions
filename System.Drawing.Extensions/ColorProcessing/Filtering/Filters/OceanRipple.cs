@@ -107,14 +107,29 @@ file readonly struct OceanRippleFrameKernel<TPixel, TWork, TKey, TDecode, TProje
   public int TargetWidth => sourceWidth;
   public int TargetHeight => sourceHeight;
 
+  // Deterministic hash → [0, 2π). Adapts each row/column phase so adjacent rows
+  // ripple slightly out of sync, producing organic ocean-surface displacement
+  // rather than the strict sinusoidal grid that plain Wave gives. Matches the
+  // intent documented in Photoshop's "Ocean Ripple" filter (per-band phase noise).
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float _Phase(int seed) {
+    uint h = (uint)seed * 2654435761u;
+    h ^= h >> 16;
+    h *= 0x85EBCA6Bu;
+    h ^= h >> 13;
+    return (float)((h & 0xFFFFFF) * (2.0 * Math.PI / 0x1000000));
+  }
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
     NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
     int destX, int destY,
     TPixel* dest, int destStride,
     in TEncode encoder) {
-    var sx = (int)(destX + amplitudeX * (float)Math.Sin(2.0 * Math.PI * destY / Math.Max(1, sizeY)));
-    var sy = (int)(destY + amplitudeY * (float)Math.Sin(2.0 * Math.PI * destX / Math.Max(1, sizeX)));
+    var phaseX = _Phase(destY);
+    var phaseY = _Phase(destX + unchecked((int)0x9E3779B1));
+    var sx = (int)(destX + amplitudeX * (float)Math.Sin(2.0 * Math.PI * destY / Math.Max(1, sizeY) + phaseX));
+    var sy = (int)(destY + amplitudeY * (float)Math.Sin(2.0 * Math.PI * destX / Math.Max(1, sizeX) + phaseY));
 
     var px = frame[sx, sy].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);

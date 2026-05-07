@@ -122,7 +122,7 @@ file readonly struct ReticulationFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     in TEncode encoder) {
     var px = frame[destX, destY].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     var noise = _Hash(destX, destY, seed) * (1f / Math.Max(1f, density));
     float v;
@@ -131,7 +131,7 @@ file readonly struct ReticulationFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     else
       v = lum + noise * backgroundLevel;
 
-    v = Math.Max(0f, Math.Min(1f, v));
+    v = ColorConverter.Saturate(v);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));
   }

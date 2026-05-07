@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Cartoon effect with quantized colors and edge darkening", Category = FilterCategory.Artistic)]
 public readonly struct Cartoon(int levels, float edgeThreshold, int blurRadius = 1) : IPixelFilter, IFrameFilter {
   private readonly int _levels = Math.Max(2, levels);
-  private readonly float _edgeThreshold = Math.Max(0f, Math.Min(1f, edgeThreshold));
+  private readonly float _edgeThreshold = ColorConverter.Saturate(edgeThreshold);
   private readonly int _blurRadius = Math.Max(1, blurRadius);
 
   public Cartoon() : this(6, 0.1f, 1) { }
@@ -116,7 +116,7 @@ file readonly struct CartoonFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,9 +133,9 @@ file readonly struct CartoonFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     var qr = (float)Math.Floor(cr * levels) / div;
     var qg = (float)Math.Floor(cg * levels) / div;
     var qb = (float)Math.Floor(cb * levels) / div;
-    qr = Math.Max(0f, Math.Min(1f, qr));
-    qg = Math.Max(0f, Math.Min(1f, qg));
-    qb = Math.Max(0f, Math.Min(1f, qb));
+    qr = ColorConverter.Saturate(qr);
+    qg = ColorConverter.Saturate(qg);
+    qb = ColorConverter.Saturate(qb);
 
     // Sobel edge detection
     var tl = _Lum(frame[destX - 1, destY - 1]);

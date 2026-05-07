@@ -35,7 +35,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("BleachBypass",
   Description = "Simulate bleach bypass film look with desaturation and contrast boost", Category = FilterCategory.Artistic)]
 public readonly struct BleachBypass(float intensity = 1f) : IPixelFilter {
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -51,7 +51,7 @@ public readonly struct BleachBypass(float intensity = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new BleachBypassKernel<TWork, TKey, TPixel, TEncode>(this._intensity));
 
-  public static BleachBypass Default => new();
+  public static BleachBypass Default => new(1f);
 }
 
 file readonly struct BleachBypassKernel<TWork, TKey, TPixel, TEncode>(float intensity)
@@ -72,7 +72,7 @@ file readonly struct BleachBypassKernel<TWork, TKey, TPixel, TEncode>(float inte
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     var dr = r + (lum - r) * 0.5f * intensity;
     var dg = g + (lum - g) * 0.5f * intensity;
@@ -83,8 +83,8 @@ file readonly struct BleachBypassKernel<TWork, TKey, TPixel, TEncode>(float inte
     var ob = (db - 0.5f) * (1f + 0.5f * intensity) + 0.5f;
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
-      Math.Max(0f, Math.Min(1f, or)),
-      Math.Max(0f, Math.Min(1f, og)),
-      Math.Max(0f, Math.Min(1f, ob)), a));
+      ColorConverter.Saturate(or),
+      ColorConverter.Saturate(og),
+      ColorConverter.Saturate(ob), a));
   }
 }

@@ -46,8 +46,8 @@ public readonly struct AccentedEdges : IPixelFilter, IFrameFilter {
 
   public AccentedEdges(float edgeWidth = 1f, float brightness = 0.5f, float smoothness = 0.5f) {
     this._edgeWidth = Math.Max(0.1f, edgeWidth);
-    this._brightness = Math.Max(0f, Math.Min(1f, brightness));
-    this._smoothness = Math.Max(0f, Math.Min(1f, smoothness));
+    this._brightness = ColorConverter.Saturate(brightness);
+    this._smoothness = ColorConverter.Saturate(smoothness);
   }
 
   /// <inheritdoc />
@@ -122,7 +122,7 @@ file readonly struct AccentedEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TPro
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -189,9 +189,9 @@ file readonly struct AccentedEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TPro
     var edgeB = Math.Min(1f, avgB + edgeMag);
 
     // Blend: original * (1 - edgeMag) + edgeColor * edgeMag
-    var outR = Math.Max(0f, Math.Min(1f, avgR * (1f - edgeMag) + edgeR * edgeMag));
-    var outG = Math.Max(0f, Math.Min(1f, avgG * (1f - edgeMag) + edgeG * edgeMag));
-    var outB = Math.Max(0f, Math.Min(1f, avgB * (1f - edgeMag) + edgeB * edgeMag));
+    var outR = ColorConverter.Saturate(avgR * (1f - edgeMag) + edgeR * edgeMag);
+    var outG = ColorConverter.Saturate(avgG * (1f - edgeMag) + edgeG * edgeMag);
+    var outB = ColorConverter.Saturate(avgB * (1f - edgeMag) + edgeB * edgeMag);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, ca));
   }

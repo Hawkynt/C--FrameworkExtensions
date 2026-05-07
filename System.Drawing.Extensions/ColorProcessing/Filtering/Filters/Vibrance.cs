@@ -73,7 +73,33 @@ file readonly struct VibranceKernel<TWork, TKey, TPixel, TEncode>(float amount)
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
     var (h, s, l) = HslMath.RgbToHsl(r, g, b);
     var boost = amount * (1f - s);
-    s = Math.Max(0f, Math.Min(1f, s + boost));
+
+    // Adobe-style skin-tone protection: hues in 0..50° (red-orange) get less
+    // saturation boost, since pushing skin saturation looks unnatural.
+    // Hue is normalised to [0,1]; skin range is hue ∈ [0, 0.139] OR [0.861, 1]
+    // (the hue-wrap neighbourhood of pure red). A smoothstep-shaped attenuation
+    // drops the boost to 40% at pure red and ramps back to 100% at hue 0.139
+    // (or 0.861 from the wrap side). Reference:
+    // https://helpx.adobe.com/camera-raw/using/saturation-vibrance-adjustments.html
+    const float SkinEdge = 0.139f; // 50° / 360°
+    float distFromRed;
+    if (h <= SkinEdge)
+      distFromRed = h;
+    else if (h >= 1f - SkinEdge)
+      distFromRed = 1f - h;
+    else
+      distFromRed = SkinEdge; // outside skin range → no attenuation
+
+    // smoothstep(0, SkinEdge, distFromRed) ∈ [0,1]; 0 at red, 1 at edge.
+    var t = distFromRed / SkinEdge;
+    if (t < 0f) t = 0f;
+    else if (t > 1f) t = 1f;
+    var s01 = t * t * (3f - 2f * t);
+    // skinFactor: 0.4 at red, 1.0 at edge and beyond.
+    var skinFactor = 0.4f + 0.6f * s01;
+    boost *= skinFactor;
+
+    s = ColorConverter.Saturate(s + boost);
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, a));
   }

@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -113,9 +115,9 @@ public readonly struct HilbertCurveDiffusionDitherer : IDitherer {
       var pr = c1.ToFloat() + ar;
       var pg = c2.ToFloat() + ag;
       var pb = c3.ToFloat() + ab;
-      var adjR = Math.Max(0f, Math.Min(1f, pr));
-      var adjG = Math.Max(0f, Math.Min(1f, pg));
-      var adjB = Math.Max(0f, Math.Min(1f, pb));
+      var adjR = ColorConverter.Saturate(pr);
+      var adjG = ColorConverter.Saturate(pg);
+      var adjB = ColorConverter.Saturate(pb);
 
       var adj = ColorFactory.FromNormalized_4<TWork>(
         UNorm32.FromFloatClamped(adjR),

@@ -114,7 +114,7 @@ public class NeighborFrameTests {
         ptr, width, height, width,
         default, default,
         OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-        startY
+        startY: startY
       );
 
       Assert.That(frame.CurrentY, Is.EqualTo(startY));
@@ -137,7 +137,7 @@ public class NeighborFrameTests {
         ptr, width, height, width,
         default, default,
         OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-        startY
+        startY: startY
       );
 
       var window = frame.GetWindow();

@@ -134,9 +134,9 @@ file readonly struct CutoutFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     ar = (float)Math.Floor(ar * levels) / div;
     ag = (float)Math.Floor(ag * levels) / div;
     ab = (float)Math.Floor(ab * levels) / div;
-    ar = Math.Max(0f, Math.Min(1f, ar));
-    ag = Math.Max(0f, Math.Min(1f, ag));
-    ab = Math.Max(0f, Math.Min(1f, ab));
+    ar = ColorConverter.Saturate(ar);
+    ag = ColorConverter.Saturate(ag);
+    ab = ColorConverter.Saturate(ab);
 
     var center = frame[destX, destY].Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

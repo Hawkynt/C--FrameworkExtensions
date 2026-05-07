@@ -136,7 +136,7 @@ file readonly struct SoftGlowFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     var avgB = sumB / count;
 
     // Luminance of average
-    var blurLum = ColorMatrices.BT601_R * avgR + ColorMatrices.BT601_G * avgG + ColorMatrices.BT601_B * avgB;
+    var blurLum = ColorConverter.LuminanceFromRgb(avgR, avgG, avgB);
 
     // Screen blend only if blur is bright enough
     float outR, outG, outB;
@@ -160,9 +160,9 @@ file readonly struct SoftGlowFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     outG = outG * (1f - sharpness) + cg * sharpness;
     outB = outB * (1f - sharpness) + cb * sharpness;
 
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, ca));
   }

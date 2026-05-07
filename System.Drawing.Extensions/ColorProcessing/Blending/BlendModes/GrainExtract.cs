@@ -21,6 +21,8 @@ using System;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Blending.BlendModes;
 
 /// <summary>
@@ -32,5 +34,5 @@ namespace Hawkynt.ColorProcessing.Blending.BlendModes;
 public readonly struct GrainExtract : IBlendMode {
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public float Blend(float bg, float fg) => Math.Max(0f, Math.Min(1f, bg - fg + 0.5f));
+  public float Blend(float bg, float fg) => ColorConverter.Saturate(bg - fg + 0.5f);
 }

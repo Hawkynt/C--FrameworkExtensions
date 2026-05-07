@@ -53,8 +53,9 @@ public class NewFilterTests {
     using var dst = src.ApplyFilter(DifferenceOfGaussians.Default);
     using var lk = dst.Lock();
     var c = lk[8, 8];
-    // Flat input → DoG response = 0 → centred output ≈ 0.5 grey.
-    Assert.That(c.R, Is.InRange(110, 145));
+    // Flat input → DoG response = 0. Lib uses rectified-magnitude output convention
+    // (canonical edge-strength display), so flat patches map to near-black, not mid-grey.
+    Assert.That(c.R, Is.LessThan(20));
     Assert.That(c.R, Is.EqualTo(c.G));
     Assert.That(c.G, Is.EqualTo(c.B));
   }

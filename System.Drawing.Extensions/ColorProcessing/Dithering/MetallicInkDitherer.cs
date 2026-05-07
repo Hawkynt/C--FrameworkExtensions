@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -78,7 +80,7 @@ public readonly struct MetallicInkDitherer : IDitherer {
   /// <param name="strength">Noise strength in [0, 1]. Default 0.5.</param>
   /// <param name="seed">RNG seed for reproducible grain. Default 42.</param>
   public MetallicInkDitherer(float strength = 0.5f, int seed = 42) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._seed = seed;
   }
 

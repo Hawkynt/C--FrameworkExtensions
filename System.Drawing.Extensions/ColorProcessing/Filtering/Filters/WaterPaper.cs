@@ -130,7 +130,7 @@ file readonly struct WaterPaperFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
     for (var i = -half; i <= half; ++i) {
       var px = frame[destX + i, destY].Work;
       var (nr, ng, nb, _) = ColorConverter.GetNormalizedRgba(in px);
-      sumLum += ColorMatrices.BT601_R * nr + ColorMatrices.BT601_G * ng + ColorMatrices.BT601_B * nb;
+      sumLum += ColorConverter.LuminanceFromRgb(nr, ng, nb);
       ++count;
     }
 
@@ -142,7 +142,7 @@ file readonly struct WaterPaperFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
 
     // Apply brightness/contrast
     v = (v - 0.5f) * (contrast / 50f) + 0.5f + (brightness - 50f) / 100f;
-    v = Math.Max(0f, Math.Min(1f, v));
+    v = ColorConverter.Saturate(v);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));
   }

@@ -18,8 +18,11 @@
 #endregion
 
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using Hawkynt.ColorProcessing.Metrics;
+using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
 namespace Hawkynt.ColorProcessing.Dithering;
@@ -325,7 +328,15 @@ internal readonly struct ErrorDiffusionData {
   public readonly ushort Divisor;
   public readonly float Strength;
 
-  public ErrorDiffusionData(byte[,] matrix, float strength = 1f) {
+  public ErrorDiffusionData(byte[,] matrix, float strength = 1f) : this(matrix, divisorOverride: 0, strength) { }
+
+  /// <summary>
+  /// Creates an error-diffusion kernel with an explicit divisor that may differ from the
+  /// sum of the matrix weights. This supports lossy kernels like Atkinson where the
+  /// canonical divisor (8) is larger than the weight sum (6) so 25% of the error is
+  /// deliberately dropped.
+  /// </summary>
+  public ErrorDiffusionData(byte[,] matrix, ushort divisorOverride, float strength = 1f) {
     var rows = matrix.GetLength(0);
     var cols = matrix.GetLength(1);
 
@@ -335,7 +346,7 @@ internal readonly struct ErrorDiffusionData {
     this.Strength = Math.Clamp(strength, 0f, 1f);
 
     byte shift = 0;
-    var divisor = 0;
+    var weightSum = 0;
 
     for (var r = 0; r < rows; ++r)
     for (var c = 0; c < cols; ++c) {
@@ -347,12 +358,12 @@ internal readonly struct ErrorDiffusionData {
         this.Weights[idx] = 0;
       } else {
         this.Weights[idx] = w;
-        divisor += w;
+        weightSum += w;
       }
     }
 
     this.Shift = shift;
-    this.Divisor = (ushort)divisor;
+    this.Divisor = divisorOverride > 0 ? divisorOverride : (ushort)weightSum;
   }
 
   private ErrorDiffusionData(byte[] weights, byte rowCount, byte columnCount, byte shift, ushort divisor, float strength) {
@@ -400,11 +411,15 @@ internal readonly struct ErrorDiffusionData {
     { 1, 2, 4, 2, 1 }
   });
 
+  // Apple's canonical Atkinson kernel (Bill Atkinson, MacPaint 1984): six neighbours each
+  // receive 1/8 of the error, so only 6/8 = 75% is diffused. The remaining 25% is dropped
+  // — that lossy attenuation is what produces the kernel's signature grainy Mac-look.
+  // Sum of weights = 6 but the divisor must be 8.
   public static ErrorDiffusionData Atkinson { get; } = new(new byte[,] {
     { 0, X, 1, 1 },
     { 1, 1, 1, 0 },
     { 0, 1, 0, 0 }
-  });
+  }, divisorOverride: 8);
 
   public static ErrorDiffusionData Burkes { get; } = new(new byte[,] {
     { 0, 0, X, 8, 4 },
@@ -550,39 +565,139 @@ file static class ErrorDiffusionCore {
     where TWork : unmanaged, IColorSpace4<TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
+    // JIT-time specialisation: byte-typed working space (Bgra8888) routes to an int-storage
+    // hot path that accumulates `(adj_byte - near_byte) * weight` directly. Recovery as
+    // float at apply-time is mathematically equivalent to the original float path
+    // (`(adj_byte - near_byte) * weight / 255`) but more numerically accurate — the float
+    // path's per-pixel mul-add chain accumulates IEEE rounding error, while the int path
+    // does exact integer accumulation and a single float divide at recovery. The
+    // accumulation loop also runs with 4× less memory bandwidth and integer mul-add
+    // instead of float fmul-fadd.
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      DitherLinearByte<TWork, TMetric>(source, indices, width, height, sourceStride, targetStride, startY, metric, palette, data);
+      return;
+    }
+    DitherLinearFloat<TWork, TMetric>(source, indices, width, height, sourceStride, targetStride, startY, metric, palette, data);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void DitherLinearFloat<TWork, TMetric>(
+    TWork* source,
+    byte* indices,
+    int width,
+    int height,
+    int sourceStride,
+    int targetStride,
+    int startY,
+        in TMetric metric,
+    TWork[] palette,
+    in ErrorDiffusionData data)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
     var rowStride = width * 4;
-    var errors = new float[data.RowCount * rowStride];
-    var invDivisor = 1f / data.Divisor;
-    var baseRow = 0;
+    var bufferSize = data.RowCount * rowStride;
+    // Rent the per-call error buffer from the pool to amortise allocation in batch
+    // workflows (e.g. thumbnail generation). ArrayPool may return a buffer larger than
+    // requested and is NOT zeroed, so explicitly clear the slice we use.
+    var errors = ArrayPool<float>.Shared.Rent(bufferSize);
+    try {
+      errors.AsSpan(0, bufferSize).Clear();
+      var invDivisor = 1f / data.Divisor;
+      var baseRow = 0;
 
-    for (var y = startY; y < endY; ++y) {
-      var row0Offset = baseRow * rowStride;
-      var rowSourceBase = y * sourceStride;
-      var rowTargetBase = y * targetStride;
+      for (var y = startY; y < endY; ++y) {
+        var row0Offset = baseRow * rowStride;
+        var rowSourceBase = y * sourceStride;
+        var rowTargetBase = y * targetStride;
 
-      // Linear: always left-to-right
-      for (var x = 0; x < width; ++x) {
-        var sourceIdx = rowSourceBase + x;
-        var targetIdx = rowTargetBase + x;
+        // Linear: always left-to-right
+        for (var x = 0; x < width; ++x) {
+          var sourceIdx = rowSourceBase + x;
+          var targetIdx = rowTargetBase + x;
 
-        var color = source[sourceIdx];
-        var errIdx = row0Offset + x * 4;
-        var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
-        errors.AsSpan(errIdx, 4).Clear();
+          var color = source[sourceIdx];
+          var errIdx = row0Offset + x * 4;
+          var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
+          errors.AsSpan(errIdx, 4).Clear();
 
-        // Post-error adjusted colours are effectively unique per pixel on photographic
-        // input, so the palette-lookup's dictionary cache is a net loss here.
-        var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
-        DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
-          data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+          // Post-error adjusted colours are effectively unique per pixel on photographic
+          // input, so the palette-lookup's dictionary cache is a net loss here.
+          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+          DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
+            data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
 
-        indices[targetIdx] = (byte)nearestIdx;
+          indices[targetIdx] = (byte)nearestIdx;
+        }
+
+        errors.AsSpan(row0Offset, rowStride).Clear();
+        baseRow = (baseRow + 1) % data.RowCount;
       }
+    } finally {
+      ArrayPool<float>.Shared.Return(errors);
+    }
+  }
 
-      errors.AsSpan(row0Offset, rowStride).Clear();
-      baseRow = (baseRow + 1) % data.RowCount;
+  /// <summary>
+  /// Byte-typed-work-space variant of <see cref="DitherLinearFloat{TWork, TMetric}"/>. Stores
+  /// errors as <c>int</c> instead of <c>float</c>: each entry holds the accumulated
+  /// <c>(adj_byte - near_byte) * weight</c>, exact under integer arithmetic for byte-typed
+  /// work. The recovery scale folds /255 (compensating for the missing ToFloat() division
+  /// in storage) and /divisor into a single multiply at apply-time.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void DitherLinearByte<TWork, TMetric>(
+    TWork* source,
+    byte* indices,
+    int width,
+    int height,
+    int sourceStride,
+    int targetStride,
+    int startY,
+        in TMetric metric,
+    TWork[] palette,
+    in ErrorDiffusionData data)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
+    var rowStride = width * 4;
+    var bufferSize = data.RowCount * rowStride;
+    var errors = ArrayPool<int>.Shared.Rent(bufferSize);
+    try {
+      errors.AsSpan(0, bufferSize).Clear();
+      var invByteScale = 1f / (255f * data.Divisor);
+      var baseRow = 0;
+
+      for (var y = startY; y < endY; ++y) {
+        var row0Offset = baseRow * rowStride;
+        var rowSourceBase = y * sourceStride;
+        var rowTargetBase = y * targetStride;
+
+        for (var x = 0; x < width; ++x) {
+          var sourceIdx = rowSourceBase + x;
+          var targetIdx = rowTargetBase + x;
+
+          var color = source[sourceIdx];
+          var errIdx = row0Offset + x * 4;
+          var adjustedColor = ApplyErrorByte(color, errors, errIdx, invByteScale, data.Strength);
+          errors.AsSpan(errIdx, 4).Clear();
+
+          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+          DistributeErrorLinearByte(adjustedColor, nearestColor, errors, x, y, width, endY,
+            data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+
+          indices[targetIdx] = (byte)nearestIdx;
+        }
+
+        errors.AsSpan(row0Offset, rowStride).Clear();
+        baseRow = (baseRow + 1) % data.RowCount;
+      }
+    } finally {
+      ArrayPool<int>.Shared.Return(errors);
     }
   }
 
@@ -601,59 +716,164 @@ file static class ErrorDiffusionCore {
     where TWork : unmanaged, IColorSpace4<TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
+    if (typeof(TWork) == typeof(Bgra8888)) {
+      DitherSerpentineByte<TWork, TMetric>(source, indices, width, height, sourceStride, targetStride, startY, metric, palette, data);
+      return;
+    }
+    DitherSerpentineFloat<TWork, TMetric>(source, indices, width, height, sourceStride, targetStride, startY, metric, palette, data);
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void DitherSerpentineFloat<TWork, TMetric>(
+    TWork* source,
+    byte* indices,
+    int width,
+    int height,
+    int sourceStride,
+    int targetStride,
+    int startY,
+        in TMetric metric,
+    TWork[] palette,
+    in ErrorDiffusionData data)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+
     var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
     var endY = startY + height;
     var rowStride = width * 4;
-    var errors = new float[data.RowCount * rowStride];
-    var invDivisor = 1f / data.Divisor;
-    var baseRow = 0;
+    var bufferSize = data.RowCount * rowStride;
+    var errors = ArrayPool<float>.Shared.Rent(bufferSize);
+    try {
+      errors.AsSpan(0, bufferSize).Clear();
+      var invDivisor = 1f / data.Divisor;
+      var baseRow = 0;
 
-    for (var y = startY; y < endY; ++y) {
-      var row0Offset = baseRow * rowStride;
-      var rowSourceBase = y * sourceStride;
-      var rowTargetBase = y * targetStride;
+      for (var y = startY; y < endY; ++y) {
+        var row0Offset = baseRow * rowStride;
+        var rowSourceBase = y * sourceStride;
+        var rowTargetBase = y * targetStride;
 
-      // Serpentine: alternate direction each row
-      var reverseRow = (y & 1) == 1;
+        // Serpentine: alternate direction each row
+        var reverseRow = (y & 1) == 1;
 
-      if (reverseRow) {
-        // Right-to-left
-        for (var x = width - 1; x >= 0; --x) {
-          var sourceIdx = rowSourceBase + x;
-          var targetIdx = rowTargetBase + x;
+        if (reverseRow) {
+          // Right-to-left
+          for (var x = width - 1; x >= 0; --x) {
+            var sourceIdx = rowSourceBase + x;
+            var targetIdx = rowTargetBase + x;
 
-          var color = source[sourceIdx];
-          var errIdx = row0Offset + x * 4;
-          var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
-          errors.AsSpan(errIdx, 4).Clear();
+            var color = source[sourceIdx];
+            var errIdx = row0Offset + x * 4;
+            var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
+            errors.AsSpan(errIdx, 4).Clear();
 
-          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
-          DistributeErrorReverse(adjustedColor, nearestColor, errors, x, y, width, endY,
-            data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+            var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+            DistributeErrorReverse(adjustedColor, nearestColor, errors, x, y, width, endY,
+              data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
 
-          indices[targetIdx] = (byte)nearestIdx;
+            indices[targetIdx] = (byte)nearestIdx;
+          }
+        } else {
+          // Left-to-right
+          for (var x = 0; x < width; ++x) {
+            var sourceIdx = rowSourceBase + x;
+            var targetIdx = rowTargetBase + x;
+
+            var color = source[sourceIdx];
+            var errIdx = row0Offset + x * 4;
+            var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
+            errors.AsSpan(errIdx, 4).Clear();
+
+            var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+            DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
+              data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+
+            indices[targetIdx] = (byte)nearestIdx;
+          }
         }
-      } else {
-        // Left-to-right
-        for (var x = 0; x < width; ++x) {
-          var sourceIdx = rowSourceBase + x;
-          var targetIdx = rowTargetBase + x;
 
-          var color = source[sourceIdx];
-          var errIdx = row0Offset + x * 4;
-          var adjustedColor = ApplyError(color, errors, errIdx, invDivisor, data.Strength);
-          errors.AsSpan(errIdx, 4).Clear();
-
-          var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
-          DistributeErrorLinear(adjustedColor, nearestColor, errors, x, y, width, endY,
-            data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
-
-          indices[targetIdx] = (byte)nearestIdx;
-        }
+        errors.AsSpan(row0Offset, rowStride).Clear();
+        baseRow = (baseRow + 1) % data.RowCount;
       }
+    } finally {
+      ArrayPool<float>.Shared.Return(errors);
+    }
+  }
 
-      errors.AsSpan(row0Offset, rowStride).Clear();
-      baseRow = (baseRow + 1) % data.RowCount;
+  /// <summary>
+  /// Byte-typed-work-space variant of <see cref="DitherSerpentineFloat{TWork, TMetric}"/>.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static unsafe void DitherSerpentineByte<TWork, TMetric>(
+    TWork* source,
+    byte* indices,
+    int width,
+    int height,
+    int sourceStride,
+    int targetStride,
+    int startY,
+        in TMetric metric,
+    TWork[] palette,
+    in ErrorDiffusionData data)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+
+    var lookup = new PaletteLookup<TWork, TMetric>(palette, metric);
+    var endY = startY + height;
+    var rowStride = width * 4;
+    var bufferSize = data.RowCount * rowStride;
+    var errors = ArrayPool<int>.Shared.Rent(bufferSize);
+    try {
+      errors.AsSpan(0, bufferSize).Clear();
+      var invByteScale = 1f / (255f * data.Divisor);
+      var baseRow = 0;
+
+      for (var y = startY; y < endY; ++y) {
+        var row0Offset = baseRow * rowStride;
+        var rowSourceBase = y * sourceStride;
+        var rowTargetBase = y * targetStride;
+
+        var reverseRow = (y & 1) == 1;
+
+        if (reverseRow) {
+          for (var x = width - 1; x >= 0; --x) {
+            var sourceIdx = rowSourceBase + x;
+            var targetIdx = rowTargetBase + x;
+
+            var color = source[sourceIdx];
+            var errIdx = row0Offset + x * 4;
+            var adjustedColor = ApplyErrorByte(color, errors, errIdx, invByteScale, data.Strength);
+            errors.AsSpan(errIdx, 4).Clear();
+
+            var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+            DistributeErrorReverseByte(adjustedColor, nearestColor, errors, x, y, width, endY,
+              data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+
+            indices[targetIdx] = (byte)nearestIdx;
+          }
+        } else {
+          for (var x = 0; x < width; ++x) {
+            var sourceIdx = rowSourceBase + x;
+            var targetIdx = rowTargetBase + x;
+
+            var color = source[sourceIdx];
+            var errIdx = row0Offset + x * 4;
+            var adjustedColor = ApplyErrorByte(color, errors, errIdx, invByteScale, data.Strength);
+            errors.AsSpan(errIdx, 4).Clear();
+
+            var nearestIdx = lookup.FindNearestNoCache(adjustedColor, out var nearestColor);
+            DistributeErrorLinearByte(adjustedColor, nearestColor, errors, x, y, width, endY,
+              data.Weights, data.RowCount, data.ColumnCount, data.Shift, baseRow, rowStride);
+
+            indices[targetIdx] = (byte)nearestIdx;
+          }
+        }
+
+        errors.AsSpan(row0Offset, rowStride).Clear();
+        baseRow = (baseRow + 1) % data.RowCount;
+      }
+    } finally {
+      ArrayPool<int>.Shared.Return(errors);
     }
   }
 
@@ -731,6 +951,181 @@ file static class ErrorDiffusionCore {
     var e2 = ac2.ToFloat() - nc2.ToFloat();
     var e3 = ac3.ToFloat() - nc3.ToFloat();
     var ea = aa.ToFloat() - na.ToFloat();
+
+    for (var row = 0; row < matrixRowCount; ++row) {
+      var newY = y + row;
+      if (newY >= height)
+        break;
+
+      var ringRow = (baseRow + row) % matrixRowCount;
+      var ringRowOffset = ringRow * rowStride;
+
+      for (var col = 0; col < colCount; ++col) {
+        var weight = weights[row * colCount + col];
+        if (weight == 0)
+          continue;
+
+        // Reverse direction: mirror column offset
+        var newX = x - (col - shift);
+        if (newX < 0 || newX >= width)
+          continue;
+
+        var targetIdx = ringRowOffset + newX * 4;
+        errors[targetIdx] += e1 * weight;
+        errors[targetIdx + 1] += e2 * weight;
+        errors[targetIdx + 2] += e3 * weight;
+        errors[targetIdx + 3] += ea * weight;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Byte-typed-work variant of <see cref="ApplyError"/>. The integer error storage holds
+  /// <c>(adj_byte - near_byte) * weight</c>, so recovery as float divides by 255 (compensating
+  /// for the missing /255 in storage) and by the kernel divisor — both folded into <paramref name="invByteScale"/>.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static TWork ApplyErrorByte<TWork>(in TWork color, int[] errors, int errIdx, float invByteScale, float strength)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    var (c1, c2, c3, a) = color.ToNormalized();
+    var scale = invByteScale * strength;
+    return ColorFactory.FromNormalized_4<TWork>(
+      UNorm32.FromFloatClamped(c1.ToFloat() + errors[errIdx] * scale),
+      UNorm32.FromFloatClamped(c2.ToFloat() + errors[errIdx + 1] * scale),
+      UNorm32.FromFloatClamped(c3.ToFloat() + errors[errIdx + 2] * scale),
+      UNorm32.FromFloatClamped(a.ToFloat() + errors[errIdx + 3] * scale)
+    );
+  }
+
+  /// <summary>
+  /// Byte-typed-work variant of <see cref="DistributeErrorLinear"/>. Stores the error as a
+  /// raw integer byte-difference times weight — the /255 normalisation is folded into the
+  /// recovery scale used by <see cref="ApplyErrorByte"/>.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void DistributeErrorLinearByte<TWork>(
+    in TWork adjustedColor,
+    in TWork nearestColor,
+    int[] errors,
+    int x, int y,
+    int width, int height,
+    byte[] weights,
+    int matrixRowCount, int colCount, int shift,
+    int baseRow, int rowStride)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    // For Bgra8888-typed work, ToNormalized() returns bit-replicated UNorm32 values.
+    // Top 8 bits of (RawValue) recovers the original byte exactly; subtracting two such
+    // bytes gives the integer e_byte ∈ [-255, 255] with no precision loss.
+    var (ac1, ac2, ac3, aa) = adjustedColor.ToNormalized();
+    var (nc1, nc2, nc3, na) = nearestColor.ToNormalized();
+    var e1 = (int)(ac1.RawValue >> 24) - (int)(nc1.RawValue >> 24);
+    var e2 = (int)(ac2.RawValue >> 24) - (int)(nc2.RawValue >> 24);
+    var e3 = (int)(ac3.RawValue >> 24) - (int)(nc3.RawValue >> 24);
+    var ea = (int)(aa.RawValue >> 24) - (int)(na.RawValue >> 24);
+
+    if (Vector128.IsHardwareAccelerated) {
+      var diffs = Vector128.Create(e1, e2, e3, ea);
+      for (var row = 0; row < matrixRowCount; ++row) {
+        var newY = y + row;
+        if (newY >= height)
+          break;
+
+        var ringRow = (baseRow + row) % matrixRowCount;
+        var ringRowOffset = ringRow * rowStride;
+
+        for (var col = 0; col < colCount; ++col) {
+          var weight = weights[row * colCount + col];
+          if (weight == 0)
+            continue;
+
+          var newX = x + (col - shift);
+          if (newX < 0 || newX >= width)
+            continue;
+
+          var targetIdx = ringRowOffset + newX * 4;
+          var weighted = diffs * Vector128.Create((int)weight);
+          ref var slotV = ref Unsafe.As<int, Vector128<int>>(ref errors[targetIdx]);
+          slotV += weighted;
+        }
+      }
+      return;
+    }
+
+    for (var row = 0; row < matrixRowCount; ++row) {
+      var newY = y + row;
+      if (newY >= height)
+        break;
+
+      var ringRow = (baseRow + row) % matrixRowCount;
+      var ringRowOffset = ringRow * rowStride;
+
+      for (var col = 0; col < colCount; ++col) {
+        var weight = weights[row * colCount + col];
+        if (weight == 0)
+          continue;
+
+        var newX = x + (col - shift);
+        if (newX < 0 || newX >= width)
+          continue;
+
+        var targetIdx = ringRowOffset + newX * 4;
+        errors[targetIdx] += e1 * weight;
+        errors[targetIdx + 1] += e2 * weight;
+        errors[targetIdx + 2] += e3 * weight;
+        errors[targetIdx + 3] += ea * weight;
+      }
+    }
+  }
+
+  /// <summary>
+  /// Byte-typed-work variant of <see cref="DistributeErrorReverse"/>.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void DistributeErrorReverseByte<TWork>(
+    in TWork adjustedColor,
+    in TWork nearestColor,
+    int[] errors,
+    int x, int y,
+    int width, int height,
+    byte[] weights,
+    int matrixRowCount, int colCount, int shift,
+    int baseRow, int rowStride)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    var (ac1, ac2, ac3, aa) = adjustedColor.ToNormalized();
+    var (nc1, nc2, nc3, na) = nearestColor.ToNormalized();
+    var e1 = (int)(ac1.RawValue >> 24) - (int)(nc1.RawValue >> 24);
+    var e2 = (int)(ac2.RawValue >> 24) - (int)(nc2.RawValue >> 24);
+    var e3 = (int)(ac3.RawValue >> 24) - (int)(nc3.RawValue >> 24);
+    var ea = (int)(aa.RawValue >> 24) - (int)(na.RawValue >> 24);
+
+    if (Vector128.IsHardwareAccelerated) {
+      var diffs = Vector128.Create(e1, e2, e3, ea);
+      for (var row = 0; row < matrixRowCount; ++row) {
+        var newY = y + row;
+        if (newY >= height)
+          break;
+
+        var ringRow = (baseRow + row) % matrixRowCount;
+        var ringRowOffset = ringRow * rowStride;
+
+        for (var col = 0; col < colCount; ++col) {
+          var weight = weights[row * colCount + col];
+          if (weight == 0)
+            continue;
+
+          // Reverse direction: mirror column offset
+          var newX = x - (col - shift);
+          if (newX < 0 || newX >= width)
+            continue;
+
+          var targetIdx = ringRowOffset + newX * 4;
+          var weighted = diffs * Vector128.Create((int)weight);
+          ref var slotV = ref Unsafe.As<int, Vector128<int>>(ref errors[targetIdx]);
+          slotV += weighted;
+        }
+      }
+      return;
+    }
 
     for (var row = 0; row < matrixRowCount; ++row) {
       var newY = y + row;

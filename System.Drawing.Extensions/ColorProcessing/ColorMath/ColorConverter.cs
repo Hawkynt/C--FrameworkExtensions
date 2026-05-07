@@ -121,6 +121,28 @@ public static class ColorConverter {
     => GetLuminanceInt(color.C1, color.C2, color.C3);
 
   /// <summary>
+  /// BT.601 luminance from already-normalised RGB channels — for filter kernels that
+  /// have decomposed RGB via <see cref="GetNormalizedRgb"/> / <see cref="GetNormalizedRgba"/>
+  /// and don't have the original color struct handy. Replaces the duplicated
+  /// <c>ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b</c>
+  /// pattern that was scattered across ~30 filter files before Round 22.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float LuminanceFromRgb(float r, float g, float b)
+    => ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+
+  /// <summary>
+  /// Saturate (clamp to <c>[0, 1]</c>) a single float channel value. Replaces the
+  /// duplicated <c>Math.Min(1f, Math.Max(0f, x))</c> pattern.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static float Saturate(float x) {
+    if (x < 0f) return 0f;
+    if (x > 1f) return 1f;
+    return x;
+  }
+
+  /// <summary>
   /// Gets normalized RGB components (0.0-1.0 range) from a color.
   /// </summary>
   /// <typeparam name="TWork">The working color type.</typeparam>

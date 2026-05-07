@@ -223,51 +223,14 @@ public readonly struct Nedi : IRescaler {
       r1 += NEDI_WEIGHT * (y0*c0b + y1*c1b + y2*c2b + y3*c3b);
     }
 
-    // Configuration 1: extended positions (weight 1)
-    {
-      var y0 = GetLumaAt(window, -2, -1);
-      var y1 = GetLumaAt(window,  2,  1);
-      var y2 = GetLumaAt(window, -1,  2);
-      var y3 = GetLumaAt(window,  1, -2);
-
-      var c0a = GetLumaAt(window, -2, -2) + GetLumaAt(window, -2, 0);
-      var c0b = GetLumaAt(window, -2, 0) + GetLumaAt(window, -2, -2);
-      var c1a = GetLumaAt(window, 2, 0) + GetLumaAt(window, 2, 2);
-      var c1b = GetLumaAt(window, 2, 2) + GetLumaAt(window, 2, 0);
-      var c2a = GetLumaAt(window, -2, 2) + GetLumaAt(window, 0, 2);
-      var c2b = GetLumaAt(window, 0, 2) + GetLumaAt(window, -2, 2);
-      var c3a = GetLumaAt(window, 0, -2) + GetLumaAt(window, 2, -2);
-      var c3b = GetLumaAt(window, 2, -2) + GetLumaAt(window, 0, -2);
-
-      r00 += c0a*c0a + c1a*c1a + c2a*c2a + c3a*c3a;
-      r01 += c0a*c0b + c1a*c1b + c2a*c2b + c3a*c3b;
-      r11 += c0b*c0b + c1b*c1b + c2b*c2b + c3b*c3b;
-      r0 += y0*c0a + y1*c1a + y2*c2a + y3*c3a;
-      r1 += y0*c0b + y1*c1b + y2*c2b + y3*c3b;
-    }
-
-    // Configuration 2: alternate extended (weight 1)
-    {
-      var y0 = GetLumaAt(window, -2,  1);
-      var y1 = GetLumaAt(window,  2, -1);
-      var y2 = GetLumaAt(window,  1,  2);
-      var y3 = GetLumaAt(window, -1, -2);
-
-      var c0a = GetLumaAt(window, -2, 0) + GetLumaAt(window, -2, 2);
-      var c0b = GetLumaAt(window, -2, 2) + GetLumaAt(window, -2, 0);
-      var c1a = GetLumaAt(window, 2, -2) + GetLumaAt(window, 2, 0);
-      var c1b = GetLumaAt(window, 2, 0) + GetLumaAt(window, 2, -2);
-      var c2a = GetLumaAt(window, 0, 2) + GetLumaAt(window, 2, 2);
-      var c2b = GetLumaAt(window, 2, 2) + GetLumaAt(window, 0, 2);
-      var c3a = GetLumaAt(window, -2, -2) + GetLumaAt(window, 0, -2);
-      var c3b = GetLumaAt(window, 0, -2) + GetLumaAt(window, -2, -2);
-
-      r00 += c0a*c0a + c1a*c1a + c2a*c2a + c3a*c3a;
-      r01 += c0a*c0b + c1a*c1b + c2a*c2b + c3a*c3b;
-      r11 += c0b*c0b + c1b*c1b + c2b*c2b + c3b*c3b;
-      r0 += y0*c0a + y1*c1a + y2*c2a + y3*c3a;
-      r1 += y0*c0b + y1*c1b + y2*c2b + y3*c3b;
-    }
+    // Configurations 1 and 2 (extended-position weight-1 contributions) were originally
+    // intended to strengthen the autocorrelation estimate, but the previous implementation
+    // had `c?b` as a permutation of `c?a` (e.g. `X+Y` vs `Y+X`), which is commutative for
+    // addition — the "two directions" were identical, making the contribution degenerate
+    // and the 2×2 system singular for those rows. Removed pending a reference-grounded
+    // re-derivation (Li & Orchard 2001 specifies the full 4×4 covariance over a wider
+    // window; the lib's reduced 2-direction formulation needs separate `a`/`b` sampling
+    // patterns at the extended positions).
 
     r00 /= NEDI_N; r01 /= NEDI_N; r11 /= NEDI_N;
     r0 /= NEDI_N; r1 /= NEDI_N;

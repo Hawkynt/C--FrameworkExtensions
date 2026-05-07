@@ -67,7 +67,7 @@ file readonly struct LaplacianKernel<TWork, TKey, TPixel, TEncode>
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,7 +82,7 @@ file readonly struct LaplacianKernel<TWork, TKey, TPixel, TEncode>
     var l = _Lum(window.P0M1);
     var r = _Lum(window.P0P1);
 
-    var v = Math.Max(0f, Math.Min(1f, Math.Abs(t + b + l + r - 4f * c)));
+    var v = ColorConverter.Saturate(Math.Abs(t + b + l + r - 4f * c));
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

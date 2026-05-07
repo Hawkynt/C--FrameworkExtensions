@@ -110,7 +110,7 @@ file readonly struct ConteCrayonFrameKernel<TPixel, TWork, TKey, TDecode, TProje
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +121,7 @@ file readonly struct ConteCrayonFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     in TEncode encoder) {
     var px = frame[destX, destY].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     var tl = _Lum(frame, destX - 1, destY - 1);
     var t  = _Lum(frame, destX,     destY - 1);
@@ -143,7 +143,7 @@ file readonly struct ConteCrayonFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     else
       v = 1f - background * (1f - edge);
 
-    v = Math.Max(0f, Math.Min(1f, v));
+    v = ColorConverter.Saturate(v);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));
   }

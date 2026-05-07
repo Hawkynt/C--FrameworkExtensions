@@ -125,7 +125,7 @@ file readonly struct SpongeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     for (var dx = -brushSize; dx <= brushSize; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       var bin = (int)(lum * (bins - 1));
       if (bin < 0)
         bin = 0;
@@ -157,9 +157,9 @@ file readonly struct SpongeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     outG = 0.5f + (outG - 0.5f) * (1f + smoothness * 0.2f);
     outB = 0.5f + (outB - 0.5f) * (1f + smoothness * 0.2f);
 
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     var center = frame[destX, destY].Work;
     var (_, _, _, a) = ColorConverter.GetNormalizedRgba(in center);

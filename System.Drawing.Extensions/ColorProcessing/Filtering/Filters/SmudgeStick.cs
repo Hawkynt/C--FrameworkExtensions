@@ -38,8 +38,8 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Smudge stick painting with highlight brightening", Category = FilterCategory.Artistic)]
 public readonly struct SmudgeStick(int strokeLength = 2, float highlightArea = 0.5f, float intensity = 0.5f) : IPixelFilter, IFrameFilter {
   private readonly int _strokeLength = Math.Max(1, strokeLength);
-  private readonly float _highlightArea = Math.Max(0f, Math.Min(1f, highlightArea));
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _highlightArea = ColorConverter.Saturate(highlightArea);
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public bool UsesFrameAccess => true;
@@ -117,7 +117,7 @@ file readonly struct SmudgeStickFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     in TEncode encoder) {
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, a) = ColorConverter.GetNormalizedRgba(in center);
-    var lum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var lum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
 
     var sumR = 0f;
     var sumG = 0f;
@@ -151,9 +151,9 @@ file readonly struct SmudgeStickFrameKernel<TPixel, TWork, TKey, TDecode, TProje
       outB = avgB;
     }
 
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

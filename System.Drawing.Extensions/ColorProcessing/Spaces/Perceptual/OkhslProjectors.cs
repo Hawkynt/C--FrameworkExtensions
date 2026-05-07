@@ -40,8 +40,12 @@ public readonly struct OklabFToOkhslF : IProject<OklabF, OkhslF> {
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public OkhslF Project(in OklabF lab) {
     var c = MathF.Sqrt(lab.A * lab.A + lab.B * lab.B);
-    if (c < 1e-9f) {
-      // Achromatic — toe-mapped lightness only.
+    // The achromatic threshold is set to 1e-6 (was 1e-9). sRGB white passed through
+    // LinearRgbFToOklabF accumulates a float-residual chroma of ~6e-8 which is too
+    // small to be visually meaningful but too large to fall under 1e-9. Without this
+    // looser threshold, the L≥1 / cMax=cMid=0 boundary in GetCs produced NaN saturation
+    // (Ottosson's reference returns S=0 at white). Tested in ColorSpaceAnchorTests.
+    if (c < 1e-6f) {
       return new(0f, 0f, OkhslOkhsvHelpers.Toe(lab.L));
     }
 

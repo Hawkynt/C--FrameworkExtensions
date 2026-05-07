@@ -29,12 +29,13 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// zfast-CRT scaler - Performance-optimized CRT simulation.
+/// Stylistic CRT-style upscale inspired by the zfast-crt shader. NOT a port: this
+/// filter uses a fixed darkening pattern over each scaled block in place of the
+/// shader's per-fragment scanline math.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/zfast-crt</para>
-/// <para>Algorithm: Minimal overhead CRT effect with scanlines and simple color mask.</para>
-/// <para>Designed for real-time applications with minimal performance impact.</para>
+/// <para>Reference (cited but not faithfully implemented):
+/// https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/zfast-crt</para>
 /// </remarks>
 [ScalerInfo("zfast-CRT",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/zfast-crt",

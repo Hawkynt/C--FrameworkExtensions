@@ -26,6 +26,8 @@ using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -175,9 +177,9 @@ public readonly struct VoidAndClusterDitherer : IDitherer {
           }
 
           var threshold = ditherMatrix[x % matrixSize, matrixY] - 0.5f;
-          var adjustedC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + threshold));
-          var adjustedC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + threshold));
-          var adjustedC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + threshold));
+          var adjustedC1 = ColorConverter.Saturate(c1.ToFloat() + threshold);
+          var adjustedC2 = ColorConverter.Saturate(c2.ToFloat() + threshold);
+          var adjustedC3 = ColorConverter.Saturate(c3.ToFloat() + threshold);
 
           var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
             UNorm32.FromFloatClamped(adjustedC1),
@@ -222,9 +224,9 @@ public readonly struct VoidAndClusterDitherer : IDitherer {
           var threshold = ditherMatrix[x % matrixSize, matrixY] - 0.5f;
 
           // Apply threshold to each channel
-          var adjustedC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + threshold));
-          var adjustedC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + threshold));
-          var adjustedC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + threshold));
+          var adjustedC1 = ColorConverter.Saturate(c1.ToFloat() + threshold);
+          var adjustedC2 = ColorConverter.Saturate(c2.ToFloat() + threshold);
+          var adjustedC3 = ColorConverter.Saturate(c3.ToFloat() + threshold);
 
           // Create adjusted color
           var adjustedColor = ColorFactory.FromNormalized_4<TWork>(

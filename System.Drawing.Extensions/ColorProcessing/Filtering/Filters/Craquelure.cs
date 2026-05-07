@@ -131,9 +131,9 @@ file readonly struct CraquelureFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
     float outR, outG, outB;
     if (isCrack) {
       var factor = 1f - crackBrightness / 10f;
-      outR = Math.Max(0f, Math.Min(1f, r * factor));
-      outG = Math.Max(0f, Math.Min(1f, g * factor));
-      outB = Math.Max(0f, Math.Min(1f, b * factor));
+      outR = ColorConverter.Saturate(r * factor);
+      outG = ColorConverter.Saturate(g * factor);
+      outB = ColorConverter.Saturate(b * factor);
     } else {
       outR = r;
       outG = g;

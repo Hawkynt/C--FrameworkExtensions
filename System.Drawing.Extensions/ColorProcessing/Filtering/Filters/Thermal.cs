@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("Thermal",
   Description = "False-color thermal imaging with cold-to-hot color ramp", Category = FilterCategory.Artistic)]
 public readonly struct Thermal(float intensity = 1f) : IPixelFilter {
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -52,7 +52,7 @@ public readonly struct Thermal(float intensity = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new ThermalKernel<TWork, TKey, TPixel, TEncode>(this._intensity));
 
-  public static Thermal Default => new();
+  public static Thermal Default => new(1f);
 }
 
 file readonly struct ThermalKernel<TWork, TKey, TPixel, TEncode>(float intensity)
@@ -97,7 +97,7 @@ file readonly struct ThermalKernel<TWork, TKey, TPixel, TEncode>(float intensity
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     var (tr, tg, tb) = _MapThermal(lum);
     var or = r + (tr - r) * intensity;

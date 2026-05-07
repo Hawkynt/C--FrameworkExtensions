@@ -181,9 +181,11 @@ file readonly struct CedKernel<TWork, TKey, TPixel, TEncode>(float lambda, float
     var muNormal = alpha + (1f - alpha) * (coherence > 1e-6f ? MathF.Exp(-1f / coherence) : 0f);
 
     // Map back to 4-neighbour weights using the eigenvector basis. Principal direction
-    // angle θ = ½·atan2(2·avgIxIy, avgIx2 − avgIy2). Build the 4-neighbour conductivity
-    // anisotropy as a weighted blend of axis-aligned (μ₂) and diagonal-aligned (μ₁).
-    var theta = 0.5f * MathF.Atan2(2f * avgIxIy, MathF.Max(diffAB, 1e-9f));
+    // angle θ = ½·atan2(2·avgIxIy, avgIx2 − avgIy2). The y-arg `diffAB` is legitimately
+    // negative when local content is more vertical than horizontal — atan2 must accept
+    // a signed second argument, so it is NOT clamped to a positive epsilon.
+    // Reference: Weickert 1999 "Coherence-Enhancing Diffusion Filtering" eq. (5).
+    var theta = 0.5f * MathF.Atan2(2f * avgIxIy, diffAB);
     var cT = MathF.Cos(theta);
     var sT = MathF.Sin(theta);
     var dXX = muTangent * cT * cT + muNormal * sT * sT;

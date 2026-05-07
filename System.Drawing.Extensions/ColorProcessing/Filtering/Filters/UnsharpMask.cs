@@ -185,7 +185,7 @@ file readonly struct UnsharpMaskKernel<TWork, TKey, TPixel, TEncode>(
     if (Math.Abs(diff) < thresh)
       return orig;
 
-    return Math.Max(0f, Math.Min(1f, orig + amt * diff));
+    return ColorConverter.Saturate(orig + amt * diff);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -235,7 +235,7 @@ file readonly struct UnsharpMaskFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     if (Math.Abs(diff) < thresh)
       return orig;
 
-    return Math.Max(0f, Math.Min(1f, orig + amt * diff));
+    return ColorConverter.Saturate(orig + amt * diff);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -35,7 +35,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("AddNoise",
   Description = "Add deterministic positional noise with optional per-channel variation", Category = FilterCategory.Noise)]
 public readonly struct AddNoise(float amount, bool monochromatic = false, int seed = 0) : IPixelFilter, IFrameFilter {
-  private readonly float _amount = Math.Max(0f, Math.Min(1f, amount));
+  private readonly float _amount = ColorConverter.Saturate(amount);
 
   public AddNoise() : this(0.1f, false, 0) { }
 
@@ -126,16 +126,16 @@ file readonly struct AddNoiseFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
 
     if (monochromatic) {
       var noise = _Hash(destX, destY, seed) * amount;
-      r = Math.Max(0f, Math.Min(1f, r + noise));
-      g = Math.Max(0f, Math.Min(1f, g + noise));
-      b = Math.Max(0f, Math.Min(1f, b + noise));
+      r = ColorConverter.Saturate(r + noise);
+      g = ColorConverter.Saturate(g + noise);
+      b = ColorConverter.Saturate(b + noise);
     } else {
       var nr = _Hash(destX, destY, seed) * amount;
       var ng = _Hash(destX, destY, seed + 1) * amount;
       var nb = _Hash(destX, destY, seed + 2) * amount;
-      r = Math.Max(0f, Math.Min(1f, r + nr));
-      g = Math.Max(0f, Math.Min(1f, g + ng));
-      b = Math.Max(0f, Math.Min(1f, b + nb));
+      r = ColorConverter.Saturate(r + nr);
+      g = ColorConverter.Saturate(g + ng);
+      b = ColorConverter.Saturate(b + nb);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));

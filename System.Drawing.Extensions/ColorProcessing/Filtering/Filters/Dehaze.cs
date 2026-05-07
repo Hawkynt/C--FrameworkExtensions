@@ -29,14 +29,30 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Dehaze filter — removes atmospheric haze by estimating and subtracting the dark channel,
-/// then boosting contrast based on the estimated atmospheric light.
-/// Always uses frame-level random access for neighborhood dark channel estimation.
+/// He et al. 2009 "Single Image Haze Removal Using Dark Channel Prior" (CVPR), with
+/// the simplifying assumption A = (1, 1, 1) for atmospheric light.
 /// </summary>
+/// <remarks>
+/// <para>Reference: K. He, J. Sun &amp; X. Tang, "Single Image Haze Removal Using Dark
+/// Channel Prior", CVPR 2009.</para>
+/// <para>Implements the canonical formula
+/// <c>t(x) = 1 − ω · min_{y∈Ω(x)} min_c (I_c(y) / A_c)</c> and
+/// <c>J(x) = (I(x) − A) / max(t(x), t0) + A</c> with ω = strength·0.95 and t0 = 0.1
+/// (paper §4.5 defaults).</para>
+/// <para><b>Approximation:</b> the canonical algorithm computes A globally as the average of
+/// the brightest 0.1% dark-channel pixels — that requires frame-level pre-pass state the
+/// per-pixel kernel cannot maintain. This filter assumes A = (1, 1, 1) (clear-sky white).
+/// For typical outdoor haze scenes this is accurate; for images with strongly-tinted
+/// haze (e.g. sunset, sandstorm) the colour cast is not removed. No soft-matting / guided-
+/// filter transmission refinement is applied (paper's optional refinement step).</para>
+/// </remarks>
 [FilterInfo("Dehaze",
-  Description = "Remove atmospheric haze by dark channel estimation", Category = FilterCategory.Enhancement)]
+  Author = "He, Sun & Tang", Year = 2009,
+  Url = "https://kaiminghe.github.io/publications/cvpr09.pdf",
+  Description = "He 2009 dark-channel haze removal (with A = white assumption)",
+  Category = FilterCategory.Enhancement)]
 public readonly struct Dehaze(float strength, int radius = 7) : IPixelFilter, IFrameFilter {
-  private readonly float _strength = Math.Max(0f, Math.Min(1f, strength));
+  private readonly float _strength = ColorConverter.Saturate(strength);
   private readonly int _radius = Math.Max(1, radius);
 
   public Dehaze() : this(0.5f, 7) { }
@@ -115,26 +131,42 @@ file readonly struct DehazeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     int destX, int destY,
     TPixel* dest, int destStride,
     in TEncode encoder) {
+    // He, Sun & Tang 2009 "Single Image Haze Removal Using Dark Channel Prior" (CVPR):
+    //   t(x) = 1 - ω · min_{y∈Ω(x)} min_c (I_c(y) / A_c)
+    //   J(x) = (I(x) - A) / max(t(x), t0) + A
+    // The canonical algorithm needs global atmospheric light A from the brightest 0.1%
+    // dark-channel pixels; that requires a frame-level precompute step the per-pixel
+    // kernel cannot support without external state. As a defensible approximation we
+    // assume A = (1, 1, 1) (clear-sky white) — accurate for most outdoor scenes; users
+    // wanting per-image A should run a separate atmospheric-light estimator.
+    // ω = strength·ω_max controls the haze-removal aggressiveness; t0 = 0.1 floors the
+    // transmission to avoid noise amplification (paper §4.5).
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
 
-    var atmo = 1f;
+    // Local dark channel min over Ω: min_{y∈Ω(x)} min_c I_c(y).
+    // With A = (1, 1, 1) the ratio I_c/A_c reduces to I_c, so this also serves as
+    // min_c (I_c / A_c) needed for the transmission.
+    var darkMin = 1f;
     for (var dy = -radius; dy <= radius; ++dy)
     for (var dx = -radius; dx <= radius; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var dark = Math.Min(r, Math.Min(g, b));
-      if (dark < atmo)
-        atmo = dark;
+      var localMin = Math.Min(r, Math.Min(g, b));
+      if (localMin < darkMin)
+        darkMin = localMin;
     }
 
-    var denom = 1f - atmo * strength;
-    if (denom <= 0f)
-      denom = 1e-6f;
+    const float omegaMax = 0.95f; // He 2009 §4.5 default ω
+    const float t0 = 0.1f;        // transmission floor
+    var omega = strength * omegaMax;
+    var t = 1f - omega * darkMin;
+    if (t < t0) t = t0;
 
-    var or = Math.Max(0f, Math.Min(1f, (cr - atmo * strength) / denom));
-    var og = Math.Max(0f, Math.Min(1f, (cg - atmo * strength) / denom));
-    var ob = Math.Max(0f, Math.Min(1f, (cb - atmo * strength) / denom));
+    // J_c = (I_c - A_c) / t + A_c, with A_c = 1.
+    var or = ColorConverter.Saturate((cr - 1f) / t + 1f);
+    var og = ColorConverter.Saturate((cg - 1f) / t + 1f);
+    var ob = ColorConverter.Saturate((cb - 1f) / t + 1f);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

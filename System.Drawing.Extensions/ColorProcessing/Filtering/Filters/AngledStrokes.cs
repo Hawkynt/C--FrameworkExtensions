@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 public readonly struct AngledStrokes(float angle = 45f, int strokeLength = 15, float sharpness = 0.5f) : IPixelFilter, IFrameFilter {
   private readonly float _angle = angle;
   private readonly int _strokeLength = Math.Max(1, strokeLength);
-  private readonly float _sharpness = Math.Max(0f, Math.Min(1f, sharpness));
+  private readonly float _sharpness = ColorConverter.Saturate(sharpness);
 
   /// <inheritdoc />
   public bool UsesFrameAccess => true;

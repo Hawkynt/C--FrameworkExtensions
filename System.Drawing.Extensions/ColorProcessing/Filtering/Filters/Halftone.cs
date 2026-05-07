@@ -137,7 +137,10 @@ file readonly struct HalftoneFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     var luminance = 0.299f * r + 0.587f * g + 0.114f * b;
 
     float or, og, ob;
-    if (distance < dotSize * 0.5f * luminance) {
+    // Classical AM halftone (offset-printing convention): on a white background, ink
+    // coverage rises with darkness — black dots grow LARGER as luminance DECREASES.
+    // Use (1 − luminance) so bright cells get tiny dots and black cells fully fill.
+    if (distance < dotSize * 0.5f * (1f - luminance)) {
       or = 0f;
       og = 0f;
       ob = 0f;

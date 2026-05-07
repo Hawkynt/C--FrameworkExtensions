@@ -75,7 +75,7 @@ public class ParallelProcessingTests {
           ptrCopy, width, height, width,
           default, default,
           OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-          startY
+          startY: startY
         );
 
         for (var y = startY; y < endY; ++y) {
@@ -130,7 +130,7 @@ public class ParallelProcessingTests {
           ptrCopy, width, height, width,
           default, default,
           OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-          startY
+          startY: startY
         );
 
         var window = frame.GetWindow();
@@ -165,7 +165,7 @@ public class ParallelProcessingTests {
             ptrCopy, width, height, width,
             default, default,
             OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-            y
+            startY: y
           );
 
           var window = frame.GetWindow();
@@ -205,7 +205,7 @@ public class ParallelProcessingTests {
           ptrCopy, width, height, width,
           default, default,
           OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-          y
+          startY: y
         );
 
         var window = frame.GetWindow();
@@ -244,7 +244,7 @@ public class ParallelProcessingTests {
                ptrCopy, width, height, width,
                default, default,
                OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-               0)) {
+               startY: 0)) {
         for (var y = 0; y < 9; ++y)
           frame1.MoveDown();
 
@@ -261,7 +261,7 @@ public class ParallelProcessingTests {
                ptrCopy, width, height, width,
                default, default,
                OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-               10)) {
+               startY: 10)) {
         var window = frame2.GetWindow();
         partition2Neighbors[0] = window.M2P0.Work;
         partition2Neighbors[1] = window.M1P0.Work;
@@ -302,14 +302,14 @@ public class ParallelProcessingTests {
         ptr, width, height, width,
         default, default,
         OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-        0
+        startY: 0
       );
 
       using var frame2 = new NeighborFrame<TestInt32, TestInt32, TestInt32, IdentityDecode, IdentityProject>(
         ptr, width, height, width,
         default, default,
         OutOfBoundsMode.ConstantExtension, OutOfBoundsMode.ConstantExtension,
-        10
+        startY: 10
       );
 
       var window1 = frame1.GetWindow();

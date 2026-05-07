@@ -57,7 +57,7 @@ public readonly struct FalseColor(
     => callback.Invoke(new FalseColorKernel<TWork, TKey, TPixel, TEncode>(
       this._lr, this._lg, this._lb, this._mr, this._mg, this._mb, this._hr, this._hg, this._hb));
 
-  public static FalseColor Default => new();
+  public static FalseColor Default => new(0f, 0f, 1f, 0f, 1f, 0f, 1f, 0f, 0f);
 }
 
 file readonly struct FalseColorKernel<TWork, TKey, TPixel, TEncode>(
@@ -79,7 +79,7 @@ file readonly struct FalseColorKernel<TWork, TKey, TPixel, TEncode>(
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     float or, og, ob;
     if (lum < 0.5f) {

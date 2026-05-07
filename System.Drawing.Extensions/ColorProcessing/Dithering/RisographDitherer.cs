@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -98,9 +100,9 @@ public readonly struct RisographDitherer : IDitherer {
   /// Default 0.35.</param>
   /// <param name="seed">Hash seed for reproducibility. Default 42.</param>
   public RisographDitherer(float strength = 1f, float streakWeight = _STREAK_WEIGHT_DEFAULT, float scatterWeight = _SCATTER_WEIGHT_DEFAULT, int seed = 42) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
-    this._streakWeight = Math.Max(0f, Math.Min(1f, streakWeight));
-    this._scatterWeight = Math.Max(0f, Math.Min(1f, scatterWeight));
+    this._strength = ColorConverter.Saturate(strength);
+    this._streakWeight = ColorConverter.Saturate(streakWeight);
+    this._scatterWeight = ColorConverter.Saturate(scatterWeight);
     this._seed = seed;
   }
 

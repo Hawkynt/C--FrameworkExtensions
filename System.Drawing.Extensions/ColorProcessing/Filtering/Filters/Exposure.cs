@@ -71,9 +71,9 @@ file readonly struct ExposureKernel<TWork, TKey, TPixel, TEncode>(float factor)
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    r = Math.Max(0f, Math.Min(1f, r * factor));
-    g = Math.Max(0f, Math.Min(1f, g * factor));
-    b = Math.Max(0f, Math.Min(1f, b * factor));
+    r = ColorConverter.Saturate(r * factor);
+    g = ColorConverter.Saturate(g * factor);
+    b = ColorConverter.Saturate(b * factor);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

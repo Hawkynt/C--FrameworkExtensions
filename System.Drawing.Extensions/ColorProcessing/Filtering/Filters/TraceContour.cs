@@ -42,7 +42,7 @@ public readonly struct TraceContour : IPixelFilter, IFrameFilter {
   public TraceContour() : this(0.5f) { }
 
   public TraceContour(float threshold = 0.5f) {
-    this._threshold = Math.Max(0f, Math.Min(1f, threshold));
+    this._threshold = ColorConverter.Saturate(threshold);
   }
 
   /// <inheritdoc />
@@ -117,7 +117,7 @@ file readonly struct TraceContourFrameKernel<TPixel, TWork, TKey, TDecode, TProj
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,11 +134,19 @@ file readonly struct TraceContourFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     var lLum = _Lum(frame[destX - 1, destY]);
     var rLum = _Lum(frame[destX + 1, destY]);
 
+    // Photoshop "Trace Contour": treats `threshold` as an iso-luminance level L. Output
+    // is "edge" wherever the level L crosses BETWEEN this pixel and any cardinal neighbour
+    // — i.e. (cLum − L) and (neighbourLum − L) have opposite signs. This isolates a
+    // single contour line at the chosen level rather than detecting any gradient above
+    // a magnitude threshold (the previous, incorrect behaviour).
+    var L = threshold;
+    var dC = cLum - L;
+    var sC = MathF.Sign(dC);
     var isEdge =
-      Math.Abs(tLum - cLum) > threshold ||
-      Math.Abs(bLum - cLum) > threshold ||
-      Math.Abs(lLum - cLum) > threshold ||
-      Math.Abs(rLum - cLum) > threshold;
+      MathF.Sign(tLum - L) != sC ||
+      MathF.Sign(bLum - L) != sC ||
+      MathF.Sign(lLum - L) != sC ||
+      MathF.Sign(rLum - L) != sC;
 
     var v = isEdge ? 1f : 0f;
 

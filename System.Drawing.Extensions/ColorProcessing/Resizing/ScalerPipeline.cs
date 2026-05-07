@@ -457,11 +457,15 @@ public static class ScalerPipeline {
 
     // Compute the destination region where every sample window sits inside the source image.
     // For most resizes this is almost the entire destination — the edge bands are ~radius pixels thick.
+    // For pathologically narrow sources (e.g. width=1 with a wide kernel) the safe region can be
+    // OUTSIDE [0, destWidth) entirely; clamp BOTH endpoints into the destination bounds so the
+    // edge loops in _ResampleRangeSafeSplit never iterate past the destination buffer (writing
+    // dest[destY * destStride + destX] with destX > destWidth is the OOB that crashes the host).
     var safe = kernel.GetSafeDestinationRegion();
-    var safeLeft = Math.Max(0, safe.Left);
-    var safeTop = Math.Max(0, safe.Top);
-    var safeRight = Math.Min(destWidth, safe.Right);
-    var safeBottom = Math.Min(destHeight, safe.Bottom);
+    var safeLeft = Math.Max(0, Math.Min(destWidth, safe.Left));
+    var safeTop = Math.Max(0, Math.Min(destHeight, safe.Top));
+    var safeRight = Math.Max(0, Math.Min(destWidth, safe.Right));
+    var safeBottom = Math.Max(0, Math.Min(destHeight, safe.Bottom));
     if (safeRight < safeLeft) safeRight = safeLeft;
     if (safeBottom < safeTop) safeBottom = safeTop;
 

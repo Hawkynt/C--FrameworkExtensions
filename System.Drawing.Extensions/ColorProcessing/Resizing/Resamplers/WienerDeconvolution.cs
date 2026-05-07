@@ -173,9 +173,11 @@ public readonly struct WienerDeconvolution : IResampler {
       kernel[y * FftSize + x] = psf[sy, sx].Real;
     }
 
-    // Renormalise so the 9×9 centre window we actually convolve over sums to 1 — the kernel
-    // outside that radius is truncation-noise we discard, and Accum4F.Result divides by the
-    // weight-sum so a non-unit sum would bias brightness.
+    // Renormalise the truncated 9×9 window to sum=1: this preserves the DC-component
+    // (solid input → solid output) and uniformly scales kernel coefficients without
+    // changing relative magnitudes — the centre-tap-vs-side-lobe RATIO is preserved,
+    // which is what gives Wiener its high-frequency boost. The full FFT kernel sums to
+    // ~1 only over its INFINITE support; on the finite 9×9 window we explicitly enforce it.
     const int radius = 4;
     var centerSum = 0f;
     for (var y = c - radius; y <= c + radius; ++y)
@@ -229,7 +231,9 @@ file readonly struct WienerKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
 
     // Convolve a (2·R+1) × (2·R+1) source neighbourhood centred at (x0, y0) with the
     // precomputed Wiener kernel. The kernel is FftSize × FftSize (16×16); we use only the
-    // central (2·R+1) × (2·R+1) = 9×9 taps — the rest decays to ~0 for typical σ.
+    // central (2·R+1) × (2·R+1) = 9×9 taps — the rest decays to ~0 for typical σ. Kernel
+    // sums to 1 (renormalised in CreateKernel), so Accum4F.Result is effectively a
+    // pure convolution (its divide-by-weight-sum is a no-op).
     Accum4F<TWork> acc = default;
     for (var ky = -KernelRadius; ky <= KernelRadius; ++ky)
     for (var kx = -KernelRadius; kx <= KernelRadius; ++kx) {

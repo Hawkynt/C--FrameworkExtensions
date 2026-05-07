@@ -138,12 +138,19 @@ public static class MultiScaleRetinex {
     return dst;
   }
 
+  // Jobson 1997 eq. (2): R_i(x,y) = Σ_n W_n · [log I_i(x,y) − log(F_n * I_i)(x,y)].
+  // Operates on NORMALISED intensity I ∈ (0, 1] so the log is unitless and bit-depth
+  // independent. `eps = 1/255` is the unit-byte floor preventing log(0). Equal-weight
+  // averaging W_n = 1/3 across scales is the simplification used in the public code
+  // distributions of MSR (e.g. NASA's MSRCR Photoshop plugin); the paper allows
+  // unequal W_n for tuning per-scale contribution but most implementations use 1/N.
   private static float _Msr(byte i, byte s1, byte s3, byte s5) {
-    var lI = MathF.Log(i + 1f);
+    const float Eps = 1f / 255f;
+    var lI = MathF.Log(i / 255f + Eps);
     return (1f / 3f) * (
-      (lI - MathF.Log(s1 + 1f)) +
-      (lI - MathF.Log(s3 + 1f)) +
-      (lI - MathF.Log(s5 + 1f))
+      (lI - MathF.Log(s1 / 255f + Eps)) +
+      (lI - MathF.Log(s3 / 255f + Eps)) +
+      (lI - MathF.Log(s5 / 255f + Eps))
     );
   }
 

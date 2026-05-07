@@ -38,8 +38,8 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("DarkStrokes",
   Description = "Dark stroke effect emphasizing shadows", Category = FilterCategory.Artistic)]
 public readonly struct DarkStrokes(float balance = 0.5f, float intensity = 0.5f) : IPixelFilter, IFrameFilter {
-  private readonly float _balance = Math.Max(0f, Math.Min(1f, balance));
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _balance = ColorConverter.Saturate(balance);
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public bool UsesFrameAccess => true;
@@ -113,7 +113,7 @@ file readonly struct DarkStrokesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,7 +134,7 @@ file readonly struct DarkStrokesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     for (var dx = -2; dx <= 2; ++dx) {
       var np = frame[destX + dx, destY + dy].Work;
       var (nr, ng, nb, _) = ColorConverter.GetNormalizedRgba(in np);
-      var lum = ColorMatrices.BT601_R * nr + ColorMatrices.BT601_G * ng + ColorMatrices.BT601_B * nb;
+      var lum = ColorConverter.LuminanceFromRgb(nr, ng, nb);
       if (lum >= minLum)
         continue;
 
@@ -152,9 +152,9 @@ file readonly struct DarkStrokesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     outG *= 1f - intensity * 0.5f;
     outB *= 1f - intensity * 0.5f;
 
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

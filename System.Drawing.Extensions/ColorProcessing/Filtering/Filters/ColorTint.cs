@@ -71,9 +71,9 @@ file readonly struct ColorTintKernel<TWork, TKey, TPixel, TEncode>(float tint)
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    g = Math.Max(0f, Math.Min(1f, g - tint * 0.1f));
-    r = Math.Max(0f, Math.Min(1f, r + tint * 0.05f));
-    b = Math.Max(0f, Math.Min(1f, b + tint * 0.05f));
+    g = ColorConverter.Saturate(g - tint * 0.1f);
+    r = ColorConverter.Saturate(r + tint * 0.05f);
+    b = ColorConverter.Saturate(b + tint * 0.05f);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

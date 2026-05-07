@@ -27,15 +27,18 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 
 /// <summary>
-/// Magic Kernel Sharp resampler.
+/// Magic Kernel resampler — the simple v1/v2 form (4-tap, support [-1.5, 1.5], peak 9/16).
 /// </summary>
 /// <remarks>
-/// <para>High-quality 4-tap kernel designed for maximum sharpness with minimal ringing.</para>
-/// <para>Uses weights [-1/16, 9/16, 9/16, -1/16] for a balanced interpolation.</para>
-/// <para>Originally developed by John Googol and popularized through ImageMagick.</para>
+/// <para>Implements the original Magic Kernel by John Costella (not the wider, sharpening
+/// "Magic Kernel Sharp" v3 from 2013/2023 which iterates this kernel against a deconvolution
+/// polynomial and has support [-4.5, 4.5] or wider). Despite the type name, this is the
+/// 4-tap form: f(0) = 9/16, weights [-1/16, 9/16, 9/16, -1/16].</para>
+/// <para>If you need the actual Magic Kernel Sharp (the deconvolution-iterated v3 with
+/// f(0) = 17/16 / 1.0625), see https://johncostella.com/magic/ — not yet implemented.</para>
 /// </remarks>
-[ScalerInfo("Magic Kernel Sharp", Author = "John Googol", Year = 2024,
-  Description = "4-tap kernel for maximum sharpness with minimal ringing", Category = ScalerCategory.Resampler)]
+[ScalerInfo("Magic Kernel Sharp", Author = "John Costella", Year = 1998,
+  Description = "4-tap Magic Kernel (v1/v2) — peak 9/16. Despite the name, NOT the v3 sharp variant.", Category = ScalerCategory.Resampler)]
 public readonly struct MagicKernelSharp : IResampler {
 
   /// <inheritdoc />

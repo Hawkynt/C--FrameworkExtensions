@@ -135,7 +135,7 @@ file readonly struct MezzotintFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     for (var sx = blockX; sx < endX; ++sx) {
       var px = frame[sx, sy].Work;
       var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
-      lumSum += ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      lumSum += ColorConverter.LuminanceFromRgb(r, g, b);
       aSum += a;
     }
 

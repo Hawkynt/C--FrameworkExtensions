@@ -95,8 +95,8 @@ file readonly struct ChannelMixerKernel<TWork, TKey, TPixel, TEncode>(
     var ob = r * br + g * bg + b * bb;
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
-      Math.Max(0f, Math.Min(1f, or)),
-      Math.Max(0f, Math.Min(1f, og)),
-      Math.Max(0f, Math.Min(1f, ob)), a));
+      ColorConverter.Saturate(or),
+      ColorConverter.Saturate(og),
+      ColorConverter.Saturate(ob), a));
   }
 }

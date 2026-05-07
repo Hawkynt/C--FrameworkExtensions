@@ -29,18 +29,43 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// Super-xBR (Super-Scale2x Refinement) scaler by Hyllian (2x only).
+/// Super-xBR 2× edge-directed scaler — port of Hyllian's 3-pass GLSL shader.
 /// </summary>
 /// <remarks>
-/// <para>2-pass edge-directed scaling algorithm that improves upon XBR.</para>
-/// <para>
-/// Uses diagonal edge detection with weighted color differences and
-/// anti-ringing filter to reduce artifacts.
-/// </para>
-/// <para>Algorithm by Hyllian, 2015.</para>
+/// <para>Reference: Hyllian's Super-xBR shader,
+/// https://github.com/libretro/glsl-shaders/tree/master/xbr/shaders/super-xbr.
+/// All three passes share a structurally identical kernel: the published
+/// <c>d_wd</c> weighted-distance and <c>hv_wd</c> horizontal/vertical edgeness
+/// functions over a 16-tap stencil drive a smoothstep blend between diagonal
+/// (<c>c1, c2</c>) and h/v (<c>c3, c4</c>) 4-tap directional filters, followed
+/// by a local <c>{E, F, H, I}</c> min/max anti-ringing clamp. Each pass uses its
+/// own coefficient set (mode 0 defaults).</para>
+/// <para><b>Pass 0 — diagonal output (e11)</b>: full port. Stencil samples a
+/// 4×4 source-pixel block. Coefficients <c>wp = (2, 1, −1, 4, −1, 1)</c>,
+/// <c>weight1 ≈ 0.1296</c>, <c>weight2 ≈ 0.0875</c>.</para>
+/// <para><b>Pass 1 — h/v outputs (e01, e10)</b>: full port within the available
+/// 5×5 source window. The 16-tap stencil rotated to the H/V output position has
+/// 8 integer-source-pixel positions (read directly), 4 pass-0 e11 positions
+/// (computed on-the-fly using the pass-0 kernel inside the window), and 4 pass-0
+/// e11 positions whose own 4×4 source stencils reach one column/row outside the
+/// 5×5 window — those are substituted by the bilinear midpoint of the cell's
+/// four source corners (the limiting value of any unbiased pass-0 reconstruction
+/// when its stencil is unavailable). Coefficients
+/// <c>wp = (8, 0, 0, 0, 0, 0)</c>, <c>weight1 ≈ 0.1751</c>,
+/// <c>weight2 ≈ 0.0648</c>.</para>
+/// <para><b>Pass 2 — deringing</b>: in the reference shader, pass 2 runs the same
+/// kernel a second time at every output position with stencil reads from
+/// already-filled pass-1 outputs. A single-pass per-source-pixel kernel cannot
+/// reach those output-grid pixels, so the dominant deringing effect — the
+/// 3×3 source-pixel min/max clamp on the filtered result — is applied to e01
+/// and e10 as well as e11 (pass 0 already clamps e11). This matches pass 2's
+/// anti-ringing intent on each output channel without fabricating a second
+/// filter pass against unavailable inputs.</para>
 /// </remarks>
 [ScalerInfo("Super-xBR", Author = "Hyllian", Year = 2015,
-  Description = "Super-Scale2x Refinement edge-directed scaler", Category = ScalerCategory.Rescaler)]
+  Url = "https://github.com/libretro/glsl-shaders/tree/master/xbr/shaders/super-xbr",
+  Description = "Super-xBR 2× edge-directed scaler (pass 0/1 ported from Hyllian's GLSL; pass 2 deringing applied uniformly)",
+  Category = ScalerCategory.Rescaler)]
 public readonly struct SuperXbr : IRescaler {
 
   private readonly bool _fast;
@@ -175,17 +200,100 @@ file readonly struct SuperXbrKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     var p43 = window.P2P1.Work;
     var p44 = window.P2P2.Work;
 
-    // Apply edge-directed interpolation for each output pixel
-    var e00 = this._InterpolateDiagonal(p22, p12, p21, p11, p13, p31, p23, p33, p02, p20, p24, p42);
-    var e01 = this._InterpolateDiagonal(p22, p13, p23, p12, p14, p32, p24, p34, p03, p21, p33, p43);
-    var e10 = this._InterpolateDiagonal(p22, p21, p32, p11, p31, p13, p33, p23, p20, p02, p42, p24);
-    var e11 = this._InterpolateDiagonal(p22, p23, p33, p12, p32, p14, p34, p24, p21, p03, p43, p31);
+    // Output positions per Hyllian's Super-xBR pipeline:
+    //   e00 = source pixel (aligns 2× output grid with integer source positions).
+    //   e11 = pass 0 diagonal output between source (i,j), (i+1,j), (i,j+1), (i+1,j+1).
+    //   e01 = pass 1 H output (right of source pixel).
+    //   e10 = pass 1 V output (below source pixel).
+    var e00 = p22;
 
-    // Apply anti-ringing using 3x3 neighborhood around center
-    e00 = _ApplyAntiRinging(e00, p11, p12, p13, p21, p22, p23, p31, p32, p33);
-    e01 = _ApplyAntiRinging(e01, p12, p13, p14, p22, p23, p24, p32, p33, p34);
-    e10 = _ApplyAntiRinging(e10, p21, p22, p23, p31, p32, p33, p41, p42, p43);
-    e11 = _ApplyAntiRinging(e11, p22, p23, p24, p32, p33, p34, p42, p43, p44);
+    // ----- Pass 0: e11 between (p22, p23, p32, p33). 4×4 source-pixel stencil. -----
+    var e11 = _SuperXbrPass(
+      p11, p12, p13, p14,        // P0, B,  C,  P1
+      p21, p22, p23, p24,        // D,  E,  F,  F4
+      p31, p32, p33, p34,        // G,  H,  I,  I4
+      p41, p42, p43, p44,        // P2, H5, I5, P3
+      Pass0Wp1, Pass0Wp2, Pass0Wp3, Pass0Wp4, Pass0Wp5, Pass0Wp6,
+      Pass0Weight1, Pass0Weight2);
+
+    // ----- Pass-0 outputs needed by pass 1's rotated stencil. -----
+    // Each is the e11 of a different source-pixel cell whose 4×4 stencil fits in the 5×5 window.
+    // Using shader naming: B=NW, D=SW, F=N, H=S of the e01 stencil.
+    // (these double as F=W, H=E of the e10 stencil; B,D match e10's NW/SW unchanged.)
+    var pass0_NW = _SuperXbrPass(   // e11 of source pixel (i-1, j-1)
+      p00, p01, p02, p03, p10, p11, p12, p13,
+      p20, p21, p22, p23, p30, p31, p32, p33,
+      Pass0Wp1, Pass0Wp2, Pass0Wp3, Pass0Wp4, Pass0Wp5, Pass0Wp6,
+      Pass0Weight1, Pass0Weight2);
+    var pass0_SW = _SuperXbrPass(   // e11 of source pixel (i-1, j)
+      p10, p11, p12, p13, p20, p21, p22, p23,
+      p30, p31, p32, p33, p40, p41, p42, p43,
+      Pass0Wp1, Pass0Wp2, Pass0Wp3, Pass0Wp4, Pass0Wp5, Pass0Wp6,
+      Pass0Weight1, Pass0Weight2);
+    var pass0_N = _SuperXbrPass(    // e11 of source pixel (i, j-1)
+      p01, p02, p03, p04, p11, p12, p13, p14,
+      p21, p22, p23, p24, p31, p32, p33, p34,
+      Pass0Wp1, Pass0Wp2, Pass0Wp3, Pass0Wp4, Pass0Wp5, Pass0Wp6,
+      Pass0Weight1, Pass0Weight2);
+    var pass0_S = e11;              // e11 of source pixel (i, j) — the pass-0 result we just computed
+
+    // 4-corner cell-average substitutes for the 4 pass-0 outputs whose own 4×4 stencils
+    // reach one column/row past the 5×5 window. Each is the bilinear midpoint of the
+    // four source pixels surrounding that pass-0 sample position — the unbiased
+    // limiting value when no edge-direction information is available.
+    // Naming: avg_<row><col> = pass-0 e11 of source pixel at that direction from (i, j).
+    var avg_N2 = _Avg4(p02, p03, p12, p13);  // pass-0 e11 of (i, j-2) — used as e01's P1
+    var avg_S1 = _Avg4(p32, p33, p42, p43);  // pass-0 e11 of (i, j+1) — used as e01's P2 / e10's I5
+    var avg_E1high = _Avg4(p13, p14, p23, p24); // pass-0 e11 of (i+1, j-1) — used as e01's I4
+    var avg_E1low  = _Avg4(p23, p24, p33, p34); // pass-0 e11 of (i+1, j)   — used as e01's I5 / e10's P2
+    var avg_W2 = _Avg4(p20, p21, p30, p31);  // pass-0 e11 of (i-2, j)   — used as e10's P1
+    var avg_W1S = _Avg4(p31, p32, p41, p42); // pass-0 e11 of (i-1, j+1) — used as e10's I4
+
+    // ----- Pass 1: e01 (H position, right of source pixel (i, j)) -----
+    // Stencil mapping (shader notation → our 5×5 window):
+    //   E = p22 (i, j)            I = p23 (i+1, j)
+    //   F = pass0_N  (e11 N)      H = pass0_S (e11 S, = main e11 above)
+    //   B = pass0_NW              D = pass0_SW
+    //   C = p12 (i, j-1)          G = p32 (i, j+1)
+    //   F4 = p13 (i+1, j-1)       H5 = p33 (i+1, j+1)
+    //   I4 = avg(p13,p14,p23,p24) I5 = avg(p23,p24,p33,p34)
+    //   P0 = p21 (i-1, j)         P3 = p24 (i+2, j)
+    //   P1 = avg(p02,p03,p12,p13) P2 = avg(p32,p33,p42,p43)
+    var e01 = _SuperXbrPass(
+      p21,        pass0_NW,   p12,        avg_N2,        // P0, B,  C,  P1
+      pass0_SW,   p22,        pass0_N,    p13,           // D,  E,  F,  F4
+      p32,        pass0_S,    p23,        avg_E1high,    // G,  H,  I,  I4
+      avg_S1,     p33,        avg_E1low,  p24,           // P2, H5, I5, P3
+      Pass1Wp1, Pass1Wp2, Pass1Wp3, Pass1Wp4, Pass1Wp5, Pass1Wp6,
+      Pass1Weight1, Pass1Weight2);
+
+    // ----- Pass 1: e10 (V position, below source pixel (i, j)) -----
+    // Stencil rotated 90° from e01. fp.x<0.5 case in the shader: g1 in y, g2 in x, so:
+    //   E = p22 (i, j)            I = p32 (i, j+1)
+    //   F = pass0_W (e11 W = NW-S diagonal of column i-1) — same as pass0_SW for e01 stencil
+    //                              H = pass0_E (e11 E) — same as pass0_S
+    //   B = pass0_NW              D = pass0_NE-of-column-i = pass0_N of e01 stencil
+    //   C = p21 (i-1, j)          G = p23 (i+1, j)
+    //   F4 = p31 (i-1, j+1)       H5 = p33 (i+1, j+1)
+    //   I4 = avg(p31,p32,p41,p42) I5 = avg(p32,p33,p42,p43)
+    //   P0 = p12 (i, j-1)         P3 = p42 (i, j+2)
+    //   P1 = avg(p20,p21,p30,p31) P2 = avg(p23,p24,p33,p34)
+    var e10 = _SuperXbrPass(
+      p12,        pass0_NW,   p21,        avg_W2,        // P0, B,  C,  P1
+      pass0_N,    p22,        pass0_SW,   p31,           // D,  E,  F,  F4
+      p23,        pass0_S,    p32,        avg_W1S,       // G,  H,  I,  I4
+      avg_E1low,  p33,        avg_S1,     p42,           // P2, H5, I5, P3
+      Pass1Wp1, Pass1Wp2, Pass1Wp3, Pass1Wp4, Pass1Wp5, Pass1Wp6,
+      Pass1Weight1, Pass1Weight2);
+
+    // ----- Pass 2: anti-ringing on all three filtered outputs. -----
+    // The reference pass 2 runs the full kernel again at every output position reading
+    // pass-1 outputs; we cannot reach those in a single-pass kernel. The dominant
+    // deringing component is the local source-pixel min/max clamp — apply it to the
+    // pass-0 e11 (continues existing behaviour) and to the pass-1 e01/e10.
+    e11 = _ApplyAntiRinging(e11, p11, p12, p13, p21, p22, p23, p31, p32, p33);
+    e01 = _ApplyAntiRinging(e01, p11, p12, p13, p21, p22, p23, p31, p32, p33);
+    e10 = _ApplyAntiRinging(e10, p11, p12, p13, p21, p22, p23, p31, p32, p33);
 
     // Write 2x2 output
     var row0 = destTopLeft;
@@ -197,39 +305,197 @@ file readonly struct SuperXbrKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp l
     row1[1] = encoder.Encode(e11);
   }
 
+  // ===========================================================================
+  // Hyllian Super-xBR pass kernel. Faithful port of the libretro/glsl-shaders
+  // super-xbr-pass{0,1,2}.glsl shaders (default MODE=0). All three passes run
+  // the same algorithm with different coefficient sets.
+  // Reference: https://github.com/libretro/glsl-shaders/tree/master/xbr/shaders/super-xbr
+  // ===========================================================================
+
+  // Pass-0 mode 0: edge detector and 4-tap directional filter weights for the
+  // diagonal output. Drives the first pass that interpolates the e11 output
+  // between four source pixels.
+  private const float Pass0Wp1 = 2f, Pass0Wp2 = 1f, Pass0Wp3 = -1f, Pass0Wp4 = 4f, Pass0Wp5 = -1f, Pass0Wp6 = 1f;
+  private const float Pass0Weight1 = 1.29633f / 10f;
+  private const float Pass0Weight2 = 1.75068f / 10f / 2f;
+
+  // Pass-1 mode 0: only wp1 nonzero — d_wd reduces to 8·(inner cross sum) and
+  // hv_wd to 8·(inner-vs-outer sum). Filter weights swap weight1/weight2 magnitudes
+  // relative to pass 0 (the H/V output sits along the cardinal axes).
+  private const float Pass1Wp1 = 8f, Pass1Wp2 = 0f, Pass1Wp3 = 0f, Pass1Wp4 = 0f, Pass1Wp5 = 0f, Pass1Wp6 = 0f;
+  private const float Pass1Weight1 = 1.75068f / 10f;
+  private const float Pass1Weight2 = 1.29633f / 10f / 2f;
+
+  // XBR_EDGE_STR (smoothstep limit on |d_edge|).
+  private const float XbrEdgeStr = 0.6f;
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private TWork _InterpolateDiagonal(
-    in TWork center, in TWork n, in TWork e, in TWork nw, in TWork ne,
-    in TWork w, in TWork se, in TWork sw, in TWork nn, in TWork ww,
-    in TWork ee, in TWork ss) {
+  private static float _Lum(in TWork c) => ColorConverter.GetLuminance(in c);
 
-    // Calculate edge weights using color differences
-    var d_edge = SuperXbr.ColorDiff(n, e)
-               + SuperXbr.ColorDiff(w, se)
-               + SuperXbr.ColorDiff(nw, sw)
-               + SuperXbr.ColorDiff(center, nn)
-               + SuperXbr.ColorDiff(center, ww)
-               + SuperXbr.SmallNumber;
+  /// <summary>
+  /// 4-pixel arithmetic mean (bilinear midpoint of four corner samples).
+  /// Used as the unbiased substitute for a pass-0 reconstruction whose own 4×4
+  /// stencil reaches outside the available 5×5 window.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static TWork _Avg4(in TWork a, in TWork b, in TWork c, in TWork d) {
+    var (ar, ag, ab) = ColorConverter.GetNormalizedRgb(a);
+    var (br, bg, bb) = ColorConverter.GetNormalizedRgb(b);
+    var (cr, cg, cb) = ColorConverter.GetNormalizedRgb(c);
+    var (dr, dg, db) = ColorConverter.GetNormalizedRgb(d);
+    var aA = ColorConverter.GetAlpha(a);
+    return ColorConverter.FromNormalizedRgba<TWork>(
+      0.25f * (ar + br + cr + dr),
+      0.25f * (ag + bg + cg + dg),
+      0.25f * (ab + bb + cb + db),
+      aA);
+  }
 
-    var d_diag = SuperXbr.ColorDiff(nw, center)
-               + SuperXbr.ColorDiff(center, se)
-               + SuperXbr.ColorDiff(n, w)
-               + SuperXbr.ColorDiff(e, sw)
-               + SuperXbr.ColorDiff(ne, center)
-               + SuperXbr.SmallNumber;
+  /// <summary>
+  /// Hyllian's d_wd weighted-distance function. Computes the "diagonal edgeness" via
+  /// a weighted sum of luminance differences over the 16-tap stencil. Coefficients
+  /// wp1..wp6 are pass-specific; the formula is identical across all three passes.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float _Dwd(
+      float wp1, float wp2, float wp3, float wp4, float wp5, float wp6,
+      float b0, float b1,
+      float c0, float c1, float c2,
+      float d0, float d1, float d2, float d3,
+      float e1, float e2, float e3,
+      float f2, float f3) {
+    static float Df(float a, float b) => MathF.Abs(a - b);
+    return wp1 * (Df(c1, c2) + Df(c1, c0) + Df(e2, e1) + Df(e2, e3))
+         + wp2 * (Df(d2, d3) + Df(d0, d1))
+         + wp3 * (Df(d1, d3) + Df(d0, d2))
+         + wp4 * Df(d1, d2)
+         + wp5 * (Df(c0, c2) + Df(e1, e3))
+         + wp6 * (Df(b0, b1) + Df(f2, f3));
+  }
 
-    var edgeStrength = d_diag / (d_edge + d_diag);
+  /// <summary>
+  /// Hyllian's hv_wd: horizontal/vertical "edgeness" from a 2×4 stencil (4 inner taps
+  /// i1..i4, 4 outer taps e1..e4). Coefficients wp1..wp6 are pass-specific.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float _Hvwd(
+      float wp1, float wp3, float wp4,
+      float i1, float i2, float i3, float i4,
+      float e1, float e2, float e3, float e4) {
+    static float Df(float a, float b) => MathF.Abs(a - b);
+    return wp4 * (Df(i1, i2) + Df(i3, i4))
+         + wp1 * (Df(i1, e1) + Df(i2, e2) + Df(i3, e3) + Df(i4, e4))
+         + wp3 * (Df(i1, e2) + Df(i3, e4) + Df(e1, i2) + Df(e3, i4));
+  }
 
-    // Use smoothstep for smoother blending
+  /// <summary>
+  /// 4-tap directional filter c = w·(a, b, c, d) using the published filter weights
+  /// w1 = (-w, w+0.5, w+0.5, -w). Negative side-lobes give the characteristic xBR-style
+  /// sharpening; sums to 1 by construction (-w + w+0.5 + w+0.5 - w = 1).
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private TWork _Filter4Tap(in TWork a, in TWork b, in TWork c, in TWork d, float w) {
+    // Use signed accumulation: weights are negative for the outer taps, so the
+    // ILerp-based blending used elsewhere doesn't work directly. Decompose to RGB.
+    var (ar, ag, ab) = ColorConverter.GetNormalizedRgb(a);
+    var (br, bg, bb) = ColorConverter.GetNormalizedRgb(b);
+    var (cr, cg, cb) = ColorConverter.GetNormalizedRgb(c);
+    var (dr, dg, db) = ColorConverter.GetNormalizedRgb(d);
+    var aA = ColorConverter.GetAlpha(a);
+    var w_outer = -w;
+    var w_inner = w + 0.5f;
+    var or = ar * w_outer + br * w_inner + cr * w_inner + dr * w_outer;
+    var og = ag * w_outer + bg * w_inner + cg * w_inner + dg * w_outer;
+    var ob = ab * w_outer + bb * w_inner + cb * w_inner + db * w_outer;
+    or = MathF.Max(0f, MathF.Min(1f, or));
+    og = MathF.Max(0f, MathF.Min(1f, og));
+    ob = MathF.Max(0f, MathF.Min(1f, ob));
+    return ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, aA);
+  }
+
+  /// <summary>
+  /// Generic Super-xBR pass kernel. Same algorithm for all three reference passes,
+  /// parameterised by the wp1..wp6 weighted-distance coefficients and the weight1/weight2
+  /// directional-filter strengths. Stencil layout (output sits between H and F):
+  /// <code>
+  ///   |P0|B |C |P1|
+  ///   |D |E |F |F4|
+  ///   |G |H |I |I4|
+  ///   |P2|H5|I5|P3|
+  /// </code>
+  /// Smoothly blends between two diagonal-direction filters (c1: P2-H-F-P1, c2: P0-E-I-P3)
+  /// and two h/v-direction filters (c3, c4) based on the smoothstepped |d_edge| value.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private TWork _SuperXbrPass(
+      in TWork P0, in TWork B,  in TWork C,  in TWork P1,
+      in TWork D,  in TWork E,  in TWork F,  in TWork F4,
+      in TWork G,  in TWork H,  in TWork I,  in TWork I4,
+      in TWork P2, in TWork H5, in TWork I5, in TWork P3,
+      float wp1, float wp2, float wp3, float wp4, float wp5, float wp6,
+      float weight1, float weight2) {
+
+    var p0 = _Lum(P0); var b = _Lum(B); var c = _Lum(C); var p1 = _Lum(P1);
+    var d = _Lum(D); var e = _Lum(E); var f = _Lum(F); var f4 = _Lum(F4);
+    var g = _Lum(G); var h = _Lum(H); var i = _Lum(I); var i4 = _Lum(I4);
+    var p2 = _Lum(P2); var h5 = _Lum(H5); var i5 = _Lum(I5); var p3 = _Lum(P3);
+
+    // d_edge: signed; positive favours one diagonal, negative the other.
+    var dEdge = _Dwd(wp1, wp2, wp3, wp4, wp5, wp6, d, b, g, e, c, p2, h, f, p1, h5, i, f4, i5, i4)
+              - _Dwd(wp1, wp2, wp3, wp4, wp5, wp6, c, f4, b, f, i4, p0, e, i, p3, d, h, i5, g, h5);
+    var hvEdge = _Hvwd(wp1, wp3, wp4, f, i, e, h, c, i5, b, h5)
+               - _Hvwd(wp1, wp3, wp4, e, f, h, i, d, f4, g, i4);
+
+    var edgeStrength = MathF.Min(1f, MathF.Abs(dEdge) / (XbrEdgeStr + 1e-6f));
     edgeStrength = SuperXbr.Smoothstep(edgeStrength);
 
-    // Blend between edge and diagonal interpolation
-    var edgeColor = lerp.Lerp(n, e);
-    var diagColor = lerp.Lerp(nw, se);
+    // Diagonal candidates: c1 along P2-H-F-P1; c2 along P0-E-I-P3.
+    var c1 = _Filter4Tap(P2, H, F, P1, weight1);
+    var c2 = _Filter4Tap(P0, E, I, P3, weight1);
+    // H/V candidates: c3 vertical pairs averaged, c4 horizontal pairs.
+    var c3 = _Filter4TapPair(D, G, E, H, F, I, F4, I4, weight2);
+    var c4 = _Filter4TapPair(C, B, F, E, I, H, I5, H5, weight2);
 
-    var w2Edge = (int)(edgeStrength * 256f);
-    return lerp.Lerp(edgeColor, diagColor, 256 - w2Edge, w2Edge);
+    // Pick diag side by sign(d_edge), hv side by sign(hv_edge), blend by edge_strength.
+    var diagPick = dEdge >= 0 ? c2 : c1;
+    var hvPick = hvEdge >= 0 ? c4 : c3;
+
+    // Final mix: (1-edge_strength)·hvPick + edge_strength·diagPick.
+    var w2i = (int)(edgeStrength * 256f);
+    return lerp.Lerp(hvPick, diagPick, 256 - w2i, w2i);
   }
+
+  /// <summary>
+  /// Filter c3/c4 form: 4-tap on PAIRS of pixels (a+b, c+d, e+f, g+h), divided by 3
+  /// since each tap is a sum of 2 pixels. Implements `mul(w2, mat4x3(a+b, c+d, e+f, g+h))/3`
+  /// from the shader.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private TWork _Filter4TapPair(
+      in TWork a, in TWork b, in TWork c, in TWork d,
+      in TWork e, in TWork f, in TWork g, in TWork h,
+      float w) {
+    var (ar, ag, ab) = ColorConverter.GetNormalizedRgb(a);
+    var (br, bg, bb) = ColorConverter.GetNormalizedRgb(b);
+    var (cr, cg, cb) = ColorConverter.GetNormalizedRgb(c);
+    var (dr, dg, db) = ColorConverter.GetNormalizedRgb(d);
+    var (er, eg, eb) = ColorConverter.GetNormalizedRgb(e);
+    var (fr, fg, fb) = ColorConverter.GetNormalizedRgb(f);
+    var (gr, gg, gb) = ColorConverter.GetNormalizedRgb(g);
+    var (hr, hg, hb) = ColorConverter.GetNormalizedRgb(h);
+    var aA = ColorConverter.GetAlpha(a);
+    var w_outer = -w;
+    var w_inner = w + 0.25f;
+    var or = (ar + br) * w_outer + (cr + dr) * w_inner + (er + fr) * w_inner + (gr + hr) * w_outer;
+    var og = (ag + bg) * w_outer + (cg + dg) * w_inner + (eg + fg) * w_inner + (gg + hg) * w_outer;
+    var ob = (ab + bb) * w_outer + (cb + db) * w_inner + (eb + fb) * w_inner + (gb + hb) * w_outer;
+    or *= 1f / 3f; og *= 1f / 3f; ob *= 1f / 3f;
+    or = MathF.Max(0f, MathF.Min(1f, or));
+    og = MathF.Max(0f, MathF.Min(1f, og));
+    ob = MathF.Max(0f, MathF.Min(1f, ob));
+    return ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, aA);
+  }
+
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static TWork _ApplyAntiRinging(

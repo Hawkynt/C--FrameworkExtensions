@@ -69,7 +69,7 @@ public readonly struct BottomHat(int radius = 1) : IPixelFilter, IFrameFilter {
     => callback.Invoke(new BottomHatFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       this._radius, sourceWidth, sourceHeight));
 
-  public static BottomHat Default => new();
+  public static BottomHat Default => new(1);
 }
 
 file readonly struct BottomHatPassThroughKernel<TWork, TKey, TPixel, TEncode>
@@ -111,7 +111,7 @@ file readonly struct BottomHatFrameKernel<TPixel, TWork, TKey, TDecode, TProject
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,7 +134,7 @@ file readonly struct BottomHatFrameKernel<TPixel, TWork, TKey, TDecode, TProject
       for (var ix = -radius; ix <= radius; ++ix) {
         var npx = frame[destX + ox + ix, destY + oy + iy].Work;
         var (nr, ng, nb, _) = ColorConverter.GetNormalizedRgba(in npx);
-        var nl = ColorMatrices.BT601_R * nr + ColorMatrices.BT601_G * ng + ColorMatrices.BT601_B * nb;
+        var nl = ColorConverter.LuminanceFromRgb(nr, ng, nb);
         if (nl > maxLum || !initedMax) {
           maxLum = nl;
           maxWork = npx;

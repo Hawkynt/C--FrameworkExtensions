@@ -61,17 +61,26 @@ public static class BayerMatrix {
 
   /// <summary>
   /// Computes a single Bayer matrix cell value without materialising the full matrix.
-  /// Uses the classic recursive definition via bit-interleaving.
+  /// Uses the canonical recursive definition: M_{2N}(i,j) = 4·M_N(i mod N, j mod N) +
+  /// M_2(i div N, j div N), where M_2 = [[0,2],[3,1]]. Equivalently, the result is built
+  /// bit-by-bit from the LSB of (x,y) up: each (x_bit, y_bit) pair at level k contributes
+  /// the M_2 lookup placed at bit position 2k of the result. Verified byte-exact against
+  /// the published 2×2/4×4/8×8 Bayer matrices in <c>BayerMatrixReferenceTests</c>.
   /// </summary>
+  /// <remarks>
+  /// Earlier versions iterated from MSB→LSB and emitted bits as (xor, y) instead of
+  /// (y, xor); that produced a transposed-and-bit-swapped matrix that still had the
+  /// dispersion property but did not match Bayer's published values. Fixed 2026-04-30.
+  /// </remarks>
   internal static float _ComputeValue(int x, int y, int size) {
     var value = 0;
-    var mask = size >> 1;
-    while (mask > 0) {
+    for (var mask = 1; mask < size; mask <<= 1) {
       value <<= 2;
       var xBit = (x & mask) != 0 ? 1 : 0;
       var yBit = (y & mask) != 0 ? 1 : 0;
-      value |= (xBit ^ yBit) | (yBit << 1);
-      mask >>= 1;
+      // M_2(xBit, yBit): (0,0)→0, (1,0)→2, (0,1)→3, (1,1)→1
+      //   bit 0 = yBit; bit 1 = xBit ^ yBit
+      value |= yBit | ((xBit ^ yBit) << 1);
     }
     return value;
   }

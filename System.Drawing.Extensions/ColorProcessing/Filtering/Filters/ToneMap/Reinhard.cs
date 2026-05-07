@@ -96,7 +96,7 @@ file readonly struct ReinhardKernel<TWork, TKey, TPixel, TEncode>(float exposure
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     if (lum < 1e-6f) {
       dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0f, 0f, 0f, a));

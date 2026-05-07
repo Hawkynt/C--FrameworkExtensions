@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -130,9 +132,9 @@ public readonly struct GradientAwareDitherer : IDitherer {
           : this._gradientStrength;
 
         // Apply error to color
-        var c1 = Math.Max(0f, Math.Min(1f, originalColor.c1 + eC1 * diffusionStrength));
-        var c2 = Math.Max(0f, Math.Min(1f, originalColor.c2 + eC2 * diffusionStrength));
-        var c3 = Math.Max(0f, Math.Min(1f, originalColor.c3 + eC3 * diffusionStrength));
+        var c1 = ColorConverter.Saturate(originalColor.c1 + eC1 * diffusionStrength);
+        var c2 = ColorConverter.Saturate(originalColor.c2 + eC2 * diffusionStrength);
+        var c3 = ColorConverter.Saturate(originalColor.c3 + eC3 * diffusionStrength);
 
         var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(c1),

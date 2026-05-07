@@ -50,7 +50,7 @@ public readonly struct Sepia(float intensity = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SepiaKernel<TWork, TKey, TPixel, TEncode>(this._intensity));
 
-  public static Sepia Default => new();
+  public static Sepia Default => new(1f);
 }
 
 file readonly struct SepiaKernel<TWork, TKey, TPixel, TEncode>(float intensity)

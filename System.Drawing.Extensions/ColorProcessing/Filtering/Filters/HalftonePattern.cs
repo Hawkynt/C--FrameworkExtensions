@@ -113,7 +113,7 @@ file readonly struct HalftonePatternFrameKernel<TPixel, TWork, TKey, TDecode, TP
     in TEncode encoder) {
     var px = frame[destX, destY].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     var ps = Math.Max(1, patternSize);
     float threshold;
@@ -128,8 +128,33 @@ file readonly struct HalftonePatternFrameKernel<TPixel, TWork, TKey, TDecode, TP
         threshold = Math.Min(destX % ps, destY % ps) / (float)ps;
         break;
       default:
-        // Dot pattern (Bayer-like)
-        threshold = ((destX % ps + destY % ps * ps) % (ps * ps)) / (float)(ps * ps);
+        // Bayer 4×4 ordered-dither matrix per Bayer 1973 (also called "M-matrix"). Each
+        // entry t ∈ [0, 15] is normalised by 16 to the [0, 1) threshold range.
+        // Pattern (canonical order):
+        //   [ 0  8  2 10]
+        //   [12  4 14  6]
+        //   [ 3 11  1  9]
+        //   [15  7 13  5]
+        // Reference: B.E. Bayer 1973, "An Optimum Method for Two-Level Rendition of
+        // Continuous-Tone Pictures", IEEE ICC. The recursive doubling-construction is
+        // standard but for `ps != 4` we fall back to a coarser modulus to preserve
+        // the user-tuned cell size.
+        if (ps == 4) {
+          var bxx = destX & 3;
+          var byy = destY & 3;
+          var idx = byy * 4 + bxx;
+          // Encoded as a flat lookup table (column-major sequence above).
+          var bayer = idx switch {
+            0  => 0,  1 =>  8,  2 =>  2,  3 => 10,
+            4 => 12,  5 =>  4,  6 => 14,  7 =>  6,
+            8 =>  3,  9 => 11, 10 =>  1, 11 =>  9,
+            12 => 15, 13 =>  7, 14 => 13, 15 =>  5,
+            _ => 0
+          };
+          threshold = (bayer + 0.5f) / 16f;
+        } else {
+          threshold = ((destX % ps + destY % ps * ps) % (ps * ps)) / (float)(ps * ps);
+        }
         break;
     }
 

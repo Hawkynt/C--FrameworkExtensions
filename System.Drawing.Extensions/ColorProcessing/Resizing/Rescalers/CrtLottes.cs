@@ -29,16 +29,22 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Lottes scaler - Timothy Lottes' CRT simulation with bloom and scanlines.
+/// Stylistic CRT-style upscale inspired by Timothy Lottes' shader. NOT a port of the
+/// crt-lottes GLSL shader: this implementation uses a fixed darkening pattern over
+/// each scaled block instead of the shader's per-fragment Gaussian beam, mask4 RGB
+/// channel selection, and barrel-warp transform.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-lottes</para>
-/// <para>Algorithm: Authentic CRT appearance with bloom effect, scanlines, and phosphor mask.</para>
-/// <para>Developed by Timothy Lottes at NVIDIA for realistic CRT emulation.</para>
+/// <para>Reference (cited but not faithfully implemented): Timothy Lottes' CRT shader,
+/// https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-lottes</para>
+/// <para>Visible effect: scanline-style darkening with subtle phosphor pattern. For
+/// pixel-accurate Lottes appearance, use the original GLSL shader through a hardware
+/// pipeline; this filter only approximates the look.</para>
 /// </remarks>
 [ScalerInfo("CRT-Lottes", Author = "Timothy Lottes",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-lottes",
-  Description = "CRT simulation with bloom and phosphor mask", Category = ScalerCategory.Resampler)]
+  Description = "Stylistic CRT-Lottes-inspired pattern (not a port of the GLSL shader)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct CrtLottes : IRescaler {
   private readonly int _scale;
 

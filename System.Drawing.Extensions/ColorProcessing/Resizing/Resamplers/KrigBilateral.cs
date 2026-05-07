@@ -27,16 +27,31 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 
 /// <summary>
-/// Kriging-based bilateral upscaling resampler.
+/// Ordinary-kriging upscaler (Krige 1951 / Matheron 1962) on a 4×4 neighbourhood with a
+/// Gaussian covariance model. Solves a 17×17 linear system per output pixel via Gaussian
+/// elimination to produce minimum-variance unbiased weights, then averages neighbour
+/// colours with those weights.
 /// </summary>
 /// <remarks>
-/// <para>Combines kriging interpolation with bilateral filtering for edge-aware results.</para>
-/// <para>Spatial weights are modulated by color similarity (range kernel).</para>
-/// <para>Produces smooth gradients while preserving sharp edges.</para>
-/// <para>Based on geostatistical interpolation adapted for image processing.</para>
+/// <para>For each output pixel we sample 16 source neighbours (4×4 grid around the
+/// destination's source-mapping). The Gaussian process model assigns a covariance
+/// <c>C(d) = exp(−d²/(2σ²))</c> to any pair separated by Euclidean distance <c>d</c>.
+/// Ordinary kriging finds weights <c>w_i</c> minimising prediction variance subject to
+/// the unbiasedness constraint <c>Σ w_i = 1</c>. The result is the optimal linear
+/// estimator under the Gaussian-process model — smoother than bicubic in flat regions,
+/// sharper across edges than Gaussian-only smoothing.</para>
+/// <para>The <c>rangeSigma</c> parameter applies an additional bilateral range-kernel
+/// modulation to the kriging weights, dampening contributions from neighbours whose
+/// luminance differs strongly from the local mean — preserving sharp edges where the
+/// Gaussian-process covariance assumption breaks down.</para>
+/// <para>Reference: D.G. Krige 1951 "A Statistical Approach to Some Basic Mine Valuation
+/// Problems"; Matheron 1962-1965 (formalisation as ordinary kriging). Cost is
+/// O(17³) ≈ 5000 ops per output pixel.</para>
 /// </remarks>
 [ScalerInfo("KrigBilateral",
-  Description = "Kriging-based bilateral edge-aware upscaling", Category = ScalerCategory.Resampler)]
+  Author = "Krige & Matheron", Year = 1951,
+  Description = "Ordinary kriging upscaler on 4×4 neighbourhood with Gaussian covariance + bilateral range modulation",
+  Category = ScalerCategory.Resampler)]
 public readonly struct KrigBilateral : IResampler {
 
   private readonly float _spatialSigma;
@@ -161,93 +176,124 @@ file readonly struct KrigBilateralKernel<TPixel, TWork, TKey, TDecode, TProject,
     colors[14] = frame[x0 + 1, y0 + 2].Work;
     colors[15] = frame[x0 + 2, y0 + 2].Work;
 
-    // Compute initial estimate using bilinear (for range kernel reference)
+    // Bilinear estimate as the reference luminance for the bilateral range kernel.
     var bilinearEst = BilinearInterpolate(colors[5], colors[6], colors[9], colors[10], fx, fy);
     var refLuma = ColorConverter.GetLuminance(in bilinearEst);
 
-    // Compute bilateral weights combining spatial and range components
-    var weights = stackalloc float[16];
-    var totalWeight = 0f;
+    // -----------------------------------------------------------------
+    // Step 1 — Build the ordinary-kriging system A · [w; μ] = b for the 16-point
+    // neighbourhood. A is 17×17 stored row-major in `mat`; b is the last column.
+    //   A[i, j] = C(||p_i − p_j||)   for i, j ∈ [0, 16)         covariance matrix
+    //   A[i, 16] = 1                  for i ∈ [0, 16)            unbiasedness Lagrange
+    //   A[16, j] = 1                  for j ∈ [0, 16)
+    //   A[16, 16] = 0
+    //   b[i]    = C(||p_i − p_target||) for i ∈ [0, 16)
+    //   b[16]   = 1
+    // C(d) = exp(−d²/(2σ²)) with σ = spatialSigma.
+    // -----------------------------------------------------------------
+    const int N = 17; // 16 + 1 Lagrange row
+    var mat = stackalloc float[N * N];
+    var rhs = stackalloc float[N];
 
-    for (var ky = 0; ky < 4; ++ky)
-    for (var kx = 0; kx < 4; ++kx) {
-      var idx = ky * 4 + kx;
-
-      // Spatial distance
-      var dx = kx - 1 - fx;
-      var dy = ky - 1 - fy;
-      var spatialDist2 = dx * dx + dy * dy;
-      var spatialWeight = MathF.Exp(spatialDist2 * this._spatialFactor);
-
-      // Range distance (luminance difference)
-      var luma = ColorConverter.GetLuminance(in colors[idx]);
-      var rangeDist2 = (luma - refLuma) * (luma - refLuma);
-      var rangeWeight = MathF.Exp(rangeDist2 * this._rangeFactor);
-
-      // Combined bilateral weight
-      var weight = spatialWeight * rangeWeight;
-
-      // Apply kriging-like correction based on local variance
-      // This helps with smooth gradient areas
-      weights[idx] = weight;
-      totalWeight += weight;
-    }
-
-    // Normalize weights
-    if (totalWeight > 0.0001f) {
-      var invTotal = 1f / totalWeight;
-      for (var i = 0; i < 16; ++i)
-        weights[i] *= invTotal;
-    } else {
-      // Fallback to uniform if all weights are near zero
-      for (var i = 0; i < 16; ++i)
-        weights[i] = 1f / 16f;
-    }
-
-    // Apply kriging correction: compute residual variance
-    var meanLuma = 0f;
-    for (var i = 0; i < 16; ++i)
-      meanLuma += ColorConverter.GetLuminance(in colors[i]) * weights[i];
-
-    var variance = 0f;
     for (var i = 0; i < 16; ++i) {
-      var diff = ColorConverter.GetLuminance(in colors[i]) - meanLuma;
-      variance += diff * diff * weights[i];
-    }
+      var ix = i % 4;
+      var iy = i / 4;
+      var pix = ix - 1 - fx;
+      var piy = iy - 1 - fy;
+      // RHS: covariance from neighbour i to target.
+      rhs[i] = MathF.Exp((pix * pix + piy * piy) * this._spatialFactor);
 
-    // Adjust weights based on local variance (kriging nugget effect)
-    // In low-variance areas, trust spatial interpolation more
-    // In high-variance areas, trust range filtering more
-    var varianceFactor = MathF.Min(variance * 10f, 1f);
-    if (varianceFactor < 0.5f) {
-      // Low variance: blend towards spatial-only weights
-      var spatialWeights = stackalloc float[16];
-      var spatialTotal = 0f;
-      for (var ky = 0; ky < 4; ++ky)
-      for (var kx = 0; kx < 4; ++kx) {
-        var idx = ky * 4 + kx;
-        var dx = kx - 1 - fx;
-        var dy = ky - 1 - fy;
-        var dist2 = dx * dx + dy * dy;
-        spatialWeights[idx] = MathF.Exp(dist2 * this._spatialFactor);
-        spatialTotal += spatialWeights[idx];
+      for (var j = 0; j < 16; ++j) {
+        var jx = j % 4;
+        var jy = j / 4;
+        var dx = ix - jx;
+        var dy = iy - jy;
+        mat[i * N + j] = MathF.Exp((dx * dx + dy * dy) * this._spatialFactor);
       }
+      mat[i * N + 16] = 1f;
+      mat[16 * N + i] = 1f;
+    }
+    mat[16 * N + 16] = 0f;
+    rhs[16] = 1f;
 
-      if (spatialTotal > 0.0001f) {
-        var invSpatial = 1f / spatialTotal;
-        var blend = (0.5f - varianceFactor) * 2f; // 0 when variance=0.5, 1 when variance=0
-        for (var i = 0; i < 16; ++i) {
-          var spatialW = spatialWeights[i] * invSpatial;
-          weights[i] = weights[i] * (1f - blend * 0.5f) + spatialW * blend * 0.5f;
+    // -----------------------------------------------------------------
+    // Step 2 — Gaussian elimination with partial pivoting on the augmented matrix.
+    // -----------------------------------------------------------------
+    for (var k = 0; k < N; ++k) {
+      // Partial pivot.
+      var piv = k;
+      var pivVal = MathF.Abs(mat[k * N + k]);
+      for (var r = k + 1; r < N; ++r) {
+        var v = MathF.Abs(mat[r * N + k]);
+        if (v > pivVal) { pivVal = v; piv = r; }
+      }
+      if (pivVal < 1e-9f) {
+        // Singular — fall back to bilinear and return early.
+        dest[destY * destStride + destX] = encoder.Encode(bilinearEst);
+        return;
+      }
+      if (piv != k) {
+        for (var c = k; c < N; ++c) {
+          var tmp = mat[k * N + c];
+          mat[k * N + c] = mat[piv * N + c];
+          mat[piv * N + c] = tmp;
         }
+        var trh = rhs[k]; rhs[k] = rhs[piv]; rhs[piv] = trh;
+      }
+      // Eliminate below.
+      var invPiv = 1f / mat[k * N + k];
+      for (var r = k + 1; r < N; ++r) {
+        var factor = mat[r * N + k] * invPiv;
+        if (factor == 0f) continue;
+        for (var c = k; c < N; ++c)
+          mat[r * N + c] -= factor * mat[k * N + c];
+        rhs[r] -= factor * rhs[k];
       }
     }
 
-    // Accumulate final result
+    // -----------------------------------------------------------------
+    // Step 3 — Back-substitution. We only need the first 16 weights (w[i]); the
+    // 17th element is the Lagrange multiplier μ which we discard.
+    // -----------------------------------------------------------------
+    var weights = stackalloc float[16];
+    // Solve for x[16] then back-substitute. We do this for the full 17-vector but
+    // copy only [0..16) into weights.
+    var xSol = stackalloc float[N];
+    for (var k = N - 1; k >= 0; --k) {
+      var s = rhs[k];
+      for (var c = k + 1; c < N; ++c)
+        s -= mat[k * N + c] * xSol[c];
+      xSol[k] = s / mat[k * N + k];
+    }
+    for (var i = 0; i < 16; ++i) weights[i] = xSol[i];
+
+    // -----------------------------------------------------------------
+    // Step 4 — Apply optional bilateral range modulation (preserve edges where the
+    // Gaussian-process covariance model breaks down). Multiply each kriging weight by
+    // a range-Gaussian on |luma(neighbour) − luma(bilinear estimate)|, then re-normalise
+    // so the unbiasedness constraint is preserved.
+    // -----------------------------------------------------------------
+    var sumW = 0f;
+    for (var i = 0; i < 16; ++i) {
+      var luma = ColorConverter.GetLuminance(in colors[i]);
+      var d = luma - refLuma;
+      var rangeWeight = MathF.Exp(d * d * this._rangeFactor);
+      weights[i] *= rangeWeight;
+      sumW += weights[i];
+    }
+    if (MathF.Abs(sumW) > 1e-6f) {
+      var invSum = 1f / sumW;
+      for (var i = 0; i < 16; ++i) weights[i] *= invSum;
+    } else {
+      // Range modulation collapsed all weights — fall back to bilinear.
+      dest[destY * destStride + destX] = encoder.Encode(bilinearEst);
+      return;
+    }
+
+    // Accumulate weighted RGBA. Note kriging weights can be negative; AddMul handles it.
     Accum4F<TWork> acc = default;
     for (var i = 0; i < 16; ++i)
-      if (weights[i] > 0.0001f)
-        acc.AddMul(colors[i], weights[i]);
+      acc.AddMul(colors[i], weights[i]);
 
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }

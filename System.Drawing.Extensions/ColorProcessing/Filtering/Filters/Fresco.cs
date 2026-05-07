@@ -133,7 +133,7 @@ file readonly struct FrescoFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     for (var dx = -brushSize; dx <= brushSize; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       var bin = (int)(lum * (_LEVELS - 1));
       if (bin < 0)
         bin = 0;
@@ -159,9 +159,9 @@ file readonly struct FrescoFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var inv = 1f / maxCount;
     var noise = _Hash(destX, destY, seed) * textureAmount * 0.1f;
 
-    var outR = Math.Max(0f, Math.Min(1f, binR[maxBin] * inv + noise));
-    var outG = Math.Max(0f, Math.Min(1f, binG[maxBin] * inv + noise));
-    var outB = Math.Max(0f, Math.Min(1f, binB[maxBin] * inv + noise));
+    var outR = ColorConverter.Saturate(binR[maxBin] * inv + noise);
+    var outG = ColorConverter.Saturate(binG[maxBin] * inv + noise);
+    var outB = ColorConverter.Saturate(binB[maxBin] * inv + noise);
 
     var center = frame[destX, destY].Work;
     var (_, _, _, a) = ColorConverter.GetNormalizedRgba(in center);

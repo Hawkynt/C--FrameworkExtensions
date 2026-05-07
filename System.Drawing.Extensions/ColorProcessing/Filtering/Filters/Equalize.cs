@@ -70,7 +70,7 @@ public readonly struct Equalize(int radius = 10) : IPixelFilter, IFrameFilter {
     => callback.Invoke(new EqualizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       this._radius, sourceWidth, sourceHeight));
 
-  public static Equalize Default => new();
+  public static Equalize Default => new(10);
 }
 
 file readonly struct EqualizePassThroughKernel<TWork, TKey, TPixel, TEncode>
@@ -112,7 +112,7 @@ file readonly struct EqualizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -137,18 +137,26 @@ file readonly struct EqualizeFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
       ++totalPixels;
     }
 
-    // Build CDF
+    // Build CDF; cdfMin is the smallest non-zero CDF value, needed for the textbook
+    // mapping T(v) = (cdf(v) − cdf_min) / (N − cdf_min) so that the minimum input
+    // luminance maps to 0 instead of cdf_min/N (Gonzalez & Woods §3.3.1).
     var cumulativeCounts = stackalloc int[256];
     cumulativeCounts[0] = histogram[0];
     for (var i = 1; i < 256; ++i)
       cumulativeCounts[i] = cumulativeCounts[i - 1] + histogram[i];
+    var cdfMin = 0;
+    for (var i = 0; i < 256; ++i)
+      if (cumulativeCounts[i] > 0) { cdfMin = cumulativeCounts[i]; break; }
 
     // Map center pixel
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var centerLum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var centerLum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
     var centerBin = Math.Max(0, Math.Min(255, (int)(centerLum * 255f)));
-    var cdf = cumulativeCounts[centerBin] / (float)totalPixels;
+    var denom = totalPixels - cdfMin;
+    var cdf = denom > 0
+      ? Math.Max(0f, cumulativeCounts[centerBin] - cdfMin) / (float)denom
+      : cumulativeCounts[centerBin] / (float)totalPixels;
 
     var scale = centerLum > 0.001f ? cdf / centerLum : cdf;
     var outR = Math.Min(1f, cr * scale);

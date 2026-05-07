@@ -37,7 +37,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("Clarity",
   Description = "Local contrast enhancement targeting midtones", Category = FilterCategory.Enhancement)]
 public readonly struct Clarity(float amount = 0.5f, int radius = 3) : IPixelFilter, IFrameFilter {
-  private readonly float _amount = Math.Max(0f, Math.Min(1f, amount));
+  private readonly float _amount = ColorConverter.Saturate(amount);
   private readonly int _radius = Math.Max(1, radius);
 
   public Clarity() : this(0.5f, 3) { }
@@ -119,7 +119,7 @@ file readonly struct ClarityFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
 
-    var lum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var lum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
     var midWeight = 1f - 2f * Math.Abs(lum - 0.5f);
 
     float sr = 0, sg = 0, sb = 0;
@@ -140,9 +140,9 @@ file readonly struct ClarityFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     var mb = sb * invCount;
 
     var scale = amount * midWeight;
-    var or = Math.Max(0f, Math.Min(1f, cr + scale * (cr - mr)));
-    var og = Math.Max(0f, Math.Min(1f, cg + scale * (cg - mg)));
-    var ob = Math.Max(0f, Math.Min(1f, cb + scale * (cb - mb)));
+    var or = ColorConverter.Saturate(cr + scale * (cr - mr));
+    var og = ColorConverter.Saturate(cg + scale * (cg - mg));
+    var ob = ColorConverter.Saturate(cb + scale * (cb - mb));
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

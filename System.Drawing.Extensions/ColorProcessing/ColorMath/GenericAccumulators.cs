@@ -113,9 +113,23 @@ public struct Accum4F<TColor> : IAccum<Accum4F<TColor>, TColor>
   public TColor Result {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     get {
+      // Guard against zero weight sum: kernels with hard weight thresholds (NoHalo / LoHalo
+      // EWA paths) can filter out every tap on pathological aspect ratios (1×N strips), and
+      // 1f/0 = +∞ then 0*+∞ = NaN propagates into the encoder's sRGB lookup table where it
+      // OOBs the table-index conversion. Returning zeros gives a documented fallback that the
+      // caller (kernel) can detect via _weightSum == 0 if it wants a smarter fallback.
+      if (this._weightSum <= 0f)
+        return default;
       var inv = 1f / this._weightSum;
       return ColorFactory.Create4F<TColor>(this._c1 * inv, this._c2 * inv, this._c3 * inv, this._a * inv);
     }
+  }
+
+  /// <summary>True if at least one tap has been accumulated. Kernels can use this to detect
+  /// "no support" at the current sample point and fall back to nearest-neighbor.</summary>
+  public bool HasContribution {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    get => this._weightSum > 0f;
   }
 }
 

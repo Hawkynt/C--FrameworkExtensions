@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -61,7 +63,7 @@ public readonly struct DizzyDitherer : IDitherer {
   /// <param name="spiralRadius">Radius of the spiral pattern.</param>
   /// <param name="seed">Random seed for reproducibility.</param>
   public DizzyDitherer(float randomness = 0.15f, int spiralRadius = 3, int seed = 42) {
-    this._randomness = Math.Max(0f, Math.Min(1f, randomness));
+    this._randomness = ColorConverter.Saturate(randomness);
     this._spiralRadius = Math.Max(1, Math.Min(6, spiralRadius));
     this._seed = seed;
   }
@@ -107,9 +109,9 @@ public readonly struct DizzyDitherer : IDitherer {
         var pixel = source[y * sourceStride + x];
         var (c1, c2, c3, alpha) = pixel.ToNormalized();
 
-        var newC1 = Math.Max(0f, Math.Min(1f, c1.ToFloat() + errorC1[x, localY]));
-        var newC2 = Math.Max(0f, Math.Min(1f, c2.ToFloat() + errorC2[x, localY]));
-        var newC3 = Math.Max(0f, Math.Min(1f, c3.ToFloat() + errorC3[x, localY]));
+        var newC1 = ColorConverter.Saturate(c1.ToFloat() + errorC1[x, localY]);
+        var newC2 = ColorConverter.Saturate(c2.ToFloat() + errorC2[x, localY]);
+        var newC3 = ColorConverter.Saturate(c3.ToFloat() + errorC3[x, localY]);
 
         var newColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(newC1),

@@ -190,9 +190,9 @@ file readonly struct HighPassKernel<TWork, TKey, TPixel, TEncode>(
     _AccumRow(ref ar, ref ag, ref ab, window.P1M2, window.P1M1, window.P1P0, window.P1P1, window.P1P2, yw1);
     _AccumRow(ref ar, ref ag, ref ab, window.P2M2, window.P2M1, window.P2P0, window.P2P1, window.P2P2, yw2);
 
-    var or = Math.Max(0f, Math.Min(1f, cr - ar + 0.5f));
-    var og = Math.Max(0f, Math.Min(1f, cg - ag + 0.5f));
-    var ob = Math.Max(0f, Math.Min(1f, cb - ab + 0.5f));
+    var or = ColorConverter.Saturate(cr - ar + 0.5f);
+    var og = ColorConverter.Saturate(cg - ag + 0.5f);
+    var ob = ColorConverter.Saturate(cb - ab + 0.5f);
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }
@@ -243,9 +243,16 @@ file readonly struct HighPassFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
       }
     }
 
-    var or = Math.Max(0f, Math.Min(1f, cr - ar + 0.5f));
-    var og = Math.Max(0f, Math.Min(1f, cg - ag + 0.5f));
-    var ob = Math.Max(0f, Math.Min(1f, cb - ab + 0.5f));
+    // The bias must equal the linear-light value that gamma-encodes to sRGB byte 128
+    // (canonical "neutral grey" in the output). Naive `+ 0.5f` in linear-light produces
+    // byte 188 (gamma-encoded 0.5 ≈ 0.735 sRGB). The IPixelFilter Fast path uses
+    // Bgra8888 work (no gamma) and so its `+ 0.5f` directly yields byte 128; this frame
+    // path operates in LinearRgbaF (per _ApplyViaFrame's quality choice) and needs the
+    // pre-encoded equivalent: ((128/255+0.055)/1.055)^2.4 ≈ 0.21404114.
+    const float NeutralGreyLinear = 0.21404114f;
+    var or = ColorConverter.Saturate(cr - ar + NeutralGreyLinear);
+    var og = ColorConverter.Saturate(cg - ag + NeutralGreyLinear);
+    var ob = ColorConverter.Saturate(cb - ab + NeutralGreyLinear);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, ca));
   }

@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -88,7 +90,7 @@ public readonly struct PatternDependentThresholdDitherer : IDitherer {
   /// <param name="pdtGain">Gain of the causal-neighbour correction, as a
   /// fraction of the screen range. Default 1/16.</param>
   public PatternDependentThresholdDitherer(float strength = 1f, float pdtGain = 0.0625f) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._pdtGain = Math.Max(0f, Math.Min(0.5f, pdtGain));
   }
 

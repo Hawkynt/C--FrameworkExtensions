@@ -278,7 +278,9 @@ file readonly struct NoHaloKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
       acc.AddMul(pixel, weight);
     }
 
-    return acc.Result;
+    // Fallback: pathological aspect ratios (1×N strip with extreme scale ratio) compress
+    // the teepee ellipse below 1e-6f at every tap. Use nearest source sample in that case.
+    return acc.HasContribution ? acc.Result : frame[x0, y0].Work;
   }
 
   /// <summary>
@@ -347,7 +349,8 @@ file readonly struct NoHaloKernel<TPixel, TWork, TKey, TDecode, TProject, TEncod
       acc.AddMul(pixel, weight);
     }
 
-    return acc.Result;
+    // See ClampedEwaTeepee for the fallback rationale.
+    return acc.HasContribution ? acc.Result : frame[x0, y0].Work;
   }
 
   /// <summary>

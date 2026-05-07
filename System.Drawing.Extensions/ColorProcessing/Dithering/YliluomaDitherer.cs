@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -41,6 +43,27 @@ public readonly struct YliluomaDitherer : IDitherer {
 
   private const int _DEFAULT_ALGORITHM = 1;
   private const int _DEFAULT_MATRIX_SIZE = 8;
+
+  /// <summary>
+  /// Standard Bayer 8×8 ordered-dither matrix. Values 0..63 each appear exactly once
+  /// (verified by recursive doubling construction). Bisqwit's Yliluoma reference uses
+  /// this exact matrix at https://bisqwit.iki.fi/story/howto/dither/jy/.
+  /// </summary>
+  /// <remarks>
+  /// Must remain declared BEFORE <see cref="_DefaultMatrix"/> — static field initializers
+  /// run in textual order, and <see cref="_GenerateDitherMatrix"/> reads this array.
+  /// Reordering caused a NullReferenceException during type initialization.
+  /// </remarks>
+  private static readonly int[] _Bayer8x8Int = [
+     0, 48, 12, 60,  3, 51, 15, 63,
+    32, 16, 44, 28, 35, 19, 47, 31,
+     8, 56,  4, 52, 11, 59,  7, 55,
+    40, 24, 36, 20, 43, 27, 39, 23,
+     2, 50, 14, 62,  1, 49, 13, 61,
+    34, 18, 46, 30, 33, 17, 45, 29,
+    10, 58,  6, 54,  9, 57,  5, 53,
+    42, 26, 38, 22, 41, 25, 37, 21
+  ];
 
   // Static default matrix shared by all instances - avoids null issues with default struct initialization
   private static readonly float[] _DefaultMatrix = _GenerateDitherMatrix(_DEFAULT_MATRIX_SIZE);
@@ -72,14 +95,18 @@ public readonly struct YliluomaDitherer : IDitherer {
   }
 
   private static float[] _GenerateDitherMatrix(int size) {
-    var matrix = new float[size * size];
-    for (var y = 0; y < size; ++y)
-    for (var x = 0; x < size; ++x) {
-      var value = ((x * 7 + y * 13) % 64) / 64f;
-      value = (float)(0.5 + 0.4 * Math.Sin(value * Math.PI * 2) + 0.1 * Math.Sin(value * Math.PI * 8));
-      value = Math.Max(0f, Math.Min(1f, value));
-      matrix[y * size + x] = value;
+    // For size=8, return the canonical Bayer 8×8 / 64 (in [0, 1) range).
+    if (size == 8) {
+      var bayer = new float[64];
+      for (var i = 0; i < 64; ++i) bayer[i] = _Bayer8x8Int[i] / 64f;
+      return bayer;
     }
+    // Generic fallback: linear ramp distributed via index*prime % N — produces an
+    // ordered (but not strictly Bayer) threshold distribution for unusual sizes.
+    var matrix = new float[size * size];
+    var n = size * size;
+    for (var i = 0; i < n; ++i)
+      matrix[i] = ((i * 7) % n) / (float)n;
     return matrix;
   }
 
@@ -118,11 +145,17 @@ public readonly struct YliluomaDitherer : IDitherer {
         var color = source[sourceIdx];
         var threshold = matrix[thresholdRowOffset + (x % matrixSize)];
 
+        // Convert the float threshold (matrix value / N²) back to its integer position
+        // (0..N²-1) for algorithms 2 and 3 which INDEX directly into a sorted candidate
+        // list.
+        var matrixIdx = (int)Math.Round(threshold * (matrixSize * matrixSize));
+        if (matrixIdx >= matrixSize * matrixSize) matrixIdx = matrixSize * matrixSize - 1;
+
         var closestIndex = algorithm switch {
           1 => _ApplyAlgorithm1(color, palette, threshold, lookup),
-          2 => _ApplyAlgorithm2(color, palette, threshold, x, y, lookup),
-          3 => _ApplyAlgorithm3(color, palette, threshold, x, y, lookup),
-          4 => _ApplyAlgorithm3Full(color, palette, threshold, matrixSize, lookup),
+          2 => _ApplyAlgorithm2(color, palette, matrixIdx, matrixSize * matrixSize),
+          3 => _ApplyAlgorithm3(color, palette, matrixIdx, matrixSize * matrixSize, lookup),
+          4 => _ApplyAlgorithm3(color, palette, matrixIdx, matrixSize * matrixSize, lookup),
           _ => lookup.FindNearest(color)
         };
 
@@ -132,8 +165,18 @@ public readonly struct YliluomaDitherer : IDitherer {
   }
 
   /// <summary>
-  /// Algorithm 1: Two-color mixing based on threshold.
+  /// Yliluoma's Algorithm 1: positional dithering with optimal two-colour mixing per
+  /// bisqwit's published reference (https://bisqwit.iki.fi/story/howto/dither/jy/).
+  /// Enumerates every unique palette pair (i, j), computes the analytic optimal mix
+  /// ratio for that pair, evaluates the squared-RGB penalty against the input, and
+  /// keeps the (pair, ratio) with smallest penalty. Then at each pixel the dither
+  /// matrix value <paramref name="threshold"/> ∈ [0, 1) selects between the two
+  /// colours: factor &lt; ratio → color2, else color1.
   /// </summary>
+  /// <remarks>
+  /// Optimal-ratio formula: r = ((input − c1) · (c2 − c1)) / ‖c2 − c1‖² clamped to
+  /// [0, 1]. This is the projection of the input onto the line segment between c1 and c2.
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static int _ApplyAlgorithm1<TWork, TMetric>(
     TWork pixel,
@@ -143,185 +186,287 @@ public readonly struct YliluomaDitherer : IDitherer {
     where TWork : unmanaged, IColorSpace4<TWork>
     where TMetric : struct, IColorMetric<TWork> {
 
-    var closestIndex = lookup.FindNearest(pixel, out var closestColor);
-    var secondClosestIndex = _FindSecondClosestIndex(pixel, palette, closestIndex);
+    var (pn1, pn2, pn3, _) = pixel.ToNormalized();
+    var p1 = pn1.ToFloat();
+    var p2 = pn2.ToFloat();
+    var p3 = pn3.ToFloat();
 
-    // Calculate relative position between closest and second-closest colors
-    var (pc1, pc2, pc3, _) = pixel.ToNormalized();
-    var (c1, c2, c3, _) = closestColor.ToNormalized();
-    var (s1, s2, s3, _) = palette[secondClosestIndex].ToNormalized();
+    var bestPenalty = float.MaxValue;
+    var bestI = 0;
+    var bestJ = 0;
+    var bestRatio = 0f;
 
-    var distToClosest = Math.Abs(pc1.ToFloat() - c1.ToFloat()) +
-                        Math.Abs(pc2.ToFloat() - c2.ToFloat()) +
-                        Math.Abs(pc3.ToFloat() - c3.ToFloat());
-    var distToSecond = Math.Abs(pc1.ToFloat() - s1.ToFloat()) +
-                       Math.Abs(pc2.ToFloat() - s2.ToFloat()) +
-                       Math.Abs(pc3.ToFloat() - s3.ToFloat());
+    for (var i = 0; i < palette.Length; ++i) {
+      var (in1, in2, in3, _) = palette[i].ToNormalized();
+      var c1a = in1.ToFloat();
+      var c1b = in2.ToFloat();
+      var c1c = in3.ToFloat();
 
-    var totalDist = distToClosest + distToSecond;
-    var ratio = totalDist > 0.001f ? distToClosest / totalDist : 0f;
+      for (var j = i; j < palette.Length; ++j) {
+        var (jn1, jn2, jn3, _) = palette[j].ToNormalized();
+        var c2a = jn1.ToFloat();
+        var c2b = jn2.ToFloat();
+        var c2c = jn3.ToFloat();
 
-    // Select second color only if pixel is meaningfully between colors AND threshold indicates it
-    return threshold > 1f - ratio ? secondClosestIndex : closestIndex;
+        // Direction vector c2 - c1.
+        var da = c2a - c1a;
+        var db = c2b - c1b;
+        var dc = c2c - c1c;
+        var dotDD = da * da + db * db + dc * dc;
+
+        float ratio;
+        if (dotDD < 1e-9f) {
+          // Same colour or near-identical pair — pick ratio=0 (use c1).
+          ratio = 0f;
+        } else {
+          // Analytic optimum: r = (input - c1) · (c2 - c1) / |c2 - c1|².
+          var dotIn = (p1 - c1a) * da + (p2 - c1b) * db + (p3 - c1c) * dc;
+          ratio = dotIn / dotDD;
+          if (ratio < 0f) ratio = 0f;
+          else if (ratio > 1f) ratio = 1f;
+        }
+
+        var mr = c1a + ratio * da;
+        var mg = c1b + ratio * db;
+        var mb = c1c + ratio * dc;
+        var er = p1 - mr; var eg = p2 - mg; var eb = p3 - mb;
+        var penalty = er * er + eg * eg + eb * eb;
+
+        if (penalty < bestPenalty) {
+          bestPenalty = penalty;
+          bestI = i;
+          bestJ = j;
+          bestRatio = ratio;
+        }
+      }
+    }
+
+    // At dither position with `threshold`, draw c2 if threshold < ratio else c1.
+    return threshold < bestRatio ? bestJ : bestI;
   }
 
-  /// <summary>
-  /// Algorithm 2: Multi-color candidate generation with positional factor.
-  /// </summary>
+  // Gamma constant per bisqwit's reference (gamma=2.0 used for analytic-friendliness;
+  // bisqwit also discusses 2.2 — the exact value affects mix appearance but not the
+  // structure of the algorithm).
+  private const double Gamma = 2.0;
+  private const double InvGamma = 1.0 / Gamma;
+
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _ApplyAlgorithm2<TWork, TMetric>(
-    TWork pixel,
-    TWork[] palette,
-    float threshold,
-    int x,
-    int y,
-    in PaletteLookup<TWork, TMetric> lookup)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TMetric : struct, IColorMetric<TWork> {
+  private static double _GammaCorrect(double v) => v <= 0 ? 0 : Math.Pow(v, Gamma);
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static double _GammaUncorrect(double v) => v <= 0 ? 0 : Math.Pow(v, InvGamma);
 
-    var closestIndex = lookup.FindNearest(pixel, out var closestColor);
-    var secondClosestIndex = _FindSecondClosestIndex(pixel, palette, closestIndex);
-
-    // Calculate relative position between closest and second-closest colors
-    var (pc1, pc2, pc3, _) = pixel.ToNormalized();
-    var (c1, c2, c3, _) = closestColor.ToNormalized();
-    var (s1, s2, s3, _) = palette[secondClosestIndex].ToNormalized();
-
-    var distToClosest = Math.Abs(pc1.ToFloat() - c1.ToFloat()) +
-                        Math.Abs(pc2.ToFloat() - c2.ToFloat()) +
-                        Math.Abs(pc3.ToFloat() - c3.ToFloat());
-    var distToSecond = Math.Abs(pc1.ToFloat() - s1.ToFloat()) +
-                       Math.Abs(pc2.ToFloat() - s2.ToFloat()) +
-                       Math.Abs(pc3.ToFloat() - s3.ToFloat());
-
-    var totalDist = distToClosest + distToSecond;
-    var ratio = totalDist > 0.001f ? distToClosest / totalDist : 0f;
-
-    var positionFactor = ((x * 3 + y * 7) % 16) / 16f;
-    var adjustedThreshold = (threshold + positionFactor * 0.3f) % 1f;
-
-    // Select second color only if pixel is meaningfully between colors AND adjusted threshold indicates it
-    return adjustedThreshold > 1f - ratio ? secondClosestIndex : closestIndex;
-  }
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static double _Luminance(double r, double g, double b)
+    => 0.299 * r + 0.587 * g + 0.114 * b;
 
   /// <summary>
-  /// Algorithm 3: Simplified multi-candidate selection.
+  /// Yliluoma's Algorithm 2 (https://bisqwit.iki.fi/story/howto/dither/jy/):
+  /// builds a list of N candidate palette indices (where N = matrix size²) by greedy
+  /// iterative addition. At each iteration, finds the palette colour AND amount p ∈
+  /// {1, 2, 4, ...} that minimises the squared-RGB penalty when added to the gamma-
+  /// corrected running sum, then appends p copies of that index. Once N candidates are
+  /// collected, sort by luminance and INDEX with the matrix value to pick the output.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _ApplyAlgorithm3<TWork, TMetric>(
-    TWork pixel,
-    TWork[] palette,
-    float threshold,
-    int x,
-    int y,
-    in PaletteLookup<TWork, TMetric> lookup)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TMetric : struct, IColorMetric<TWork> {
+  private static int _ApplyAlgorithm2<TWork>(
+    TWork pixel, TWork[] palette, int matrixIdx, int N)
+    where TWork : unmanaged, IColorSpace4<TWork> {
+    var (pn1, pn2, pn3, _) = pixel.ToNormalized();
+    var p1 = (double)pn1.ToFloat();
+    var p2 = (double)pn2.ToFloat();
+    var p3 = (double)pn3.ToFloat();
 
-    var candidateIndices = _FindBestCandidateIndices(pixel, palette, 4);
-    if (candidateIndices.Length == 0)
-      return 0;
+    // Pre-compute gamma-corrected palette.
+    var palCount = palette.Length;
+    var palR = new double[palCount];
+    var palG = new double[palCount];
+    var palB = new double[palCount];
+    for (var i = 0; i < palCount; ++i) {
+      var (qn1, qn2, qn3, _) = palette[i].ToNormalized();
+      palR[i] = _GammaCorrect(qn1.ToFloat());
+      palG[i] = _GammaCorrect(qn2.ToFloat());
+      palB[i] = _GammaCorrect(qn3.ToFloat());
+    }
 
-    // Check if pixel is close to the nearest candidate (exact or near-exact match)
-    var (pc1, pc2, pc3, _) = pixel.ToNormalized();
-    var (c1, c2, c3, _) = palette[candidateIndices[0]].ToNormalized();
-    var distToNearest = Math.Abs(pc1.ToFloat() - c1.ToFloat()) +
-                        Math.Abs(pc2.ToFloat() - c2.ToFloat()) +
-                        Math.Abs(pc3.ToFloat() - c3.ToFloat());
+    var solution = new int[N];
+    var solutionSize = 0;
+    double sumR = 0, sumG = 0, sumB = 0;
 
-    // If pixel is very close to nearest color, just return it
-    if (distToNearest < 0.01f)
-      return candidateIndices[0];
+    while (solutionSize < N) {
+      var bestIdx = 0;
+      var bestAmount = 1;
+      var bestPenalty = double.MaxValue;
+      var maxTest = Math.Max(1, solutionSize);
+      // Cap so we don't fill past N.
+      var roomLeft = N - solutionSize;
 
-    // For colors between palette entries, use threshold-based selection
-    var complexThreshold = _CalculateComplexThreshold(threshold, x, y);
-    var index = (int)(complexThreshold * candidateIndices.Length) % candidateIndices.Length;
-    return candidateIndices[index];
-  }
+      for (var i = 0; i < palCount; ++i) {
+        var addR = palR[i];
+        var addG = palG[i];
+        var addB = palB[i];
+        double runR = sumR, runG = sumG, runB = sumB;
 
-  /// <summary>
-  /// Algorithm 3 Full: Iterative subdivision for optimal color mixing.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static int _ApplyAlgorithm3Full<TWork, TMetric>(
-    TWork pixel,
-    TWork[] palette,
-    float threshold,
-    int matrixSize,
-    in PaletteLookup<TWork, TMetric> lookup)
-    where TWork : unmanaged, IColorSpace4<TWork>
-    where TMetric : struct, IColorMetric<TWork> {
-
-    // Get target color in normalized form
-    var (tc1, tc2, tc3, _) = pixel.ToNormalized();
-    var targetC1 = tc1.ToFloat();
-    var targetC2 = tc2.ToFloat();
-    var targetC3 = tc3.ToFloat();
-
-    // Build candidate list through iterative refinement
-    var candidateCounts = new int[palette.Length];
-    var totalCount = 0;
-    var accumC1 = 0.0;
-    var accumC2 = 0.0;
-    var accumC3 = 0.0;
-
-    // Use matrix area as iteration count for optimal mixing granularity
-    var maxIterations = matrixSize * matrixSize;
-    for (var iteration = 0; iteration < maxIterations; ++iteration) {
-      var bestIndex = -1;
-      var bestError = double.MaxValue;
-
-      // Find the palette color that minimizes error when added to the mix
-      for (var i = 0; i < palette.Length; ++i) {
-        var (pc1, pc2, pc3, _) = palette[i].ToNormalized();
-        var colorC1 = pc1.ToFloat();
-        var colorC2 = pc2.ToFloat();
-        var colorC3 = pc3.ToFloat();
-
-        // Compute mixed color if we add this candidate
-        var mixC1 = (accumC1 + colorC1) / (totalCount + 1);
-        var mixC2 = (accumC2 + colorC2) / (totalCount + 1);
-        var mixC3 = (accumC3 + colorC3) / (totalCount + 1);
-
-        // Calculate error
-        var d1 = mixC1 - targetC1;
-        var d2 = mixC2 - targetC2;
-        var d3 = mixC3 - targetC3;
-        var error = d1 * d1 + d2 * d2 + d3 * d3;
-
-        if (error < bestError) {
-          bestError = error;
-          bestIndex = i;
+        for (var p = 1; p <= maxTest && p <= roomLeft; p *= 2) {
+          runR += addR; runG += addG; runB += addB;
+          addR += addR; addG += addG; addB += addB;
+          var inv = 1.0 / (solutionSize + p);
+          var testR = _GammaUncorrect(runR * inv);
+          var testG = _GammaUncorrect(runG * inv);
+          var testB = _GammaUncorrect(runB * inv);
+          var dr = p1 - testR; var dg = p2 - testG; var db = p3 - testB;
+          var penalty = dr * dr + dg * dg + db * db;
+          if (penalty < bestPenalty) {
+            bestPenalty = penalty;
+            bestIdx = i;
+            bestAmount = p;
+          }
         }
       }
 
-      if (bestIndex < 0)
-        break;
-
-      // Add the best candidate to our mix
-      var (bc1, bc2, bc3, _) = palette[bestIndex].ToNormalized();
-      accumC1 += bc1.ToFloat();
-      accumC2 += bc2.ToFloat();
-      accumC3 += bc3.ToFloat();
-      ++candidateCounts[bestIndex];
-      ++totalCount;
-
-      // Stop early if error is negligible
-      if (bestError < 0.0001)
-        break;
+      // Append bestAmount copies of bestIdx.
+      for (var k = 0; k < bestAmount && solutionSize < N; ++k)
+        solution[solutionSize++] = bestIdx;
+      sumR += palR[bestIdx] * bestAmount;
+      sumG += palG[bestIdx] * bestAmount;
+      sumB += palB[bestIdx] * bestAmount;
     }
 
-    // Use ordered dithering to select from candidates based on threshold
-    var scaledPosition = (int)(threshold * totalCount);
-    var runningSum = 0;
-    for (var i = 0; i < palette.Length; ++i) {
-      runningSum += candidateCounts[i];
-      if (scaledPosition < runningSum)
-        return i;
+    // Sort solution by luminance of the palette entry.
+    Array.Sort(solution, (a, b) => {
+      var (an1, an2, an3, _) = palette[a].ToNormalized();
+      var (bn1, bn2, bn3, _) = palette[b].ToNormalized();
+      return _Luminance(an1.ToFloat(), an2.ToFloat(), an3.ToFloat())
+        .CompareTo(_Luminance(bn1.ToFloat(), bn2.ToFloat(), bn3.ToFloat()));
+    });
+
+    if (matrixIdx >= solutionSize) matrixIdx = solutionSize - 1;
+    return solution[matrixIdx];
+  }
+
+  /// <summary>
+  /// Yliluoma's Algorithm 3 (iterative pair-replacement):
+  /// start with N copies of the closest palette colour; iteratively try to replace one
+  /// colour in the multiset with a 50:50 mix of two different palette colours. Continue
+  /// until no pair-replacement improves the perceptual penalty. Reference:
+  /// https://bisqwit.iki.fi/story/howto/dither/jy/.
+  /// </summary>
+  /// <remarks>
+  /// The algorithm runs a bounded number of outer-loop iterations to keep per-pixel
+  /// cost predictable; the canonical convergence test ("until no improvement") is
+  /// preserved as the inner termination condition.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static int _ApplyAlgorithm3<TWork, TMetric>(
+    TWork pixel, TWork[] palette, int matrixIdx, int N,
+    in PaletteLookup<TWork, TMetric> lookup)
+    where TWork : unmanaged, IColorSpace4<TWork>
+    where TMetric : struct, IColorMetric<TWork> {
+    var (pn1, pn2, pn3, _) = pixel.ToNormalized();
+    var p1 = (double)pn1.ToFloat();
+    var p2 = (double)pn2.ToFloat();
+    var p3 = (double)pn3.ToFloat();
+
+    var palCount = palette.Length;
+    var palR = new double[palCount];
+    var palG = new double[palCount];
+    var palB = new double[palCount];
+    for (var i = 0; i < palCount; ++i) {
+      var (qn1, qn2, qn3, _) = palette[i].ToNormalized();
+      palR[i] = _GammaCorrect(qn1.ToFloat());
+      palG[i] = _GammaCorrect(qn2.ToFloat());
+      palB[i] = _GammaCorrect(qn3.ToFloat());
     }
 
-    // Fallback to closest match
-    return lookup.FindNearest(pixel);
+    // Multiset: counts[i] = number of times palette[i] appears in solution.
+    var counts = new int[palCount];
+    var closest = lookup.FindNearest(pixel);
+    counts[closest] = N;
+
+    double Penalty(double[] cnt) {
+      double sR = 0, sG = 0, sB = 0;
+      var total = 0;
+      for (var i = 0; i < palCount; ++i) {
+        var c = (int)cnt[i];
+        if (c == 0) continue;
+        sR += palR[i] * c; sG += palG[i] * c; sB += palB[i] * c; total += c;
+      }
+      if (total == 0) return double.MaxValue;
+      var inv = 1.0 / total;
+      var testR = _GammaUncorrect(sR * inv);
+      var testG = _GammaUncorrect(sG * inv);
+      var testB = _GammaUncorrect(sB * inv);
+      var dr = p1 - testR; var dg = p2 - testG; var db = p3 - testB;
+      return dr * dr + dg * dg + db * db;
+    }
+
+    var workingCounts = new double[palCount];
+    var currentPenalty = double.MaxValue;
+    {
+      for (var i = 0; i < palCount; ++i) workingCounts[i] = counts[i];
+      currentPenalty = Penalty(workingCounts);
+    }
+
+    const int MaxOuter = 8;
+    for (var iter = 0; iter < MaxOuter; ++iter) {
+      var bestSplitFrom = -1;
+      var bestA = -1;
+      var bestB = -1;
+      var bestNewPenalty = currentPenalty;
+
+      for (var splitFrom = 0; splitFrom < palCount; ++splitFrom) {
+        if (counts[splitFrom] == 0) continue;
+        var splitCount = counts[splitFrom];
+        var portion1 = splitCount / 2;
+        var portion2 = splitCount - portion1;
+        if (portion1 == 0 || portion2 == 0) continue;
+
+        // Try splitting splitFrom into (a, b) — distinct palette colours.
+        for (var a = 0; a < palCount; ++a)
+        for (var b = 0; b < palCount; ++b) {
+          if (a == b || a == splitFrom || b == splitFrom) continue;
+          for (var i = 0; i < palCount; ++i) workingCounts[i] = counts[i];
+          workingCounts[splitFrom] = 0;
+          workingCounts[a] += portion1;
+          workingCounts[b] += portion2;
+          var pen = Penalty(workingCounts);
+          if (pen < bestNewPenalty) {
+            bestNewPenalty = pen;
+            bestSplitFrom = splitFrom;
+            bestA = a;
+            bestB = b;
+          }
+        }
+      }
+
+      if (bestSplitFrom < 0) break; // No improvement.
+
+      var sCount = counts[bestSplitFrom];
+      var p1Count = sCount / 2;
+      var p2Count = sCount - p1Count;
+      counts[bestSplitFrom] = 0;
+      counts[bestA] += p1Count;
+      counts[bestB] += p2Count;
+      currentPenalty = bestNewPenalty;
+    }
+
+    // Build candidate list and sort by luminance.
+    var candidates = new int[N];
+    var idx = 0;
+    for (var i = 0; i < palCount && idx < N; ++i)
+      for (var k = 0; k < counts[i] && idx < N; ++k)
+        candidates[idx++] = i;
+    while (idx < N) candidates[idx++] = closest;
+
+    Array.Sort(candidates, (a, b) => {
+      var (an1, an2, an3, _) = palette[a].ToNormalized();
+      var (bn1, bn2, bn3, _) = palette[b].ToNormalized();
+      return _Luminance(an1.ToFloat(), an2.ToFloat(), an3.ToFloat())
+        .CompareTo(_Luminance(bn1.ToFloat(), bn2.ToFloat(), bn3.ToFloat()));
+    });
+
+    if (matrixIdx >= N) matrixIdx = N - 1;
+    return candidates[matrixIdx];
   }
 
   private static int _FindSecondClosestIndex<TWork>(TWork target, TWork[] palette, int excludeIndex)
@@ -379,6 +524,6 @@ public readonly struct YliluomaDitherer : IDitherer {
   private static float _CalculateComplexThreshold(float baseThreshold, int x, int y) {
     var spatial = (float)Math.Sin((x * 0.1 + y * 0.13) * Math.PI * 2) * 0.1f;
     var pattern = ((x + y * 3) % 8) / 8f * 0.2f;
-    return Math.Max(0f, Math.Min(1f, baseThreshold + spatial + pattern));
+    return ColorConverter.Saturate(baseThreshold + spatial + pattern);
   }
 }

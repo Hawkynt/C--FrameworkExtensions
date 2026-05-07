@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 public readonly struct SelectiveDesaturation(float targetHue, float hueRange = 30f, float strength = 1f) : IPixelFilter {
   private readonly float _targetHue = ((targetHue % 360f) + 360f) % 360f;
   private readonly float _hueRange = Math.Max(0f, Math.Min(180f, hueRange));
-  private readonly float _strength = Math.Max(0f, Math.Min(1f, strength));
+  private readonly float _strength = ColorConverter.Saturate(strength);
 
   public SelectiveDesaturation() : this(0f, 30f, 1f) { }
 
@@ -84,7 +84,7 @@ file readonly struct SelectiveDesaturationKernel<TWork, TKey, TPixel, TEncode>(
     if (dist > 180f)
       dist = 360f - dist;
 
-    var keep = 1f - Math.Max(0f, Math.Min(1f, (dist - hueRange * 0.5f) / Math.Max(hueRange * 0.5f, 0.001f)));
+    var keep = 1f - ColorConverter.Saturate((dist - hueRange * 0.5f) / Math.Max(hueRange * 0.5f, 0.001f));
     var newS = s * (1f - strength * (1f - keep));
     var (or, og, ob) = HslMath.HslToRgb(h, newS, l);
 

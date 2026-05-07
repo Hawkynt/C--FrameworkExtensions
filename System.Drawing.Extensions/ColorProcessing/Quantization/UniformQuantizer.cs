@@ -64,8 +64,13 @@ public struct UniformQuantizer : IQuantizer {
       // Min-clamp at 1 (not 2): for colorCount ∈ {3..7}, a 2³ = 8 cube already exceeds the
       // requested count. Starting at (1,1,1) lets the ratchet loop find a non-cubic
       // decomposition like (4,1,1) for k=4 or (3,2,1) for k=6 that satisfies the ≤k contract.
-      var baseLevels = (int)Math.Floor(Math.Cbrt(colorCount));
-      baseLevels = Math.Max(1, Math.Min(baseLevels, 8));
+      //
+      // Integer cube-root loop — `Math.Cbrt(colorCount)` is platform-dependent (net48 returns
+      // 3.9999... for k=64 → floor=3 → ratchet hits (7,3,3); net6+ returns exactly 4.0 →
+      // floor=4 → ratchet stays at (4,4,4)). The integer loop is deterministic across all TFMs.
+      var baseLevels = 1;
+      while ((baseLevels + 1) * (baseLevels + 1) * (baseLevels + 1) <= colorCount && baseLevels < 8)
+        ++baseLevels;
 
       // Find the best combination of levels that gives us <= colorCount colors
       int rLevels = baseLevels, gLevels = baseLevels, bLevels = baseLevels;

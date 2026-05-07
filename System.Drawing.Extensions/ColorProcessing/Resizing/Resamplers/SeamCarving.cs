@@ -203,8 +203,13 @@ file readonly struct SeamCarvingKernel<TPixel, TWork, TKey, TDecode, TProject, T
       var seamMask = new bool[currentWidth * height];
 
       for (var i = 0; i < seamsThisPass; ++i) {
-        var energy = ComputeEnergyMap(resultKeys, currentWidth, height, metric, seamMask);
-        var seam = FindVerticalSeam(energy, currentWidth, height);
+        int[] seam;
+        if (energyMode == SeamCarvingEnergyMode.Forward) {
+          seam = FindVerticalSeamForward(resultKeys, currentWidth, height, metric, seamMask);
+        } else {
+          var energy = ComputeEnergyMap(resultKeys, currentWidth, height, metric, seamMask);
+          seam = FindVerticalSeam(energy, currentWidth, height);
+        }
         seamsToFind[i] = seam;
 
         // Mark this seam in the mask
@@ -276,8 +281,13 @@ file readonly struct SeamCarvingKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var currentWidth = width;
 
     for (var i = 0; i < seamsToRemove; ++i) {
-      var energy = ComputeEnergyMap(resultKeys, currentWidth, height, metric, null);
-      var seam = FindVerticalSeam(energy, currentWidth, height);
+      int[] seam;
+      if (energyMode == SeamCarvingEnergyMode.Forward) {
+        seam = FindVerticalSeamForward(resultKeys, currentWidth, height, metric, null);
+      } else {
+        var energy = ComputeEnergyMap(resultKeys, currentWidth, height, metric, null);
+        seam = FindVerticalSeam(energy, currentWidth, height);
+      }
 
       // Remove the seam
       var newWidth = currentWidth - 1;
@@ -436,6 +446,10 @@ file readonly struct SeamCarvingKernel<TPixel, TWork, TKey, TDecode, TProject, T
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float ComputeForwardEnergy(TKey[] keys, int width, int height, int x, int y, in TMetric metric) {
+    // Per-pixel forward-energy proxy used as a generic energy map (e.g., for the seam-mask
+    // visualisation), NOT for forward-energy seam selection — that path uses
+    // FindVerticalSeamForward which keeps cU/cL/cR distinct during the DP per
+    // Rubinstein, Shamir & Avidan 2008 eq.(4)-(5).
     var idx = y * width + x;
     var center = keys[idx];
 
@@ -448,6 +462,93 @@ file readonly struct SeamCarvingKernel<TPixel, TWork, TKey, TDecode, TProject, T
     var cR = cU + (float)metric.Distance(in up, in right);
 
     return Math.Min(cU, Math.Min(cL, cR));
+  }
+
+  /// <summary>
+  /// Forward-energy DP per Rubinstein, Shamir & Avidan 2008
+  /// "Improved Seam Carving for Video Retargeting", eq.(4)-(5):
+  ///   M[i,j] = min(M[i-1,j-1] + cL, M[i-1,j] + cU, M[i-1,j+1] + cR)
+  /// where cU/cL/cR are the per-direction edge-creation costs at (i, j).
+  /// </summary>
+  /// <remarks>
+  /// Each predecessor uses ITS corresponding directional cost (not the pixel-min collapse
+  /// produced by <see cref="ComputeForwardEnergy"/>). Without this, "Forward" mode would
+  /// degenerate to a backward-style DP with weaker costs.
+  /// </remarks>
+  private static int[] FindVerticalSeamForward(TKey[] keys, int width, int height, in TMetric metric, bool[]? seamMask) {
+    var cumulative = new float[width * height];
+    var backtrack = new int[width * height];
+
+    // Row 0: no predecessor; seed with cU only (the up-distance terms are absent).
+    for (var x = 0; x < width; ++x) {
+      if (seamMask != null && seamMask[x]) {
+        cumulative[x] = SEAM_PENALTY;
+        continue;
+      }
+      var center = keys[x];
+      var left = x > 0 ? keys[x - 1] : center;
+      var right = x < width - 1 ? keys[x + 1] : center;
+      cumulative[x] = (float)metric.Distance(in left, in right);
+    }
+
+    for (var y = 1; y < height; ++y) {
+      var rowOffset = y * width;
+      var prevRowOffset = (y - 1) * width;
+      for (var x = 0; x < width; ++x) {
+        var idx = rowOffset + x;
+        if (seamMask != null && seamMask[idx]) {
+          cumulative[idx] = SEAM_PENALTY;
+          backtrack[idx] = x;
+          continue;
+        }
+
+        var center = keys[idx];
+        var left = x > 0 ? keys[idx - 1] : center;
+        var right = x < width - 1 ? keys[idx + 1] : center;
+        var up = keys[prevRowOffset + x];
+
+        var cU = (float)metric.Distance(in left, in right);
+        var cL = cU + (float)metric.Distance(in up, in left);
+        var cR = cU + (float)metric.Distance(in up, in right);
+
+        var bestCost = cumulative[prevRowOffset + x] + cU;
+        var bestX = x;
+
+        if (x > 0) {
+          var costL = cumulative[prevRowOffset + x - 1] + cL;
+          if (costL < bestCost) {
+            bestCost = costL;
+            bestX = x - 1;
+          }
+        }
+        if (x < width - 1) {
+          var costR = cumulative[prevRowOffset + x + 1] + cR;
+          if (costR < bestCost) {
+            bestCost = costR;
+            bestX = x + 1;
+          }
+        }
+
+        cumulative[idx] = bestCost;
+        backtrack[idx] = bestX;
+      }
+    }
+
+    var seam = new int[height];
+    var lastRow = (height - 1) * width;
+    var minIdx = 0;
+    var minVal = cumulative[lastRow];
+    for (var x = 1; x < width; ++x) {
+      if (cumulative[lastRow + x] < minVal) {
+        minVal = cumulative[lastRow + x];
+        minIdx = x;
+      }
+    }
+    seam[height - 1] = minIdx;
+    for (var y = height - 2; y >= 0; --y)
+      seam[y] = backtrack[(y + 1) * width + seam[y + 1]];
+
+    return seam;
   }
 
   #endregion

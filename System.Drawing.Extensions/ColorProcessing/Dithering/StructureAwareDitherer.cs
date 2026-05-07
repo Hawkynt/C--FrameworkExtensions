@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -111,9 +113,9 @@ public readonly struct StructureAwareDitherer : IDitherer {
       for (var x = 0; x < width; ++x) {
         var pixel = sourceColors[localY, x];
 
-        var newC1 = Math.Max(0f, Math.Min(1f, pixel.c1 + errorC1[x, localY]));
-        var newC2 = Math.Max(0f, Math.Min(1f, pixel.c2 + errorC2[x, localY]));
-        var newC3 = Math.Max(0f, Math.Min(1f, pixel.c3 + errorC3[x, localY]));
+        var newC1 = ColorConverter.Saturate(pixel.c1 + errorC1[x, localY]);
+        var newC2 = ColorConverter.Saturate(pixel.c2 + errorC2[x, localY]);
+        var newC3 = ColorConverter.Saturate(pixel.c3 + errorC3[x, localY]);
 
         var newColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(newC1),

@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Vertical fiber texture blended with source", Category = FilterCategory.Render)]
 public readonly struct Fibers(float variance = 16f, float strength = 0.5f, int seed = 0) : IPixelFilter, IFrameFilter {
   private readonly float _variance = Math.Max(0.1f, variance);
-  private readonly float _strength = Math.Max(0f, Math.Min(1f, strength));
+  private readonly float _strength = ColorConverter.Saturate(strength);
 
   public Fibers() : this(16f, 0.5f, 0) { }
 

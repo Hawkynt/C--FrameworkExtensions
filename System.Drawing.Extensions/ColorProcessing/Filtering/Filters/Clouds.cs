@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Procedural value noise clouds blended with source", Category = FilterCategory.Render)]
 public readonly struct Clouds(float scale = 0.05f, float blend = 0.5f, int seed = 0) : IPixelFilter, IFrameFilter {
   private readonly float _scale = Math.Max(0.001f, scale);
-  private readonly float _blend = Math.Max(0f, Math.Min(1f, blend));
+  private readonly float _blend = ColorConverter.Saturate(blend);
 
   public Clouds() : this(0.05f, 0.5f, 0) { }
 

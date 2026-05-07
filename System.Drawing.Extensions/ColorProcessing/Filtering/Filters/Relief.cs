@@ -79,7 +79,7 @@ file readonly struct ReliefKernel<TWork, TKey, TPixel, TEncode>(float dx, float 
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,7 +96,7 @@ file readonly struct ReliefKernel<TWork, TKey, TPixel, TEncode>(float dx, float 
            + _Lum(window.P1M1) + 2f * _Lum(window.P1P0) + _Lum(window.P1P1);
 
     var dot = gx * dx + gy * dy;
-    var v = Math.Max(0f, Math.Min(1f, 0.5f + dot * depth));
+    var v = ColorConverter.Saturate(0.5f + dot * depth);
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

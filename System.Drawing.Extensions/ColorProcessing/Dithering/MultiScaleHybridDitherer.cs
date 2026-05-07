@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -75,7 +77,7 @@ public readonly struct MultiScaleHybridDitherer : IDitherer {
   /// in [0, 1]. 0 = pure FS; 1 = full Bayer-8 amplitude. Default 0.3.
   /// </param>
   public MultiScaleHybridDitherer(float preBiasStrength = 0.3f) {
-    this._preBiasStrength = Math.Max(0f, Math.Min(1f, preBiasStrength));
+    this._preBiasStrength = ColorConverter.Saturate(preBiasStrength);
   }
 
   /// <summary>Returns this ditherer with the specified pre-bias strength.</summary>
@@ -118,9 +120,9 @@ public readonly struct MultiScaleHybridDitherer : IDitherer {
         var pr = c1.ToFloat() + errR[x, localY] + bias;
         var pg = c2.ToFloat() + errG[x, localY] + bias;
         var pb = c3.ToFloat() + errB[x, localY] + bias;
-        var adjR = Math.Max(0f, Math.Min(1f, pr));
-        var adjG = Math.Max(0f, Math.Min(1f, pg));
-        var adjB = Math.Max(0f, Math.Min(1f, pb));
+        var adjR = ColorConverter.Saturate(pr);
+        var adjG = ColorConverter.Saturate(pg);
+        var adjB = ColorConverter.Saturate(pb);
 
         var adj = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(adjR),

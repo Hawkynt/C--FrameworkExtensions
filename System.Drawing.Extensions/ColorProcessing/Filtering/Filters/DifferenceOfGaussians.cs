@@ -84,7 +84,7 @@ file readonly struct DoGKernel<TWork, TKey, TPixel, TEncode>
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,10 +121,12 @@ file readonly struct DoGKernel<TWork, TKey, TPixel, TEncode>
     var gNarrow = _GaussSum(in window, 1.0f);
     var gWide = _GaussSum(in window, 1.6f);
     var diff = gNarrow - gWide;
-    // Centre and scale to 0..1 — typical DoG amplitudes are tiny, so amplify.
-    var v = 0.5f + diff * 4f;
-    if (v < 0f) v = 0f;
-    else if (v > 1f) v = 1f;
+    // DoG is naturally zero-mean: positive at light blobs (narrow > wide), negative at
+    // dark blobs (narrow < wide), zero on flat areas. Output the absolute magnitude as
+    // edge strength — the canonical convention for displaying DoG/LoG output.
+    // Reference: Marr & Hildreth 1980; the σ-ratio of 1.6 is the standard LoG approximation.
+    var v = MathF.Abs(diff);
+    if (v > 1f) v = 1f;
 
     var center = window.P0P0.Work;
     var (_, _, _, ca) = ColorConverter.GetNormalizedRgba(in center);

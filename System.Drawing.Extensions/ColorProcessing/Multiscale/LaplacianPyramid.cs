@@ -121,12 +121,18 @@ public sealed class LaplacianPyramid {
   /// Reconstructs the source bitmap from this pyramid. Lossless in floating-point
   /// arithmetic; final encoding into 8-bit BGRA clamps to [0, 255] with rounding.
   /// </summary>
+  /// <remarks>
+  /// Uses the float-domain <see cref="GaussianPyramid.ExpandOnceFloat"/> to avoid an
+  /// intermediate byte-clamping round-trip — the running reconstruction `current` may
+  /// exceed [0, 255] at intermediate levels (high-amplitude residuals), and clamping it
+  /// before the next expand would destroy the lossless property the class promises.
+  /// </remarks>
   public Bitmap Reconstruct() {
     var actual = this._levels.Length;
     if (actual == 0)
       throw new InvalidOperationException("Empty pyramid.");
 
-    // Walk from coarsest to finest: expand current, add band-pass residual.
+    // Walk from coarsest to finest: expand current (in float), add band-pass residual.
     var current = (float[])this._levels[actual - 1].Clone();
     var curW = this._widths[actual - 1];
     var curH = this._heights[actual - 1];
@@ -134,9 +140,7 @@ public sealed class LaplacianPyramid {
     for (var i = actual - 2; i >= 0; --i) {
       var fineW = this._widths[i];
       var fineH = this._heights[i];
-      using var coarseBmp = _WriteFloat(current, curW, curH);
-      using var expanded = GaussianPyramid.ExpandOnce(coarseBmp, fineW, fineH);
-      var expandedFloat = _ReadFloat(expanded);
+      var expandedFloat = GaussianPyramid.ExpandOnceFloat(current, curW, curH, fineW, fineH);
       var residual = this._levels[i];
       var combined = new float[fineW * fineH * 4];
       for (var k = 0; k < combined.Length; ++k)
@@ -146,6 +150,8 @@ public sealed class LaplacianPyramid {
       curH = fineH;
     }
 
+    // Final write: clamp + encode to 8-bit BGRA. This is the ONLY clamp in the
+    // reconstruction pipeline, applied once at the end.
     return _WriteFloat(current, curW, curH);
   }
 

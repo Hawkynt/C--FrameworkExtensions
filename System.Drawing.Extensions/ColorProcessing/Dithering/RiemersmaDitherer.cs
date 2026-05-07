@@ -176,14 +176,21 @@ public readonly struct RiemersmaDitherer : IDitherer {
       var originalC3 = c3.ToFloat();
       var originalA = alpha.ToFloat();
 
-      // Calculate weighted error from history using exponential decay
+      // Riemersma 1998 weight schedule (https://www.compuphase.com/riemer.htm):
+      //   weight[i] = (1/r) * pow(b, j)  where j = (q-1-i) so the most recent (i=0)
+      //   gets weight 1 and the oldest (i=q-1) gets weight 1/r.
+      // Equivalently: weight[i] = exp(-i * log(r) / (q-1)). r = 16 is the published
+      // newest-to-oldest ratio; q = history size.
       var totalErrorC1 = 0.0;
       var totalErrorC2 = 0.0;
       var totalErrorC3 = 0.0;
+      const double Ratio = 16.0;
+      var logR = Math.Log(Ratio);
+      var qm1 = Math.Max(1, historySize - 1);
 
       for (var i = 0; i < historySize; ++i) {
         var index = (historyIndex - i - 1 + historySize) % historySize;
-        var weight = Math.Exp(-i * 0.1);
+        var weight = Math.Exp(-i * logR / qm1);
         totalErrorC1 += errorHistory[index].c1 * weight;
         totalErrorC2 += errorHistory[index].c2 * weight;
         totalErrorC3 += errorHistory[index].c3 * weight;

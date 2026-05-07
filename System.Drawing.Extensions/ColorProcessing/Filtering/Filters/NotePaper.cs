@@ -117,7 +117,7 @@ file readonly struct NotePaperFrameKernel<TPixel, TWork, TKey, TDecode, TProject
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,9 +148,9 @@ file readonly struct NotePaperFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     var v = lum * (imageBalance / 25f) + emboss + grain;
 
     // Warm paper tint
-    var outR = Math.Max(0f, Math.Min(1f, v * 1.05f));
-    var outG = Math.Max(0f, Math.Min(1f, v * 0.98f));
-    var outB = Math.Max(0f, Math.Min(1f, v * 0.9f));
+    var outR = ColorConverter.Saturate(v * 1.05f);
+    var outG = ColorConverter.Saturate(v * 0.98f);
+    var outB = ColorConverter.Saturate(v * 0.9f);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

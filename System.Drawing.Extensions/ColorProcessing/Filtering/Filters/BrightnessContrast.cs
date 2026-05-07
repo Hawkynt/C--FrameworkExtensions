@@ -76,9 +76,9 @@ file readonly struct BrightnessContrastKernel<TWork, TKey, TPixel, TEncode>(floa
     g += brightness;
     b += brightness;
     var factor = 1f + contrast;
-    r = Math.Max(0f, Math.Min(1f, (r - 0.5f) * factor + 0.5f));
-    g = Math.Max(0f, Math.Min(1f, (g - 0.5f) * factor + 0.5f));
-    b = Math.Max(0f, Math.Min(1f, (b - 0.5f) * factor + 0.5f));
+    r = ColorConverter.Saturate((r - 0.5f) * factor + 0.5f);
+    g = ColorConverter.Saturate((g - 0.5f) * factor + 0.5f);
+    b = ColorConverter.Saturate((b - 0.5f) * factor + 0.5f);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

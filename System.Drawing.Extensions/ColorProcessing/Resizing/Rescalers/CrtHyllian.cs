@@ -29,12 +29,13 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Hyllian scaler - sharp scanlines with phosphor simulation.
+/// Stylistic CRT-style upscale inspired by Hyllian's shader. NOT a port: the shader's
+/// luma-modulated scanline weight and aperture mask are NOT implemented; this filter
+/// uses a flat per-block darkening percentage.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-hyllian</para>
-/// <para>Algorithm: Sharp well-defined scanlines with phosphor mask simulation.</para>
-/// <para>Known for producing sharp, well-defined scanlines that work well with pixel art.</para>
+/// <para>Reference (cited but not faithfully implemented):
+/// https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-hyllian</para>
 /// </remarks>
 [ScalerInfo("CRT-Hyllian", Author = "Hyllian",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-hyllian",

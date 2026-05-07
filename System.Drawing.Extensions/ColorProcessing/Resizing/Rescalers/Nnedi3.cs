@@ -41,18 +41,24 @@ public enum Nnedi3Quality {
 }
 
 /// <summary>
-/// NNEDI3 (Neural Network Edge Directed Interpolation 3) scaler by tritical (2x, 3x, 4x).
+/// Edge-directed bicubic-style upscaler with 8 hand-rolled directional filter kernels.
+/// Inspired by NNEDI3 in name only — does NOT load tritical's trained neural-network
+/// weights and does NOT evaluate a neural network. The "neuron count" parameter merely
+/// blends with bilinear by a fixed weight.
 /// </summary>
 /// <remarks>
-/// <para>Uses trained neural network weights to analyze local pixel neighborhoods.</para>
-/// <para>
-/// Applies directional interpolation based on edge detection for high-quality upscaling.
-/// Includes ReLU and sigmoid activation functions with bilinear fallback.
-/// </para>
-/// <para>Algorithm by tritical, 2010. Reference: https://github.com/sekrit-twc/znedi3</para>
+/// <para>Reference (NOT directly implemented): tritical's NNEDI3 uses precomputed weights
+/// (≈1 MB binary, several thousand neurons across pre-screener + predictor networks)
+/// trained offline. See https://github.com/sekrit-twc/znedi3 for the canonical
+/// implementation.</para>
+/// <para>This struct uses 8 hardcoded 4×4 directional smoothing filters and a static
+/// blend factor with bilinear; it cannot reproduce NNEDI3's neural predictions. Output
+/// is best understood as "edge-directed bicubic with 8 directional taps" — useful for
+/// modest upscale of pixel art, but NOT a port of NNEDI3.</para>
 /// </remarks>
-[ScalerInfo("NNEDI3", Author = "tritical", Year = 2010,
-  Description = "Neural Network Edge Directed Interpolation", Category = ScalerCategory.Rescaler)]
+[ScalerInfo("NNEDI3", Author = "tritical (lib: edge-directed bicubic approximation)", Year = 2010,
+  Description = "Edge-directed multi-tap upscaler (NOT NNEDI3; no trained network)",
+  Category = ScalerCategory.Rescaler)]
 public readonly struct Nnedi3 : IRescaler {
 
   private readonly int _scale;

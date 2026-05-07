@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -90,8 +92,8 @@ public readonly struct HoshinoNishikawaDitherer : IDitherer {
   /// sub-quantum (1/256 for the 16×16 screen). Default 1.</param>
   /// <param name="seed">Jitter-hash seed. Default 42.</param>
   public HoshinoNishikawaDitherer(float strength = 1f, float jitterAmplitude = 1f, int seed = 42) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
-    this._jitterAmplitude = Math.Max(0f, Math.Min(1f, jitterAmplitude));
+    this._strength = ColorConverter.Saturate(strength);
+    this._jitterAmplitude = ColorConverter.Saturate(jitterAmplitude);
     this._seed = seed;
   }
 

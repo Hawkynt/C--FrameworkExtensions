@@ -93,19 +93,32 @@ file readonly struct ColorBalanceKernel<TWork, TKey, TPixel, TEncode>(
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
-    var shadowW = 1f - Math.Min(1f, lum * 4f);
-    var highlightW = Math.Max(0f, (lum - 0.75f) * 4f);
+    // Smoothstep tonal masks. Replaces the original linear ramps (which had visible
+    // kinks at L=0.25 and L=0.75) with C¹-continuous S-curves. Anchors:
+    //   shadowW    = 1 at L=0,   0 at L≥0.5  (peaks at shadows)
+    //   midW       = 0 at L=0,   1 at L=0.5, 0 at L=1 (tent peak at midgrey)
+    //   highlightW = 0 at L≤0.5, 1 at L=1
+    // shadowW + midW + highlightW = 1 by construction. Photoshop's Color Balance uses
+    // a similar smooth weighting; the canonical shape is documented in the Adobe SDK.
+    static float Smoothstep(float t) {
+      if (t <= 0f) return 0f;
+      if (t >= 1f) return 1f;
+      return t * t * (3f - 2f * t);
+    }
+    var shadowW = 1f - Smoothstep(lum * 2f);
+    var highlightW = Smoothstep((lum - 0.5f) * 2f);
     var midW = 1f - shadowW - highlightW;
+    if (midW < 0f) midW = 0f;
 
     var rShift = shadowW * sCR + midW * mCR + highlightW * hCR;
     var gShift = shadowW * sMG + midW * mMG + highlightW * hMG;
     var bShift = shadowW * sYB + midW * mYB + highlightW * hYB;
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
-      Math.Max(0f, Math.Min(1f, r + rShift * 0.25f)),
-      Math.Max(0f, Math.Min(1f, g + gShift * 0.25f)),
-      Math.Max(0f, Math.Min(1f, b + bShift * 0.25f)), a));
+      ColorConverter.Saturate(r + rShift * 0.25f),
+      ColorConverter.Saturate(g + gShift * 0.25f),
+      ColorConverter.Saturate(b + bShift * 0.25f), a));
   }
 }

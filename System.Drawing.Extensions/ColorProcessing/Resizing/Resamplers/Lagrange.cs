@@ -402,15 +402,23 @@ internal static class LagrangeMath {
       var t = x - 2f;
       return -(t + 1f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 120f;
     }
+    // [1, 2) branch — kx=-1, denom = (-1+2)(-1)(-2)(-3)(-4) = +24.
+    // Canonical L_{-1}(t) = (t+2)t(t-1)(t-2)(t-3)/24 (positive). The leading `-`
+    // (still present after Round 4) caused partition-of-unity to overshoot by ~9%
+    // at fx=0.1 (sum=1.087 vs canonical 1.0). Reference: Lagrange polynomial basis
+    // L_i(t) = ∏_{j≠i}(t - x_j)/(x_i - x_j) — Burden & Faires "Numerical Analysis"
+    // §3.1, or Wikipedia "Lagrange polynomial".
     if (x >= 1f) {
       var t = x - 1f;
-      return -(t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 24f;
+      return (t + 2f) * t * (t - 1f) * (t - 2f) * (t - 3f) / 24f;
     }
+    // [0, 1) branch — kx=0, denom = (2)(1)(-1)(-2)(-3) = -12.
     if (x >= 0f)
-      return (x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) / 12f;
+      return -(x + 2f) * (x + 1f) * (x - 1f) * (x - 2f) * (x - 3f) / 12f;
+    // [-1, 0) branch — kx=1, denom = (3)(2)(1)(-1)(-2) = +12.
     if (x >= -1f) {
       var t = x + 1f;
-      return -(t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) / 12f;
+      return (t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) / 12f;
     }
     if (x >= -2f) {
       var t = x + 2f;
@@ -441,9 +449,11 @@ internal static class LagrangeMath {
       var t = x + 1f;
       return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 2f) * (t - 3f) * (t - 4f) / 144f;
     }
+    // [-2, -1) branch — sample grid {-5,-4,-3,-2,-1,0,1,2} excl 0; L_0 denominator
+    // is (5)(4)(3)(2)(1)(-1)(-2) = +240. Leading `-` was wrong; removed.
     if (x >= -2f) {
       var t = x + 2f;
-      return -(t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) * (t - 4f) / 240f;
+      return (t + 3f) * (t + 2f) * (t + 1f) * t * (t - 1f) * (t - 3f) * (t - 4f) / 240f;
     }
     if (x >= -3f) {
       var t = x + 3f;

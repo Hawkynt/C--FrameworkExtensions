@@ -50,7 +50,8 @@ public struct MedianCutQuantizer : IQuantizer {
       => QuantizerHelper.GeneratePaletteWithReduction(histogram, colorCount, _ReduceColorsTo);
 
     private static IEnumerable<TWork> _ReduceColorsTo(int colorCount, IEnumerable<(TWork color, uint count)> histogram) {
-      var cubes = new List<ColorCube> { new(histogram.Select(h => h.color)) };
+      var hist = histogram.ToList();
+      var cubes = new List<ColorCube> { new(hist.Select(h => h.color), hist.Select(h => h.count).ToList()) };
 
       while (cubes.Count < colorCount) {
         var largestCube = cubes.OrderByDescending(c => c.Volume).FirstOrDefault();
@@ -67,11 +68,19 @@ public struct MedianCutQuantizer : IQuantizer {
 
     private sealed class ColorCube {
       private readonly List<TWork> _colors;
+      // Per-colour pixel counts. Used to compute the population-weighted median during
+      // Split(), per Heckbert 1980/82 — splits the cube at the population-weighted median
+      // index so each child has roughly equal pixel coverage. Without this, splits favour
+      // sparse outliers in unique-color space and waste palette budget.
+      private readonly List<uint> _counts;
       private readonly float _c1Min, _c1Max, _c2Min, _c2Max, _c3Min, _c3Max;
       private readonly double _c1Sum, _c2Sum, _c3Sum, _aSum;
 
-      public ColorCube(IEnumerable<TWork> colors) {
+      public ColorCube(IEnumerable<TWork> colors) : this(colors, null) { }
+
+      public ColorCube(IEnumerable<TWork> colors, List<uint>? counts) {
         this._colors = colors.ToList();
+        this._counts = counts ?? Enumerable.Repeat(1u, this._colors.Count).ToList();
         if (this._colors.Count == 0) {
           this._c1Min = this._c1Max = this._c2Min = this._c2Max = this._c3Min = this._c3Max = 0;
           this._c1Sum = this._c2Sum = this._c3Sum = this._aSum = 0;
@@ -293,28 +302,57 @@ public struct MedianCutQuantizer : IQuantizer {
         if (c3Range > currentMax)
           axis = 2;
 
+        // Sort colors and counts together in lockstep (zip-sort).
+        var pairs = new List<(TWork color, uint count)>(this._colors.Count);
+        for (var i = 0; i < this._colors.Count; ++i)
+          pairs.Add((this._colors[i], this._counts[i]));
+
         switch (axis) {
           case 0:
-            this._colors.Sort((a, b) => a.ToNormalized().C1.CompareTo(b.ToNormalized().C1));
+            pairs.Sort((a, b) => a.color.ToNormalized().C1.CompareTo(b.color.ToNormalized().C1));
             break;
           case 1:
-            this._colors.Sort((a, b) => a.ToNormalized().C2.CompareTo(b.ToNormalized().C2));
+            pairs.Sort((a, b) => a.color.ToNormalized().C2.CompareTo(b.color.ToNormalized().C2));
             break;
           default:
-            this._colors.Sort((a, b) => a.ToNormalized().C3.CompareTo(b.ToNormalized().C3));
+            pairs.Sort((a, b) => a.color.ToNormalized().C3.CompareTo(b.color.ToNormalized().C3));
             break;
         }
 
-        var medianIndex = this._colors.Count >> 1;
+        // Population-weighted median per Heckbert 1980/82: split where cumulative pixel
+        // count crosses half the total population. Each child has ≈ equal pixel coverage,
+        // so subsequent splits target where the actual image content is dense.
+        ulong totalPop = 0;
+        foreach (var (_, c) in pairs) totalPop += c;
+        var halfPop = totalPop / 2;
+        var splitIndex = 0;
+        ulong cumPop = 0;
+        for (var i = 0; i < pairs.Count; ++i) {
+          cumPop += pairs[i].count;
+          if (cumPop >= halfPop) {
+            splitIndex = i + 1;
+            break;
+          }
+        }
+        if (splitIndex < 1) splitIndex = 1;
+        if (splitIndex >= pairs.Count) splitIndex = pairs.Count - 1;
 
-        if (medianIndex == 0)
-          medianIndex = 1;
-        if (medianIndex >= this._colors.Count)
-          medianIndex = this._colors.Count - 1;
+        var leftColors = new List<TWork>(splitIndex);
+        var leftCounts = new List<uint>(splitIndex);
+        var rightColors = new List<TWork>(pairs.Count - splitIndex);
+        var rightCounts = new List<uint>(pairs.Count - splitIndex);
+        for (var i = 0; i < splitIndex; ++i) {
+          leftColors.Add(pairs[i].color);
+          leftCounts.Add(pairs[i].count);
+        }
+        for (var i = splitIndex; i < pairs.Count; ++i) {
+          rightColors.Add(pairs[i].color);
+          rightCounts.Add(pairs[i].count);
+        }
 
         return [
-          new(this._colors.Take(medianIndex)),
-          new(this._colors.Skip(medianIndex))
+          new(leftColors, leftCounts),
+          new(rightColors, rightCounts)
         ];
       }
     }

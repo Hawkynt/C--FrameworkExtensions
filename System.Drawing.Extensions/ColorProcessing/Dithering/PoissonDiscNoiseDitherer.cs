@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -82,7 +84,7 @@ public readonly struct PoissonDiscNoiseDitherer : IDitherer {
   /// <param name="strength">Dither strength in [0, 1]. Default 1.</param>
   /// <param name="seed">Hash seed for reproducibility. Default 42.</param>
   public PoissonDiscNoiseDitherer(float strength = 1f, int seed = 42) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._seed = seed;
   }
 

@@ -152,9 +152,9 @@ file readonly struct TexturizerFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
     }
 
     var offset = (tex - 0.5f) * relief * 0.1f;
-    var outR = Math.Max(0f, Math.Min(1f, r + offset));
-    var outG = Math.Max(0f, Math.Min(1f, g + offset));
-    var outB = Math.Max(0f, Math.Min(1f, b + offset));
+    var outR = ColorConverter.Saturate(r + offset);
+    var outG = ColorConverter.Saturate(g + offset);
+    var outB = ColorConverter.Saturate(b + offset);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

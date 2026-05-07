@@ -36,7 +36,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Multi-octave plasma noise blended with source", Category = FilterCategory.Render)]
 public readonly struct PlasmaTexture(float scale = 0.02f, float blend = 0.5f, int seed = 0) : IPixelFilter, IFrameFilter {
   private readonly float _scale = Math.Max(0.001f, scale);
-  private readonly float _blend = Math.Max(0f, Math.Min(1f, blend));
+  private readonly float _blend = ColorConverter.Saturate(blend);
 
   public PlasmaTexture() : this(0.02f, 0.5f, 0) { }
 

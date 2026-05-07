@@ -29,16 +29,23 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// Guest's 4xSoft Smart deBlur scaler - soft scaling with adaptive edge enhancement.
+/// 4xSoft-Smart-inspired scaler — three-path edge blend with center bias (NOT a true
+/// deblur algorithm).
 /// </summary>
 /// <remarks>
-/// <para>Combines soft scaling with smart deblurring for enhanced edges.</para>
-/// <para>Analyzes edge directions and applies adaptive smoothing based on local contrast.</para>
-/// <para>Uses power function for edge enhancement controlled by local difference.</para>
-/// <para>Reference: guest(r) 2016 - guest.r@gmail.com</para>
+/// <para>The three-path blend (T1 horizontal/vertical, T2 diagonal, T3 inner-diagonal)
+/// is sound and matches the structure of guest(r)'s 4xSoft family. The "smart deblur"
+/// step in this implementation is a generic center-biased lerp; the adaptive
+/// power-function edge enhancement described in the original 4xSoft Smart deBlur
+/// shader is NOT implemented here. Output is therefore a softer 4× scale than the
+/// canonical shader; structural quality (no banding, edge preservation) is
+/// preserved but the deblurring component is absent.</para>
+/// <para>Reference (inspiration, NOT directly implemented): guest(r) 2016 — 4xSoft
+/// Smart deBlur.</para>
 /// </remarks>
-[ScalerInfo("4xSoft Smart", Author = "guest(r)", Year = 2016,
-  Description = "Soft scaling with adaptive edge enhancement", Category = ScalerCategory.Resampler)]
+[ScalerInfo("4xSoft Smart", Author = "guest(r) (lib: 3-path edge-blend approximation)", Year = 2016,
+  Description = "4xSoft-Smart-inspired 3-path edge blend (deblur component is a center-bias stub)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct SoftSmart : IRescaler {
   private readonly int _scale;
 

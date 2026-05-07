@@ -27,24 +27,27 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 
 /// <summary>
-/// Iterative Back-Projection (IBP) super-resolution resampler.
+/// Iterative Back-Projection (IBP) super-resolution resampler — closed-form
+/// linearisation of Irani &amp; Peleg's iterative loop.
 /// </summary>
 /// <remarks>
-/// <para>Classic super-resolution by iterative reconstruction: start from a bilinear estimate
-/// and repeatedly inject the high-frequency residual (source minus locally-blurred source).
-/// Each iteration adds another pass of detail; the result converges toward an
-/// inverse-convolution-style sharpened image.</para>
-/// <para>References: Ur &amp; Gross 1992, "Improved resolution from subpixel shifted pictures",
-/// IEEE Trans. Signal Processing. Survey: Park, Park &amp; Kang 2003, "Super-resolution image
-/// reconstruction: a technical overview", IEEE Signal Processing Magazine.</para>
-/// <para>This is a per-pixel approximation of the full-image IBP loop: each output pixel is
-/// computed independently from a small source neighbourhood, so the reach of the iteration
-/// is limited to the kernel size × iteration count. For typical N=4 and a 3×3 blur, that
-/// covers ±4 source pixels — sufficient for moderate up-scaling without the cost of full
-/// whole-image passes.</para>
+/// <para>References: Irani &amp; Peleg 1991, "Improving resolution by image registration",
+/// CVGIP: Graphical Models and Image Processing 53(3) — original iterative formulation
+/// <c>e_{k+1} = e_k + λ·(y − blur(e_k))</c>. Ur &amp; Gross 1992 — refined application to
+/// upsampling. Park, Park &amp; Kang 2003 survey for context.</para>
+/// <para><b>Implementation note:</b> the canonical Irani-Peleg loop computes
+/// <c>blur(e_k)</c> at every iteration, which requires a stateful per-pixel estimator
+/// that the per-pixel resampler API does not support. Lib uses the LINEARISED
+/// closed-form approximation — under the assumption that <c>e_k</c> stays close to
+/// the reference, <c>blur(e_k) ≈ blur(source) + (e_k − source)</c>, the geometric series
+/// collapses to <c>e_N ≈ source + (1 − (1−λ)^N)·(source − blur(source))</c> — i.e. an
+/// unsharp mask with N-iteration-equivalent gain. This matches the canonical IBP
+/// behaviour for small λ and few iterations; for larger N or stronger λ where the
+/// linearisation breaks down, output diverges from the true iterative result.</para>
 /// </remarks>
-[ScalerInfo("IBP", Author = "Ur & Gross (1992)", Year = 1992,
-  Description = "Iterative back-projection super-resolution",
+[ScalerInfo("IBP", Author = "Irani & Peleg", Year = 1991,
+  Url = "https://www.sciencedirect.com/science/article/abs/pii/104996529190045T",
+  Description = "Iterative back-projection (closed-form linearisation of the Irani-Peleg iterative loop)",
   Category = ScalerCategory.Resampler)]
 public readonly struct IterativeBackProjection : IResampler {
 

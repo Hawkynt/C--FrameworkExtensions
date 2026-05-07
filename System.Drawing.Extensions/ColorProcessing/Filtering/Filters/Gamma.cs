@@ -50,7 +50,7 @@ public readonly struct Gamma(float gamma = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new GammaKernel<TWork, TKey, TPixel, TEncode>(this._invGamma));
 
-  public static Gamma Default => new();
+  public static Gamma Default => new(1f);
 }
 
 file readonly struct GammaKernel<TWork, TKey, TPixel, TEncode>(float invGamma)

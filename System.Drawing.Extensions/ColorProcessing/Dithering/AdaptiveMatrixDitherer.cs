@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -181,9 +183,9 @@ public readonly struct AdaptiveMatrixDitherer : IDitherer {
         var pA = salpha.ToFloat();
 
         // Apply accumulated error
-        var newC1 = Math.Max(0f, Math.Min(1f, pC1 + errorC1[x, localY]));
-        var newC2 = Math.Max(0f, Math.Min(1f, pC2 + errorC2[x, localY]));
-        var newC3 = Math.Max(0f, Math.Min(1f, pC3 + errorC3[x, localY]));
+        var newC1 = ColorConverter.Saturate(pC1 + errorC1[x, localY]);
+        var newC2 = ColorConverter.Saturate(pC2 + errorC2[x, localY]);
+        var newC3 = ColorConverter.Saturate(pC3 + errorC3[x, localY]);
 
         var correctedColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(newC1),

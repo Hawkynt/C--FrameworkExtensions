@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -93,7 +95,7 @@ public readonly struct PerlinNoiseDitherer : IDitherer {
   /// <param name="latticeScale">Lattice period in pixels — controls grain
   /// coarseness. Default 8.</param>
   public PerlinNoiseDitherer(float strength = 1f, int seed = 42, int latticeScale = _LATTICE_SCALE_DEFAULT) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._seed = seed;
     this._latticeScale = Math.Max(1, latticeScale);
     this._permutation = seed == 42 ? _DefaultPermutation : _BuildPermutation(seed);

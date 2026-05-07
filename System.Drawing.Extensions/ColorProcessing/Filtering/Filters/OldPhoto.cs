@@ -34,7 +34,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("OldPhoto",
   Description = "Vintage photograph effect with sepia tone and reduced contrast", Category = FilterCategory.Artistic)]
 public readonly struct OldPhoto(float intensity = 1f) : IPixelFilter {
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -50,7 +50,7 @@ public readonly struct OldPhoto(float intensity = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new OldPhotoKernel<TWork, TKey, TPixel, TEncode>(this._intensity));
 
-  public static OldPhoto Default => new();
+  public static OldPhoto Default => new(1f);
 }
 
 file readonly struct OldPhotoKernel<TWork, TKey, TPixel, TEncode>(float intensity)
@@ -92,8 +92,8 @@ file readonly struct OldPhotoKernel<TWork, TKey, TPixel, TEncode>(float intensit
     var ob = b + (sb - b) * intensity;
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
-      Math.Max(0f, Math.Min(1f, or)),
-      Math.Max(0f, Math.Min(1f, og)),
-      Math.Max(0f, Math.Min(1f, ob)), a));
+      ColorConverter.Saturate(or),
+      ColorConverter.Saturate(og),
+      ColorConverter.Saturate(ob), a));
   }
 }

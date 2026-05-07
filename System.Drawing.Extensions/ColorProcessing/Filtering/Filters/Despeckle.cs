@@ -111,7 +111,7 @@ file readonly struct DespeckleFrameKernel<TPixel, TWork, TKey, TDecode, TProject
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _Luminance(float r, float g, float b)
-    => ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    => ColorConverter.LuminanceFromRgb(r, g, b);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static void _SortByLuminance(float[] lr, float[] lg, float[] lb, float[] lum, int count) {

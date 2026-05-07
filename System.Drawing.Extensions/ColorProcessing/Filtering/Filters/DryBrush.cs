@@ -126,7 +126,7 @@ file readonly struct DryBrushFrameKernel<TPixel, TWork, TKey, TDecode, TProject,
     for (var dx = -brushSize; dx <= brushSize; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       var bin = (int)(lum * (levels - 1));
       if (bin < 0)
         bin = 0;

@@ -38,9 +38,9 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("Crosshatch",
   Description = "Multi-angle crosshatch drawing based on luminance bands", Category = FilterCategory.Artistic)]
 public readonly struct Crosshatch(float threshold1, float threshold2, float threshold3, int spacing = 4) : IPixelFilter, IFrameFilter {
-  private readonly float _threshold1 = Math.Max(0f, Math.Min(1f, threshold1));
-  private readonly float _threshold2 = Math.Max(0f, Math.Min(1f, threshold2));
-  private readonly float _threshold3 = Math.Max(0f, Math.Min(1f, threshold3));
+  private readonly float _threshold1 = ColorConverter.Saturate(threshold1);
+  private readonly float _threshold2 = ColorConverter.Saturate(threshold2);
+  private readonly float _threshold3 = ColorConverter.Saturate(threshold3);
   private readonly int _spacing = Math.Max(1, spacing);
 
   public Crosshatch() : this(0.2f, 0.5f, 0.8f, 4) { }
@@ -121,7 +121,7 @@ file readonly struct CrosshatchFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
     in TEncode encoder) {
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var lum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var lum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
 
     // Start with white
     var value = 1f;
@@ -141,7 +141,7 @@ file readonly struct CrosshatchFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
       if (destY % spacing == 0)
         value -= 0.35f;
 
-    value = Math.Max(0f, Math.Min(1f, value));
+    value = ColorConverter.Saturate(value);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(value, value, value, ca));
   }

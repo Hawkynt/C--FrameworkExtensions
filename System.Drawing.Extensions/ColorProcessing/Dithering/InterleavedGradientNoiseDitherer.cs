@@ -26,6 +26,8 @@ using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -64,7 +66,7 @@ public readonly struct InterleavedGradientNoiseDitherer : IDitherer {
   /// </summary>
   /// <param name="intensity">Noise intensity (0-1).</param>
   public InterleavedGradientNoiseDitherer(float intensity = 0.5f) {
-    this._intensity = Math.Max(0f, Math.Min(1f, intensity));
+    this._intensity = ColorConverter.Saturate(intensity);
   }
 
   /// <inheritdoc />
@@ -144,9 +146,9 @@ public readonly struct InterleavedGradientNoiseDitherer : IDitherer {
           var noiseValue = (float)_ComputeIGN(x, y);
           var threshold = noiseValue * intensity;
 
-          var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + threshold));
-          var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + threshold));
-          var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + threshold));
+          var adjustedC1 = ColorConverter.Saturate(pixelC1 + threshold);
+          var adjustedC2 = ColorConverter.Saturate(pixelC2 + threshold);
+          var adjustedC3 = ColorConverter.Saturate(pixelC3 + threshold);
 
           var adjustedColor = ColorFactory.FromNormalized_4<TWork>(
             UNorm32.FromFloatClamped(adjustedC1),
@@ -179,9 +181,9 @@ public readonly struct InterleavedGradientNoiseDitherer : IDitherer {
           var threshold = noiseValue * intensity;
 
           // Apply noise to each channel
-          var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + threshold));
-          var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + threshold));
-          var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + threshold));
+          var adjustedC1 = ColorConverter.Saturate(pixelC1 + threshold);
+          var adjustedC2 = ColorConverter.Saturate(pixelC2 + threshold);
+          var adjustedC3 = ColorConverter.Saturate(pixelC3 + threshold);
 
           // Create adjusted color
           var adjustedColor = ColorFactory.FromNormalized_4<TWork>(

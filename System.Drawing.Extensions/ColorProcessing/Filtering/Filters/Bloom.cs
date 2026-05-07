@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Soft glow bloom effect around bright areas", Category = FilterCategory.Artistic)]
 public readonly struct Bloom(float threshold = 0.7f, float intensity = 1f, int radius = 3)
   : IPixelFilter, IFrameFilter {
-  private readonly float _threshold = Math.Max(0f, Math.Min(1f, threshold));
+  private readonly float _threshold = ColorConverter.Saturate(threshold);
   private readonly float _intensity = Math.Max(0f, Math.Min(5f, intensity));
   private readonly int _radius = Math.Max(1, radius);
 
@@ -129,7 +129,7 @@ file readonly struct BloomFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     for (var dx = -radius; dx <= radius; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       if (lum <= threshold)
         continue;
 
@@ -144,9 +144,9 @@ file readonly struct BloomFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
       glowR /= totalWeight;
       glowG /= totalWeight;
       glowB /= totalWeight;
-      cr = Math.Max(0f, Math.Min(1f, cr + glowR * intensity));
-      cg = Math.Max(0f, Math.Min(1f, cg + glowG * intensity));
-      cb = Math.Max(0f, Math.Min(1f, cb + glowB * intensity));
+      cr = ColorConverter.Saturate(cr + glowR * intensity);
+      cg = ColorConverter.Saturate(cg + glowG * intensity);
+      cb = ColorConverter.Saturate(cb + glowB * intensity);
     }
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(cr, cg, cb, ca));

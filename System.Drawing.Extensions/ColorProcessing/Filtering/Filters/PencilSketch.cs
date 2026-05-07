@@ -38,7 +38,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("PencilSketch",
   Description = "Pencil sketch effect combining edge detection with grayscale", Category = FilterCategory.Artistic)]
 public readonly struct PencilSketch(float edgeStrength, int blurRadius = 1) : IPixelFilter, IFrameFilter {
-  private readonly float _edgeStrength = Math.Max(0f, Math.Min(1f, edgeStrength));
+  private readonly float _edgeStrength = ColorConverter.Saturate(edgeStrength);
   private readonly int _blurRadius = Math.Max(1, blurRadius);
 
   public PencilSketch() : this(0.8f, 1) { }
@@ -115,7 +115,7 @@ file readonly struct PencilSketchFrameKernel<TPixel, TWork, TKey, TDecode, TProj
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,7 +126,7 @@ file readonly struct PencilSketchFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     in TEncode encoder) {
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var gray = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var gray = ColorConverter.LuminanceFromRgb(cr, cg, cb);
 
     // Sobel edge detection from neighborhood
     var tl = _Lum(frame[destX - 1, destY - 1]);
@@ -146,7 +146,7 @@ file readonly struct PencilSketchFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     var edgeMag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy));
 
     // Invert edge and blend with grayscale: sketch = gray * (1 - edgeStrength * edgeMag)
-    var sketch = Math.Max(0f, Math.Min(1f, gray * (1f - edgeStrength * edgeMag)));
+    var sketch = ColorConverter.Saturate(gray * (1f - edgeStrength * edgeMag));
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(sketch, sketch, sketch, ca));
   }

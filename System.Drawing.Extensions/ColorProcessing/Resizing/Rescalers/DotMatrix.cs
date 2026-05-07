@@ -29,12 +29,19 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// DotMatrix scaler - simulates dot-matrix display appearance.
+/// DotMatrix scaler — simulates dot-matrix display appearance with a fixed brightness
+/// pattern over each scaled block.
 /// </summary>
 /// <remarks>
-/// <para>Reference: ScummVM project (https://wiki.scummvm.org/index.php/Scalers)</para>
-/// <para>Algorithm: Creates a dot-matrix pattern by varying pixel brightness in a grid.</para>
-/// <para>Simulates the appearance of LCD/LED dot-matrix displays with visible gaps.</para>
+/// <para>Reference: ScummVM project (https://wiki.scummvm.org/index.php/Scalers).</para>
+/// <para>Algorithm: each source pixel is replicated as a 2×2 / 3×3 / 4×4 block whose cells
+/// have descending brightness weights — emulating the visible gaps between LED/LCD pixels.</para>
+/// <para><b>Note on luminance:</b> by construction the pattern darkens the output globally
+/// (≈ 75% mean luminance for 2×2, ≈ 83% for 3×3, ≈ 88% for 4×4). This matches real LED/LCD
+/// dot-matrix displays where the unlit gaps reduce overall brightness; users who want a
+/// luminance-preserving "dot pattern" effect should pre-boost the source via
+/// <see cref="Filtering.Filters.Brightness"/> or <see cref="Filtering.Filters.Exposure"/>
+/// before applying this scaler.</para>
 /// </remarks>
 [ScalerInfo("DotMatrix", Author = "ScummVM Team",
   Url = "https://wiki.scummvm.org/index.php/Scalers",

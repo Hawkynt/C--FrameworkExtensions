@@ -54,7 +54,7 @@ public readonly struct Blur(float strength = 0.5f) : IPixelFilter {
     => callback.Invoke(new BlurKernel<TWork, TKey, TPixel, TLerp, TEncode>(lerp, this._blurWeight));
 
   /// <summary>Gets the default Blur filter (0.5 strength).</summary>
-  public static Blur Default => new();
+  public static Blur Default => new(0.5f);
 }
 
 #region Blur Helpers

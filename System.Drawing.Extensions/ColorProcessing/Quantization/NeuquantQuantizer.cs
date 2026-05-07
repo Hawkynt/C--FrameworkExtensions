@@ -97,6 +97,22 @@ public struct NeuquantQuantizer : IQuantizer {
         ];
       }
 
+      // Dekker 1994 §4 conscience mechanism: per-neuron frequency `freq[i]` and bias
+      // `bias[i] = gamma * (1/N − freq[i])`. The best-match search subtracts bias from
+      // distance so under-utilised neurons (freq < 1/N) appear closer and get pulled
+      // into action; over-utilised ones get pushed away. This equalises neuron
+      // utilisation and is the central novelty of Dekker's paper over plain Kohonen SOM.
+      // Constants from the published reference implementation: β = 1/1024, γ = 1024.
+      var freq = new double[networkSize];
+      var bias = new double[networkSize];
+      var initFreq = 1.0 / networkSize;
+      for (var i = 0; i < networkSize; ++i) {
+        freq[i] = initFreq;
+        bias[i] = 0;
+      }
+      const double Beta = 1.0 / 1024.0;
+      const double BetaGamma = 1.0; // = beta * gamma = (1/1024) * 1024
+
       // Training phase
       var radius = initialRadius;
       var alpha = (double)initialAlpha;
@@ -112,8 +128,19 @@ public struct NeuquantQuantizer : IQuantizer {
           var color = samples[sampleIndex % totalSamples];
           sampleIndex += step;
 
-          // Find best matching unit
-          var bestIndex = _FindClosestNeuron(network, color);
+          // Find best matching unit (with conscience bias).
+          var bestIndex = _FindClosestNeuronConscience(network, bias, color);
+
+          // Update conscience: bias winner down, others up. Per Dekker eq. (10):
+          //   freq[i] += β·(winner_i − freq[i])
+          //   bias[i] = γ·(1/N − freq[i])
+          // Combined and unrolled so each step is O(N).
+          for (var k = 0; k < networkSize; ++k) {
+            freq[k] -= Beta * freq[k];
+            bias[k] += BetaGamma * freq[k];
+          }
+          freq[bestIndex] += Beta;
+          bias[bestIndex] -= BetaGamma;
 
           // Update neurons in neighborhood
           _UpdateNeighborhood(network, bestIndex, color, alpha, radius);
@@ -124,7 +151,15 @@ public struct NeuquantQuantizer : IQuantizer {
         radius -= radiusDec;
       }
 
-      // Extract final palette, limited to requested color count
+      // Final palette extraction: if requested colorCount < networkSize, run a small
+      // k-means refinement against the histogram to MERGE close neurons rather than
+      // truncate to the first N. The Dekker paper assumes networkSize == colorCount;
+      // for smaller colorCount we use the trained network as initialisation and
+      // re-cluster.
+      if (colorCount < networkSize) {
+        return _ReduceNetworkToColorCount(network, samples, colorCount);
+      }
+
       return network
         .Take(colorCount)
         .Select(neuron => ColorFactory.FromNormalized_4<TWork>(
@@ -133,6 +168,49 @@ public struct NeuquantQuantizer : IQuantizer {
           UNorm32.FromFloatClamped((float)neuron[2]),
           UNorm32.FromFloatClamped((float)neuron[3])
         ));
+    }
+
+    /// <summary>
+    /// Reduce a fully-trained network to <paramref name="colorCount"/> output colours by
+    /// merging close neurons via greedy nearest-pair clustering. Avoids the previous
+    /// implementation's arbitrary "Take first N" which discarded perfectly-trained neurons.
+    /// </summary>
+    private static IEnumerable<TWork> _ReduceNetworkToColorCount(double[][] network, List<TWork> samples, int colorCount) {
+      // Start with all neurons; greedily merge the closest pair until count == colorCount.
+      var remaining = network.Select(n => (double[])n.Clone()).ToList();
+      while (remaining.Count > colorCount) {
+        var bestI = 0;
+        var bestJ = 1;
+        var bestDist = double.MaxValue;
+        for (var i = 0; i < remaining.Count; ++i)
+        for (var j = i + 1; j < remaining.Count; ++j) {
+          var a = remaining[i];
+          var b = remaining[j];
+          var dr = a[0] - b[0];
+          var dg = a[1] - b[1];
+          var db = a[2] - b[2];
+          var da = a[3] - b[3];
+          var d = dr * dr + dg * dg + db * db + da * da;
+          if (d < bestDist) {
+            bestDist = d;
+            bestI = i;
+            bestJ = j;
+          }
+        }
+        // Merge i and j into i (mean), drop j.
+        var ai = remaining[bestI];
+        var aj = remaining[bestJ];
+        ai[0] = 0.5 * (ai[0] + aj[0]);
+        ai[1] = 0.5 * (ai[1] + aj[1]);
+        ai[2] = 0.5 * (ai[2] + aj[2]);
+        ai[3] = 0.5 * (ai[3] + aj[3]);
+        remaining.RemoveAt(bestJ);
+      }
+      return remaining.Select(n => ColorFactory.FromNormalized_4<TWork>(
+        UNorm32.FromFloatClamped((float)n[0]),
+        UNorm32.FromFloatClamped((float)n[1]),
+        UNorm32.FromFloatClamped((float)n[2]),
+        UNorm32.FromFloatClamped((float)n[3])));
     }
 
     private static int _FindClosestNeuron(double[][] network, TWork color) {
@@ -152,6 +230,40 @@ public struct NeuquantQuantizer : IQuantizer {
         var dc3 = neuron[2] - c3;
         var da = neuron[3] - a;
         var distance = dc1 * dc1 + dc2 * dc2 + dc3 * dc3 + da * da;
+
+        if (!(distance < bestDistance))
+          continue;
+
+        bestDistance = distance;
+        bestIndex = i;
+      }
+
+      return bestIndex;
+    }
+
+    /// <summary>
+    /// Conscience-biased best-match search per Dekker 1994 §4: subtract <c>bias[i]</c>
+    /// from the squared distance so under-utilised neurons (positive bias) win more often
+    /// and over-utilised ones (negative bias) less often. Equalises neuron utilisation
+    /// across the colour space.
+    /// </summary>
+    private static int _FindClosestNeuronConscience(double[][] network, double[] bias, TWork color) {
+      var bestDistance = double.MaxValue;
+      var bestIndex = 0;
+
+      var (c1N, c2N, c3N, aN) = color.ToNormalized();
+      var c1 = (double)c1N.ToFloat();
+      var c2 = (double)c2N.ToFloat();
+      var c3 = (double)c3N.ToFloat();
+      var a = (double)aN.ToFloat();
+
+      for (var i = 0; i < network.Length; ++i) {
+        var neuron = network[i];
+        var dc1 = neuron[0] - c1;
+        var dc2 = neuron[1] - c2;
+        var dc3 = neuron[2] - c3;
+        var da = neuron[3] - a;
+        var distance = dc1 * dc1 + dc2 * dc2 + dc3 * dc3 + da * da - bias[i];
 
         if (!(distance < bestDistance))
           continue;

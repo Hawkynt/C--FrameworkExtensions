@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -281,7 +283,7 @@ public readonly struct NoiseDitherer : IDitherer {
       // Direct call to struct method - devirtualized by JIT
       // Get noise value and clamp to [0, 1] range
       var noiseValue = noiseGen.GetThreshold(x, y);
-      var threshold = Math.Max(0f, Math.Min(1f, (noiseValue + 0.5f) * strength));
+      var threshold = ColorConverter.Saturate((noiseValue + 0.5f) * strength);
 
       // Use threshold to decide between nearest and second-nearest based on relative distances
       // ratio = 0 means we're exactly on nearest, ratio = 1 means we're exactly on second-nearest

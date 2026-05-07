@@ -71,8 +71,8 @@ file readonly struct ColorTemperatureKernel<TWork, TKey, TPixel, TEncode>(float 
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    r = Math.Max(0f, Math.Min(1f, r + temperature * 0.1f));
-    b = Math.Max(0f, Math.Min(1f, b - temperature * 0.1f));
+    r = ColorConverter.Saturate(r + temperature * 0.1f);
+    b = ColorConverter.Saturate(b - temperature * 0.1f);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

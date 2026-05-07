@@ -49,7 +49,7 @@ public readonly struct Solarize(float threshold = 0.5f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new SolarizeKernel<TWork, TKey, TPixel, TEncode>(this._threshold));
 
-  public static Solarize Default => new();
+  public static Solarize Default => new(0.5f);
 }
 
 file readonly struct SolarizeKernel<TWork, TKey, TPixel, TEncode>(float threshold)

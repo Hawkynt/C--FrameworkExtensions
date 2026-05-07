@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -92,7 +94,7 @@ public readonly struct PigmentDitherer : IDitherer {
   /// </param>
   /// <param name="seed">RNG seed for reproducible flow-vector selection.</param>
   public PigmentDitherer(float viscosity = 0.5f, int seed = 42) {
-    this._viscosity = Math.Max(0f, Math.Min(1f, viscosity));
+    this._viscosity = ColorConverter.Saturate(viscosity);
     this._seed = seed;
   }
 
@@ -135,9 +137,9 @@ public readonly struct PigmentDitherer : IDitherer {
       for (var x = 0; x < width; ++x) {
         var color = source[y * sourceStride + x];
         var (c1, c2, c3, alpha) = color.ToNormalized();
-        var pr = Math.Max(0f, Math.Min(1f, c1.ToFloat() + errR[x, localY]));
-        var pg = Math.Max(0f, Math.Min(1f, c2.ToFloat() + errG[x, localY]));
-        var pb = Math.Max(0f, Math.Min(1f, c3.ToFloat() + errB[x, localY]));
+        var pr = ColorConverter.Saturate(c1.ToFloat() + errR[x, localY]);
+        var pg = ColorConverter.Saturate(c2.ToFloat() + errG[x, localY]);
+        var pb = ColorConverter.Saturate(c3.ToFloat() + errB[x, localY]);
 
         var adj = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(pr),

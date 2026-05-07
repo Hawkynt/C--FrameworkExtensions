@@ -36,10 +36,10 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Radial starburst light rays added to source", Category = FilterCategory.Render)]
 public readonly struct Supernova(float brightness = 0.7f, int spokes = 20, float posX = 0.5f, float posY = 0.5f, int seed = 0)
   : IPixelFilter, IFrameFilter {
-  private readonly float _brightness = Math.Max(0f, Math.Min(1f, brightness));
+  private readonly float _brightness = ColorConverter.Saturate(brightness);
   private readonly int _spokes = Math.Max(1, spokes);
-  private readonly float _posX = Math.Max(0f, Math.Min(1f, posX));
-  private readonly float _posY = Math.Max(0f, Math.Min(1f, posY));
+  private readonly float _posX = ColorConverter.Saturate(posX);
+  private readonly float _posY = ColorConverter.Saturate(posY);
 
   public Supernova() : this(0.7f, 20, 0.5f, 0.5f, 0) { }
 
@@ -136,9 +136,9 @@ file readonly struct SupernovaFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     var angle = (float)Math.Atan2(dy, dx);
     var ray = brightness * (float)Math.Exp(-dist / (Math.Max(sourceWidth, sourceHeight) * 0.25f)) * (0.5f + 0.5f * (float)Math.Sin(angle * spokes + _Hash(destX, destY, seed)));
 
-    r = Math.Max(0f, Math.Min(1f, r + ray));
-    g = Math.Max(0f, Math.Min(1f, g + ray));
-    b = Math.Max(0f, Math.Min(1f, b + ray));
+    r = ColorConverter.Saturate(r + ray);
+    g = ColorConverter.Saturate(g + ray);
+    b = ColorConverter.Saturate(b + ray);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }

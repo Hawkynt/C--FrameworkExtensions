@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("ColoredPencil",
   Description = "Colored pencil sketch preserving hue with edge-modulated lightness", Category = FilterCategory.Artistic)]
 public readonly struct ColoredPencil(float edgeStrength, int pencilWidth = 1) : IPixelFilter, IFrameFilter {
-  private readonly float _edgeStrength = Math.Max(0f, Math.Min(1f, edgeStrength));
+  private readonly float _edgeStrength = ColorConverter.Saturate(edgeStrength);
   private readonly int _pencilWidth = Math.Max(1, pencilWidth);
 
   public ColoredPencil() : this(0.6f, 1) { }
@@ -116,7 +116,7 @@ file readonly struct ColoredPencilFrameKernel<TPixel, TWork, TKey, TDecode, TPro
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,7 +146,7 @@ file readonly struct ColoredPencilFrameKernel<TPixel, TWork, TKey, TDecode, TPro
     var edgeMag = Math.Min(1f, (float)Math.Sqrt(gx * gx + gy * gy));
 
     // Modulate lightness by edge magnitude
-    l = Math.Max(0f, Math.Min(1f, l * (1f - edgeStrength * edgeMag)));
+    l = ColorConverter.Saturate(l * (1f - edgeStrength * edgeMag));
 
     // Convert back to RGB
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);

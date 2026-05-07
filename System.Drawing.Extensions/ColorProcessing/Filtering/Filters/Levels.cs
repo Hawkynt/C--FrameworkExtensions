@@ -61,7 +61,7 @@ public readonly struct Levels(
     => callback.Invoke(new LevelsKernel<TWork, TKey, TPixel, TEncode>(
       this._inBlack, this._inWhite, this._outBlack, this._outWhite, this._invMidtone));
 
-  public static Levels Default => new();
+  public static Levels Default => new(0f, 1f, 0f, 1f, 1f);
 }
 
 file readonly struct LevelsKernel<TWork, TKey, TPixel, TEncode>(
@@ -79,7 +79,7 @@ file readonly struct LevelsKernel<TWork, TKey, TPixel, TEncode>(
   private float _ApplyLevels(float v) {
     var inRange = inWhite - inBlack;
     v = inRange > 0f ? (v - inBlack) / inRange : 0f;
-    v = Math.Max(0f, Math.Min(1f, v));
+    v = ColorConverter.Saturate(v);
     v = (float)Math.Pow(v, invMidtone);
     return outBlack + v * (outWhite - outBlack);
   }

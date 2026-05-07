@@ -116,7 +116,7 @@ file readonly struct PaletteKnifeFrameKernel<TPixel, TWork, TKey, TDecode, TProj
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,10 +174,10 @@ file readonly struct PaletteKnifeFrameKernel<TPixel, TWork, TKey, TDecode, TProj
     }
 
     var inv = 1f / totalWeight;
-    var outR = Math.Max(0f, Math.Min(1f, sumR * inv));
-    var outG = Math.Max(0f, Math.Min(1f, sumG * inv));
-    var outB = Math.Max(0f, Math.Min(1f, sumB * inv));
-    var outA = Math.Max(0f, Math.Min(1f, sumA * inv));
+    var outR = ColorConverter.Saturate(sumR * inv);
+    var outG = ColorConverter.Saturate(sumG * inv);
+    var outB = ColorConverter.Saturate(sumB * inv);
+    var outA = ColorConverter.Saturate(sumA * inv);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, outA));
   }

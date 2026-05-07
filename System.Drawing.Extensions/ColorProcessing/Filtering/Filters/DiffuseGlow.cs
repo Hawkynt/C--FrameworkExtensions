@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Soft diffuse glow with luminance-weighted bloom and optional grain", Category = FilterCategory.Artistic)]
 public readonly struct DiffuseGlow(float graininess, float glowAmount = 0.5f, float clearAmount = 0.5f)
   : IPixelFilter, IFrameFilter {
-  private readonly float _graininess = Math.Max(0f, Math.Min(1f, graininess));
+  private readonly float _graininess = ColorConverter.Saturate(graininess);
   private readonly float _glowAmount = Math.Max(0f, Math.Min(2f, glowAmount));
   private readonly float _clearAmount = Math.Max(0f, Math.Min(2f, clearAmount));
 
@@ -131,7 +131,7 @@ file readonly struct DiffuseGlowFrameKernel<TPixel, TWork, TKey, TDecode, TProje
     in TEncode encoder) {
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var lum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var lum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
 
     // Average neighborhood for glow component
     float blurR = 0, blurG = 0, blurB = 0;
@@ -164,9 +164,9 @@ file readonly struct DiffuseGlowFrameKernel<TPixel, TWork, TKey, TDecode, TProje
       outB += noise;
     }
 
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, ca));
   }

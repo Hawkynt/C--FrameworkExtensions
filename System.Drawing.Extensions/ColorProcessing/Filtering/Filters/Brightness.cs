@@ -71,9 +71,9 @@ file readonly struct BrightnessKernel<TWork, TKey, TPixel, TEncode>(float amount
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    r = Math.Max(0f, Math.Min(1f, r + amount));
-    g = Math.Max(0f, Math.Min(1f, g + amount));
-    b = Math.Max(0f, Math.Min(1f, b + amount));
+    r = ColorConverter.Saturate(r + amount);
+    g = ColorConverter.Saturate(g + amount);
+    b = ColorConverter.Saturate(b + amount);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }
 }

@@ -127,7 +127,7 @@ file readonly struct EngraveFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
     in TEncode encoder) {
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var lum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
+    var lum = ColorConverter.LuminanceFromRgb(cr, cg, cb);
 
     // Rotate position along the engraving angle
     var rotated = cos * destX + sin * destY;

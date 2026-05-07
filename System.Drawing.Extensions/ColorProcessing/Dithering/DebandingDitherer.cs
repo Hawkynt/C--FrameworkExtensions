@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -138,9 +140,9 @@ public readonly struct DebandingDitherer : IDitherer {
         var strength = isGradient ? this._ditherStrength : 0.5f;
 
         // Apply accumulated error from previous pixels
-        var c1 = Math.Max(0f, Math.Min(1f, originalColor.c1 + currentRow[x + 1, 0] * strength));
-        var c2 = Math.Max(0f, Math.Min(1f, originalColor.c2 + currentRow[x + 1, 1] * strength));
-        var c3 = Math.Max(0f, Math.Min(1f, originalColor.c3 + currentRow[x + 1, 2] * strength));
+        var c1 = ColorConverter.Saturate(originalColor.c1 + currentRow[x + 1, 0] * strength);
+        var c2 = ColorConverter.Saturate(originalColor.c2 + currentRow[x + 1, 1] * strength);
+        var c3 = ColorConverter.Saturate(originalColor.c3 + currentRow[x + 1, 2] * strength);
 
         var ditheredColor = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(c1),

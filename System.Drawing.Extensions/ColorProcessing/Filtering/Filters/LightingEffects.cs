@@ -42,7 +42,7 @@ public readonly struct LightingEffects(float angle, float elevation = 45f, float
   private readonly float _angle = angle;
   private readonly float _elevation = Math.Max(0f, Math.Min(90f, elevation));
   private readonly float _intensity = Math.Max(0f, Math.Min(5f, intensity));
-  private readonly float _ambientLight = Math.Max(0f, Math.Min(1f, ambientLight));
+  private readonly float _ambientLight = ColorConverter.Saturate(ambientLight);
 
   public LightingEffects() : this(315f, 45f, 1f, 0.2f) { }
 
@@ -118,7 +118,7 @@ file readonly struct LightingEffectsFrameKernel<TPixel, TWork, TKey, TDecode, TP
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -171,9 +171,9 @@ file readonly struct LightingEffectsFrameKernel<TPixel, TWork, TKey, TDecode, TP
 
     // Result = original * (ambientLight + intensity * diffuse)
     var factor = ambientLight + intensity * diffuse;
-    var outR = Math.Max(0f, Math.Min(1f, cr * factor));
-    var outG = Math.Max(0f, Math.Min(1f, cg * factor));
-    var outB = Math.Max(0f, Math.Min(1f, cb * factor));
+    var outR = ColorConverter.Saturate(cr * factor);
+    var outG = ColorConverter.Saturate(cg * factor);
+    var outB = ColorConverter.Saturate(cb * factor);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, ca));
   }

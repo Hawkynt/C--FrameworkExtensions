@@ -110,7 +110,7 @@ file readonly struct WindFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEn
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static float _Lum(float r, float g, float b)
-    => ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    => ColorConverter.LuminanceFromRgb(r, g, b);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(

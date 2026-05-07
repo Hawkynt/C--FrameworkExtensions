@@ -113,7 +113,7 @@ file readonly struct BokehBlurFrameKernel<TPixel, TWork, TKey, TDecode, TProject
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,7 +142,7 @@ file readonly struct BokehBlurFrameKernel<TPixel, TWork, TKey, TDecode, TProject
 
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      var lum = ColorConverter.LuminanceFromRgb(r, g, b);
       var w = lum > threshold ? 1f + (lum - threshold) * 3f : 1f;
       ar += r * w;
       ag += g * w;

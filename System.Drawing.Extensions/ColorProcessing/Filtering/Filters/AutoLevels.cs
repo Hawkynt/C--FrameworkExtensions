@@ -30,13 +30,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Local auto-levels contrast stretching.
-/// Finds the min and max luminance in the neighborhood and linearly stretches
-/// the center pixel's luminance to fill the full range.
-/// Always uses frame-level random access.
+/// Local auto-levels contrast stretching — Photoshop-style per-channel histogram stretch.
 /// </summary>
+/// <remarks>
+/// <para>For each output pixel, finds per-channel min/max in the local neighbourhood and
+/// stretches each channel independently to fill <c>[0, 1]</c>:
+/// <c>out_C = (C − minC) / (maxC − minC)</c>. The per-channel formulation matches Adobe's
+/// AutoLevels and is idempotent in the limit: applying AutoLevels twice converges to the
+/// fixed point of "all channel histograms locally fill [0, 1]".</para>
+/// <para>Note: per-channel stretching can shift colours (e.g. a sky-blue cast in shadows
+/// gets pushed toward neutral). For luminance-preserving local contrast that preserves
+/// hue, use Equalize or CLAHE instead.</para>
+/// <para>Always uses frame-level random access.</para>
+/// </remarks>
 [FilterInfo("AutoLevels",
-  Description = "Local auto-levels contrast stretching", Category = FilterCategory.ColorCorrection)]
+  Description = "Local auto-levels per-channel histogram stretch", Category = FilterCategory.ColorCorrection)]
 public readonly struct AutoLevels(int radius = 10) : IPixelFilter, IFrameFilter {
   private readonly int _radius = Math.Max(1, radius);
 
@@ -70,7 +78,7 @@ public readonly struct AutoLevels(int radius = 10) : IPixelFilter, IFrameFilter 
     => callback.Invoke(new AutoLevelsFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
       this._radius, sourceWidth, sourceHeight));
 
-  public static AutoLevels Default => new();
+  public static AutoLevels Default => new(10);
 }
 
 file readonly struct AutoLevelsPassThroughKernel<TWork, TKey, TPixel, TEncode>
@@ -109,48 +117,44 @@ file readonly struct AutoLevelsFrameKernel<TPixel, TWork, TKey, TDecode, TProjec
   public int TargetHeight => sourceHeight;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
-    var px = frame[x, y].Work;
-    var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
-  }
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public unsafe void Resample(
     NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
     int destX, int destY,
     TPixel* dest, int destStride,
     in TEncode encoder) {
-    var minLum = float.MaxValue;
-    var maxLum = float.MinValue;
+    // Per-channel histogram stretch over the local window. Matches Photoshop AutoLevels
+    // and is idempotent in the limit (fixed point: all channel histograms locally fill
+    // [0, 1]).
+    var minR = float.MaxValue; var maxR = float.MinValue;
+    var minG = float.MaxValue; var maxG = float.MinValue;
+    var minB = float.MaxValue; var maxB = float.MinValue;
 
     for (var dy = -radius; dy <= radius; ++dy)
     for (var dx = -radius; dx <= radius; ++dx) {
-      var lum = _Lum(frame, destX + dx, destY + dy);
-      if (lum < minLum)
-        minLum = lum;
-      if (lum > maxLum)
-        maxLum = lum;
+      var px = frame[destX + dx, destY + dy].Work;
+      var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
+      if (r < minR) minR = r;
+      if (r > maxR) maxR = r;
+      if (g < minG) minG = g;
+      if (g > maxG) maxG = g;
+      if (b < minB) minB = b;
+      if (b > maxB) maxB = b;
     }
 
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var centerLum = ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb;
 
-    var range = maxLum - minLum;
-    float outR, outG, outB;
+    var rangeR = maxR - minR;
+    var rangeG = maxG - minG;
+    var rangeB = maxB - minB;
 
-    if (range > 0.001f) {
-      var newLum = (centerLum - minLum) / range;
-      var factor = centerLum > 0.001f ? newLum / centerLum : 0f;
-      outR = Math.Min(1f, cr * factor);
-      outG = Math.Min(1f, cg * factor);
-      outB = Math.Min(1f, cb * factor);
-    } else {
-      outR = cr;
-      outG = cg;
-      outB = cb;
-    }
+    var outR = rangeR > 0.001f ? (cr - minR) / rangeR : cr;
+    var outG = rangeG > 0.001f ? (cg - minG) / rangeG : cg;
+    var outB = rangeB > 0.001f ? (cb - minB) / rangeB : cb;
+
+    if (outR < 0f) outR = 0f; else if (outR > 1f) outR = 1f;
+    if (outG < 0f) outG = 0f; else if (outG > 1f) outG = 1f;
+    if (outB < 0f) outB = 0f; else if (outB > 1f) outB = 1f;
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, ca));
   }

@@ -29,16 +29,21 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Geom scaler - Classic CRT geometry with shadow mask and scanlines.
+/// Stylistic CRT-style upscale inspired by Themaister's CRT-Geom shader. NOT a port
+/// of the GLSL shader — uses fixed darkening patterns over each scaled block instead
+/// of the shader's per-fragment Gaussian beam, dotMask RGB-channel selection, or
+/// barrel-distortion warp.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom</para>
-/// <para>Algorithm: CRT simulation with phosphor shadow mask patterns and scanline darkening.</para>
-/// <para>Inspired by the CRT-Geom shader from the libretro community.</para>
+/// <para>Reference (cited but not faithfully implemented): CRT-Geom shader,
+/// https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom</para>
+/// <para>For pixel-accurate CRT-Geom output, use the original GLSL shader; this filter
+/// approximates the visual character without implementing the per-fragment math.</para>
 /// </remarks>
 [ScalerInfo("CRT-Geom",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-geom",
-  Description = "CRT simulation with shadow mask and scanline darkening", Category = ScalerCategory.Resampler)]
+  Description = "Stylistic CRT-Geom-inspired pattern (not a port of the GLSL shader)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct CrtGeom : IRescaler {
   private readonly int _scale;
 

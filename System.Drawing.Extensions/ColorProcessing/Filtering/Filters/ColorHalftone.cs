@@ -176,9 +176,9 @@ file readonly struct ColorHalftoneFrameKernel<TPixel, TWork, TKey, TDecode, TPro
     var outR = (1f - cDot) * (1f - kDot);
     var outG = (1f - mDot) * (1f - kDot);
     var outB = (1f - yDot) * (1f - kDot);
-    outR = Math.Max(0f, Math.Min(1f, outR));
-    outG = Math.Max(0f, Math.Min(1f, outG));
-    outB = Math.Max(0f, Math.Min(1f, outB));
+    outR = ColorConverter.Saturate(outR);
+    outG = ColorConverter.Saturate(outG);
+    outB = ColorConverter.Saturate(outB);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

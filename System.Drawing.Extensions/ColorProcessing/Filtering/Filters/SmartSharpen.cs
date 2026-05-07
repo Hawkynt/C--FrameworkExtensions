@@ -113,7 +113,7 @@ file readonly struct SmartSharpenFrameKernel<TPixel, TWork, TKey, TDecode, TProj
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,9 +158,9 @@ file readonly struct SmartSharpenFrameKernel<TPixel, TWork, TKey, TDecode, TProj
 
     float outR, outG, outB;
     if (edgeMag >= threshold) {
-      outR = Math.Max(0f, Math.Min(1f, r + amount * (r - blurR)));
-      outG = Math.Max(0f, Math.Min(1f, g + amount * (g - blurG)));
-      outB = Math.Max(0f, Math.Min(1f, b + amount * (b - blurB)));
+      outR = ColorConverter.Saturate(r + amount * (r - blurR));
+      outG = ColorConverter.Saturate(g + amount * (g - blurG));
+      outB = ColorConverter.Saturate(b + amount * (b - blurB));
     } else {
       outR = r;
       outG = g;

@@ -55,7 +55,7 @@ public readonly struct SigmoidContrast(float contrast = 5f, float midpoint = 0.5
     where TEquality : struct, IColorEquality<TKey>
     where TLerp : struct, ILerp<TWork>
     where TEncode : struct, IEncode<TWork, TPixel>
-    => callback.Invoke(new SigmoidContrastPassThroughKernel<TWork, TKey, TPixel, TEncode>());
+    => callback.Invoke(new SigmoidContrastKernel<TWork, TKey, TPixel, TEncode>(this._contrast, this._midpoint));
 
   /// <inheritdoc />
   public TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(
@@ -73,7 +73,14 @@ public readonly struct SigmoidContrast(float contrast = 5f, float midpoint = 0.5
   public static SigmoidContrast Default => new(5f, 0.5f);
 }
 
-file readonly struct SigmoidContrastPassThroughKernel<TWork, TKey, TPixel, TEncode>
+// ImageMagick "sigmoidal-contrast" formula:
+//   σ(x) = 1 / (1 + exp(c·(β − x)))
+//   out  = (σ(x) − σ(0)) / (σ(1) − σ(0))
+// The endpoint normalisation is required so x=0→0 and x=1→1; without it,
+// black is lifted (~0.076 with c=5, β=0.5) and white is dimmed (~0.924).
+// Reference: https://imagemagick.org/script/command-line-options.php#sigmoidal-contrast
+//   and Hagen & Hartl 2011 (ImageMagick implementation).
+file readonly struct SigmoidContrastKernel<TWork, TKey, TPixel, TEncode>(float contrast, float midpoint)
   : IScaler<TWork, TKey, TPixel, TEncode>
   where TWork : unmanaged, IColorSpace
   where TKey : unmanaged, IColorSpace
@@ -88,8 +95,20 @@ file readonly struct SigmoidContrastPassThroughKernel<TWork, TKey, TPixel, TEnco
     in NeighborWindow<TWork, TKey> window,
     TPixel* dest,
     int destStride,
-    in TEncode encoder)
-    => dest[0] = encoder.Encode(window.P0P0.Work);
+    in TEncode encoder) {
+    var px = window.P0P0.Work;
+    var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
+
+    var sigma0 = 1f / (1f + (float)Math.Exp(contrast * midpoint));
+    var sigma1 = 1f / (1f + (float)Math.Exp(contrast * (midpoint - 1f)));
+    var range = sigma1 - sigma0;
+
+    var outR = (1f / (1f + (float)Math.Exp(-contrast * (r - midpoint))) - sigma0) / range;
+    var outG = (1f / (1f + (float)Math.Exp(-contrast * (g - midpoint))) - sigma0) / range;
+    var outB = (1f / (1f + (float)Math.Exp(-contrast * (b - midpoint))) - sigma0) / range;
+
+    dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
+  }
 }
 
 file readonly struct SigmoidContrastFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode>(
@@ -117,9 +136,13 @@ file readonly struct SigmoidContrastFrameKernel<TPixel, TWork, TKey, TDecode, TP
     var px = frame[destX, destY].Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
 
-    var outR = 1f / (1f + (float)Math.Exp(-contrast * (r - midpoint)));
-    var outG = 1f / (1f + (float)Math.Exp(-contrast * (g - midpoint)));
-    var outB = 1f / (1f + (float)Math.Exp(-contrast * (b - midpoint)));
+    var sigma0 = 1f / (1f + (float)Math.Exp(contrast * midpoint));
+    var sigma1 = 1f / (1f + (float)Math.Exp(contrast * (midpoint - 1f)));
+    var range = sigma1 - sigma0;
+
+    var outR = (1f / (1f + (float)Math.Exp(-contrast * (r - midpoint))) - sigma0) / range;
+    var outG = (1f / (1f + (float)Math.Exp(-contrast * (g - midpoint))) - sigma0) / range;
+    var outB = (1f / (1f + (float)Math.Exp(-contrast * (b - midpoint))) - sigma0) / range;
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(outR, outG, outB, a));
   }

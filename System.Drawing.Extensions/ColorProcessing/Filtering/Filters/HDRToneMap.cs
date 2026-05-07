@@ -30,10 +30,20 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Filtering.Filters;
 
 /// <summary>
-/// Reinhard tone mapping operator for compressing high dynamic range values.
+/// Reinhard-extended tone mapping operator for compressing high dynamic range values.
+/// Implements <c>L' = L·(1 + L/W²) / (1 + L)</c> per Reinhard et al. 2002 eq. (4),
+/// applied via per-pixel luminance scaling.
 /// </summary>
+/// <remarks>
+/// This is the same operator as <see cref="ToneMap.ReinhardExtended"/> exposed under a
+/// different filter ID for backwards compatibility. New code should prefer
+/// <see cref="ToneMap.ReinhardExtended"/> for clarity.
+/// </remarks>
 [FilterInfo("HDRToneMap",
-  Description = "Reinhard HDR tone mapping with exposure and white point controls", Category = FilterCategory.ColorCorrection)]
+  Author = "Reinhard, Stark, Shirley & Ferwerda", Year = 2002,
+  Url = "https://www.cs.utah.edu/docs/techreports/2002/pdf/UUCS-02-001.pdf",
+  Description = "Reinhard-extended HDR tone mapping (alias of ReinhardExtended) with exposure and white point controls",
+  Category = FilterCategory.ColorCorrection)]
 public readonly struct HDRToneMap : IPixelFilter {
   private readonly float _exposure;
   private readonly float _whitePointSq;
@@ -81,7 +91,7 @@ file readonly struct HDRToneMapKernel<TWork, TKey, TPixel, TEncode>(float exposu
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
 
     if (lum < 0.001f) {
       dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0f, 0f, 0f, a));

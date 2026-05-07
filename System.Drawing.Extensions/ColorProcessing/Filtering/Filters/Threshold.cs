@@ -56,7 +56,7 @@ public readonly struct Threshold(float level = 0.5f) : IPixelFilter {
     => callback.Invoke(new ThresholdKernel<TWork, TKey, TPixel, TEncode>(this._level));
 
   /// <summary>Gets the default Threshold filter (0.5 level).</summary>
-  public static Threshold Default => new();
+  public static Threshold Default => new(0.5f);
 }
 
 #region Threshold 1x Kernel
@@ -79,7 +79,7 @@ file readonly struct ThresholdKernel<TWork, TKey, TPixel, TEncode>(float level)
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
     var v = lum >= level ? 1f : 0f;
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));
   }

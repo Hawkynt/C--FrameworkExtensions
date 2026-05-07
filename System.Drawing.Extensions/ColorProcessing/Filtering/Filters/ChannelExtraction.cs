@@ -54,7 +54,7 @@ public readonly struct ChannelExtraction(ColorChannel channel = ColorChannel.Red
     => callback.Invoke(new ChannelKernel<TWork, TKey, TPixel, TEncode>(this._channel));
 
   /// <summary>Gets the default Channel Extraction filter (Red channel).</summary>
-  public static ChannelExtraction Default => new();
+  public static ChannelExtraction Default => new(ColorChannel.Red);
 }
 
 #region Channel Kernel

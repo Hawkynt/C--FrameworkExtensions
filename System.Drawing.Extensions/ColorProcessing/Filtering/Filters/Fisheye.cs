@@ -56,7 +56,7 @@ public readonly struct Fisheye : IPixelFilter, IFrameFilter {
   public Fisheye() : this(1f) { }
 
   public Fisheye(float strength) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
   }
 
   /// <inheritdoc />
@@ -143,13 +143,21 @@ file readonly struct FisheyeFrameKernel<TPixel, TWork, TKey, TDecode, TProject, 
 
     int sx, sy;
     if (r <= 1f && r > 0f) {
-      // Equidistant fisheye: angle θ = r · π/2, then map back via tan.
-      var theta = r * (float)(Math.PI / 2.0);
-      var rPin = (float)Math.Tan(theta);
-      var maxPin = (float)Math.Tan(Math.PI / 2.0 - 1e-3); // saturate at edge
-      var rNew = rPin / maxPin;
-      // Blend distorted ↔ original by strength.
-      var rOut = strength * rNew + (1f - strength) * r;
+      // Equidistant fisheye projection (Wikipedia "Fisheye lens"): destination radius r ∈ [0,1]
+      // maps to source radius r_src = tan(r·θ_max) / tan(θ_max), where θ_max ∈ (0, π/2)
+      // is the half-FOV. r=0 → 0 and r=1 → 1 (corners anchored); interior is monotonically
+      // contracted toward the center, producing the characteristic center-magnified bulge.
+      // strength controls θ_max linearly; cap at 0.45π so strength=1 stays well-behaved
+      // (avoids tan(π/2)=∞ singularity). At strength=1 dest r=0.5 samples src ≈ 0.20
+      // (clear center magnification); at strength→0 the mapping limits to identity.
+      var thetaMax = strength * 0.45f * (float)Math.PI;
+      float rOut;
+      if (thetaMax < 1e-4f) {
+        rOut = r;
+      } else {
+        var rNew = (float)Math.Tan(r * thetaMax) / (float)Math.Tan(thetaMax);
+        rOut = rNew;
+      }
       var sxF = cx + (dx / r) * rOut * maxR;
       var syF = cy + (dy / r) * rOut * maxR;
       sx = (int)sxF;

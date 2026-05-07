@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -63,7 +65,7 @@ public readonly struct RandomDitherer : IDitherer {
   /// <param name="intensity">Noise intensity (0-1).</param>
   /// <param name="seed">Optional random seed for reproducibility.</param>
   public RandomDitherer(float intensity = 0.5f, int seed = 42) {
-    this._intensity = Math.Max(0f, Math.Min(1f, intensity));
+    this._intensity = ColorConverter.Saturate(intensity);
     this._seed = seed;
   }
 
@@ -104,9 +106,9 @@ public readonly struct RandomDitherer : IDitherer {
         var noiseValue = (float)(random.NextDouble() * 2.0 - 1.0) * intensity;
 
         // Apply noise to each channel
-        var adjustedC1 = Math.Max(0f, Math.Min(1f, pixelC1 + noiseValue));
-        var adjustedC2 = Math.Max(0f, Math.Min(1f, pixelC2 + noiseValue));
-        var adjustedC3 = Math.Max(0f, Math.Min(1f, pixelC3 + noiseValue));
+        var adjustedC1 = ColorConverter.Saturate(pixelC1 + noiseValue);
+        var adjustedC2 = ColorConverter.Saturate(pixelC2 + noiseValue);
+        var adjustedC3 = ColorConverter.Saturate(pixelC3 + noiseValue);
 
         // Create adjusted color
         var adjustedColor = ColorFactory.FromNormalized_4<TWork>(

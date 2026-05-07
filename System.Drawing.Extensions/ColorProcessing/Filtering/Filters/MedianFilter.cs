@@ -90,7 +90,7 @@ file readonly struct MedianKernel<TWork, TKey, TPixel, TEncode>
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -188,7 +188,7 @@ file readonly struct MedianFrameKernel<TPixel, TWork, TKey, TDecode, TProject, T
     for (var dx = -radius; dx <= radius; ++dx) {
       var px = frame[destX + dx, destY + dy].Work;
       var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-      lums[idx] = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+      lums[idx] = ColorConverter.LuminanceFromRgb(r, g, b);
       pixels[idx] = px;
       ++idx;
     }

@@ -39,7 +39,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Posterized colors with darkened Sobel edges", Category = FilterCategory.Artistic)]
 public readonly struct PosterEdges(int levels, float edgeStrength = 0.5f) : IPixelFilter, IFrameFilter {
   private readonly int _levels = Math.Max(2, levels);
-  private readonly float _edgeStrength = Math.Max(0f, Math.Min(1f, edgeStrength));
+  private readonly float _edgeStrength = ColorConverter.Saturate(edgeStrength);
 
   public PosterEdges() : this(4, 0.5f) { }
 
@@ -115,7 +115,7 @@ file readonly struct PosterEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,9 +129,9 @@ file readonly struct PosterEdgesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
 
     // Posterize: quantize each channel to the configured number of levels
     var div = levels - 1f;
-    var qr = Math.Max(0f, Math.Min(1f, (float)Math.Floor(cr * levels) / div));
-    var qg = Math.Max(0f, Math.Min(1f, (float)Math.Floor(cg * levels) / div));
-    var qb = Math.Max(0f, Math.Min(1f, (float)Math.Floor(cb * levels) / div));
+    var qr = ColorConverter.Saturate((float)Math.Floor(cr * levels) / div);
+    var qg = ColorConverter.Saturate((float)Math.Floor(cg * levels) / div);
+    var qb = ColorConverter.Saturate((float)Math.Floor(cb * levels) / div);
 
     // Sobel edge detection
     var tl = _Lum(frame[destX - 1, destY - 1]);

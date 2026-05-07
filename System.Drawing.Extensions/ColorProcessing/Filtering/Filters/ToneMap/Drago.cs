@@ -138,7 +138,7 @@ file readonly struct DragoFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -168,13 +168,17 @@ file readonly struct DragoFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
 
     var center = frame[destX, destY].Work;
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in center);
-    var lum = (ColorMatrices.BT601_R * cr + ColorMatrices.BT601_G * cg + ColorMatrices.BT601_B * cb) * exposure;
+    var lum = (ColorConverter.LuminanceFromRgb(cr, cg, cb)) * exposure;
 
     if (lum < 1e-6f) {
       dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(0f, 0f, 0f, ca));
       return;
     }
 
+    // Drago 2003 eq. (5)+(6): Ld = (Ld_max·0.01) · log10(1+Lw) / [log10(1+Lw_max) · log10(2 + 8·(Lw/Lw_max)^p)].
+    // Lib uses ln throughout — the conversion from three log10 terms (1 numerator + 2 denominator) to
+    // natural logs introduces a single factor of ln(10) (since 2-1 = 1 net log10). The Ld_max·0.01
+    // factor is implicitly 1, i.e. the lib assumes SDR display peak Ld_max = 100 cd/m² (BT.1886).
     var logBase = Math.Log(bias) / Math.Log(0.5);
     var divisorBase = 2.0 + 8.0 * Math.Pow(lum / maxLum, logBase);
     var num = Math.Log(1.0 + lum);

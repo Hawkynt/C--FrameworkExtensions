@@ -51,7 +51,7 @@ public readonly struct NightVision(float amplification = 2f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new NightVisionKernel<TWork, TKey, TPixel, TEncode>(this._amplification));
 
-  public static NightVision Default => new();
+  public static NightVision Default => new(2f);
 }
 
 file readonly struct NightVisionKernel<TWork, TKey, TPixel, TEncode>(float amplification)
@@ -72,7 +72,7 @@ file readonly struct NightVisionKernel<TWork, TKey, TPixel, TEncode>(float ampli
     in TEncode encoder) {
     var pixel = window.P0P0.Work;
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in pixel);
-    var lum = ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    var lum = ColorConverter.LuminanceFromRgb(r, g, b);
     var amp = Math.Min(1f, lum * amplification);
 
     var or = amp * 0.1f;

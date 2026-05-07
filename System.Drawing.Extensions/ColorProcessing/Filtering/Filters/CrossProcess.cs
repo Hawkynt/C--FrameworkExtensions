@@ -34,7 +34,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("CrossProcess",
   Description = "Simulate cross-processed film look with shifted color curves", Category = FilterCategory.Artistic)]
 public readonly struct CrossProcess(float intensity = 1f) : IPixelFilter {
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
 
   /// <inheritdoc />
   public TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(
@@ -50,7 +50,7 @@ public readonly struct CrossProcess(float intensity = 1f) : IPixelFilter {
     where TEncode : struct, IEncode<TWork, TPixel>
     => callback.Invoke(new CrossProcessKernel<TWork, TKey, TPixel, TEncode>(this._intensity));
 
-  public static CrossProcess Default => new();
+  public static CrossProcess Default => new(1f);
 }
 
 file readonly struct CrossProcessKernel<TWork, TKey, TPixel, TEncode>(float intensity)
@@ -77,15 +77,15 @@ file readonly struct CrossProcessKernel<TWork, TKey, TPixel, TEncode>(float inte
     var nb = b - intensity * 0.1f * (float)Math.Sin(b * Math.PI);
 
     var (h, s, l) = HslMath.RgbToHsl(
-      Math.Max(0f, Math.Min(1f, nr)),
-      Math.Max(0f, Math.Min(1f, ng)),
-      Math.Max(0f, Math.Min(1f, nb)));
+      ColorConverter.Saturate(nr),
+      ColorConverter.Saturate(ng),
+      ColorConverter.Saturate(nb));
     s = Math.Min(1f, s * (1f + 0.3f * intensity));
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(
-      Math.Max(0f, Math.Min(1f, or)),
-      Math.Max(0f, Math.Min(1f, og)),
-      Math.Max(0f, Math.Min(1f, ob)), a));
+      ColorConverter.Saturate(or),
+      ColorConverter.Saturate(og),
+      ColorConverter.Saturate(ob), a));
   }
 }

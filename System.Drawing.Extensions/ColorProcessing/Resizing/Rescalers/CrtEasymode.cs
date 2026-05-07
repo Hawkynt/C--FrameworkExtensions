@@ -29,12 +29,13 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Easymode scaler - A lightweight CRT simulation effect.
+/// Stylistic CRT-style upscale inspired by the crt-easymode shader. NOT a port: the
+/// shader's <c>cos(2π·y)^scan_beam</c> luma modulation and per-channel mask are NOT
+/// implemented; this filter applies a fixed darkening pattern over each scaled block.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-easymode</para>
-/// <para>Algorithm: Applies simple scanline and phosphor mask simulation.</para>
-/// <para>Optimized for performance with minimal overhead while maintaining CRT appearance.</para>
+/// <para>Reference (cited but not faithfully implemented):
+/// https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-easymode</para>
 /// </remarks>
 [ScalerInfo("CRT-Easymode",
   Url = "https://github.com/libretro/glsl-shaders/tree/master/crt/shaders/crt-easymode",

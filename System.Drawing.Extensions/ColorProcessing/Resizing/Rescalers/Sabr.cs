@@ -258,11 +258,14 @@ public readonly struct SabrSmooth : IRescaler {
 #region SABR Helpers
 
 file static class SabrHelpers {
-  // Edge detection thresholds (UNorm32 raw value scale: threshold * UNorm32.One / 100)
-  // These map to perceptual distances: 0.32 -> 32, 0.20 -> 20, 0.45 -> 45
-  public const uint StandardThreshold = (uint)(0.032 * uint.MaxValue);
-  public const uint SharpThreshold = (uint)(0.020 * uint.MaxValue);
-  public const uint SmoothThreshold = (uint)(0.045 * uint.MaxValue);
+  // Edge detection thresholds in [0, 1] perceptual distance, encoded as UNorm32 raw values.
+  // Reference: Hyllian/Joshua-Street SABR v3.0 shader (libretro/glsl-shaders/sabr/shaders/sabr-v3.0.glsl)
+  // uses `const vec4 threshold = vec4(0.32)` for the standard configuration.
+  // The Sharp variant tightens the threshold (more edges detected) and Smooth loosens it
+  // (fewer edges) — both are lib-specific tunings of the reference parameter.
+  public const uint StandardThreshold = (uint)(0.32 * uint.MaxValue);
+  public const uint SharpThreshold = (uint)(0.20 * uint.MaxValue);
+  public const uint SmoothThreshold = (uint)(0.45 * uint.MaxValue);
 
   // Angle coefficients (scaled by 100)
   public const int StandardCoef = 200;

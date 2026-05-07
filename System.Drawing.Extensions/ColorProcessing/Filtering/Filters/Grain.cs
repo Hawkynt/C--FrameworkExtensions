@@ -34,7 +34,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("Grain",
   Description = "Add deterministic photographic film grain noise", Category = FilterCategory.Artistic)]
 public readonly struct Grain(float amount, int seed = 0) : IPixelFilter, IFrameFilter {
-  private readonly float _amount = Math.Max(0f, Math.Min(1f, amount));
+  private readonly float _amount = ColorConverter.Saturate(amount);
 
   public Grain() : this(0.1f, 0) { }
 
@@ -124,9 +124,9 @@ file readonly struct GrainFrameKernel<TPixel, TWork, TKey, TDecode, TProject, TE
     var (r, g, b, a) = ColorConverter.GetNormalizedRgba(in px);
 
     var noise = _Hash(destX, destY, seed) * amount;
-    r = Math.Max(0f, Math.Min(1f, r + noise));
-    g = Math.Max(0f, Math.Min(1f, g + noise));
-    b = Math.Max(0f, Math.Min(1f, b + noise));
+    r = ColorConverter.Saturate(r + noise);
+    g = ColorConverter.Saturate(g + noise);
+    b = ColorConverter.Saturate(b + noise);
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(r, g, b, a));
   }

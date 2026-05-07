@@ -48,8 +48,9 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// <para>The single-pass form approximates Anime4K's iterative push: the runtime is comparable
 /// to Lanczos at 1024² → 4096² and the result is byte-exact reproducible.</para>
 /// </remarks>
-[ScalerInfo("Anime4K", Author = "bloc97 (algorithm)", Year = 2019,
-  Description = "Algorithmic edge-directed upscaler tuned for anime/cartoon content",
+[ScalerInfo("Anime4K", Author = "bloc97", Year = 2019,
+  Url = "https://github.com/bloc97/Anime4K",
+  Description = "Anime4K v0.9 PushColor pass — dark-line thinning via gradient-ascent push",
   Category = ScalerCategory.Resampler)]
 public readonly struct Anime4K : IResampler {
 
@@ -190,13 +191,17 @@ file readonly struct Anime4KKernel<TPixel, TWork, TKey, TDecode, TProject, TEnco
       return;
     }
 
-    // Anime4K push: step one source-pixel against the gradient (toward the darker side) and
-    // sample. This is the headline operation — it pulls bright lines toward their dark
-    // neighbours, thinning anti-aliased edges into clean strokes.
+    // Anime4K v0.9 push (bloc97 PushColor): step one pixel ALONG the gradient (toward
+    // the LIGHTER side) and sample there. This is the headline operation: anime art
+    // has dark lines on light backgrounds, and pulling EDGE pixels toward their lighter
+    // neighbours moves the boundary INTO the white side, THINNING the dark line. The
+    // visible effect is the characteristic clean-stroke sharpening that Anime4K is
+    // known for. Reference: net2cn/Anime4KSharp PushColor implementation, which
+    // selects the LIGHTEST neighbour among each kernel direction.
     var invMag = 1f / gMag;
     var nx = gx * invMag;
     var ny = gy * invMag;
-    var pushedSample = SampleBilinear(frame, srcXf - nx, srcYf - ny);
+    var pushedSample = SampleBilinear(frame, srcXf + nx, srcYf + ny);
 
     // Edge weight ∈ [0, 1]: ramps from 0 at threshold to 1 well above it.
     var edgeWeight = MathF.Min(1f, (gMag - edgeThreshold) / MathF.Max(edgeThreshold, 1e-3f));

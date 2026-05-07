@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -159,7 +161,7 @@ public readonly struct MsxScreen2Ditherer : IDitherer {
         var relX = px1 - baf1; var relY = px2 - baf2; var relZ = px3 - baf3;
         var t = relX * dirX + relY * dirY + relZ * dirZ;
         t = norm > 1e-6f ? t / norm : 0f;
-        t = Math.Max(0f, Math.Min(1f, t));
+        t = ColorConverter.Saturate(t);
         // Bayer threshold flips the decision at t == 0.5.
         t += _Row[(rowX + i) & 7];
         var pick = t > 0.5f ? bestB : bestA;

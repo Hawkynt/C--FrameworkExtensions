@@ -77,8 +77,8 @@ file readonly struct HueSaturationKernel<TWork, TKey, TPixel, TEncode>(float hue
     h += hueShift;
     if (h < 0f) ++h;
     if (h > 1f) --h;
-    s = Math.Max(0f, Math.Min(1f, s + saturation));
-    l = Math.Max(0f, Math.Min(1f, l + lightness));
+    s = ColorConverter.Saturate(s + saturation);
+    l = ColorConverter.Saturate(l + lightness);
     var (or, og, ob) = HslMath.HslToRgb(h, s, l);
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(or, og, ob, a));
   }

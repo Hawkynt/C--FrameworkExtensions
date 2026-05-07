@@ -368,7 +368,6 @@ internal static class QuantizerHelper {
     // Precompute heuristic information (inverse distance to initial palette)
     var heuristic = new double[colors.Length, k];
     for (var i = 0; i < colors.Length; ++i) {
-      var (ic1, ic2, ic3, ia) = initialPalette.Select(p => p.ToNormalized()).ToArray()[0];
       for (var j = 0; j < k; ++j) {
         var (pc1, pc2, pc3, pa) = initialPalette[j].ToNormalized();
         

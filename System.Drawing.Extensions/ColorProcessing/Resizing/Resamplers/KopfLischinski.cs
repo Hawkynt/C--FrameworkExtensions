@@ -28,22 +28,26 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 
 /// <summary>
-/// Kopf-Lischinski depixelization algorithm for pixel art.
+/// Kopf-Lischinski 2011 pixel-art depixelization with all three voting heuristics
+/// (curves, sparse-pixels, islands) for diagonal-crossing resolution. Raster-only —
+/// the paper's optional Voronoi/B-spline vector output is NOT generated.
 /// </summary>
 /// <remarks>
-/// <para>Algorithm: Depixelizing Pixel Art by Kopf and Lischinski (2011)</para>
-/// <para>Reference: https://johanneskopf.de/publications/pixelart/</para>
-/// <para>Paper: "Depixelizing Pixel Art" (SIGGRAPH 2011)</para>
-/// <para></para>
-/// <para>The algorithm builds a similarity graph between pixels using <typeparamref name="TEquality"/>,
-/// resolves diagonal ambiguities using valence and curve heuristics, and produces smooth
-/// output at any target resolution by interpolating based on edge relationships.</para>
-/// <para></para>
-/// <para>This is a raster-based approximation of the original vector algorithm.</para>
+/// <para>Reference: J. Kopf &amp; D. Lischinski, "Depixelizing Pixel Art", SIGGRAPH
+/// 2011. The diagonal-crossing resolution implements the paper's §3.1 voting weights:
+/// curves (length of curve through each diagonal, bounded traversal of the similarity
+/// graph), sparse-pixels (count of each diagonal's colour in an 8×8 window — rarer
+/// wins), and islands (the diagonal whose removal would create a valence-1 isolated
+/// pixel is preserved).</para>
+/// <para>The output is a raster image at the requested target resolution. The paper's
+/// §3.2-3.4 vector pipeline (Voronoi diagram → smooth-cubic B-splines → final raster
+/// rendering with stroke/fill) is not implemented; for paper-faithful vector output use
+/// the original DePixel reference implementation.</para>
 /// </remarks>
 [ScalerInfo("Kopf-Lischinski", Author = "Kopf & Lischinski", Year = 2011,
   Url = "https://johanneskopf.de/publications/pixelart/paper/pixel.pdf",
-  Description = "Depixelizing pixel art algorithm", Category = ScalerCategory.Resampler)]
+  Description = "Kopf-Lischinski 2011 raster depixelization with all 3 voting heuristics (curves/sparse/islands)",
+  Category = ScalerCategory.Resampler)]
 public readonly struct KopfLischinski : IEdgeAwareResampler {
 
   /// <inheritdoc />
@@ -157,16 +161,24 @@ file struct KopfLischinskiKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
     var neWeight = this._equality.Equals(sw.Key, ne.Key) ? 1f : 0f;
     var nwWeight = this._equality.Equals(se.Key, nw.Key) ? 1f : 0f;
 
-    // Resolve diagonal ambiguities using heuristics
+    // Resolve diagonal ambiguities using Kopf-Lischinski 2011 §3.1's three heuristics:
+    //   (1) Curves     — diagonal that's part of the longer curve wins (bounded traversal)
+    //   (2) Sparse-pixels — diagonal of the rarer colour in an 8×8 window wins
+    //   (3) Islands    — diagonal that prevents creating a valence-1 isolated pixel wins
     if (neWeight > 0.5f && nwWeight > 0.5f) {
-      var valenceNE = this._CalculateValence(frame, sw.Key, x0, y0);
-      var valenceNW = this._CalculateValence(frame, nw.Key, x0, y0);
+      var curveLenNE = this._CurveLength(frame, sw.Key, ne.Key, x0, y0);
+      var curveLenNW = this._CurveLength(frame, nw.Key, se.Key, x0, y0);
 
-      var curveScoreNE = this._CalculateCurveScore(sw.Key, c.Key, ne.Key);
-      var curveScoreNW = this._CalculateCurveScore(nw.Key, c.Key, se.Key);
+      var sparseNE = this._SparsePixels(frame, sw.Key, x0, y0);
+      var sparseNW = this._SparsePixels(frame, nw.Key, x0, y0);
 
-      var totalNE = neWeight + valenceNE * ValenceWeight + curveScoreNE * CurveWeight;
-      var totalNW = nwWeight + valenceNW * ValenceWeight + curveScoreNW * CurveWeight;
+      var islandsNE = this._IslandsPenalty(frame, sw.Key, ne.Key, x0, y0);
+      var islandsNW = this._IslandsPenalty(frame, nw.Key, se.Key, x0, y0);
+
+      // Per paper, larger curve length / smaller sparse count / lower islands penalty
+      // are all in favour. Combine into a single score; ties broken by favouring curves.
+      var totalNE = curveLenNE * CurveWeight + (1f / Math.Max(1f, sparseNE)) * ValenceWeight + islandsNE;
+      var totalNW = curveLenNW * CurveWeight + (1f / Math.Max(1f, sparseNW)) * ValenceWeight + islandsNW;
 
       if (totalNE > totalNW)
         nwWeight *= 0.2f;
@@ -202,31 +214,105 @@ file struct KopfLischinskiKernel<TPixel, TWork, TKey, TDecode, TProject, TEncode
     dest[destY * destStride + destX] = encoder.Encode(acc.Result);
   }
 
+  /// <summary>
+  /// Curves heuristic — counts the bounded path length along same-coloured pixels in the
+  /// similarity graph through the diagonal endpoints. Per Kopf-Lischinski 2011 §3.1, the
+  /// diagonal that's part of a longer curve is favoured (preserves elongated features).
+  /// Bounded to <c>MaxTrace</c> steps in each direction to keep cost O(1) per pixel.
+  /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private float _CalculateValence(
+  private float _CurveLength(
     NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
-    in TKey cornerKey, int cx, int cy) {
-    var valence = 0f;
-
-    // Check similarity to each cardinal neighbor
-    if (this._equality.Equals(cornerKey, frame[cx, cy - 1].Key)) valence += 1f;
-    if (this._equality.Equals(cornerKey, frame[cx + 1, cy].Key)) valence += 1f;
-    if (this._equality.Equals(cornerKey, frame[cx - 1, cy].Key)) valence += 1f;
-    if (this._equality.Equals(cornerKey, frame[cx, cy + 1].Key)) valence += 1f;
-
-    // Lower valence is better (sparse features take priority)
-    return 4f - valence;
+    in TKey endA, in TKey endB, int cx, int cy) {
+    const int MaxTrace = 8;
+    var length = 1f; // the diagonal itself counts as 1 segment
+    // From sw / se direction, walk along same-colour neighbours.
+    length += this._WalkSameColour(frame, endA, cx - 1, cy + 1, MaxTrace);
+    length += this._WalkSameColour(frame, endB, cx + 1, cy - 1, MaxTrace);
+    return length;
   }
 
+  /// <summary>Count up to <paramref name="maxSteps"/> connected same-colour neighbours
+  /// starting at (sx, sy). Greedy 8-direction walk; a step is taken to whichever same-
+  /// colour neighbour hasn't been visited yet (deterministic by direction priority).</summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private float _CalculateCurveScore(in TKey p1, in TKey center, in TKey p2) {
-    var score = 0f;
+  private float _WalkSameColour(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    in TKey colour, int sx, int sy, int maxSteps) {
+    var count = 0f;
+    var x = sx;
+    var y = sy;
+    var prevX = sx + 1; // arbitrary "came from" so we don't immediately reverse
+    var prevY = sy + 1;
+    for (var step = 0; step < maxSteps; ++step) {
+      // Find next same-colour neighbour that isn't where we came from.
+      var found = false;
+      for (var dy = -1; dy <= 1 && !found; ++dy)
+      for (var dx = -1; dx <= 1; ++dx) {
+        if (dx == 0 && dy == 0) continue;
+        var nx = x + dx;
+        var ny = y + dy;
+        if (nx == prevX && ny == prevY) continue;
+        if (this._equality.Equals(colour, frame[nx, ny].Key)) {
+          prevX = x; prevY = y;
+          x = nx; y = ny;
+          ++count;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break;
+    }
+    return count;
+  }
 
-    // Check if the colors form a continuous curve
-    if (this._equality.Equals(p1, center)) score += 1f;
-    if (this._equality.Equals(center, p2)) score += 1f;
+  /// <summary>
+  /// Sparse-pixels heuristic — counts pixels matching <paramref name="colour"/> within
+  /// an 8×8 window around (cx, cy). Per paper, the diagonal of the colour with smaller
+  /// component size (here approximated by raw count in a finite window) wins, preserving
+  /// rare features against dense backgrounds.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float _SparsePixels(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    in TKey colour, int cx, int cy) {
+    var count = 0f;
+    for (var dy = -3; dy <= 4; ++dy)
+    for (var dx = -3; dx <= 4; ++dx) {
+      if (this._equality.Equals(colour, frame[cx + dx, cy + dy].Key))
+        count += 1f;
+    }
+    return count;
+  }
 
-    return score;
+  /// <summary>
+  /// Islands heuristic — inverted valence proxy. If either diagonal endpoint has only one
+  /// same-colour neighbour (the diagonal itself), removing the diagonal would create an
+  /// isolated valence-1 pixel — we want to keep that diagonal. Returns a positive bonus
+  /// if connecting this diagonal AVOIDS creating an island.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private float _IslandsPenalty(
+    NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+    in TKey endA, in TKey endB, int cx, int cy) {
+    var bonus = 0f;
+    // Endpoint A is at (cx-1, cy+1). Count its same-colour cardinal neighbours OTHER
+    // than the diagonal partner (cx+1, cy-1).
+    var valenceA = 0;
+    if (this._equality.Equals(endA, frame[cx - 1, cy].Key)) ++valenceA;     // up
+    if (this._equality.Equals(endA, frame[cx, cy + 1].Key)) ++valenceA;     // right (back toward c)
+    if (this._equality.Equals(endA, frame[cx - 2, cy + 1].Key)) ++valenceA; // left
+    if (this._equality.Equals(endA, frame[cx - 1, cy + 2].Key)) ++valenceA; // down
+    if (valenceA == 0) bonus += 1f;
+
+    var valenceB = 0;
+    if (this._equality.Equals(endB, frame[cx + 1, cy].Key)) ++valenceB;     // down (back)
+    if (this._equality.Equals(endB, frame[cx, cy - 1].Key)) ++valenceB;     // left (back)
+    if (this._equality.Equals(endB, frame[cx + 2, cy - 1].Key)) ++valenceB; // right
+    if (this._equality.Equals(endB, frame[cx + 1, cy - 2].Key)) ++valenceB; // up
+    if (valenceB == 0) bonus += 1f;
+
+    return bonus;
   }
 }
 

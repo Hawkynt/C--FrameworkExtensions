@@ -29,14 +29,14 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Resizing.Rescalers;
 
 /// <summary>
-/// CRT-Royale scaler - advanced CRT simulation with phosphor masks, bloom, and halation.
+/// Stylistic CRT-style upscale inspired by TroggleMonkey's CRT-Royale shader. NOT a
+/// port: the shader's multipass bloom, halation (wide-blur of luma added back),
+/// luma-dependent Gaussian scanlines, and phosphor masks are NOT implemented; this
+/// filter uses a fixed darkening pattern with token bloom/halation blends.
 /// </summary>
 /// <remarks>
-/// <para>Reference: https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale</para>
-/// <para>Algorithm: Most comprehensive CRT simulation featuring phosphor mask patterns,
-/// bloom (luminance-weighted brightness boost), halation (electron scattering),
-/// and Gaussian scanlines with luminance-dependent thickness.</para>
-/// <para>Developed by TroggleMonkey for realistic CRT emulation.</para>
+/// <para>Reference (cited but not faithfully implemented):
+/// https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale</para>
 /// </remarks>
 [ScalerInfo("CRT-Royale", Author = "TroggleMonkey",
   Url = "https://github.com/libretro/slang-shaders/tree/master/crt/shaders/crt-royale",

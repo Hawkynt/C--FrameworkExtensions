@@ -38,7 +38,7 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
 [FilterInfo("InkOutlines",
   Description = "Ink-style outlines darkening edges over original color", Category = FilterCategory.Artistic)]
 public readonly struct InkOutlines(float intensity, int radius = 1) : IPixelFilter, IFrameFilter {
-  private readonly float _intensity = Math.Max(0f, Math.Min(1f, intensity));
+  private readonly float _intensity = ColorConverter.Saturate(intensity);
   private readonly int _radius = Math.Max(1, radius);
 
   public InkOutlines() : this(0.8f, 1) { }
@@ -115,7 +115,7 @@ file readonly struct InkOutlinesFrameKernel<TPixel, TWork, TKey, TDecode, TProje
   private static float _Lum(in NeighborPixel<TWork, TKey> p) {
     var px = p.Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

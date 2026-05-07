@@ -113,7 +113,67 @@ file readonly struct CannyEdgeFrameKernel<TPixel, TWork, TKey, TDecode, TProject
   private static float _Lum(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
     var px = frame[x, y].Work;
     var (r, g, b, _) = ColorConverter.GetNormalizedRgba(in px);
-    return ColorMatrices.BT601_R * r + ColorMatrices.BT601_G * g + ColorMatrices.BT601_B * b;
+    return ColorConverter.LuminanceFromRgb(r, g, b);
+  }
+
+  /// <summary>
+  /// Hysteresis tracking: returns true if a strong-edge pixel is reachable from (x, y)
+  /// via an 8-connected path of weak (or strong) pixels within a bounded search radius.
+  /// Bounded so we don't scan the whole image per pixel; depth=4 (~25-cell BFS) is
+  /// adequate for typical edge thinning.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private bool _ReachesStrongEdge(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame,
+      int sx, int sy, int unused) {
+    const int MaxDepth = 4;
+    // Iterative DFS using 8-neighbour expansion. Visited-set is a small fixed-size
+    // bitmask keyed on (dx, dy) within ±MaxDepth (a 9×9 grid).
+    Span<bool> visited = stackalloc bool[(2 * MaxDepth + 1) * (2 * MaxDepth + 1)];
+    Span<(int x, int y)> stack = stackalloc (int, int)[81];
+    var top = 0;
+    stack[top++] = (sx, sy);
+    visited[MaxDepth * (2 * MaxDepth + 1) + MaxDepth] = true;
+
+    while (top > 0) {
+      var (x, y) = stack[--top];
+      // Test all 8 neighbours.
+      for (var dy = -1; dy <= 1; ++dy)
+      for (var dx = -1; dx <= 1; ++dx) {
+        if (dx == 0 && dy == 0) continue;
+        var nx = x + dx;
+        var ny = y + dy;
+        var rdx = nx - sx + MaxDepth;
+        var rdy = ny - sy + MaxDepth;
+        if (rdx < 0 || rdx > 2 * MaxDepth || rdy < 0 || rdy > 2 * MaxDepth) continue;
+        var idx = rdy * (2 * MaxDepth + 1) + rdx;
+        if (visited[idx]) continue;
+        visited[idx] = true;
+
+        var nMag = _SobelMag(frame, nx, ny);
+        if (nMag >= highThreshold) return true;
+        if (nMag >= lowThreshold && top < stack.Length) {
+          stack[top++] = (nx, ny);
+        }
+      }
+    }
+    return false;
+  }
+
+  /// <summary>Sobel gradient magnitude at (x, y), used by NMS to compare against neighbour
+  /// gradient magnitudes per Canny 1986.</summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static float _SobelMag(NeighborFrame<TPixel, TWork, TKey, TDecode, TProject> frame, int x, int y) {
+    var tl = _Lum(frame, x - 1, y - 1);
+    var t = _Lum(frame, x, y - 1);
+    var tr = _Lum(frame, x + 1, y - 1);
+    var l = _Lum(frame, x - 1, y);
+    var ri = _Lum(frame, x + 1, y);
+    var bl = _Lum(frame, x - 1, y + 1);
+    var bo = _Lum(frame, x, y + 1);
+    var br = _Lum(frame, x + 1, y + 1);
+    var gx = -tl + tr - 2f * l + 2f * ri - bl + br;
+    var gy = -tl - 2f * t - tr + bl + 2f * bo + br;
+    return (float)Math.Sqrt(gx * gx + gy * gy);
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,33 +199,46 @@ file readonly struct CannyEdgeFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     var gy = -tl - 2f * t - tr + bl + 2f * bo + br;
     var edgeMag = (float)Math.Sqrt(gx * gx + gy * gy);
 
-    // Non-maximum suppression (simplified)
+    // Non-maximum suppression per Canny 1986: pick the two neighbours along the gradient
+    // direction (not perpendicular to it), compute their gradient magnitudes (Sobel
+    // applied at each), and suppress the centre if it's not a local maximum among the
+    // three. Simplified to one-pixel-step sampling (no sub-pixel interpolation along the
+    // gradient direction; OpenCV uses linear interpolation between adjacent neighbours
+    // — a defensible simplification for an integer-grid filter).
     var dir = (float)Math.Atan2(gy, gx);
     var absDir = dir < 0 ? dir + (float)Math.PI : dir;
-    float n1, n2;
+    int nx1, ny1, nx2, ny2;
     if (absDir < Math.PI / 8 || absDir >= 7 * Math.PI / 8) {
-      n1 = _Lum(frame, destX - 1, destY);
-      n2 = _Lum(frame, destX + 1, destY);
+      // Gradient horizontal → neighbours at (-1, 0) and (+1, 0)
+      nx1 = -1; ny1 = 0; nx2 = 1; ny2 = 0;
     } else if (absDir < 3 * Math.PI / 8) {
-      n1 = _Lum(frame, destX + 1, destY - 1);
-      n2 = _Lum(frame, destX - 1, destY + 1);
+      // Gradient diagonal NE-SW → neighbours at (+1, -1) and (-1, +1)
+      nx1 = 1; ny1 = -1; nx2 = -1; ny2 = 1;
     } else if (absDir < 5 * Math.PI / 8) {
-      n1 = _Lum(frame, destX, destY - 1);
-      n2 = _Lum(frame, destX, destY + 1);
+      // Gradient vertical → neighbours at (0, -1) and (0, +1)
+      nx1 = 0; ny1 = -1; nx2 = 0; ny2 = 1;
     } else {
-      n1 = _Lum(frame, destX - 1, destY - 1);
-      n2 = _Lum(frame, destX + 1, destY + 1);
+      // Gradient diagonal NW-SE → neighbours at (-1, -1) and (+1, +1)
+      nx1 = -1; ny1 = -1; nx2 = 1; ny2 = 1;
     }
-
-    // Suppress if not a local maximum along gradient direction
-    var centerLum = _Lum(frame, destX, destY);
-    var diff1 = Math.Abs(centerLum - n1);
-    var diff2 = Math.Abs(centerLum - n2);
-    if (edgeMag < diff1 || edgeMag < diff2)
+    var mag1 = _SobelMag(frame, destX + nx1, destY + ny1);
+    var mag2 = _SobelMag(frame, destX + nx2, destY + ny2);
+    if (edgeMag < mag1 || edgeMag < mag2)
       edgeMag = 0f;
 
-    // Hysteresis thresholding
-    var v = edgeMag >= highThreshold ? 1f : edgeMag >= lowThreshold ? 0.5f : 0f;
+    // Hysteresis tracking per Canny 1986: a pixel is a true edge iff it's STRONG itself,
+    // OR it's WEAK and reachable through a chain of WEAK pixels to a STRONG pixel via
+    // 8-connectivity. Implemented as a bounded BFS: if this pixel is strong, output 1.
+    // If weak, search the 8-neighbourhood within `maxDepth` steps for any strong pixel
+    // along an unbroken weak chain — output 1 if found, else 0.
+    float v;
+    if (edgeMag >= highThreshold) {
+      v = 1f;
+    } else if (edgeMag >= lowThreshold) {
+      v = _ReachesStrongEdge(frame, destX, destY, 0) ? 1f : 0f;
+    } else {
+      v = 0f;
+    }
 
     dest[destY * destStride + destX] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(v, v, v, a));
   }

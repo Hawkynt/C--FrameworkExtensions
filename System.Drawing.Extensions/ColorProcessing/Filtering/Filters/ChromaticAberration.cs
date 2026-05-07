@@ -128,10 +128,15 @@ file readonly struct ChromaticAberrationFrameKernel<TPixel, TWork, TKey, TDecode
     var ndy = dy / dist;
     var shift = strength * (dist / Math.Max(cx, cy));
 
-    var rsx = (int)Math.Round(destX + ndx * shift);
-    var rsy = (int)Math.Round(destY + ndy * shift);
-    var bsx = (int)Math.Round(destX - ndx * shift);
-    var bsy = (int)Math.Round(destY - ndy * shift);
+    // Canonical transverse CA convention (Hecht "Optics" §6.3.2): red is magnified
+    // less than blue at typical positive-lens dispersion, so in the captured image
+    // red appears at a smaller radius than blue (relative to green). Inverse warp:
+    // red samples from source closer to center, blue samples from further out —
+    // producing the familiar blue/purple fringe on the outside of bright edges.
+    var rsx = (int)Math.Round(destX - ndx * shift);
+    var rsy = (int)Math.Round(destY - ndy * shift);
+    var bsx = (int)Math.Round(destX + ndx * shift);
+    var bsy = (int)Math.Round(destY + ndy * shift);
 
     var rPixel = frame[rsx, rsy].Work;
     var gPixel = frame[destX, destY].Work;

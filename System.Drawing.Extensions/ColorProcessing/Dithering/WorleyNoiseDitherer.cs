@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -87,7 +89,7 @@ public readonly struct WorleyNoiseDitherer : IDitherer {
   /// <param name="seed">Integer seed for feature-point placement. Default 42.</param>
   /// <param name="latticeScale">Voronoi cell size in pixels. Default 8.</param>
   public WorleyNoiseDitherer(float strength = 1f, int seed = 42, int latticeScale = _LATTICE_SCALE_DEFAULT) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._seed = seed;
     this._latticeScale = Math.Max(1, latticeScale);
   }

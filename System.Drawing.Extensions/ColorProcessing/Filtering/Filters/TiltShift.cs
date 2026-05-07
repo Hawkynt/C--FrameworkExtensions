@@ -38,8 +38,8 @@ namespace Hawkynt.ColorProcessing.Filtering.Filters;
   Description = "Tilt-shift miniature effect with selective focus band", Category = FilterCategory.Artistic)]
 public readonly struct TiltShift(float focusPosition, float focusWidth = 0.2f, int blurRadius = 3)
   : IPixelFilter, IFrameFilter {
-  private readonly float _focusPosition = Math.Max(0f, Math.Min(1f, focusPosition));
-  private readonly float _focusWidth = Math.Max(0f, Math.Min(1f, focusWidth));
+  private readonly float _focusPosition = ColorConverter.Saturate(focusPosition);
+  private readonly float _focusWidth = ColorConverter.Saturate(focusWidth);
   private readonly int _blurRadius = Math.Max(1, blurRadius);
 
   public TiltShift() : this(0.5f, 0.2f, 3) { }
@@ -117,7 +117,7 @@ file readonly struct TiltShiftFrameKernel<TPixel, TWork, TKey, TDecode, TProject
     if (edge1 <= edge0)
       return x >= edge0 ? 1f : 0f;
 
-    var t = Math.Max(0f, Math.Min(1f, (x - edge0) / (edge1 - edge0)));
+    var t = ColorConverter.Saturate((x - edge0) / (edge1 - edge0));
     return t * t * (3f - 2f * t);
   }
 

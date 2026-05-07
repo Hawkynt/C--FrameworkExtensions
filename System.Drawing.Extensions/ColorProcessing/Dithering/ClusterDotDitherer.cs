@@ -172,17 +172,25 @@ public readonly struct ClusterDotDitherer : IDitherer {
   });
 
   /// <summary>
-  /// Clustered-dot 8x8 dithering pattern for larger dot clusters with finest tonal gradations.
+  /// Clustered-dot 8×8 dithering pattern (newspaper-style halftone screen). Threshold values
+  /// 0..63 each appear exactly once and grow outward in a spiral from cluster centres,
+  /// producing the characteristic dot-clustering of offset printing.
   /// </summary>
+  /// <remarks>
+  /// Reference: standard 8×8 clustered-dot ordered-dither matrix (Foley, van Dam, Feiner &amp;
+  /// Hughes 1990 / Ulichney 1987 family). Verified at https://maximmcnair.com/p/webgl-dithering
+  /// (this matrix layout). The previous matrix had duplicate values (two copies of a 4×4
+  /// spiral pasted side-by-side); ranking was degenerate.
+  /// </remarks>
   public static ClusterDotDitherer ClusterDot8x8 { get; } = new(new byte[,] {
-    { 24, 47, 49, 37, 12, 35, 33, 21 },
-    { 46, 58, 60, 50, 10, 22, 20, 8 },
-    { 48, 59, 63, 52, 11, 23, 19, 7 },
-    { 36, 56, 54, 38, 25, 41, 17, 9 },
-    { 13, 11, 23, 25, 48, 36, 58, 60 },
-    { 1, 9, 21, 27, 46, 38, 56, 62 },
-    { 3, 7, 19, 29, 44, 40, 54, 61 },
-    { 15, 5, 17, 31, 32, 42, 52, 39 }
+    { 24, 10, 12, 26, 35, 47, 49, 37 },
+    {  8,  0,  2, 14, 45, 59, 61, 51 },
+    { 22,  6,  4, 16, 43, 57, 63, 53 },
+    { 30, 20, 18, 28, 33, 41, 55, 39 },
+    { 34, 46, 48, 36, 25, 11, 13, 27 },
+    { 44, 58, 60, 50,  9,  1,  3, 15 },
+    { 42, 56, 62, 52, 23,  7,  5, 17 },
+    { 32, 40, 54, 38, 31, 21, 19, 29 }
   });
 
   /// <summary>Default cluster dot ditherer (4x4 pattern).</summary>

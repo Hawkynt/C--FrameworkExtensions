@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using Hawkynt.ColorProcessing.Metrics;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -110,9 +112,9 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
         var pr = c1.ToFloat() + errR[x, localY];
         var pg = c2.ToFloat() + errG[x, localY];
         var pb = c3.ToFloat() + errB[x, localY];
-        var adjR = Math.Max(0f, Math.Min(1f, pr));
-        var adjG = Math.Max(0f, Math.Min(1f, pg));
-        var adjB = Math.Max(0f, Math.Min(1f, pb));
+        var adjR = ColorConverter.Saturate(pr);
+        var adjG = ColorConverter.Saturate(pg);
+        var adjB = ColorConverter.Saturate(pb);
 
         var adj = ColorFactory.FromNormalized_4<TWork>(
           UNorm32.FromFloatClamped(adjR),
@@ -134,7 +136,7 @@ public readonly struct AdaptiveVarianceDiffusionDitherer : IDitherer {
         var alphaVar = _EstimateVariance(source, x, y, sourceStride, width, endY);
         // α = 1 for variance > 0.02 (textured); α = 0 for variance < 0.002
         // (flat). Linear ramp in-between.
-        var a = Math.Max(0f, Math.Min(1f, (alphaVar - 0.002f) / 0.018f));
+        var a = ColorConverter.Saturate((alphaVar - 0.002f) / 0.018f);
         var fsShare = 1f - a;
         var atkShare = a * 0.75f;
 

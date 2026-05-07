@@ -29,6 +29,7 @@ using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Metrics.Rgb;
 using Hawkynt.ColorProcessing.Resizing;
+using Hawkynt.ColorProcessing.Resizing.Rescalers;
 using Hawkynt.ColorProcessing.Spaces.Perceptual;
 using Hawkynt.ColorProcessing.Storage;
 using Hawkynt.ColorProcessing.Working;
@@ -247,10 +248,12 @@ public static class BitmapScalerExtensions {
     var callback = new UpscaleCallback<
       Bgra8888, Bgra8888,
       IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(source);
-    return scaler.InvokeKernel<
+    var result = scaler.InvokeKernel<
       Bgra8888, Bgra8888, Bgra8888,
       CompuPhaseSquared4<Bgra8888>, ExactEquality<Bgra8888>,
       Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+    _ApplyPostRescaleHook(scaler, result);
+    return result;
   }
 
   /// <summary>
@@ -262,10 +265,26 @@ public static class BitmapScalerExtensions {
     var callback = new UpscaleCallback<
       LinearRgbaF, OklabF,
       Srgb32ToLinearRgbaF, LinearRgbaFToOklabF, LinearRgbaFToSrgb32>(source);
-    return scaler.InvokeKernel<
+    var result = scaler.InvokeKernel<
       LinearRgbaF, OklabF, Bgra8888,
       Euclidean3F<OklabF>, ThresholdEquality3<OklabF>,
       Color4FLerp<LinearRgbaF>, LinearRgbaFToSrgb32, Bitmap>(callback, new(0.02f, 0.04f, 0.04f));
+    _ApplyPostRescaleHook(scaler, result);
+    return result;
+  }
+
+  /// <summary>
+  /// Per-rescaler post-processing dispatch. SuperXbr uses this to invoke its pass-2
+  /// filter over the already-rescaled (pass-0+1) bitmap, producing canonical 3-pass
+  /// Super-xBR output without the caller knowing about the multi-pass orchestration.
+  /// JIT specialises this method per <typeparamref name="TScaler"/> so the typeof
+  /// comparison is constant-folded; non-SuperXbr scalers pay zero cost.
+  /// </summary>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static void _ApplyPostRescaleHook<TScaler>(TScaler scaler, Bitmap result)
+    where TScaler : struct, IRescaler {
+    if (typeof(TScaler) == typeof(SuperXbr))
+      SuperXbrPass2.Apply(result);
   }
 
   #region Convenience Overload Helpers

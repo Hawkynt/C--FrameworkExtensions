@@ -25,6 +25,7 @@ using Hawkynt.ColorProcessing;
 using Hawkynt.ColorProcessing.Codecs;
 using Hawkynt.ColorProcessing.ColorMath;
 using Hawkynt.ColorProcessing.Filtering;
+using Hawkynt.ColorProcessing.Filtering.Filters;
 using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Metrics.Rgb;
 using Hawkynt.ColorProcessing.Resizing;
@@ -52,6 +53,13 @@ public static class BitmapFilterExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Bitmap ApplyFilter<TFilter>(TFilter filter, ScalerQuality quality = ScalerQuality.Fast)
       where TFilter : struct, IPixelFilter {
+      // Special-case dispatch: filters whose canonical algorithm is whole-image rather
+      // than per-pixel kernel-driven. Each branch implements the published algorithm via
+      // a static helper (e.g., FFT-HQS for L0Smoothing); the user sees the same
+      // ApplyFilter API.
+      if (filter is L0Smoothing l0)
+        return L0SmoothingFftHqs.Apply(@this, l0.Lambda);
+
       // Frame-access path for filters with large neighborhoods (uses resampler pipeline)
       if (filter is IFrameFilter { UsesFrameAccess: true } ff)
         return _ApplyViaFrame(@this, ff);
@@ -78,6 +86,107 @@ public static class BitmapFilterExtensions {
     public Bitmap ApplyFilter<TFilter>(ScalerQuality quality = ScalerQuality.Fast)
       where TFilter : struct, IPixelFilter
       => @this.ApplyFilter(new TFilter(), quality);
+
+    /// <summary>
+    /// Applies a pixel filter with FULLY-CONFIGURABLE working/key/storage color spaces,
+    /// metric, equality predicate, and interpolator. The user picks every type parameter;
+    /// the JIT specialises the entire pipeline at the call site (zero per-pixel virtual
+    /// dispatch). Use this when you need to tune e.g. the equality threshold or work
+    /// in a non-default color space (Oklab vs Lab vs YCbCr vs ...).
+    /// </summary>
+    /// <remarks>
+    /// <para>For convenience the lib provides preset combinations via the simpler
+    /// <see cref="ApplyFilter{TFilter}(TFilter, ScalerQuality)"/> overload. Use this
+    /// fully-generic form when those presets don't fit (e.g., custom thresholds,
+    /// custom working space).</para>
+    /// </remarks>
+    /// <typeparam name="TFilter">The filter type.</typeparam>
+    /// <typeparam name="TWork">The working color type (for interpolation).</typeparam>
+    /// <typeparam name="TKey">The key color type (for similarity / equality).</typeparam>
+    /// <typeparam name="TDecode">The decoder (Bgra8888 → TWork).</typeparam>
+    /// <typeparam name="TProject">The projector (TWork → TKey).</typeparam>
+    /// <typeparam name="TEncode">The encoder (TWork → Bgra8888).</typeparam>
+    /// <typeparam name="TMetric">The color distance metric.</typeparam>
+    /// <typeparam name="TEquality">The color equality predicate.</typeparam>
+    /// <typeparam name="TLerp">The color interpolation type.</typeparam>
+    /// <param name="filter">The filter instance.</param>
+    /// <param name="equality">The equality predicate instance.</param>
+    /// <param name="lerp">The interpolation instance.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap ApplyFilter<TFilter, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(
+      TFilter filter,
+      TEquality equality = default,
+      TLerp lerp = default)
+      where TFilter : struct, IPixelFilter
+      where TWork : unmanaged, IColorSpace
+      where TKey : unmanaged, IColorSpace
+      where TDecode : struct, IDecode<Bgra8888, TWork>
+      where TProject : struct, IProject<TWork, TKey>
+      where TEncode : struct, IEncode<TWork, Bgra8888>
+      where TMetric : struct, IColorMetric<TKey>, INormalizedMetric
+      where TEquality : struct, IColorEquality<TKey>
+      where TLerp : struct, ILerp<TWork> {
+      var callback = new FilterCallback<TWork, TKey, TDecode, TProject, TEncode>(@this);
+      return filter.InvokeKernel<TWork, TKey, Bgra8888, TMetric, TEquality, TLerp, TEncode, Bitmap>(
+        callback, equality, lerp);
+    }
+
+    /// <summary>
+    /// Applies a filter with a custom equality predicate, keeping default Bgra8888
+    /// identity pipeline (no color-space conversion). Convenience for the common case
+    /// of "same algorithm, different equality threshold".
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap ApplyFilterWithEquality<TFilter, TEquality>(
+      TFilter filter,
+      TEquality equality)
+      where TFilter : struct, IPixelFilter
+      where TEquality : struct, IColorEquality<Bgra8888> {
+      var callback = new FilterCallback<
+        Bgra8888, Bgra8888,
+        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(@this);
+      return filter.InvokeKernel<
+        Bgra8888, Bgra8888, Bgra8888,
+        CompuPhaseSquared4<Bgra8888>, TEquality,
+        Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback, equality);
+    }
+
+    /// <summary>
+    /// Applies a filter with a custom distance metric (used by filters that compute
+    /// per-pixel similarity weights, e.g. bilateral / NLM / guided-filter). Keeps
+    /// default Bgra8888 identity pipeline.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap ApplyFilterWithMetric<TFilter, TMetric>(TFilter filter)
+      where TFilter : struct, IPixelFilter
+      where TMetric : struct, IColorMetric<Bgra8888>, INormalizedMetric {
+      var callback = new FilterCallback<
+        Bgra8888, Bgra8888,
+        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(@this);
+      return filter.InvokeKernel<
+        Bgra8888, Bgra8888, Bgra8888,
+        TMetric, ExactEquality<Bgra8888>,
+        Color4BLerpInt<Bgra8888>, IdentityEncode<Bgra8888>, Bitmap>(callback);
+    }
+
+    /// <summary>
+    /// Applies a filter with a custom interpolator (used by filters that lerp adjacent
+    /// pixel values, e.g. blur / unsharp / sharpen). Keeps default Bgra8888 identity.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Bitmap ApplyFilterWithLerp<TFilter, TLerp>(
+      TFilter filter,
+      TLerp lerp)
+      where TFilter : struct, IPixelFilter
+      where TLerp : struct, ILerp<Bgra8888> {
+      var callback = new FilterCallback<
+        Bgra8888, Bgra8888,
+        IdentityDecode<Bgra8888>, IdentityProject<Bgra8888>, IdentityEncode<Bgra8888>>(@this);
+      return filter.InvokeKernel<
+        Bgra8888, Bgra8888, Bgra8888,
+        CompuPhaseSquared4<Bgra8888>, ExactEquality<Bgra8888>,
+        TLerp, IdentityEncode<Bgra8888>, Bitmap>(callback, default, lerp);
+    }
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]

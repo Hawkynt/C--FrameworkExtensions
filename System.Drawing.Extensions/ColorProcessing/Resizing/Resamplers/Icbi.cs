@@ -30,17 +30,20 @@ namespace Hawkynt.ColorProcessing.Resizing.Resamplers;
 /// Iterative Curvature-Based Interpolation (ICBI) resampler.
 /// </summary>
 /// <remarks>
-/// <para>Algorithm: ICBI by Li and Orchard (2001)</para>
-/// <para>Reference: https://ieeexplore.ieee.org/document/977589</para>
-/// <para>Paper: "Image Interpolation by Curvature Continuation" - IEEE Trans. Image Processing</para>
-/// <para>Performs bilinear interpolation with structure tensor analysis and curvature-minimizing
-/// correction. In edge regions, interpolates along the detected edge direction.
-/// In smooth regions, applies Laplacian smoothing correction.</para>
+/// <para>Algorithm: ICBI by Giachetti and Asuni.</para>
+/// <para>Original: A. Giachetti and N. Asuni, "Fast Artifacts-Free Image Interpolation",
+/// BMVC 2008. Extended: "Real Time Artifact Free Image Upscaling", IEEE Transactions
+/// on Image Processing, vol. 20, no. 10, pp. 2760-2768, October 2011.</para>
+/// <para>Reference site: http://www.andreagiachetti.it/icbi/</para>
+/// <para>Performs bilinear interpolation with structure-tensor analysis and
+/// curvature-minimizing correction. In edge regions, interpolates along the diagonal
+/// with the lower second-order derivative; then iteratively refines values to keep
+/// local curvatures continuous. In smooth regions, applies Laplacian smoothing.</para>
 /// <para>Adapted as single-pass resampler with configurable correction strength.</para>
 /// </remarks>
-[ScalerInfo("ICBI", Author = "Li & Orchard", Year = 2001,
-  Url = "https://ieeexplore.ieee.org/document/977589",
-  Description = "Curvature-based interpolation with structure tensor analysis", Category = ScalerCategory.Resampler)]
+[ScalerInfo("ICBI", Author = "Giachetti & Asuni", Year = 2011,
+  Url = "http://www.andreagiachetti.it/icbi/",
+  Description = "Iterative curvature-based interpolation with structure-tensor analysis", Category = ScalerCategory.Resampler)]
 public readonly struct Icbi : IResampler {
 
   private readonly float _coherenceThreshold;

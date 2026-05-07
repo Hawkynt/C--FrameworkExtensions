@@ -26,6 +26,8 @@ using Hawkynt.ColorProcessing.Metrics;
 using Hawkynt.ColorProcessing.Storage;
 using MethodImplOptions = Utilities.MethodImplOptions;
 
+using Hawkynt.ColorProcessing.ColorMath;
+
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
@@ -97,7 +99,7 @@ public readonly struct GoldNoiseDitherer : IDitherer {
   /// different slice of the same low-discrepancy field. Default 42.
   /// </param>
   public GoldNoiseDitherer(float strength = 1f, int seed = 42) {
-    this._strength = Math.Max(0f, Math.Min(1f, strength));
+    this._strength = ColorConverter.Saturate(strength);
     this._seed = seed;
   }
 

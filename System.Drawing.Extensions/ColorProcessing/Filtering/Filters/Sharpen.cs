@@ -56,7 +56,14 @@ public readonly struct Sharpen(float strength = 0.5f) : IPixelFilter {
     => callback.Invoke(new SharpenKernel<TWork, TKey, TPixel, TLerp, TEncode>(lerp, this._strength));
 
   /// <summary>Gets the default Sharpen filter (0.5 strength).</summary>
-  public static Sharpen Default => new();
+  /// <remarks>
+  /// Must pass strength explicitly. C# primary-constructor parameter defaults only apply
+  /// when the primary ctor is invoked with arguments; the parameterless <c>new()</c> takes
+  /// the struct's zero-initialised default, leaving <c>_strength = 0</c> and turning this
+  /// filter into a no-op. The argument-explicit form <c>new Sharpen(0.5f)</c> is required
+  /// for the documented "0.5 default" behaviour.
+  /// </remarks>
+  public static Sharpen Default => new(0.5f);
 }
 
 #region Sharpen 1x Kernel
@@ -87,9 +94,9 @@ file readonly struct SharpenKernel<TWork, TKey, TPixel, TLerp, TEncode>(TLerp le
     var (cr, cg, cb, ca) = ColorConverter.GetNormalizedRgba(in pixel);
     var (ar, ag, ab, _) = ColorConverter.GetNormalizedRgba(in avg);
 
-    var sr = Math.Max(0f, Math.Min(1f, cr + strength * (cr - ar)));
-    var sg = Math.Max(0f, Math.Min(1f, cg + strength * (cg - ag)));
-    var sb = Math.Max(0f, Math.Min(1f, cb + strength * (cb - ab)));
+    var sr = ColorConverter.Saturate(cr + strength * (cr - ar));
+    var sg = ColorConverter.Saturate(cg + strength * (cg - ag));
+    var sb = ColorConverter.Saturate(cb + strength * (cb - ab));
 
     dest[0] = encoder.Encode(ColorConverter.FromNormalizedRgba<TWork>(sr, sg, sb, ca));
   }
