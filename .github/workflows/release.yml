@@ -1,0 +1,63 @@
+name: Release
+
+# Stable release — MANUAL dispatch only. This is the explicit "package + publish"
+# action: it runs CI, packs every NuGet package at its OWN csproj <Version> +
+# commit count (stamped by scripts/version.pl), pushes them to nuget.org, then
+# cuts a dated GitHub Release.
+#
+# Versions are never taken from a git tag. Because each package carries its own
+# version, there is no single repo version, so the repo-level marker is the date:
+# the Release/tag is `vyyyyMMdd`. Nightlies happen automatically (nightly.yml).
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why are you cutting this release? (optional, for the audit log)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    uses: ./.github/workflows/_build.yml
+    with:
+      push-nuget: true
+    secrets:
+      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute release marker
+        run: echo "REL=v$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: dist
+      - name: Update changelog
+        run: node ".github/workflows/scripts/update-changelog.mjs" --release "$REL" || true
+      - name: Commit changelog (if it changed)
+        run: |
+          if ! git diff --quiet -- CHANGELOG.md; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add CHANGELOG.md
+            git commit -m "* update changelog for $REL [skip ci]"
+            git push
+          fi
+      - name: Create GitHub Release (dated marker; tags vyyyyMMdd)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.REL }}
+          name: ${{ env.REL }}
+          files: dist/*.nupkg
+          generate_release_notes: true

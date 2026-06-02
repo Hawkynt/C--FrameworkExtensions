@@ -1,0 +1,52 @@
+name: _build
+
+# Internal reusable building block: pack the publishable packages and,
+# optionally, push them to NuGet. Called by release.yml (push=true) and
+# nightly.yml (push=false). Same 6 projects the original NewBuild.yml shipped.
+on:
+  workflow_call:
+    inputs:
+      push-nuget:
+        description: Push the packed .nupkg files to nuget.org
+        type: boolean
+        default: false
+    secrets:
+      NUGET_TOKEN:
+        required: false
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      - name: Stamp versions
+        run: perl ".github/workflows/scripts/version.pl" --stamp
+      - name: Pack packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          for p in \
+            Backports/Backports.csproj \
+            Corlib.Extensions/Corlib.Extensions.csproj \
+            PresentationCore.Extensions/PresentationCore.Extensions.csproj \
+            System.Drawing.Extensions/System.Drawing.Extensions.csproj \
+            System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj \
+            System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj; do
+            dotnet pack "$p" --configuration Release --output ./artifacts
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+      - name: Push to NuGet
+        if: ${{ inputs.push-nuget }}
+        run: dotnet nuget push ./artifacts/*.nupkg -k "$NUGET_AUTH_TOKEN" -s https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}

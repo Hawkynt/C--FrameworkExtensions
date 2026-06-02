@@ -1,0 +1,70 @@
+name: CI
+
+# Event-driven (no cron). Replaces the old NewBuild.yml + Tests.yml.
+# release.yml and nightly.yml reuse this via `workflow_call` / `workflow_run`.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_call: {}
+
+jobs:
+  # Cross-platform packages must compile on Linux. ASP.NET / Office / Win32 are
+  # intentionally excluded here (Windows-only surfaces) — same set the original
+  # NewBuild.yml built.
+  build:
+    name: build (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                       # version.pl counts commits for the build number
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      - run: dotnet --info
+      - name: Stamp versions
+        run: perl ".github/workflows/scripts/version.pl" --stamp
+      - name: Build cross-platform packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for p in \
+            Backports/Backports.csproj \
+            Corlib.Extensions/Corlib.Extensions.csproj \
+            PresentationCore.Extensions/PresentationCore.Extensions.csproj \
+            System.Drawing.Extensions/System.Drawing.Extensions.csproj \
+            System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj \
+            System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj; do
+            echo "::group::build $p"
+            dotnet restore "$p"
+            dotnet build "$p" --no-restore --configuration Release
+            echo "::endgroup::"
+          done
+
+  # NB: tests run on WINDOWS ONLY — the test runner misbehaves on ubuntu (not
+  # our code). Preserved verbatim from the original Tests.yml, including the
+  # multi-SDK install and the Debug/Release x AnyCPU/x86/x64 matrix.
+  test:
+    name: test (windows)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+        architecture: [AnyCPU, x86, x64]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.x
+            8.x
+            6.x
+            5.x
+            3.1
+      - name: Test
+        run: dotnet test "Tests/Corlib.Tests/Corlib.Tests.csproj" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620

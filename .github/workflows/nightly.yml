@@ -1,0 +1,54 @@
+name: Nightly
+
+# After CI succeeds on master, publish a dated prerelease with the packed
+# packages, then prune old nightlies on a GFS schedule. Does NOT push to NuGet.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [master]
+    types: [completed]
+  workflow_dispatch: {}
+
+jobs:
+  nightly:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      - name: Compute nightly tag
+        run: echo "NIGHTLY_TAG=nightly-$(date -u +%Y%m%d)" >> "$GITHUB_ENV"
+      - name: Stamp versions
+        run: perl ".github/workflows/scripts/version.pl" --stamp
+      - name: Pack packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          for p in \
+            Backports/Backports.csproj \
+            Corlib.Extensions/Corlib.Extensions.csproj \
+            PresentationCore.Extensions/PresentationCore.Extensions.csproj \
+            System.Drawing.Extensions/System.Drawing.Extensions.csproj \
+            System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj \
+            System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj; do
+            dotnet pack "$p" --configuration Release --output ./artifacts
+          done
+      - name: Publish nightly prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.NIGHTLY_TAG }}
+          name: ${{ env.NIGHTLY_TAG }}
+          prerelease: true
+          files: artifacts/*.nupkg
+          generate_release_notes: true        # automatic changelog in the prerelease body
+      - name: Prune old nightlies (GFS)
+        run: node ".github/workflows/scripts/prune-nightlies.mjs"
+        env:
+          GH_TOKEN: ${{ github.token }}
