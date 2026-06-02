@@ -109,13 +109,37 @@ def main():
     assert posit_decode(0x40000000, 32, 2) == 1.0
 
     for name, n, es in (("posit8", 8, 0), ("posit16", 16, 1), ("posit32", 32, 2)):
+        exhaustive = n <= 8
+        codes = list(range(1 << n)) if exhaustive else list(range(0, 1 << n, (1 << n) // 4096))
+        nar = 1 << (n - 1)
+        width = n // 4
+
+        # decode table
         path = os.path.join(HERE, f"{name}.decode.tsv")
-        codes = range(1 << n) if n <= 8 else range(0, 1 << n, (1 << n) // 4096)
         with open(path, "w", newline="\n") as f:
             f.write(f"# {name}: <rawHex>\\t<value>. Source: from-spec posit<{n},{es}> oracle.\n")
             for raw in codes:
-                f.write(f"{raw:0{n // 4}X}\t{_fmt(posit_decode(raw, n, es))}\n")
+                f.write(f"{raw:0{width}X}\t{_fmt(posit_decode(raw, n, es))}\n")
         print(f"wrote {path}")
+
+        # encode table: round-trip identity for every (sampled) code, plus unambiguous rounding-direction
+        # points 1/4 and 3/4 of the way between adjacent representable values (oracle = nearest by value).
+        finite = [(posit_decode(raw, n, es), raw) for raw in codes if raw != nar]
+        rows = list(finite)  # (value -> code) round-trip identity
+        if exhaustive:
+            # rounding-direction points are only valid when codes are truly adjacent by value
+            finite.sort(key=lambda t: t[0])
+            for (v0, c0), (v1, c1) in zip(finite, finite[1:]):
+                rows.append((v0 + (v1 - v0) * 0.25, c0))
+                rows.append((v0 + (v1 - v0) * 0.75, c1))
+        rows.append((float("nan"), nar))                 # NaN -> NaR
+        rows.append((1e300, (1 << (n - 1)) - 1))          # overflow -> +maxpos (no infinity in posit)
+        epath = os.path.join(HERE, f"{name}.encode.tsv")
+        with open(epath, "w", newline="\n") as f:
+            f.write(f"# {name}: <inputValue>\\t<expectedRawHex>. Source: from-spec posit<{n},{es}> nearest-even oracle.\n")
+            for v, raw in rows:
+                f.write(f"{_fmt(v)}\t{raw:0{width}X}\n")
+        print(f"wrote {epath}")
 
 
 if __name__ == "__main__":

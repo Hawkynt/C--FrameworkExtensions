@@ -226,13 +226,10 @@ internal static class PositCodec {
     } else
       magnitude = (uint)(field & fieldMask);
 
-    // Guard against producing the reserved patterns for finite values:
-    //   magnitude == 0  would mean the value rounded down to zero magnitude -> use smallest positive.
-    //   (we only reach here for nonzero v)
-    if (magnitude == 0)
-      magnitude = 1u; // minpos
+    // A magnitude that rounded down to 0 is correct: values below half of minpos round to zero
+    // (round-to-nearest). Values in [minpos/2, minpos) are rounded up to minpos by the round bit above.
 
-    // Clamp magnitude to [minpos, maxpos] (maxpos = signMask-1).
+    // Clamp magnitude to maxpos (= signMask-1); posits have no infinity, so overflow saturates.
     if (magnitude > signMask - 1u)
       magnitude = signMask - 1u;
 
