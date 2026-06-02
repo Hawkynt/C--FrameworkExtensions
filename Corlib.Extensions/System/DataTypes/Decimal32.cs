@@ -17,136 +17,81 @@
 //
 
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using MethodImplOptions = Utilities.MethodImplOptions;
+using System.Numerics;
 
 namespace System;
 
 /// <summary>
-/// Represents a 32-bit simplified decimal floating-point value of the form
-/// value = (-1)^sign * coefficient * 10^(exponent - bias).
-/// Layout: bit31 = sign; bits23-30 = 8-bit biased exponent (excess-128, so unbiased = exp-128); bits0-22 = 23-bit coefficient (0-8388607).
+/// IEEE-754 decimal32: a 32-bit decimal floating-point number (7 significant decimal digits, exponent
+/// 10^-95..10^96) in the BID (Binary Integer Decimal) encoding. Arithmetic is exact in base 10, so decimal
+/// fractions such as 0.1 are represented and combined exactly (0.1 + 0.2 == 0.3), unlike <see cref="float"/>.
 /// </summary>
 /// <remarks>
-/// This is NOT a standard IEEE-754-2008 decimal interchange format (no BID/DPD declet encoding).
-/// It is a simple, self-consistent sign + biased-exponent + integer-coefficient layout intended for
-/// round-trip storage of small decimal values. Bias = 128. The coefficient ranges 0..8388607 and the
-/// unbiased exponent ranges -128..127.
+/// decimal32 holds only 7 digits, so it is primarily a compact storage/interchange format; decode to a wider
+/// type for heavy computation. Conversions to <see cref="double"/> are inherently lossy.
 /// </remarks>
-public readonly struct Decimal32 : IComparable, IComparable<Decimal32>, IEquatable<Decimal32>, IFormattable, ISpanFormattable, IParsable<Decimal32>, ISpanParsable<Decimal32> {
+public readonly struct Decimal32 : IComparable, IComparable<Decimal32>, IEquatable<Decimal32>, IFormattable {
 
-  private const int SignBits = 1;
-  private const int ExponentBits = 8;
-  private const int CoefficientBits = 23;
-  private const int ExponentBias = 128;
-  private const uint CoefficientMask = (1u << CoefficientBits) - 1; // 0x7FFFFF
-  private const int ExponentMask = (1 << ExponentBits) - 1; // 0xFF
-  private const uint SignMask = 1u << (ExponentBits + CoefficientBits); // 0x80000000
+  private static readonly DecimalFormat _fmt = DecimalFormat.D32;
 
-  private const int MaxCoefficient = (int)CoefficientMask; // 8388607
-  private const int MinUnbiasedExponent = -ExponentBias; // -128
-  private const int MaxUnbiasedExponent = ExponentMask - ExponentBias; // 127
-
-  /// <summary>
-  /// Gets the raw bit representation.
-  /// </summary>
+  /// <summary>Gets the raw 32-bit BID encoding.</summary>
   public uint RawValue { get; }
 
   private Decimal32(uint raw) => this.RawValue = raw;
 
-  /// <summary>
-  /// Creates a <see cref="Decimal32"/> from the raw bit representation.
-  /// </summary>
+  private Decimal32(DecimalFloatMath.Value v) => this.RawValue = (uint)DecimalFloatMath.Encode(v, _fmt);
+
+  private DecimalFloatMath.Value Value => DecimalFloatMath.Decode(this.RawValue, _fmt);
+
+  /// <summary>Creates a Decimal32 from its raw BID encoding.</summary>
   public static Decimal32 FromRaw(uint raw) => new(raw);
 
-  /// <summary>
-  /// Gets positive zero.
-  /// </summary>
-  public static Decimal32 Zero => new(0);
+  public static Decimal32 Zero => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.Finite));
+  public static Decimal32 One => new(new DecimalFloatMath.Value(0, BigInteger.One, 0, DecimalKind.Finite));
+  public static Decimal32 MaxValue => new(new DecimalFloatMath.Value(0, 9999999, 90, DecimalKind.Finite));
+  public static Decimal32 MinValue => new(new DecimalFloatMath.Value(1, 9999999, 90, DecimalKind.Finite));
+  public static Decimal32 PositiveInfinity => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.Infinity));
+  public static Decimal32 NegativeInfinity => new(new DecimalFloatMath.Value(1, BigInteger.Zero, 0, DecimalKind.Infinity));
+  public static Decimal32 NaN => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.NaN));
 
-  /// <summary>
-  /// Gets the value 1.0 (coefficient=1, unbiased exponent=0).
-  /// </summary>
-  public static Decimal32 One => Encode(0, 1, 0);
+  /// <summary>Gets the integer coefficient (significand) of the decoded value.</summary>
+  public BigInteger Coefficient => this.Value.Coeff;
 
-  /// <summary>
-  /// Gets the maximum finite positive value (coefficient=8388607, max exponent).
-  /// </summary>
-  public static Decimal32 MaxValue => Encode(0, MaxCoefficient, MaxUnbiasedExponent);
+  /// <summary>Gets the base-10 exponent of the decoded value.</summary>
+  public int Exponent => this.Value.Q;
 
-  /// <summary>
-  /// Gets the minimum finite value (most negative).
-  /// </summary>
-  public static Decimal32 MinValue => Encode(1, MaxCoefficient, MaxUnbiasedExponent);
+  public static bool IsNaN(Decimal32 d) => d.Value.Kind == DecimalKind.NaN;
+  public static bool IsInfinity(Decimal32 d) => d.Value.Kind == DecimalKind.Infinity;
+  public static bool IsFinite(Decimal32 d) => d.Value.Kind == DecimalKind.Finite;
+  public static bool IsNegative(Decimal32 d) => d.Value.Sign != 0 && d.Value.Kind != DecimalKind.NaN;
 
-  private int SignField => (int)((this.RawValue >> (ExponentBits + CoefficientBits)) & 1);
-  private int ExponentField => (int)((this.RawValue >> CoefficientBits) & ExponentMask);
-  private int CoefficientField => (int)(this.RawValue & CoefficientMask);
-
-  /// <summary>
-  /// Gets the integer coefficient (significand) in the range 0..8388607.
-  /// </summary>
-  public int Coefficient => this.CoefficientField;
-
-  /// <summary>
-  /// Gets the unbiased decimal exponent (power of ten).
-  /// </summary>
-  public int Exponent => this.ExponentField - ExponentBias;
-
-  /// <summary>
-  /// Returns true if this value is negative.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNegative(Decimal32 value) => value.SignField != 0;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static Decimal32 Encode(int sign, int coefficient, int unbiasedExponent) {
-    var biasedExp = (uint)(unbiasedExponent + ExponentBias);
-    var raw = ((uint)(sign & 1) << (ExponentBits + CoefficientBits)) | ((biasedExp & ExponentMask) << CoefficientBits) | ((uint)coefficient & CoefficientMask);
-    return new(raw);
-  }
-
-  /// <summary>
-  /// Converts this value to a double-precision float.
-  /// </summary>
-  public double ToDouble() {
-    var value = this.CoefficientField * Math.Pow(10, this.ExponentField - ExponentBias);
-    return this.SignField == 0 ? value : -value;
-  }
-
-  /// <summary>
-  /// Converts this value to a single-precision float.
-  /// </summary>
+  public double ToDouble() => DecimalFloatMath.ToDouble(this.Value);
   public float ToSingle() => (float)this.ToDouble();
 
-  /// <summary>
-  /// Creates a <see cref="Decimal32"/> from a double-precision float, choosing the exponent and integer
-  /// coefficient that best represent the value, rounding to nearest and saturating on overflow.
-  /// </summary>
   public static Decimal32 FromDouble(double value) {
     if (double.IsNaN(value))
-      return Zero;
-    if (double.IsPositiveInfinity(value))
-      return MaxValue;
-    if (double.IsNegativeInfinity(value))
-      return MinValue;
-
-    var sign = value < 0 || (value == 0 && 1 / value < 0) ? 1 : 0;
-    var magnitude = Math.Abs(value);
-
-    if (magnitude == 0)
-      return new((uint)sign << (ExponentBits + CoefficientBits));
-
-    return Decimal8.EncodeMagnitude(sign, magnitude, MaxCoefficient, MinUnbiasedExponent, MaxUnbiasedExponent, Encode);
+      return NaN;
+    if (double.IsInfinity(value))
+      return double.IsNegative(value) ? NegativeInfinity : PositiveInfinity;
+    return new(DecimalFloatMath.Parse(value.ToString("R", CultureInfo.InvariantCulture), _fmt));
   }
 
-  /// <summary>
-  /// Creates a <see cref="Decimal32"/> from a single-precision float.
-  /// </summary>
   public static Decimal32 FromSingle(float value) => FromDouble(value);
 
-  // Comparison
-  public int CompareTo(Decimal32 other) => this.ToDouble().CompareTo(other.ToDouble());
+  // Arithmetic (exact base-10, rounded to 7 digits half-even)
+  public static Decimal32 operator +(Decimal32 a, Decimal32 b) => new(DecimalFloatMath.Add(a.Value, b.Value, _fmt));
+  public static Decimal32 operator -(Decimal32 a, Decimal32 b) => new(DecimalFloatMath.Subtract(a.Value, b.Value, _fmt));
+  public static Decimal32 operator *(Decimal32 a, Decimal32 b) => new(DecimalFloatMath.Multiply(a.Value, b.Value, _fmt));
+  public static Decimal32 operator /(Decimal32 a, Decimal32 b) => new(DecimalFloatMath.Divide(a.Value, b.Value, _fmt));
+  public static Decimal32 operator -(Decimal32 a) => new(DecimalFloatMath.Negate(a.Value));
+  public static Decimal32 operator +(Decimal32 a) => a;
+
+  public int CompareTo(Decimal32 other) {
+    DecimalFloatMath.Value a = this.Value, b = other.Value;
+    if (a.Kind == DecimalKind.NaN || b.Kind == DecimalKind.NaN)
+      return a.Kind == DecimalKind.NaN && b.Kind == DecimalKind.NaN ? 0 : a.Kind == DecimalKind.NaN ? 1 : -1;
+    return DecimalFloatMath.Compare(a, b, _fmt);
+  }
 
   public int CompareTo(object? obj) {
     if (obj is null)
@@ -156,102 +101,37 @@ public readonly struct Decimal32 : IComparable, IComparable<Decimal32>, IEquatab
     return this.CompareTo(other);
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(Decimal32 other) => this.ToDouble().Equals(other.ToDouble());
+  public bool Equals(Decimal32 other) => this.CompareTo(other) == 0 && !IsNaN(this);
 
   public override bool Equals(object? obj) => obj is Decimal32 other && this.Equals(other);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override int GetHashCode() => this.ToDouble().GetHashCode();
+  public override int GetHashCode() => IsNaN(this) ? 0x7FC00000 : this.ToDouble().GetHashCode();
 
-  public override string ToString() => this.ToDouble().ToString(CultureInfo.InvariantCulture);
+  public override string ToString() => DecimalFloatMath.ToString(this.Value);
+  public string ToString(string? format, IFormatProvider? formatProvider) => DecimalFloatMath.ToString(this.Value);
 
-  public string ToString(IFormatProvider? provider) => this.ToDouble().ToString(provider);
+  public static bool operator ==(Decimal32 a, Decimal32 b) => a.Equals(b);
+  public static bool operator !=(Decimal32 a, Decimal32 b) => !a.Equals(b);
+  public static bool operator <(Decimal32 a, Decimal32 b) => a.CompareTo(b) < 0;
+  public static bool operator >(Decimal32 a, Decimal32 b) => a.CompareTo(b) > 0;
+  public static bool operator <=(Decimal32 a, Decimal32 b) => a.CompareTo(b) <= 0;
+  public static bool operator >=(Decimal32 a, Decimal32 b) => a.CompareTo(b) >= 0;
 
-  public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
-
-  public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
-
-  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
-    var str = format.IsEmpty
-      ? this.ToDouble().ToString(provider)
-      : this.ToDouble().ToString(format.ToString(), provider);
-    if (str.Length > destination.Length) {
-      charsWritten = 0;
-      return false;
-    }
-
-    str.AsSpan().CopyTo(destination);
-    charsWritten = str.Length;
-    return true;
-  }
-
-  // Operators
-  public static bool operator ==(Decimal32 left, Decimal32 right) => left.Equals(right);
-  public static bool operator !=(Decimal32 left, Decimal32 right) => !left.Equals(right);
-  public static bool operator <(Decimal32 left, Decimal32 right) => left.CompareTo(right) < 0;
-  public static bool operator >(Decimal32 left, Decimal32 right) => left.CompareTo(right) > 0;
-  public static bool operator <=(Decimal32 left, Decimal32 right) => left.CompareTo(right) <= 0;
-  public static bool operator >=(Decimal32 left, Decimal32 right) => left.CompareTo(right) >= 0;
-
-  // Arithmetic (via double conversion)
-  public static Decimal32 operator +(Decimal32 left, Decimal32 right) => FromDouble(left.ToDouble() + right.ToDouble());
-  public static Decimal32 operator -(Decimal32 left, Decimal32 right) => FromDouble(left.ToDouble() - right.ToDouble());
-  public static Decimal32 operator *(Decimal32 left, Decimal32 right) => FromDouble(left.ToDouble() * right.ToDouble());
-  public static Decimal32 operator /(Decimal32 left, Decimal32 right) => FromDouble(left.ToDouble() / right.ToDouble());
-  public static Decimal32 operator %(Decimal32 left, Decimal32 right) => FromDouble(left.ToDouble() % right.ToDouble());
-  public static Decimal32 operator -(Decimal32 value) => new(value.RawValue ^ SignMask);
-  public static Decimal32 operator +(Decimal32 value) => value;
-  public static Decimal32 operator ++(Decimal32 value) => FromDouble(value.ToDouble() + 1d);
-  public static Decimal32 operator --(Decimal32 value) => FromDouble(value.ToDouble() - 1d);
-
-  // Conversions
-  public static explicit operator Decimal32(float value) => FromSingle(value);
   public static explicit operator Decimal32(double value) => FromDouble(value);
-  public static implicit operator float(Decimal32 value) => value.ToSingle();
   public static implicit operator double(Decimal32 value) => value.ToDouble();
 
-  // Math helpers
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal32 Abs(Decimal32 value) => IsNegative(value) ? -value : value;
+  public static Decimal32 Parse(string s) => new(DecimalFloatMath.Parse(s, _fmt));
+  public static Decimal32 Parse(string s, IFormatProvider? provider) => Parse(s);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal32 Min(Decimal32 left, Decimal32 right) => left.ToDouble() <= right.ToDouble() ? left : right;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal32 Max(Decimal32 left, Decimal32 right) => left.ToDouble() >= right.ToDouble() ? left : right;
-
-  // Parsing
-  public static Decimal32 Parse(string s) => Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, null);
-
-  public static Decimal32 Parse(string s, IFormatProvider? provider) => Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
-
-  public static Decimal32 Parse(string s, NumberStyles style, IFormatProvider? provider) => FromDouble(double.Parse(s, style, provider));
-
-  public static bool TryParse(string? s, out Decimal32 result) => TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, null, out result);
-
-  public static bool TryParse(string? s, IFormatProvider? provider, out Decimal32 result) => TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out result);
-
-  public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Decimal32 result) {
-    if (double.TryParse(s, style, provider, out var value)) {
-      result = FromDouble(value);
-      return true;
+  public static bool TryParse(string? s, out Decimal32 result) {
+    try {
+      result = s == null ? Zero : new(DecimalFloatMath.Parse(s, _fmt));
+      return s != null;
+    } catch (FormatException) {
+      result = Zero;
+      return false;
     }
-
-    result = Zero;
-    return false;
   }
 
-  public static Decimal32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => FromDouble(double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider));
-
-  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Decimal32 result) {
-    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
-      result = FromDouble(value);
-      return true;
-    }
-
-    result = Zero;
-    return false;
-  }
-
+  public static bool TryParse(string? s, IFormatProvider? provider, out Decimal32 result) => TryParse(s, out result);
 }

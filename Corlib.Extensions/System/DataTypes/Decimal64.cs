@@ -17,136 +17,77 @@
 //
 
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using MethodImplOptions = Utilities.MethodImplOptions;
+using System.Numerics;
 
 namespace System;
 
 /// <summary>
-/// Represents a 64-bit simplified decimal floating-point value of the form
-/// value = (-1)^sign * coefficient * 10^(exponent - bias).
-/// Layout: bit63 = sign; bits53-62 = 10-bit biased exponent (excess-512, so unbiased = exp-512); bits0-52 = 53-bit coefficient (0-9007199254740991).
+/// IEEE-754 decimal64: a 64-bit decimal floating-point number (16 significant decimal digits, exponent
+/// 10^-383..10^384) in the BID (Binary Integer Decimal) encoding. Arithmetic is exact in base 10, so
+/// 0.1 + 0.2 == 0.3 exactly. With 16 digits this is the practical choice for monetary/decimal computation.
 /// </summary>
-/// <remarks>
-/// This is NOT a standard IEEE-754-2008 decimal interchange format (no BID/DPD declet encoding).
-/// It is a simple, self-consistent sign + biased-exponent + integer-coefficient layout intended for
-/// round-trip storage of small decimal values. Bias = 512. The coefficient ranges 0..9007199254740991
-/// and the unbiased exponent ranges -512..511. Primary conversions are <see cref="ToDouble"/>/<see cref="FromDouble"/>.
-/// </remarks>
-public readonly struct Decimal64 : IComparable, IComparable<Decimal64>, IEquatable<Decimal64>, IFormattable, ISpanFormattable, IParsable<Decimal64>, ISpanParsable<Decimal64> {
+public readonly struct Decimal64 : IComparable, IComparable<Decimal64>, IEquatable<Decimal64>, IFormattable {
 
-  private const int SignBits = 1;
-  private const int ExponentBits = 10;
-  private const int CoefficientBits = 53;
-  private const int ExponentBias = 512;
-  private const ulong CoefficientMask = (1ul << CoefficientBits) - 1; // 2^53-1
-  private const int ExponentMask = (1 << ExponentBits) - 1; // 0x3FF
-  private const ulong SignMask = 1ul << (ExponentBits + CoefficientBits); // 0x8000000000000000
+  private static readonly DecimalFormat _fmt = DecimalFormat.D64;
+  private static readonly BigInteger _maxCoeff = BigInteger.Parse("9999999999999999", CultureInfo.InvariantCulture);
 
-  private const long MaxCoefficient = (long)CoefficientMask; // 9007199254740991
-  private const int MinUnbiasedExponent = -ExponentBias; // -512
-  private const int MaxUnbiasedExponent = ExponentMask - ExponentBias; // 511
-
-  /// <summary>
-  /// Gets the raw bit representation.
-  /// </summary>
+  /// <summary>Gets the raw 64-bit BID encoding.</summary>
   public ulong RawValue { get; }
 
   private Decimal64(ulong raw) => this.RawValue = raw;
 
-  /// <summary>
-  /// Creates a <see cref="Decimal64"/> from the raw bit representation.
-  /// </summary>
+  private Decimal64(DecimalFloatMath.Value v) => this.RawValue = DecimalFloatMath.Encode(v, _fmt);
+
+  private DecimalFloatMath.Value Value => DecimalFloatMath.Decode(this.RawValue, _fmt);
+
+  /// <summary>Creates a Decimal64 from its raw BID encoding.</summary>
   public static Decimal64 FromRaw(ulong raw) => new(raw);
 
-  /// <summary>
-  /// Gets positive zero.
-  /// </summary>
-  public static Decimal64 Zero => new(0);
+  public static Decimal64 Zero => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.Finite));
+  public static Decimal64 One => new(new DecimalFloatMath.Value(0, BigInteger.One, 0, DecimalKind.Finite));
+  public static Decimal64 MaxValue => new(new DecimalFloatMath.Value(0, _maxCoeff, 369, DecimalKind.Finite));
+  public static Decimal64 MinValue => new(new DecimalFloatMath.Value(1, _maxCoeff, 369, DecimalKind.Finite));
+  public static Decimal64 PositiveInfinity => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.Infinity));
+  public static Decimal64 NegativeInfinity => new(new DecimalFloatMath.Value(1, BigInteger.Zero, 0, DecimalKind.Infinity));
+  public static Decimal64 NaN => new(new DecimalFloatMath.Value(0, BigInteger.Zero, 0, DecimalKind.NaN));
 
-  /// <summary>
-  /// Gets the value 1.0 (coefficient=1, unbiased exponent=0).
-  /// </summary>
-  public static Decimal64 One => Encode(0, 1, 0);
+  /// <summary>Gets the integer coefficient (significand) of the decoded value.</summary>
+  public BigInteger Coefficient => this.Value.Coeff;
 
-  /// <summary>
-  /// Gets the maximum finite positive value (coefficient=9007199254740991, max exponent).
-  /// </summary>
-  public static Decimal64 MaxValue => Encode(0, MaxCoefficient, MaxUnbiasedExponent);
+  /// <summary>Gets the base-10 exponent of the decoded value.</summary>
+  public int Exponent => this.Value.Q;
 
-  /// <summary>
-  /// Gets the minimum finite value (most negative).
-  /// </summary>
-  public static Decimal64 MinValue => Encode(1, MaxCoefficient, MaxUnbiasedExponent);
+  public static bool IsNaN(Decimal64 d) => d.Value.Kind == DecimalKind.NaN;
+  public static bool IsInfinity(Decimal64 d) => d.Value.Kind == DecimalKind.Infinity;
+  public static bool IsFinite(Decimal64 d) => d.Value.Kind == DecimalKind.Finite;
+  public static bool IsNegative(Decimal64 d) => d.Value.Sign != 0 && d.Value.Kind != DecimalKind.NaN;
 
-  private int SignField => (int)((this.RawValue >> (ExponentBits + CoefficientBits)) & 1);
-  private int ExponentField => (int)((this.RawValue >> CoefficientBits) & ExponentMask);
-  private long CoefficientField => (long)(this.RawValue & CoefficientMask);
-
-  /// <summary>
-  /// Gets the integer coefficient (significand) in the range 0..9007199254740991.
-  /// </summary>
-  public long Coefficient => this.CoefficientField;
-
-  /// <summary>
-  /// Gets the unbiased decimal exponent (power of ten).
-  /// </summary>
-  public int Exponent => this.ExponentField - ExponentBias;
-
-  /// <summary>
-  /// Returns true if this value is negative.
-  /// </summary>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsNegative(Decimal64 value) => value.SignField != 0;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static Decimal64 Encode(int sign, long coefficient, int unbiasedExponent) {
-    var biasedExp = (ulong)(unbiasedExponent + ExponentBias);
-    var raw = ((ulong)(sign & 1) << (ExponentBits + CoefficientBits)) | ((biasedExp & ExponentMask) << CoefficientBits) | ((ulong)coefficient & CoefficientMask);
-    return new(raw);
-  }
-
-  /// <summary>
-  /// Converts this value to a double-precision float.
-  /// </summary>
-  public double ToDouble() {
-    var value = this.CoefficientField * Math.Pow(10, this.ExponentField - ExponentBias);
-    return this.SignField == 0 ? value : -value;
-  }
-
-  /// <summary>
-  /// Converts this value to a single-precision float.
-  /// </summary>
+  public double ToDouble() => DecimalFloatMath.ToDouble(this.Value);
   public float ToSingle() => (float)this.ToDouble();
 
-  /// <summary>
-  /// Creates a <see cref="Decimal64"/> from a double-precision float, choosing the exponent and integer
-  /// coefficient that best represent the value, rounding to nearest and saturating on overflow.
-  /// </summary>
   public static Decimal64 FromDouble(double value) {
     if (double.IsNaN(value))
-      return Zero;
-    if (double.IsPositiveInfinity(value))
-      return MaxValue;
-    if (double.IsNegativeInfinity(value))
-      return MinValue;
-
-    var sign = value < 0 || (value == 0 && 1 / value < 0) ? 1 : 0;
-    var magnitude = Math.Abs(value);
-
-    if (magnitude == 0)
-      return new((ulong)sign << (ExponentBits + CoefficientBits));
-
-    return Decimal8.EncodeMagnitude64(sign, magnitude, MaxCoefficient, MinUnbiasedExponent, MaxUnbiasedExponent, Encode);
+      return NaN;
+    if (double.IsInfinity(value))
+      return double.IsNegative(value) ? NegativeInfinity : PositiveInfinity;
+    return new(DecimalFloatMath.Parse(value.ToString("R", CultureInfo.InvariantCulture), _fmt));
   }
 
-  /// <summary>
-  /// Creates a <see cref="Decimal64"/> from a single-precision float.
-  /// </summary>
   public static Decimal64 FromSingle(float value) => FromDouble(value);
 
-  // Comparison
-  public int CompareTo(Decimal64 other) => this.ToDouble().CompareTo(other.ToDouble());
+  public static Decimal64 operator +(Decimal64 a, Decimal64 b) => new(DecimalFloatMath.Add(a.Value, b.Value, _fmt));
+  public static Decimal64 operator -(Decimal64 a, Decimal64 b) => new(DecimalFloatMath.Subtract(a.Value, b.Value, _fmt));
+  public static Decimal64 operator *(Decimal64 a, Decimal64 b) => new(DecimalFloatMath.Multiply(a.Value, b.Value, _fmt));
+  public static Decimal64 operator /(Decimal64 a, Decimal64 b) => new(DecimalFloatMath.Divide(a.Value, b.Value, _fmt));
+  public static Decimal64 operator -(Decimal64 a) => new(DecimalFloatMath.Negate(a.Value));
+  public static Decimal64 operator +(Decimal64 a) => a;
+
+  public int CompareTo(Decimal64 other) {
+    DecimalFloatMath.Value a = this.Value, b = other.Value;
+    if (a.Kind == DecimalKind.NaN || b.Kind == DecimalKind.NaN)
+      return a.Kind == DecimalKind.NaN && b.Kind == DecimalKind.NaN ? 0 : a.Kind == DecimalKind.NaN ? 1 : -1;
+    return DecimalFloatMath.Compare(a, b, _fmt);
+  }
 
   public int CompareTo(object? obj) {
     if (obj is null)
@@ -156,102 +97,37 @@ public readonly struct Decimal64 : IComparable, IComparable<Decimal64>, IEquatab
     return this.CompareTo(other);
   }
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public bool Equals(Decimal64 other) => this.ToDouble().Equals(other.ToDouble());
+  public bool Equals(Decimal64 other) => this.CompareTo(other) == 0 && !IsNaN(this);
 
   public override bool Equals(object? obj) => obj is Decimal64 other && this.Equals(other);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public override int GetHashCode() => this.ToDouble().GetHashCode();
+  public override int GetHashCode() => IsNaN(this) ? 0x7FC00000 : this.ToDouble().GetHashCode();
 
-  public override string ToString() => this.ToDouble().ToString(CultureInfo.InvariantCulture);
+  public override string ToString() => DecimalFloatMath.ToString(this.Value);
+  public string ToString(string? format, IFormatProvider? formatProvider) => DecimalFloatMath.ToString(this.Value);
 
-  public string ToString(IFormatProvider? provider) => this.ToDouble().ToString(provider);
+  public static bool operator ==(Decimal64 a, Decimal64 b) => a.Equals(b);
+  public static bool operator !=(Decimal64 a, Decimal64 b) => !a.Equals(b);
+  public static bool operator <(Decimal64 a, Decimal64 b) => a.CompareTo(b) < 0;
+  public static bool operator >(Decimal64 a, Decimal64 b) => a.CompareTo(b) > 0;
+  public static bool operator <=(Decimal64 a, Decimal64 b) => a.CompareTo(b) <= 0;
+  public static bool operator >=(Decimal64 a, Decimal64 b) => a.CompareTo(b) >= 0;
 
-  public string ToString(string? format) => this.ToDouble().ToString(format, CultureInfo.InvariantCulture);
-
-  public string ToString(string? format, IFormatProvider? provider) => this.ToDouble().ToString(format, provider);
-
-  public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) {
-    var str = format.IsEmpty
-      ? this.ToDouble().ToString(provider)
-      : this.ToDouble().ToString(format.ToString(), provider);
-    if (str.Length > destination.Length) {
-      charsWritten = 0;
-      return false;
-    }
-
-    str.AsSpan().CopyTo(destination);
-    charsWritten = str.Length;
-    return true;
-  }
-
-  // Operators
-  public static bool operator ==(Decimal64 left, Decimal64 right) => left.Equals(right);
-  public static bool operator !=(Decimal64 left, Decimal64 right) => !left.Equals(right);
-  public static bool operator <(Decimal64 left, Decimal64 right) => left.CompareTo(right) < 0;
-  public static bool operator >(Decimal64 left, Decimal64 right) => left.CompareTo(right) > 0;
-  public static bool operator <=(Decimal64 left, Decimal64 right) => left.CompareTo(right) <= 0;
-  public static bool operator >=(Decimal64 left, Decimal64 right) => left.CompareTo(right) >= 0;
-
-  // Arithmetic (via double conversion)
-  public static Decimal64 operator +(Decimal64 left, Decimal64 right) => FromDouble(left.ToDouble() + right.ToDouble());
-  public static Decimal64 operator -(Decimal64 left, Decimal64 right) => FromDouble(left.ToDouble() - right.ToDouble());
-  public static Decimal64 operator *(Decimal64 left, Decimal64 right) => FromDouble(left.ToDouble() * right.ToDouble());
-  public static Decimal64 operator /(Decimal64 left, Decimal64 right) => FromDouble(left.ToDouble() / right.ToDouble());
-  public static Decimal64 operator %(Decimal64 left, Decimal64 right) => FromDouble(left.ToDouble() % right.ToDouble());
-  public static Decimal64 operator -(Decimal64 value) => new(value.RawValue ^ SignMask);
-  public static Decimal64 operator +(Decimal64 value) => value;
-  public static Decimal64 operator ++(Decimal64 value) => FromDouble(value.ToDouble() + 1d);
-  public static Decimal64 operator --(Decimal64 value) => FromDouble(value.ToDouble() - 1d);
-
-  // Conversions
-  public static explicit operator Decimal64(float value) => FromSingle(value);
   public static explicit operator Decimal64(double value) => FromDouble(value);
-  public static implicit operator float(Decimal64 value) => value.ToSingle();
   public static implicit operator double(Decimal64 value) => value.ToDouble();
 
-  // Math helpers
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal64 Abs(Decimal64 value) => IsNegative(value) ? -value : value;
+  public static Decimal64 Parse(string s) => new(DecimalFloatMath.Parse(s, _fmt));
+  public static Decimal64 Parse(string s, IFormatProvider? provider) => Parse(s);
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal64 Min(Decimal64 left, Decimal64 right) => left.ToDouble() <= right.ToDouble() ? left : right;
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Decimal64 Max(Decimal64 left, Decimal64 right) => left.ToDouble() >= right.ToDouble() ? left : right;
-
-  // Parsing
-  public static Decimal64 Parse(string s) => Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, null);
-
-  public static Decimal64 Parse(string s, IFormatProvider? provider) => Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider);
-
-  public static Decimal64 Parse(string s, NumberStyles style, IFormatProvider? provider) => FromDouble(double.Parse(s, style, provider));
-
-  public static bool TryParse(string? s, out Decimal64 result) => TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, null, out result);
-
-  public static bool TryParse(string? s, IFormatProvider? provider, out Decimal64 result) => TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out result);
-
-  public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Decimal64 result) {
-    if (double.TryParse(s, style, provider, out var value)) {
-      result = FromDouble(value);
-      return true;
+  public static bool TryParse(string? s, out Decimal64 result) {
+    try {
+      result = s == null ? Zero : new(DecimalFloatMath.Parse(s, _fmt));
+      return s != null;
+    } catch (FormatException) {
+      result = Zero;
+      return false;
     }
-
-    result = Zero;
-    return false;
   }
 
-  public static Decimal64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => FromDouble(double.Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider));
-
-  public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Decimal64 result) {
-    if (double.TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, provider, out var value)) {
-      result = FromDouble(value);
-      return true;
-    }
-
-    result = Zero;
-    return false;
-  }
-
+  public static bool TryParse(string? s, IFormatProvider? provider, out Decimal64 result) => TryParse(s, out result);
 }
