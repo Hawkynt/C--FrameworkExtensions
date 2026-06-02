@@ -19,6 +19,7 @@
 
 #nullable enable
 
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using MethodImplOptions = Utilities.MethodImplOptions;
@@ -43,53 +44,23 @@ internal static class Ascii7BitPacking {
   /// Gets the number of bytes required to store the specified number of characters in packed format.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static int GetPackedByteCount(int charCount) => (charCount * 7 + 7) >> 3;
+  public static int GetPackedByteCount(int charCount) => PackedBitBuffer.GetPackedByteCount(charCount, 7);
 
   /// <summary>
   /// Gets the character at the specified index from packed data.
   /// </summary>
+  /// <remarks>
+  /// The 7-bit-per-character LSB-first layout is shared with <see cref="LsbFirst"/>, so the bit math is
+  /// delegated to the common packed-bit-buffer strategy (a zero-size struct, so this stays allocation-free).
+  /// </remarks>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static byte GetCharAt(byte[] packed, int index) {
-    // Each character occupies 7 bits starting at bit position (index * 7)
-    var bitPosition = index * 7;
-    var byteIndex = bitPosition >> 3;
-    var bitOffset = bitPosition & 7;
-
-    // If the character fits entirely within one byte
-    if (bitOffset <= 1)
-      return (byte)((packed[byteIndex] >> bitOffset) & 0x7F);
-
-    // Character spans two bytes
-    var lowBits = packed[byteIndex] >> bitOffset;
-    var highBits = packed[byteIndex + 1] << (8 - bitOffset);
-    return (byte)((lowBits | highBits) & 0x7F);
-  }
+  public static byte GetCharAt(byte[] packed, int index) => (byte)default(LsbFirst).Read(packed, (long)index * 7, 7);
 
   /// <summary>
   /// Sets the character at the specified index in packed data.
   /// </summary>
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static void SetCharAt(byte[] packed, int index, byte value) {
-    var bitPosition = index * 7;
-    var byteIndex = bitPosition >> 3;
-    var bitOffset = bitPosition & 7;
-
-    // Mask off the 7 bits we'll write
-    value &= 0x7F;
-
-    if (bitOffset <= 1) {
-      // Character fits entirely within one byte
-      var mask = (byte)~(0x7F << bitOffset);
-      packed[byteIndex] = (byte)((packed[byteIndex] & mask) | (value << bitOffset));
-    } else {
-      // Character spans two bytes
-      var lowMask = (byte)(0xFF >> (8 - bitOffset));
-      var highMask = (byte)(0xFF << (bitOffset - 1));
-
-      packed[byteIndex] = (byte)((packed[byteIndex] & lowMask) | (value << bitOffset));
-      packed[byteIndex + 1] = (byte)((packed[byteIndex + 1] & highMask) | (value >> (8 - bitOffset)));
-    }
-  }
+  public static void SetCharAt(byte[] packed, int index, byte value) => default(LsbFirst).Write(packed, (long)index * 7, 7, (ulong)(value & 0x7F));
 
   /// <summary>
   /// Packs 8 unpacked ASCII bytes into 7 packed bytes.
