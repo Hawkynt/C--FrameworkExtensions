@@ -161,11 +161,9 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
   public static E4M3 FromSingle(float value) {
     if (float.IsNaN(value))
       return NaN;
-    // E4M3 has no infinity - clamp to max value
-    if (float.IsPositiveInfinity(value))
-      return MaxValue;
-    if (float.IsNegativeInfinity(value))
-      return MinValue;
+    // E4M3 (e4m3fn) has no infinity; infinities and overflow map to NaN (sign-preserved), per the spec.
+    if (float.IsInfinity(value))
+      return float.IsNegativeInfinity(value) ? new((byte)(SignMask | NaNBits)) : NaN;
 
     var sign = value < 0 ? 1 : 0;
     value = Math.Abs(value);
@@ -176,12 +174,6 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
     // Get exponent
     var exp = (int)Math.Floor(Math.Log(value, 2));
     var biasedExp = exp + ExponentBias;
-
-    // Check for overflow (clamp to max, not infinity)
-    if (biasedExp >= ExponentMask) {
-      // Return max value with appropriate sign
-      return sign == 0 ? MaxValue : MinValue;
-    }
 
     if (biasedExp <= 0) {
       // Subnormal
@@ -196,13 +188,12 @@ public readonly struct E4M3 : IComparable, IComparable<E4M3>, IEquatable<E4M3>, 
     if (mant > MantissaMask) {
       mant = 0;
       ++biasedExp;
-      if (biasedExp >= ExponentMask)
-        return sign == 0 ? MaxValue : MinValue;
     }
 
-    // Avoid creating NaN (exp=15, mant=7)
-    if (biasedExp == ExponentMask && mant == MantissaMask)
-      --mant;
+    // Overflow: e4m3fn has no infinity and exp=15/mant=7 is the NaN slot, so anything rounding to or beyond
+    // it becomes NaN (sign-preserved). 448 (exp=15, mant=6) is the largest finite value.
+    if (biasedExp > ExponentMask || (biasedExp == ExponentMask && mant >= MantissaMask))
+      return sign == 0 ? NaN : new((byte)(SignMask | NaNBits));
 
     return new((byte)((sign << (ExponentBits + MantissaBits)) | (biasedExp << MantissaBits) | mant));
   }

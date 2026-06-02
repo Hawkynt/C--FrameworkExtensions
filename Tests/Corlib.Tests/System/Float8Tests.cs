@@ -66,10 +66,12 @@ public class Float8Tests {
   }
 
   [Test]
-  public void E4M3_NoInfinity_ClampToMax() {
-    var result = (E4M3)float.PositiveInfinity;
-    Assert.IsFalse(E4M3.IsNaN(result));
-    Assert.IsTrue(E4M3.IsFinite(result));
+  public void E4M3_Infinity_MapsToNaN() {
+    // e4m3fn has no infinity; ±inf and overflow map to NaN (matches ml_dtypes float8_e4m3fn).
+    Assert.IsTrue(E4M3.IsNaN((E4M3)float.PositiveInfinity));
+    Assert.IsTrue(E4M3.IsNaN((E4M3)float.NegativeInfinity));
+    Assert.IsTrue(E4M3.IsNaN((E4M3)1000f));
+    Assert.AreEqual(448f, ((E4M3)464f).ToSingle()); // largest value that still rounds to max finite
   }
 
   // Comparison tests
