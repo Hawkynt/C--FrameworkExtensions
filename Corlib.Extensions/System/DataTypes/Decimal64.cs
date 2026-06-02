@@ -36,7 +36,7 @@ public readonly struct Decimal64 : IComparable, IComparable<Decimal64>, IEquatab
 
   private Decimal64(ulong raw) => this.RawValue = raw;
 
-  private Decimal64(DecimalFloatMath.Value v) => this.RawValue = DecimalFloatMath.Encode(v, _fmt);
+  private Decimal64(DecimalFloatMath.Value v) => this.RawValue = (ulong)DecimalFloatMath.Encode(v, _fmt);
 
   private DecimalFloatMath.Value Value => DecimalFloatMath.Decode(this.RawValue, _fmt);
 

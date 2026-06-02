@@ -47,8 +47,23 @@ internal readonly struct DecimalFormat {
     this.MaxQ = maxQ;
   }
 
-  public static readonly DecimalFormat D32 = new(32, 7, 101, 8, -101, 90);
-  public static readonly DecimalFormat D64 = new(64, 16, 398, 10, -398, 369);
+  /// <summary>
+  /// Derives the IEEE-754 decimal interchange-format parameters for a width of <paramref name="bits"/>
+  /// (a multiple of 32, >= 32): precision = 9k/32 - 2, emax = 3 * 2^(k/16 + 3), bias = emax + p - 2.
+  /// </summary>
+  public static DecimalFormat ForWidth(int bits) {
+    var precision = 9 * bits / 32 - 2;
+    var emax = 3 * (1 << (bits / 16 + 3));
+    var bias = emax + precision - 2;
+    var expBits = bits / 16 + 6;
+    var minQ = 1 - emax - (precision - 1);
+    var maxQ = emax - (precision - 1);
+    return new(bits, precision, bias, expBits, minQ, maxQ);
+  }
+
+  public static readonly DecimalFormat D32 = ForWidth(32);
+  public static readonly DecimalFormat D64 = ForWidth(64);
+  public static readonly DecimalFormat D128 = ForWidth(128);
 }
 
 internal static class DecimalFloatMath {
@@ -74,21 +89,20 @@ internal static class DecimalFloatMath {
 
   // ---- BID decode / encode ----
 
-  public static Value Decode(ulong raw, in DecimalFormat fmt) {
-    var signShift = fmt.TotalBits - 1;
-    var sign = (int)((raw >> signShift) & 1);
-    var g2 = (raw >> (fmt.TotalBits - 3)) & 3; // two bits below the sign
+  public static Value Decode(BigInteger raw, in DecimalFormat fmt) {
+    var sign = (int)((raw >> (fmt.TotalBits - 1)) & 1);
+    var g2 = (int)((raw >> (fmt.TotalBits - 3)) & 3); // two bits below the sign
 
-    var expMask = (1UL << fmt.ExpBits) - 1;
+    var expMask = (BigInteger.One << fmt.ExpBits) - 1;
     var threshold = BigInteger.One << (fmt.TotalBits - 1 - fmt.ExpBits);
 
     if (g2 != 3) {
       var e = (int)((raw >> (fmt.TotalBits - 1 - fmt.ExpBits)) & expMask);
-      var c = (BigInteger)(raw & (ulong)(threshold - 1));
+      var c = raw & (threshold - 1);
       return new(sign, c, e - fmt.Bias, DecimalKind.Finite);
     }
 
-    var top5 = (raw >> (fmt.TotalBits - 6)) & 0x1F;
+    var top5 = (int)((raw >> (fmt.TotalBits - 6)) & 0x1F);
     if (top5 == 0x1E)
       return new(sign, BigInteger.Zero, 0, DecimalKind.Infinity);
     if (top5 == 0x1F)
@@ -96,30 +110,30 @@ internal static class DecimalFloatMath {
 
     // form 2: implied "100" coefficient prefix
     var e2 = (int)((raw >> (fmt.TotalBits - 3 - fmt.ExpBits)) & expMask);
-    var fieldMask = (1UL << (fmt.TotalBits - 3 - fmt.ExpBits)) - 1;
+    var fieldMask = (BigInteger.One << (fmt.TotalBits - 3 - fmt.ExpBits)) - 1;
     var c2 = threshold + (raw & fieldMask);
     return new(sign, c2, e2 - fmt.Bias, DecimalKind.Finite);
   }
 
-  public static ulong Encode(Value v, in DecimalFormat fmt) {
-    var signBit = (ulong)v.Sign << (fmt.TotalBits - 1);
+  public static BigInteger Encode(Value v, in DecimalFormat fmt) {
+    var signBit = (BigInteger)v.Sign << (fmt.TotalBits - 1);
     switch (v.Kind) {
-      case DecimalKind.NaN: return signBit | (0x1FUL << (fmt.TotalBits - 6));
-      case DecimalKind.Infinity: return signBit | (0x1EUL << (fmt.TotalBits - 6));
+      case DecimalKind.NaN: return signBit | ((BigInteger)0x1F << (fmt.TotalBits - 6));
+      case DecimalKind.Infinity: return signBit | ((BigInteger)0x1E << (fmt.TotalBits - 6));
     }
 
     var c = v.Coeff;
     var q = v.Q;
     _RoundAndClamp(ref c, ref q, fmt, out var overflow);
     if (overflow)
-      return signBit | (0x1EUL << (fmt.TotalBits - 6)); // overflow -> infinity
+      return signBit | ((BigInteger)0x1E << (fmt.TotalBits - 6)); // overflow -> infinity
 
-    var e = (ulong)(q + fmt.Bias);
+    var e = (BigInteger)(q + fmt.Bias);
     var threshold = BigInteger.One << (fmt.TotalBits - 1 - fmt.ExpBits);
     if (c < threshold)
-      return signBit | (e << (fmt.TotalBits - 1 - fmt.ExpBits)) | (ulong)c;
+      return signBit | (e << (fmt.TotalBits - 1 - fmt.ExpBits)) | c;
 
-    return signBit | (0x3UL << (fmt.TotalBits - 3)) | (e << (fmt.TotalBits - 3 - fmt.ExpBits)) | (ulong)(c - threshold);
+    return signBit | ((BigInteger)3 << (fmt.TotalBits - 3)) | (e << (fmt.TotalBits - 3 - fmt.ExpBits)) | (c - threshold);
   }
 
   // round the coefficient to <= precision digits (half-even) and bring q into range
@@ -162,6 +176,62 @@ internal static class DecimalFloatMath {
       c /= 10;
       ++q;
     }
+  }
+
+  /// <summary>
+  /// Fits an exact value into a custom layout whose coefficient is a binary field [0, <paramref name="coeffMax"/>]
+  /// and whose exponent lies in [<paramref name="minExp"/>, <paramref name="maxExp"/>], choosing the smallest
+  /// exponent that fits (maximum precision), rounding half-even and saturating on overflow. Used by the
+  /// non-IEEE Decimal8/Decimal16 toy formats so they still arithmetic-exactly in base 10.
+  /// </summary>
+  public static void FitToField(Value v, BigInteger coeffMax, int minExp, int maxExp, out int sign, out BigInteger coeff, out int exp) {
+    sign = v.Sign;
+    var c = v.Coeff;
+    var q = v.Q;
+
+    if (c.IsZero) {
+      coeff = BigInteger.Zero;
+      exp = q < minExp ? minExp : q > maxExp ? maxExp : q;
+      return;
+    }
+
+    // round off low digits (raising the exponent) until the coefficient fits the field
+    while (c > coeffMax) {
+      _DropDigits(ref c, 1);
+      ++q;
+    }
+
+    // raise the exponent up to the minimum, rounding away the extra precision
+    while (q < minExp) {
+      _DropDigits(ref c, 1);
+      ++q;
+      if (c.IsZero) {
+        coeff = BigInteger.Zero;
+        exp = minExp;
+        return;
+      }
+    }
+
+    // bring the exponent down to the maximum by appending zeros, or saturate if that overflows the field
+    while (q > maxExp) {
+      if (c > coeffMax / 10) {
+        coeff = coeffMax;
+        exp = maxExp;
+        return;
+      }
+
+      c *= 10;
+      --q;
+    }
+
+    // canonical minimal coefficient: drop trailing zeros (so 0.30 -> 0.3), without exceeding maxExp
+    while (q < maxExp && (c % 10).IsZero && !c.IsZero) {
+      c /= 10;
+      ++q;
+    }
+
+    coeff = c;
+    exp = q;
   }
 
   private static void _DropDigits(ref BigInteger c, int drop) {

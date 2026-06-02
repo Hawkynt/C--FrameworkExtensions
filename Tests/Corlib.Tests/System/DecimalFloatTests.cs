@@ -119,4 +119,16 @@ public class DecimalFloatTests {
     Assert.IsTrue(Decimal16.IsNegative(Decimal16.FromDouble(-45.6d)));
     Assert.IsFalse(Decimal16.IsNegative(Decimal16.FromDouble(45.6d)));
   }
+
+  // The custom 8/16-bit formats now arithmetic-exactly in base 10 (via the shared engine), not through double.
+  [Test]
+  public void Decimal8_ExactDecimalArithmetic() {
+    Assert.AreEqual("0.3", (Decimal8.Parse("0.1") + Decimal8.Parse("0.2")).ToString());
+  }
+
+  [Test]
+  public void Decimal16_ExactDecimalArithmetic() {
+    Assert.AreEqual("0.3", (Decimal16.Parse("0.1") + Decimal16.Parse("0.2")).ToString());
+    Assert.AreEqual("5.79", (Decimal16.Parse("1.23") + Decimal16.Parse("4.56")).ToString());
+  }
 }
