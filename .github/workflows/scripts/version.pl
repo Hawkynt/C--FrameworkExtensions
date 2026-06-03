@@ -6,14 +6,15 @@
 #    * .NET repos: each .csproj carries its OWN <Version> (the per-package base).
 #      This is deliberate — different NuGet packages carry different versions,
 #      bumped independently as each package changes. This script appends the git
-#      commit count as the build segment and stamps <Version>BASE.BUILD</Version>
-#      back into EACH csproj. Package A at 1.0.2 and package B at 2.3.0 stay
-#      independent; both just gain the shared .BUILD tail.
+#      PER-PROJECT build segment and stamps <Version>BASE.BUILD</Version> back
+#      into EACH csproj. BASE and BUILD are both independent per package, e.g.
+#      A at 1.0.2.<commits-touching-A> and B at 2.3.0.<commits-touching-B>.
 #    * Non-.NET repos (no .csproj anywhere): fall back to a plain VERSION file at
 #      the repo root. There is nothing to stamp; --list just reports VERSION.BUILD.
 #      (This is the ONLY place a VERSION file is used — .NET repos never need one.)
 #
-#  BUILD = `git rev-list --count HEAD`.
+#  BUILD = commits touching the project's directory
+#          (`git rev-list --count HEAD -- <project-dir>`); repo-wide for --build.
 #
 #  Usage:
 #    perl version.pl --stamp   # rewrite <Version> in every csproj to BASE.BUILD
@@ -32,9 +33,9 @@ my $mode = $ARGV[0] // '--stamp';
 exit 2 unless $mode eq '--stamp' || $mode eq '--build' || $mode eq '--list';
 
 my $root  = _RepoRoot("$FindBin::Bin");
-my $build = _BuildNumber($root);
 
-if ($mode eq '--build') { print "$build\n"; exit 0; }
+# --build prints the repo-wide commit count (the only context-free build number).
+if ($mode eq '--build') { print _BuildNumber($root), "\n"; exit 0; }
 
 my @csprojs = _Csprojs($root);
 
@@ -42,11 +43,13 @@ if ($mode eq '--list') {
     if (@csprojs) {
         for my $f (@csprojs) {
             my $b = _ReadVersion($f);
-            print "$f\t" . _Compose($b, $build) . "\n" if defined $b;
+            next unless defined $b;
+            # BUILD is PER-PROJECT: commits touching this csproj's directory.
+            print "$f\t" . _Compose($b, _BuildNumber($root, _ProjDir($root, $f))) . "\n";
         }
     } else {
         my $b = _VersionFile($root);
-        print "VERSION\t" . _Compose($b, $build) . "\n" if defined $b;
+        print "VERSION\t" . _Compose($b, _BuildNumber($root)) . "\n" if defined $b;
     }
     exit 0;
 }
@@ -55,7 +58,7 @@ if ($mode eq '--list') {
 unless (@csprojs) {
     my $b = _VersionFile($root);
     print defined $b
-        ? "no csproj; VERSION-based version is " . _Compose($b, $build) . " (nothing to stamp)\n"
+        ? "no csproj; VERSION-based version is " . _Compose($b, _BuildNumber($root)) . " (nothing to stamp)\n"
         : "no csproj and no VERSION file; nothing to stamp\n";
     exit 0;
 }
@@ -64,9 +67,11 @@ my $n = 0;
 for my $f (@csprojs) {
     my $b = _ReadVersion($f);
     unless (defined $b) { warn "[warn] no <Version> in $f; skipped\n"; next; }
-    $n++ if _Rewrite($f, _Compose($b, $build));
+    # Each package's BUILD segment counts only commits that touched ITS directory,
+    # so independently-changed packages get independent build numbers.
+    $n++ if _Rewrite($f, _Compose($b, _BuildNumber($root, _ProjDir($root, $f))));
 }
-print "stamped $n csproj file(s) at build $build\n";
+print "stamped $n csproj file(s) with per-project build numbers\n";
 exit 0;
 
 # --------------------------------------------------------------------------- #
@@ -93,10 +98,21 @@ sub _RepoRoot {
 }
 
 sub _BuildNumber {
-    my ($r) = @_;
-    my $c = `git -C "$r" rev-list --count HEAD 2>&1`;
+    my ($r, $rel) = @_;
+    # With a relative project path, count only commits that touched it.
+    my $spec = (defined $rel && length $rel) ? " -- \"$rel\"" : "";
+    my $c = `git -C "$r" rev-list --count HEAD$spec 2>&1`;
     chomp $c;
     return $c =~ /^\d+$/ ? $c : '0';
+}
+
+# Path of a csproj's directory, relative to the repo root ('' = repo root).
+sub _ProjDir {
+    my ($root, $file) = @_;
+    (my $dir = $file) =~ s{[/\\][^/\\]+$}{};   # strip the filename
+    (my $r   = $root) =~ s{[/\\]$}{};
+    $dir =~ s{^\Q$r\E[/\\]?}{};                # make relative to repo root
+    return $dir;
 }
 
 sub _Csprojs {
