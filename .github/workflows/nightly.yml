@@ -40,6 +40,11 @@ jobs:
             System.DirectoryServices.AccountManagement.Extensions/DirectoryServices.Extensions.csproj; do
             dotnet pack "$p" --configuration Release --output ./artifacts
           done
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate release notes (functional changes, bucketed by + - * # !)
+        run: node ".github/workflows/scripts/update-changelog.mjs" --nightly --notes RELEASE_NOTES.md
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2
         with:
@@ -47,7 +52,7 @@ jobs:
           name: ${{ env.NIGHTLY_TAG }}
           prerelease: true
           files: artifacts/*.nupkg
-          generate_release_notes: true        # automatic changelog in the prerelease body
+          body_path: RELEASE_NOTES.md           # commit-message changelog, not GitHub's PR notes
       - name: Prune old nightlies (GFS)
         run: node ".github/workflows/scripts/prune-nightlies.mjs"
         env:

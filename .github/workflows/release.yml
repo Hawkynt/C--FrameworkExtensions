@@ -43,8 +43,11 @@ jobs:
         with:
           name: nuget-packages
           path: dist
-      - name: Update changelog
-        run: node ".github/workflows/scripts/update-changelog.mjs" --release "$REL" || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Update changelog + generate release notes (bucketed by + - * # !)
+        run: node ".github/workflows/scripts/update-changelog.mjs" --release "$REL" --notes RELEASE_NOTES.md
       - name: Commit changelog (if it changed)
         run: |
           if ! git diff --quiet -- CHANGELOG.md; then
@@ -60,4 +63,4 @@ jobs:
           tag_name: ${{ env.REL }}
           name: ${{ env.REL }}
           files: dist/*.nupkg
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md            # commit-message changelog, not GitHub's PR notes
