@@ -2,24 +2,29 @@
 # -----------------------------------------------------------------------------
 #  version.pl — the ONE versioner, identical in every Hawkynt repo.
 #
-#  Model: FILES drive versions, never git tags.
-#    * .NET repos: each .csproj carries its OWN <Version> (the per-package base).
-#      This is deliberate — different NuGet packages carry different versions,
-#      bumped independently as each package changes. This script appends the git
-#      PER-PROJECT build segment and stamps <Version>BASE.BUILD</Version> back
-#      into EACH csproj. BASE and BUILD are both independent per package, e.g.
-#      A at 1.0.2.<commits-touching-A> and B at 2.3.0.<commits-touching-B>.
-#    * Non-.NET repos (no .csproj anywhere): fall back to a plain VERSION file at
-#      the repo root. There is nothing to stamp; --list just reports VERSION.BUILD.
-#      (This is the ONLY place a VERSION file is used — .NET repos never need one.)
+#  Model: FILES drive versions, never git tags. The script scans for package
+#  manifests across ecosystems and, for EACH manifest, computes a build number
+#  from the commit count of that manifest's PARENT FOLDER, then stamps it back
+#  into the manifest. So every package versions independently, by how much its
+#  own directory actually changed.
 #
-#  BUILD = commits touching the project's directory
-#          (`git rev-list --count HEAD -- <project-dir>`); repo-wide for --build.
+#  Manifests recognised (kind -> file -> version field):
+#    dotnet : *.csproj / *.fsproj / *.vbproj   <Version>X.Y.Z</Version>
+#    node   : package.json                      "version": "X.Y.Z"
+#    php    : composer.json                     "version": "X.Y.Z"
+#    perl   : *.pm that declares $VERSION        our $VERSION = 'X.Y.Z';
+#  A *.pm without a $VERSION is ignored, so only real package modules match.
+#  Repos with no manifest (e.g. Go — versioned by tags) are left untouched.
+#
+#  BUILD = `git rev-list --count HEAD -- <manifest's parent dir>` (repo-wide for
+#  --build). Composition respects each ecosystem's version grammar:
+#    dotnet / perl : X.Y.Z.BUILD   (4-part is legal there)
+#    node / php    : X.Y.Z+BUILD   (semver forbids a 4th part; build-metadata)
 #
 #  Usage:
-#    perl version.pl --stamp   # rewrite <Version> in every csproj to BASE.BUILD
-#    perl version.pl --build   # print the build number (commit count) only
-#    perl version.pl --list    # print "<path>\t<BASE.BUILD>" per csproj (or VERSION)
+#    perl version.pl --stamp   # rewrite the version in every manifest
+#    perl version.pl --build   # print the repo-wide build number (commit count)
+#    perl version.pl --list    # print "<manifest>\t<composed-version>" per package
 #
 #  Exit: 0 success, 2 bad usage.
 # -----------------------------------------------------------------------------
@@ -32,58 +37,146 @@ use File::Copy;
 my $mode = $ARGV[0] // '--stamp';
 exit 2 unless $mode eq '--stamp' || $mode eq '--build' || $mode eq '--list';
 
-my $root  = _RepoRoot("$FindBin::Bin");
+my $root = _RepoRoot("$FindBin::Bin");
 
 # --build prints the repo-wide commit count (the only context-free build number).
 if ($mode eq '--build') { print _BuildNumber($root), "\n"; exit 0; }
 
-my @csprojs = _Csprojs($root);
+my @manifests = _Manifests($root);
 
 if ($mode eq '--list') {
-    if (@csprojs) {
-        for my $f (@csprojs) {
-            my $b = _ReadVersion($f);
-            next unless defined $b;
-            # BUILD is PER-PROJECT: commits touching this csproj's directory.
-            print "$f\t" . _Compose($b, _BuildNumber($root, _ProjDir($root, $f))) . "\n";
-        }
-    } else {
-        my $b = _VersionFile($root);
-        print "VERSION\t" . _Compose($b, _BuildNumber($root)) . "\n" if defined $b;
+    for my $m (@manifests) {
+        my ($file, $kind) = @$m;
+        my $base = _ReadBase($kind, $file);
+        next unless defined $base;
+        my $build = _BuildNumber($root, _ParentDir($root, $file));
+        print "$file\t" . _Compose($kind, $base, $build) . "\n";
     }
     exit 0;
 }
 
 # --stamp
-unless (@csprojs) {
-    my $b = _VersionFile($root);
-    print defined $b
-        ? "no csproj; VERSION-based version is " . _Compose($b, _BuildNumber($root)) . " (nothing to stamp)\n"
-        : "no csproj and no VERSION file; nothing to stamp\n";
-    exit 0;
-}
-
 my $n = 0;
-for my $f (@csprojs) {
-    my $b = _ReadVersion($f);
-    unless (defined $b) { warn "[warn] no <Version> in $f; skipped\n"; next; }
-    # Each package's BUILD segment counts only commits that touched ITS directory,
+for my $m (@manifests) {
+    my ($file, $kind) = @$m;
+    my $base = _ReadBase($kind, $file);
+    next unless defined $base;
+    # Build segment counts only commits that touched this manifest's directory,
     # so independently-changed packages get independent build numbers.
-    $n++ if _Rewrite($f, _Compose($b, _BuildNumber($root, _ProjDir($root, $f))));
+    my $full = _Compose($kind, $base, _BuildNumber($root, _ParentDir($root, $file)));
+    $n++ if _Rewrite($kind, $file, $full);
 }
-print "stamped $n csproj file(s) with per-project build numbers\n";
+print "stamped $n manifest(s) with per-package build numbers\n";
 exit 0;
 
 # --------------------------------------------------------------------------- #
 
-# base (tidied to <=3 numeric segments) + ".BUILD"
+# Compose the ecosystem-appropriate version string from base + build.
 sub _Compose {
-    my ($base, $build) = @_;
+    my ($kind, $base, $build) = @_;
     return undef unless defined $base;
     my @p = split /\./, $base;
     @p = @p[0 .. 2] if @p > 3;
-    return join('.', @p) . ".$build";
+    my $core = join('.', @p);
+    # semver (node/php) forbids a 4th numeric part -> put build in metadata.
+    return ($kind eq 'node' || $kind eq 'php') ? "$core+$build" : "$core.$build";
 }
+
+sub _Kind {
+    my ($f) = @_;
+    return 'dotnet' if $f =~ /\.(?:csproj|fsproj|vbproj)$/i;
+    return 'node'   if $f =~ m{(?:^|[/\\])package\.json$}i;
+    return 'php'    if $f =~ m{(?:^|[/\\])composer\.json$}i;
+    return 'perl'   if $f =~ /\.pm$/i;
+    return undef;
+}
+
+sub _Manifests {
+    my ($r) = @_;
+    my @out;
+    my %skip = map { $_ => 1 } qw(
+        bin obj packages node_modules .git .vs .idea TestResults
+        artifacts publish dist stage coverage vendor .svn
+    );
+    File::Find::find(
+        {
+            no_chdir   => 1,
+            preprocess => sub { grep { !$skip{$_} } @_ },
+            wanted     => sub {
+                my $f = $File::Find::name;
+                return unless -f $f;
+                my $kind = _Kind($f);
+                push @out, [$f, $kind] if $kind;
+            },
+        },
+        $r,
+    );
+    return sort { $a->[0] cmp $b->[0] } @out;
+}
+
+# ---- per-kind version readers (return the base X.Y.Z, or undef) ------------
+
+sub _ReadBase {
+    my ($kind, $f) = @_;
+    return _ReadDotnet($f) if $kind eq 'dotnet';
+    return _ReadJson($f)   if $kind eq 'node' || $kind eq 'php';
+    return _ReadPerl($f)   if $kind eq 'perl';
+    return undef;
+}
+
+sub _Slurp {
+    my ($f) = @_;
+    open my $fh, '<', $f or return undef;
+    local $/;
+    my $c = <$fh>;
+    close $fh;
+    return $c;
+}
+
+sub _ReadDotnet {
+    my ($f) = @_;
+    my $c = _Slurp($f) // return undef;
+    return $c =~ m{<Version>\s*(\d+(?:\.\d+){0,2})\s*</Version>}i ? $1 : undef;
+}
+
+sub _ReadJson {
+    my ($f) = @_;
+    my $c = _Slurp($f) // return undef;
+    return $c =~ m{"version"\s*:\s*"v?(\d+(?:\.\d+){0,2})}i ? $1 : undef;
+}
+
+sub _ReadPerl {
+    my ($f) = @_;
+    my $c = _Slurp($f) // return undef;
+    return $c =~ m{\$VERSION\s*=\s*['"]v?(\d+(?:\.\d+){0,3})}i ? $1 : undef;
+}
+
+# ---- per-kind rewriters (return 1 if the file changed) ---------------------
+
+sub _Rewrite {
+    my ($kind, $f, $full) = @_;
+    my $c = _Slurp($f);
+    return 0 unless defined $c;
+    my $orig = $c;
+    if ($kind eq 'dotnet') {
+        $c =~ s{<Version>\s*[\w.+\-]+\s*</Version>}{<Version>$full</Version>}ig;
+    } elsif ($kind eq 'node' || $kind eq 'php') {
+        $c =~ s{("version"\s*:\s*")[^"]*(")}{$1$full$2}i;   # first occurrence only
+    } elsif ($kind eq 'perl') {
+        $c =~ s{(\$VERSION\s*=\s*['"])[^'"]*(['"])}{$1$full$2};
+    } else {
+        return 0;
+    }
+    return 0 if $c eq $orig;
+    my $tmp = "$f.\$\$\$";
+    open my $out, '>', $tmp or die "write $tmp: $!";
+    print $out $c;
+    close $out;
+    File::Copy::move($tmp, $f) or die "replace $f: $!";
+    return 1;
+}
+
+# ---- git / path helpers ----------------------------------------------------
 
 sub _RepoRoot {
     my ($d) = @_;
@@ -99,74 +192,17 @@ sub _RepoRoot {
 
 sub _BuildNumber {
     my ($r, $rel) = @_;
-    # With a relative project path, count only commits that touched it.
     my $spec = (defined $rel && length $rel) ? " -- \"$rel\"" : "";
     my $c = `git -C "$r" rev-list --count HEAD$spec 2>&1`;
     chomp $c;
     return $c =~ /^\d+$/ ? $c : '0';
 }
 
-# Path of a csproj's directory, relative to the repo root ('' = repo root).
-sub _ProjDir {
+# Path of a manifest's directory, relative to the repo root ('' = repo root).
+sub _ParentDir {
     my ($root, $file) = @_;
     (my $dir = $file) =~ s{[/\\][^/\\]+$}{};   # strip the filename
     (my $r   = $root) =~ s{[/\\]$}{};
     $dir =~ s{^\Q$r\E[/\\]?}{};                # make relative to repo root
     return $dir;
-}
-
-sub _Csprojs {
-    my ($r) = @_;
-    my @f;
-    my %skip = map { $_ => 1 } qw(
-        bin obj packages node_modules .git .vs .idea TestResults
-        artifacts publish dist stage coverage
-    );
-    File::Find::find(
-        {
-            no_chdir   => 1,
-            preprocess => sub { grep { !$skip{$_} } @_ },
-            wanted     => sub { push @f, $File::Find::name if /\.csproj$/i && -f $File::Find::name },
-        },
-        $r,
-    );
-    return sort @f;
-}
-
-sub _ReadVersion {
-    my ($f) = @_;
-    open my $fh, '<', $f or return undef;
-    while (my $l = <$fh>) {
-        if ($l =~ m{<Version>\s*([\d.]+)\s*</Version>}i) { close $fh; return $1; }
-    }
-    close $fh;
-    return undef;
-}
-
-sub _VersionFile {
-    my ($r) = @_;
-    my $vf = "$r/VERSION";
-    return undef unless -r $vf;
-    open my $fh, '<', $vf or return undef;
-    chomp(my $v = <$fh>);
-    close $fh;
-    $v =~ s/^\s+|\s+$//g if defined $v;
-    return (defined $v && length $v) ? $v : undef;
-}
-
-sub _Rewrite {
-    my ($f, $full) = @_;
-    my $tmp = "$f.\$\$\$";
-    open my $in,  '<', $f   or die "read $f: $!";
-    open my $out, '>', $tmp or die "write $tmp: $!";
-    my $hit = 0;
-    while (my $l = <$in>) {
-        $hit = 1 if $l =~ s{<Version>\s*[\d.]+\s*</Version>}{<Version>$full</Version>}i;
-        print $out $l;
-    }
-    close $out;
-    close $in;
-    if ($hit) { File::Copy::move($tmp, $f) or die "replace $f: $!"; return 1; }
-    unlink $tmp;
-    return 0;
 }
