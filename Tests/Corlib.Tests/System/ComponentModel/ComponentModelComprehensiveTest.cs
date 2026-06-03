@@ -459,6 +459,7 @@ public class ComponentModelComprehensiveTest {
   #region Performance Tests
 
   [Test]
+  [Category("Performance")]
   public void BindingListExtensions_Any_PerformanceTest_LargeList() {
     var list = new BindingList<int>(Enumerable.Range(1, 100000).ToList());
 
@@ -471,6 +472,7 @@ public class ComponentModelComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void BindingListExtensions_ToArray_PerformanceTest_LargeList() {
     var sourceArray = Enumerable.Range(1, 50000).ToArray();
     var list = new BindingList<int>(sourceArray);
@@ -484,6 +486,7 @@ public class ComponentModelComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void BindingListExtensions_AddRange_PerformanceTest_LargeRange() {
     var list = new BindingList<int>();
     var itemsToAdd = Enumerable.Range(1, 10000).ToArray();

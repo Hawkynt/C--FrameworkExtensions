@@ -325,6 +325,7 @@ public class TimeSpanComprehensiveTest {
   #region Performance Tests
 
   [Test]
+  [Category("Performance")]
   public void TimeSpanExtensions_ArithmeticOperations_Performance_FastExecution() {
     var timeSpans = Enumerable
       .Range(1, 1000)
@@ -343,6 +344,7 @@ public class TimeSpanComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void TimeSpanExtensions_FactoryMethods_Performance_FastCreation() {
     var sw = Stopwatch.StartNew();
     for (var i = 0; i < 10000; i++) {
@@ -357,6 +359,7 @@ public class TimeSpanComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void TimeSpanExtensions_TypeConversions_Performance_FastConversion() {
     var sw = Stopwatch.StartNew();
     for (var i = 0; i < 1000; i++) {

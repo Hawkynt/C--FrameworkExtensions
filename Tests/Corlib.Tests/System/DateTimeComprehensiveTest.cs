@@ -661,6 +661,7 @@ public class DateTimeComprehensiveTest {
   #region Performance Tests
 
   [Test]
+  [Category("Performance")]
   public void DateTimeExtensions_DaysTill_LargeRange_PerformanceTest() {
     var start = new DateTime(2020, 1, 1);
     var end = new DateTime(2025, 12, 31); // ~6 years = ~2190 days
@@ -674,6 +675,7 @@ public class DateTimeComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void DateTimeExtensions_StartOfWeek_Performance_FastCalculation() {
     var dates = Enumerable
       .Range(0, 1000)
@@ -689,6 +691,7 @@ public class DateTimeComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void DateTimeExtensions_UnixTimestamp_Performance_FastConversion() {
     var dates = Enumerable
       .Range(0, 1000)

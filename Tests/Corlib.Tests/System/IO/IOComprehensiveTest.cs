@@ -860,6 +860,7 @@ public class IOComprehensiveTest {
   #region Performance Tests
 
   [Test]
+  [Category("Performance")]
   public void FileInfoExtensions_HashComputation_LargeFile_PerformanceTest() {
     // Create a moderately large file for performance testing
     var content = string.Join("", Enumerable.Repeat("Performance test line with various content.\n", 5000).ToArray());
@@ -874,6 +875,7 @@ public class IOComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void DirectoryInfoExtensions_GetSize_DeepHierarchy_PerformanceTest() {
     var rootDir = this.CreateTestDirectory();
 
@@ -896,6 +898,7 @@ public class IOComprehensiveTest {
   }
 
   [Test]
+  [Category("Performance")]
   public void StreamExtensions_PrimitiveIO_BulkOperations_PerformanceTest() {
     using var stream = new MemoryStream();
 

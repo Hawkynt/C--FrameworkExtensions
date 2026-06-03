@@ -66,5 +66,13 @@ jobs:
             6.x
             5.x
             3.1
-      - name: Test
-        run: dotnet test "Tests/Corlib.Tests/Corlib.Tests.csproj" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620
+      # Required tier — the core suite. Excludes the Performance category so a
+      # slow shared runner can't fail the build on a wall-clock assertion.
+      - name: Test (required — excludes Performance)
+        run: dotnet test "Tests/Corlib.Tests/Corlib.Tests.csproj" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --filter "TestCategory!=Performance" --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620
+
+      # Advisory tier — wall-clock performance tests. They run and report, but
+      # continue-on-error means a timing blip never blocks a merge.
+      - name: Test (advisory — Performance, never blocks)
+        continue-on-error: true
+        run: dotnet test "Tests/Corlib.Tests/Corlib.Tests.csproj" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --filter "TestCategory=Performance" --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620
