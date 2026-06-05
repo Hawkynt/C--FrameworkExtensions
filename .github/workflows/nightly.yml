@@ -5,7 +5,7 @@ name: Nightly
 on:
   workflow_run:
     workflows: [CI]
-    branches: [master]
+    branches: [main]
     types: [completed]
   workflow_dispatch: {}
 
@@ -48,13 +48,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # --notes-only: CHANGELOG.md is committed by release.yml exclusively.
       - name: Generate release notes (functional changes, bucketed by + - * # !)
-        run: node ".github/workflows/scripts/update-changelog.mjs" --nightly --notes RELEASE_NOTES.md
+        run: node ".github/workflows/scripts/update-changelog.mjs" --nightly --notes-only --notes RELEASE_NOTES.md
+
+      # Same-day re-run: drop the existing nightly release AND its tag first,
+      # so the tag always points at the SHA that was actually built.
+      - name: Replace same-day nightly (release + tag), if any
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete "${{ env.NIGHTLY_TAG }}" --cleanup-tag --yes || true
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.NIGHTLY_TAG }}
           name: ${{ env.NIGHTLY_TAG }}
+          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
           prerelease: true
           files: artifacts/*.nupkg
           body_path: RELEASE_NOTES.md           # commit-message changelog, not GitHub's PR notes

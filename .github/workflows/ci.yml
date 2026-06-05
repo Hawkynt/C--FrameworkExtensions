@@ -4,9 +4,9 @@ name: CI
 # release.yml and nightly.yml reuse this via `workflow_call` / `workflow_run`.
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
   workflow_call: {}
 
 # Force JavaScript-based actions to run on Node 24 instead of the deprecated Node 20 ahead of
