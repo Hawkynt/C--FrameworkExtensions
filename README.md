@@ -2,8 +2,8 @@
 
 [![License](https://img.shields.io/github/license/Hawkynt/C--FrameworkExtensions)](LICENSE)
 [![Language](https://img.shields.io/github/languages/top/Hawkynt/C--FrameworkExtensions?color=8957D5)](https://github.com/Hawkynt/C--FrameworkExtensions)
-[![CI](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml)
-![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master)
+[![CI](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml)
+![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=main)
 ![Activity](https://img.shields.io/github/commit-activity/m/Hawkynt/C--FrameworkExtensions)
 
 [![Stars](https://img.shields.io/github/stars/Hawkynt/C--FrameworkExtensions?color=FFD700)](https://github.com/Hawkynt/C--FrameworkExtensions/stargazers)
@@ -16,7 +16,7 @@
 
 > The .NET base class libraries of [.NET Framework](https://en.wikipedia.org/wiki/.NET_Framework) and [.Net Core](https://en.wikipedia.org/wiki/.NET) leaves gaps — handy methods missing from existing types and whole types you end up rewriting in every project — and these extensions fill both, enriching the BCL types and adding the ones it lacks (with the Backports package also letting the same code use modern [C#](https://en.wikipedia.org/wiki/C_Sharp_%28programming_language%29) on older runtimes).
 
-## Packages
+## 🧩 Packages
 
 | Package | Description | Version | Downloads |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@
 | [FrameworkExtensions.System.Drawing](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing) | Extensions to System.Drawing. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Drawing)](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/FrameworkExtensions.System.Drawing)](https://www.nuget.org/stats/packages/FrameworkExtensions.System.Drawing?groupby=Version) |
 | [FrameworkExtensions.System.Windows.Forms](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms) | Extensions to WindowsForms. | [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Windows.Forms)](https://www.nuget.org/packages/FrameworkExtensions.System.Windows.Forms/) | [![NuGet Downloads](https://img.shields.io/nuget/dt/FrameworkExtensions.System.Windows.Forms)](https://www.nuget.org/stats/packages/FrameworkExtensions.System.Windows.Forms?groupby=Version) |
 
-## Building
+## 🛠️ Building
 
 ```bash
 # Restore + build a single package (cross-platform packages build anywhere):
@@ -44,13 +44,21 @@ CI builds the cross-platform packages on Linux and runs the test suite on
 Windows across the supported target frameworks — see
 [`CI/CD`](.github/workflows/README.md).
 
-## License
-
-Licensed under [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.txt) — see [LICENSE](LICENSE).
+## 🤝 Contributing
 
 - give credit to ***Hawkynt*** when using
 - please open **pull requests** if you add something
 - report issues and get in contact via [GitHub](https://github.com/Hawkynt/C--FrameworkExtensions/issues)
-- always deliver the [LICENSE](https://www.gnu.org/licenses/lgpl-3.0.txt) file to your code's customer
 
 See [CONTRIBUTING](CONTRIBUTING.md) for the contribution rules.
+
+## ❤️ Support
+
+If this project saves you time or money, consider supporting its development:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?logo=githubsponsors)](https://github.com/sponsors/Hawkynt)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?logo=paypal)](https://www.paypal.me/hawkynt)
+
+## 📜 License
+
+Licensed under LGPL-3.0-or-later — see [LICENSE](LICENSE).
