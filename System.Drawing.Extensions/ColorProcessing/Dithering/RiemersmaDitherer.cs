@@ -26,52 +26,81 @@ using MethodImplOptions = Utilities.MethodImplOptions;
 namespace Hawkynt.ColorProcessing.Dithering;
 
 /// <summary>
-/// Types of space-filling curves for image traversal.
+/// Types of space-filling and locality-oriented curves for image traversal.
 /// </summary>
 /// <remarks>
-/// Space-filling curves visit every point in a 2D region while maintaining locality -
-/// nearby points in the curve tend to be nearby in space. This property makes them
-/// ideal for error diffusion dithering where error propagation benefits from spatial coherence.
+/// Riemersma's error history benefits from spatial locality. Continuous curves such as Hilbert,
+/// Moore, Gilbert and the Peano family keep consecutive samples adjacent on their native domains;
+/// Morton and diagonal scans are included as useful comparison traversals with weaker continuity.
 /// </remarks>
 public enum SpaceFillingCurve {
   /// <summary>
   /// Hilbert curve - subdivides space into 4 quadrants recursively.
-  /// Order range: 1-7. Each order doubles the resolution (order n covers 2^n × 2^n).
+  /// Order range: 1-7 when explicitly specified. Order n covers 2^n × 2^n.
   /// </summary>
-  /// <remarks>
-  /// Reference: D. Hilbert 1891 "Über die stetige Abbildung einer Linie auf ein Flächenstück"
-  /// See: https://en.wikipedia.org/wiki/Hilbert_curve
-  /// </remarks>
-  Hilbert,
+  Hilbert = 0,
 
   /// <summary>
-  /// Peano curve - subdivides space into 9 parts recursively (3×3 grid).
-  /// Order range: 1-5. Each order triples the resolution (order n covers 3^n × 3^n).
+  /// Peano curve - subdivides space into a recursively transformed 3×3 grid.
+  /// Order range: 1-5. Order n covers 3^n × 3^n.
   /// </summary>
-  /// <remarks>
-  /// Reference: G. Peano 1890 "Sur une courbe, qui remplit toute une aire plane"
-  /// See: https://en.wikipedia.org/wiki/Peano_curve
-  /// </remarks>
-  Peano,
+  Peano = 1,
 
   /// <summary>
   /// Simple serpentine (boustrophedon) scan - alternating left-to-right and right-to-left rows.
-  /// No order parameter needed.
   /// </summary>
-  Linear
+  Linear = 2,
+
+  /// <summary>
+  /// Moore curve - closed-loop Hilbert relative. Complete 2^n × 2^n domains are 4-connected
+  /// and the final point is adjacent to the first one.
+  /// </summary>
+  Moore = 3,
+
+  /// <summary>
+  /// Generalized Hilbert (Gilbert) traversal for arbitrary rectangular dimensions.
+  /// The curve order parameter is ignored.
+  /// </summary>
+  Gilbert = 4,
+
+  /// <summary>
+  /// Coil curve - continuous 3×3 Peano-family traversal that swaps axes in every recursive subcell.
+  /// </summary>
+  Coil = 5,
+
+  /// <summary>
+  /// Half-coil curve - continuous 3×3 Peano-family traversal alternating Peano and Coil orientations.
+  /// </summary>
+  HalfCoil = 6,
+
+  /// <summary>
+  /// Meurthe curve - continuous 3×3 Peano-family traversal with neutral recursive orientation.
+  /// </summary>
+  Meurthe = 7,
+
+  /// <summary>
+  /// Morton/Z-order traversal. Preserves hierarchical locality but may jump between consecutive pixels.
+  /// </summary>
+  Morton = 8,
+
+  /// <summary>
+  /// Clockwise inward rectangular spiral. Supports arbitrary dimensions and remains 4-connected.
+  /// </summary>
+  Spiral = 9,
+
+  /// <summary>
+  /// Zig-zag traversal over successive x+y diagonals. Supports arbitrary dimensions and includes diagonal steps.
+  /// </summary>
+  DiagonalSerpentine = 10
 }
 
 /// <summary>
-/// Riemersma dithering using space-filling curves (Hilbert, Peano, or linear).
+/// Riemersma dithering using configurable space-filling or locality-oriented traversals.
 /// </summary>
 /// <remarks>
-/// <para>Reference: T. Riemersma 1998 "A Balanced Dithering Technique" C/C++ Users Journal</para>
+/// <para>Reference: T. Riemersma 1998 "A Balanced Dithering Technique" C/C++ Users Journal.</para>
 /// <para>See also: https://www.compuphase.com/riemer.htm</para>
-/// <para>Uses exponential decay weights with history buffer along space-filling curve traversal.</para>
-/// <para>
-/// Space-filling curves provide better error diffusion than simple row scanning by maintaining
-/// spatial locality - pixels that are nearby in the traversal order are also nearby in the image.
-/// </para>
+/// <para>Uses exponential decay weights with a history buffer along the selected traversal.</para>
 /// </remarks>
 [Ditherer("Riemersma", Description = "Space-filling curve dithering with exponential decay history", Type = DitheringType.Custom, Author = "Thiadmer Riemersma", Year = 1998)]
 public readonly struct RiemersmaDitherer : IDitherer {
@@ -81,11 +110,17 @@ public readonly struct RiemersmaDitherer : IDitherer {
   private readonly SpaceFillingCurve _curveType;
   private readonly int? _curveOrder;
 
-  /// <summary>Maximum order for Hilbert curve (2^7 = 128 pixels per side).</summary>
-  public const int MaxHilbertOrder = 7;
+  /// <summary>Maximum explicitly requested Hilbert order.</summary>
+  public const int MaxHilbertOrder = SpaceFillingCurves.MaxHilbertOrder;
 
-  /// <summary>Maximum order for Peano curve (3^5 = 243 pixels per side).</summary>
-  public const int MaxPeanoOrder = 5;
+  /// <summary>Maximum explicitly requested Moore order.</summary>
+  public const int MaxMooreOrder = SpaceFillingCurves.MaxMooreOrder;
+
+  /// <summary>Maximum Peano-family order.</summary>
+  public const int MaxPeanoOrder = SpaceFillingCurves.MaxPeanoOrder;
+
+  /// <summary>Maximum explicitly requested Morton order.</summary>
+  public const int MaxMortonOrder = SpaceFillingCurves.MaxMortonOrder;
 
   /// <summary>Pre-configured instance with 16-entry history and Hilbert curve (auto order).</summary>
   public static RiemersmaDitherer Default { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Hilbert);
@@ -96,22 +131,50 @@ public readonly struct RiemersmaDitherer : IDitherer {
   /// <summary>Pre-configured instance with 32-entry history (slower, higher quality).</summary>
   public static RiemersmaDitherer Large { get; } = new(32, SpaceFillingCurve.Hilbert);
 
-  /// <summary>Pre-configured instance with linear (serpentine) traversal instead of space-filling curve.</summary>
+  /// <summary>Pre-configured instance with linear serpentine traversal.</summary>
   public static RiemersmaDitherer LinearScan { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Linear);
 
-  /// <summary>Pre-configured instance with Peano curve traversal (3×3 subdivision).</summary>
+  /// <summary>Pre-configured instance with Peano traversal.</summary>
   public static RiemersmaDitherer Peano { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Peano);
 
+  /// <summary>Pre-configured instance with Moore traversal.</summary>
+  public static RiemersmaDitherer Moore { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Moore);
+
+  /// <summary>Pre-configured instance with generalized Hilbert traversal for arbitrary rectangles.</summary>
+  public static RiemersmaDitherer Gilbert { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Gilbert);
+
+  /// <summary>Pre-configured instance with Coil traversal.</summary>
+  public static RiemersmaDitherer Coil { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Coil);
+
+  /// <summary>Pre-configured instance with Half-coil traversal.</summary>
+  public static RiemersmaDitherer HalfCoil { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.HalfCoil);
+
+  /// <summary>Pre-configured instance with Meurthe traversal.</summary>
+  public static RiemersmaDitherer Meurthe { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Meurthe);
+
+  /// <summary>Pre-configured instance with Morton/Z-order traversal.</summary>
+  public static RiemersmaDitherer Morton { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Morton);
+
+  /// <summary>Pre-configured instance with clockwise inward spiral traversal.</summary>
+  public static RiemersmaDitherer SpiralScan { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.Spiral);
+
+  /// <summary>Pre-configured instance with diagonal serpentine traversal.</summary>
+  public static RiemersmaDitherer DiagonalScan { get; } = new(_DEFAULT_HISTORY_SIZE, SpaceFillingCurve.DiagonalSerpentine);
+
   /// <summary>
-  /// Creates a Riemersma ditherer with specified curve type.
+  /// Creates a Riemersma ditherer with the specified traversal.
   /// </summary>
   /// <param name="historySize">Size of the error history buffer (typically 8, 16, or 32).</param>
-  /// <param name="curveType">Type of space-filling curve to use for traversal.</param>
+  /// <param name="curveType">Traversal used to order pixels.</param>
   /// <param name="curveOrder">
-  /// Order/level of the curve (null = auto-calculate based on image size).
-  /// For Hilbert: 1-7 (covers 2^n × 2^n pixels). For Peano: 1-5 (covers 3^n × 3^n pixels).
+  /// Optional recursive order. Used by Hilbert, Moore, Peano, Coil, Half-coil, Meurthe and Morton;
+  /// ignored by Gilbert, Spiral, DiagonalSerpentine and Linear. <see langword="null"/> selects
+  /// an order automatically where applicable.
   /// </param>
-  public RiemersmaDitherer(int historySize = _DEFAULT_HISTORY_SIZE, SpaceFillingCurve curveType = SpaceFillingCurve.Hilbert, int? curveOrder = null) {
+  public RiemersmaDitherer(
+    int historySize = _DEFAULT_HISTORY_SIZE,
+    SpaceFillingCurve curveType = SpaceFillingCurve.Hilbert,
+    int? curveOrder = null) {
     this._historySize = historySize;
     this._curveType = curveType;
     this._curveOrder = curveOrder;
@@ -139,7 +202,7 @@ public readonly struct RiemersmaDitherer : IDitherer {
     int sourceStride,
     int targetStride,
     int startY,
-        in TMetric metric,
+    in TMetric metric,
     TWork[] palette)
     where TWork : unmanaged, IColorSpace4<TWork>
     where TMetric : struct, IColorMetric<TWork> {
@@ -156,12 +219,18 @@ public readonly struct RiemersmaDitherer : IDitherer {
     var errorHistory = new (double c1, double c2, double c3)[historySize];
     var historyIndex = 0;
 
-    // Generate traversal order for the specified region. Delegates to the public
-    // SpaceFillingCurves utility so other tools can reuse the same curves.
     var traversalOrder = this._curveType switch {
       SpaceFillingCurve.Hilbert => SpaceFillingCurves.Hilbert(width, height, startY, this._curveOrder),
       SpaceFillingCurve.Peano => SpaceFillingCurves.Peano(width, height, startY, this._curveOrder),
       SpaceFillingCurve.Linear => SpaceFillingCurves.LinearSerpentine(width, height, startY),
+      SpaceFillingCurve.Moore => SpaceFillingCurves.Moore(width, height, startY, this._curveOrder),
+      SpaceFillingCurve.Gilbert => SpaceFillingCurves.Gilbert(width, height, startY),
+      SpaceFillingCurve.Coil => SpaceFillingCurves.Coil(width, height, startY, this._curveOrder),
+      SpaceFillingCurve.HalfCoil => SpaceFillingCurves.HalfCoil(width, height, startY, this._curveOrder),
+      SpaceFillingCurve.Meurthe => SpaceFillingCurves.Meurthe(width, height, startY, this._curveOrder),
+      SpaceFillingCurve.Morton => SpaceFillingCurves.Morton(width, height, startY, this._curveOrder),
+      SpaceFillingCurve.Spiral => SpaceFillingCurves.Spiral(width, height, startY),
+      SpaceFillingCurve.DiagonalSerpentine => SpaceFillingCurves.DiagonalSerpentine(width, height, startY),
       _ => SpaceFillingCurves.Hilbert(width, height, startY, this._curveOrder)
     };
 
@@ -229,6 +298,5 @@ public readonly struct RiemersmaDitherer : IDitherer {
       historyIndex = (historyIndex + 1) % historySize;
     }
   }
-
 
 }
