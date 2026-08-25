@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the License along with Hawkynt's
 // .NET Framework extensions. If not, see
-// <https://github.com/Hawkynt+C--FrameworkExtensions/blob/master/LICENSE>.
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
 
 #endregion
 
@@ -35,11 +35,26 @@ namespace Hawkynt.ColorProcessing;
 /// </remarks>
 public static class SpaceFillingCurves {
 
-  /// <summary>Largest Hilbert order we accept (2^7 = 128 covers most real images).</summary>
+  /// <summary>Largest explicitly requested Hilbert order (2^7 = 128 pixels per side).</summary>
   public const int MaxHilbertOrder = 7;
 
-  /// <summary>Largest Peano order we accept (3^5 = 243 covers most real images).</summary>
+  /// <summary>Largest explicitly requested Moore order (2^7 = 128 pixels per side).</summary>
+  public const int MaxMooreOrder = 7;
+
+  /// <summary>Largest Peano-family order we accept (3^5 = 243 pixels per side).</summary>
   public const int MaxPeanoOrder = 5;
+
+  /// <summary>Largest Coil order we accept.</summary>
+  public const int MaxCoilOrder = MaxPeanoOrder;
+
+  /// <summary>Largest Half-coil order we accept.</summary>
+  public const int MaxHalfCoilOrder = MaxPeanoOrder;
+
+  /// <summary>Largest Meurthe order we accept.</summary>
+  public const int MaxMeurtheOrder = MaxPeanoOrder;
+
+  /// <summary>Largest explicitly requested Morton order (2^7 = 128 pixels per side).</summary>
+  public const int MaxMortonOrder = 7;
 
   /// <summary>
   /// Generates a Hilbert-curve traversal of a <paramref name="width"/> × <paramref name="height"/>
@@ -82,37 +97,181 @@ public static class SpaceFillingCurves {
   }
 
   /// <summary>
-  /// Generates a Peano-curve traversal of a <paramref name="width"/> × <paramref name="height"/>
-  /// region starting at row <paramref name="startY"/>.
+  /// Generates a Moore-curve traversal. Moore is the closed-loop relative of Hilbert:
+  /// complete <c>2ⁿ × 2ⁿ</c> domains have unit Manhattan steps and the final point is
+  /// adjacent to the first one. Rectangles are covered by clipping the enclosing Moore square.
   /// </summary>
-  /// <param name="order">Optional order (1..<see cref="MaxPeanoOrder"/>). Each order covers <c>3ⁿ × 3ⁿ</c>.</param>
-  public static List<(int x, int y)> Peano(int width, int height, int startY = 0, int? order = null) {
+  /// <param name="order">Optional order (1..<see cref="MaxMooreOrder"/>). Each order covers <c>2ⁿ × 2ⁿ</c>.</param>
+  public static List<(int x, int y)> Moore(int width, int height, int startY = 0, int? order = null) {
     var result = new List<(int, int)>(Math.Max(0, width * height));
     var endY = startY + height;
     if (width <= 0 || height <= 0)
       return result;
 
-    int peanoOrder;
-    int n;
-    if (order.HasValue) {
-      peanoOrder = Math.Max(1, Math.Min(MaxPeanoOrder, order.Value));
-      n = 1;
-      for (var k = 0; k < peanoOrder; ++k) n *= 3;
-    } else {
-      peanoOrder = 1;
-      n = 3;
-      while (n < Math.Max(width, endY) && peanoOrder < MaxPeanoOrder) {
-        n *= 3;
-        ++peanoOrder;
+    int curveOrder;
+    if (order.HasValue)
+      curveOrder = Math.Max(1, Math.Min(MaxMooreOrder, order.Value));
+    else {
+      curveOrder = 1;
+      var side = 2;
+      while (side < Math.Max(width, endY)) {
+        side *= 2;
+        ++curveOrder;
       }
     }
 
-    var totalPoints = n * n;
-    for (var i = 0; i < totalPoints; ++i) {
-      var (x, y) = _PeanoIndexToXY(i, peanoOrder);
-      if (x < width && y >= startY && y < endY)
-        result.Add((x, y));
+    // Moore's L-system is traced twice. The first pass determines the translation
+    // needed to normalize the turtle coordinates without allocating a second full
+    // curve-sized list; the second pass emits only pixels inside the requested region.
+    int minX = 0, minY = 0;
+    _TraceMoore(curveOrder, null, 0, 0, 0, 0, ref minX, ref minY);
+    _TraceMoore(curveOrder, result, -minX, -minY, width, endY, ref minX, ref minY, startY);
+    return result;
+  }
+
+  /// <summary>
+  /// Generates a generalized Hilbert ("Gilbert") traversal that directly fills an arbitrary
+  /// rectangular raster instead of generating a square and clipping it.
+  /// </summary>
+  /// <remarks>
+  /// Consecutive points are normally orthogonal neighbors. Some odd/even dimension combinations
+  /// require a single diagonal transition; this is inherent to Hamiltonian paths on those rectangles.
+  /// Based on Jakub Červený's generalized Hilbert construction (BSD-2-Clause).
+  /// </remarks>
+  public static List<(int x, int y)> Gilbert(int width, int height, int startY = 0) {
+    var result = new List<(int, int)>(Math.Max(0, width * height));
+    if (width <= 0 || height <= 0)
+      return result;
+
+    if (width >= height)
+      _GilbertRecursive(result, 0, startY, width, 0, 0, height);
+    else
+      _GilbertRecursive(result, 0, startY, 0, height, width, 0);
+
+    return result;
+  }
+
+  /// <summary>
+  /// Generates the classical Peano traversal using recursive 3×3 subdivision.
+  /// </summary>
+  /// <param name="order">Optional order (1..<see cref="MaxPeanoOrder"/>). Each order covers <c>3ⁿ × 3ⁿ</c>.</param>
+  public static List<(int x, int y)> Peano(int width, int height, int startY = 0, int? order = null)
+    => _TernaryCurve(width, height, startY, order, _TernaryCurveType.Peano)
+    ;
+
+  /// <summary>
+  /// Generates Haverkort's Coil traversal, a continuous 3×3 Peano-family curve
+  /// that swaps the coordinate axes in every recursive subcell.
+  /// </summary>
+  /// <param name="order">Optional order (1..<see cref="MaxCoilOrder"/>). Each order covers <c>3ⁿ × 3ⁿ</c>.</param>
+  public static List<(int x, int y)> Coil(int width, int height, int startY = 0, int? order = null)
+    => _TernaryCurve(width, height, startY, order, _TernaryCurveType.Coil)
+    ;
+
+  /// <summary>
+  /// Generates Haverkort's Half-coil traversal, alternating between Peano-like
+  /// and Coil-like recursive orientation according to the subcell rank.
+  /// </summary>
+  /// <param name="order">Optional order (1..<see cref="MaxHalfCoilOrder"/>). Each order covers <c>3ⁿ × 3ⁿ</c>.</param>
+  public static List<(int x, int y)> HalfCoil(int width, int height, int startY = 0, int? order = null)
+    => _TernaryCurve(width, height, startY, order, _TernaryCurveType.HalfCoil)
+    ;
+
+  /// <summary>
+  /// Generates Haverkort's Meurthe traversal, a continuous 3×3 curve with
+  /// neutral orientation over recursive pieces.
+  /// </summary>
+  /// <param name="order">Optional order (1..<see cref="MaxMeurtheOrder"/>). Each order covers <c>3ⁿ × 3ⁿ</c>.</param>
+  public static List<(int x, int y)> Meurthe(int width, int height, int startY = 0, int? order = null)
+    => _TernaryCurve(width, height, startY, order, _TernaryCurveType.Meurthe)
+    ;
+
+  /// <summary>
+  /// Generates Morton/Z-order by recursively visiting quadtree cells in bit-interleaving order.
+  /// Hierarchical locality is preserved, but consecutive points are not guaranteed to be neighbors.
+  /// </summary>
+  /// <param name="order">Optional order (1..<see cref="MaxMortonOrder"/>). Each order covers <c>2ⁿ × 2ⁿ</c>.</param>
+  public static List<(int x, int y)> Morton(int width, int height, int startY = 0, int? order = null) {
+    var result = new List<(int, int)>(Math.Max(0, width * height));
+    var endY = startY + height;
+    if (width <= 0 || height <= 0)
+      return result;
+
+    int side;
+    if (order.HasValue) {
+      var clampedOrder = Math.Max(1, Math.Min(MaxMortonOrder, order.Value));
+      side = 1 << clampedOrder;
+    } else {
+      side = 1;
+      while (side < Math.Max(width, endY))
+        side *= 2;
     }
+
+    _MortonRecursive(result, 0, 0, side, width, startY, endY);
+    return result;
+  }
+
+  /// <summary>
+  /// Generates a clockwise inward spiral over an arbitrary rectangle.
+  /// Every consecutive pixel is 4-connected.
+  /// </summary>
+  public static List<(int x, int y)> Spiral(int width, int height, int startY = 0) {
+    var result = new List<(int, int)>(Math.Max(0, width * height));
+    if (width <= 0 || height <= 0)
+      return result;
+
+    var left = 0;
+    var right = width - 1;
+    var top = startY;
+    var bottom = startY + height - 1;
+
+    while (left <= right && top <= bottom) {
+      for (var x = left; x <= right; ++x)
+        result.Add((x, top));
+      ++top;
+
+      for (var y = top; y <= bottom; ++y)
+        result.Add((right, y));
+      --right;
+
+      if (top <= bottom) {
+        for (var x = right; x >= left; --x)
+          result.Add((x, bottom));
+        --bottom;
+      }
+
+      if (left <= right) {
+        for (var y = bottom; y >= top; --y)
+          result.Add((left, y));
+        ++left;
+      }
+    }
+
+    return result;
+  }
+
+  /// <summary>
+  /// Generates a zig-zag traversal over successive <c>x + y</c> diagonals.
+  /// This reduces horizontal scan bias but uses diagonal steps within each diagonal.
+  /// </summary>
+  public static List<(int x, int y)> DiagonalSerpentine(int width, int height, int startY = 0) {
+    var result = new List<(int, int)>(Math.Max(0, width * height));
+    if (width <= 0 || height <= 0)
+      return result;
+
+    var lastSum = width + height - 2;
+    for (var sum = 0; sum <= lastSum; ++sum) {
+      var minX = Math.Max(0, sum - (height - 1));
+      var maxX = Math.Min(width - 1, sum);
+
+      if ((sum & 1) == 0)
+        for (var x = maxX; x >= minX; --x)
+          result.Add((x, startY + sum - x));
+      else
+        for (var x = minX; x <= maxX; ++x)
+          result.Add((x, startY + sum - x));
+    }
+
     return result;
   }
 
@@ -165,128 +324,374 @@ public static class SpaceFillingCurves {
 
   #endregion
 
-  #region Peano internals
+  #region Moore internals
+
+  private struct _MooreState {
+    public List<(int, int)>? Result;
+    public int X;
+    public int Y;
+    public int Direction;
+    public int OffsetX;
+    public int OffsetY;
+    public int MaxWidth;
+    public int MinYFilter;
+    public int MaxY;
+    public int MinX;
+    public int MinY;
+  }
+
+  private static void _TraceMoore(
+    int order,
+    List<(int, int)>? result,
+    int offsetX,
+    int offsetY,
+    int maxWidth,
+    int maxY,
+    ref int minX,
+    ref int minY,
+    int minYFilter = int.MinValue) {
+
+    var state = new _MooreState {
+      Result = result,
+      OffsetX = offsetX,
+      OffsetY = offsetY,
+      MaxWidth = maxWidth,
+      MinYFilter = minYFilter,
+      MaxY = maxY,
+      MinX = minX,
+      MinY = minY
+    };
+
+    if (result != null)
+      _AddMoorePoint(ref state);
+
+    var depth = order - 1;
+    _MooreL(depth, ref state);
+    _MooreForward(ref state);
+    _MooreL(depth, ref state);
+    _MooreTurn(ref state, 1);
+    _MooreForward(ref state);
+    _MooreTurn(ref state, 1);
+    _MooreL(depth, ref state);
+    _MooreForward(ref state);
+    _MooreL(depth, ref state);
+
+    minX = state.MinX;
+    minY = state.MinY;
+  }
+
+  private static void _MooreL(int depth, ref _MooreState state) {
+    if (depth <= 0)
+      return;
+
+    _MooreTurn(ref state, -1);
+    _MooreR(depth - 1, ref state);
+    _MooreForward(ref state);
+    _MooreTurn(ref state, 1);
+    _MooreL(depth - 1, ref state);
+    _MooreForward(ref state);
+    _MooreL(depth - 1, ref state);
+    _MooreTurn(ref state, 1);
+    _MooreForward(ref state);
+    _MooreR(depth - 1, ref state);
+    _MooreTurn(ref state, -1);
+  }
+
+  private static void _MooreR(int depth, ref _MooreState state) {
+    if (depth <= 0)
+      return;
+
+    _MooreTurn(ref state, 1);
+    _MooreL(depth - 1, ref state);
+    _MooreForward(ref state);
+    _MooreTurn(ref state, -1);
+    _MooreR(depth - 1, ref state);
+    _MooreForward(ref state);
+    _MooreR(depth - 1, ref state);
+    _MooreTurn(ref state, -1);
+    _MooreForward(ref state);
+    _MooreL(depth - 1, ref state);
+    _MooreTurn(ref state, 1);
+  }
+
+  private static void _MooreForward(ref _MooreState state) {
+    switch (state.Direction & 3) {
+      case 0: ++state.X; break;
+      case 1: --state.Y; break;
+      case 2: --state.X; break;
+      default: ++state.Y; break;
+    }
+
+    if (state.Result == null) {
+      state.MinX = Math.Min(state.MinX, state.X);
+      state.MinY = Math.Min(state.MinY, state.Y);
+      return;
+    }
+
+    _AddMoorePoint(ref state);
+  }
+
+  private static void _AddMoorePoint(ref _MooreState state) {
+    var x = state.X + state.OffsetX;
+    var y = state.Y + state.OffsetY;
+    if (x >= 0 && x < state.MaxWidth && y >= state.MinYFilter && y < state.MaxY)
+      state.Result!.Add((x, y));
+  }
+
+  private static void _MooreTurn(ref _MooreState state, int quarterTurns)
+    => state.Direction = (state.Direction + quarterTurns) & 3;
+
+  #endregion
+
+  #region Gilbert internals
+
+  private static void _GilbertRecursive(
+    List<(int, int)> result,
+    int x,
+    int y,
+    int ax,
+    int ay,
+    int bx,
+    int by) {
+
+    var w = Math.Abs(ax + ay);
+    var h = Math.Abs(bx + by);
+
+    var dax = Math.Sign(ax);
+    var day = Math.Sign(ay);
+    var dbx = Math.Sign(bx);
+    var dby = Math.Sign(by);
+
+    if (h == 1) {
+      for (var i = 0; i < w; ++i) {
+        result.Add((x, y));
+        x += dax;
+        y += day;
+      }
+      return;
+    }
+
+    if (w == 1) {
+      for (var i = 0; i < h; ++i) {
+        result.Add((x, y));
+        x += dbx;
+        y += dby;
+      }
+      return;
+    }
+
+    // Arithmetic right shift is intentional: unlike integer division, it rounds
+    // negative odd vectors toward -infinity, matching the reference construction.
+    var ax2 = ax >> 1;
+    var ay2 = ay >> 1;
+    var bx2 = bx >> 1;
+    var by2 = by >> 1;
+    var w2 = Math.Abs(ax2 + ay2);
+    var h2 = Math.Abs(bx2 + by2);
+
+    if (2 * w > 3 * h) {
+      if ((w2 & 1) != 0 && w > 2) {
+        ax2 += dax;
+        ay2 += day;
+      }
+
+      _GilbertRecursive(result, x, y, ax2, ay2, bx, by);
+      _GilbertRecursive(result, x + ax2, y + ay2, ax - ax2, ay - ay2, bx, by);
+      return;
+    }
+
+    if ((h2 & 1) != 0 && h > 2) {
+      bx2 += dbx;
+      by2 += dby;
+    }
+
+    _GilbertRecursive(result, x, y, bx2, by2, ax2, ay2);
+    _GilbertRecursive(result, x + bx2, y + by2, ax, ay, bx - bx2, by - by2);
+    _GilbertRecursive(
+      result,
+      x + (ax - dax) + (bx2 - dbx),
+      y + (ay - day) + (by2 - dby),
+      -bx2,
+      -by2,
+      -(ax - ax2),
+      -(ay - ay2)
+    );
+  }
+
+  #endregion
+
+  #region Peano-family internals
+
+  private enum _TernaryCurveType {
+    Peano,
+    Coil,
+    HalfCoil,
+    Meurthe
+  }
+
+  private static List<(int x, int y)> _TernaryCurve(
+    int width,
+    int height,
+    int startY,
+    int? order,
+    _TernaryCurveType curveType) {
+
+    var result = new List<(int, int)>(Math.Max(0, width * height));
+    var endY = startY + height;
+    if (width <= 0 || height <= 0)
+      return result;
+
+    int curveOrder;
+    int side;
+    if (order.HasValue) {
+      curveOrder = Math.Max(1, Math.Min(MaxPeanoOrder, order.Value));
+      side = 1;
+      for (var k = 0; k < curveOrder; ++k)
+        side *= 3;
+    } else {
+      curveOrder = 1;
+      side = 3;
+      while (side < Math.Max(width, endY) && curveOrder < MaxPeanoOrder) {
+        side *= 3;
+        ++curveOrder;
+      }
+    }
+
+    var totalPoints = side * side;
+    for (var i = 0; i < totalPoints; ++i) {
+      var (x, y) = _TernaryIndexToXY(i, curveOrder, curveType);
+      if (x < width && y >= startY && y < endY)
+        result.Add((x, y));
+    }
+
+    return result;
+  }
 
   /// <summary>
-  /// Maps a linear index <paramref name="index"/> ∈ [0, 9^<paramref name="order"/>) to
-  /// (x, y) on a 3^order × 3^order Peano curve.
+  /// Maps a linear index to a 2D 3-regular mono-Wunderlich traversal.
   /// </summary>
   /// <remarks>
-  /// <para>Construction: column-snake at each recursive level. At each level we extract
-  /// a base-9 digit, decompose into (a, b) where a is the column index and b is the
-  /// row-within-column. The "snake" traverses col 0 bottom-to-top, col 1 top-to-bottom,
-  /// col 2 bottom-to-top — implemented as <c>row = (a even) ? b : 2 − b</c>.</para>
-  /// <para>Continuity at level boundaries requires flip propagation: when entering a
-  /// sub-cell at the middle row (b_eff is 1) the inner sub-curve must be horizontally
-  /// mirrored, and when entering the middle column (a is 1) it must be vertically
-  /// mirrored. These flips toggle through levels (XOR-style) so the orientation
-  /// propagates correctly to the deepest cells. Verified to satisfy both visit-once
-  /// AND Manhattan-adjacency for orders 1 through <see cref="MaxPeanoOrder"/>.</para>
-  /// <para>Reference: column-snake Peano curve construction. The flip-propagation rule
-  /// is a discrete analog of the Peano curve's rotational symmetry described in Sagan
-  /// 1994, "Space-Filling Curves", Springer, ch. 3.</para>
+  /// This is the two-dimensional specialization of Haverkort's common framework
+  /// for Peano, Coil, Half-coil and Meurthe curves. All four use the same ternary
+  /// reflected-Gray-code subcell order and reflection state; only the recursive
+  /// axis permutation differs. Keeping that distinction as data/state rather than
+  /// four bespoke recursions makes the continuity rules explicit and testable.
   /// </remarks>
-  private static (int x, int y) _PeanoIndexToXY(int index, int order) {
+  private static (int x, int y) _TernaryIndexToXY(int index, int order, _TernaryCurveType curveType) {
     int x = 0, y = 0;
-    var flipX = false;
-    var flipY = false;
+    int axis0 = 0, axis1 = 1;
+    var reflectedX = false;
+    var reflectedY = false;
+    var forward = true;
 
     for (var level = order - 1; level >= 0; --level) {
       var subSize = 1;
-      for (var k = 0; k < level; ++k) subSize *= 9;
-      var side = 1;
-      for (var k = 0; k < level; ++k) side *= 3;
+      for (var k = 0; k < level; ++k)
+        subSize *= 9;
 
       var digit = (index / subSize) % 9;
-      var a = digit / 3;
-      var b = digit % 3;
+      var rank0 = digit / 3;
+      var rank1 = digit % 3;
+      var directionBeforeCell = forward;
+      int xDigit = 0, yDigit = 0;
 
-      var col = a;
-      var row = ((a & 1) == 0) ? b : 2 - b;
+      _DecodeTernaryDigit(
+        rank0,
+        axis0,
+        ref reflectedX,
+        ref reflectedY,
+        ref forward,
+        ref xDigit,
+        ref yDigit
+      );
+      _DecodeTernaryDigit(
+        rank1,
+        axis1,
+        ref reflectedX,
+        ref reflectedY,
+        ref forward,
+        ref xDigit,
+        ref yDigit
+      );
 
-      if (flipX) col = 2 - col;
-      if (flipY) row = 2 - row;
+      x = x * 3 + xDigit;
+      y = y * 3 + yDigit;
 
-      x += col * side;
-      y += row * side;
+      var swapAxes = false;
+      switch (curveType) {
+        case _TernaryCurveType.Coil:
+          swapAxes = true;
+          break;
+        case _TernaryCurveType.HalfCoil:
+          swapAxes = forward == directionBeforeCell;
+          break;
+        case _TernaryCurveType.Meurthe:
+          // In two dimensions Haverkort's Meurthe inverse-permutation rule
+          // reduces to swapping axes exactly when the second rank digit is 0 or 1.
+          swapAxes = rank1 != 2;
+          break;
+      }
 
-      var bEff = ((a & 1) == 0) ? b : 2 - b;
-      if ((bEff & 1) == 1) flipX = !flipX;
-      if ((a & 1) == 1) flipY = !flipY;
+      if (swapAxes)
+        (axis0, axis1) = (axis1, axis0);
     }
 
     return (x, y);
   }
 
-  private static void _PeanoRecursive(
+  private static void _DecodeTernaryDigit(
+    int rank,
+    int axis,
+    ref bool reflectedX,
+    ref bool reflectedY,
+    ref bool forward,
+    ref int xDigit,
+    ref int yDigit) {
+
+    var reflected = axis == 0 ? reflectedX : reflectedY;
+    var spatialDigit = reflected == forward ? 2 - rank : rank;
+    if (axis == 0)
+      xDigit = spatialDigit;
+    else
+      yDigit = spatialDigit;
+
+    if ((rank & 1) == 0)
+      return;
+
+    forward = !forward;
+    if (axis == 0)
+      reflectedX = !reflectedX;
+    else
+      reflectedY = !reflectedY;
+  }
+
+  #endregion
+
+  #region Morton internals
+
+  private static void _MortonRecursive(
     List<(int, int)> result,
-    int x, int y,
-    int ax, int ay,
-    int bx, int by,
-    int maxWidth, int minY, int maxY) {
+    int x,
+    int y,
+    int size,
+    int maxWidth,
+    int minY,
+    int maxY) {
 
-    var w = Math.Abs(ax + ay);
-    var h = Math.Abs(bx + by);
+    if (x >= maxWidth || y >= maxY || x + size <= 0 || y + size <= minY)
+      return;
 
-    var dax = ax > 0 ? 1 : ax < 0 ? -1 : 0;
-    var day = ay > 0 ? 1 : ay < 0 ? -1 : 0;
-    var dbx = bx > 0 ? 1 : bx < 0 ? -1 : 0;
-    var dby = by > 0 ? 1 : by < 0 ? -1 : 0;
-
-    if (w == 1 && h == 1) {
-      if (x >= 0 && x < maxWidth && y >= minY && y < maxY)
+    if (size == 1) {
+      if (x >= 0 && y >= minY)
         result.Add((x, y));
       return;
     }
 
-    var ax2 = ax / 3;
-    var ay2 = ay / 3;
-    var bx2 = bx / 3;
-    var by2 = by / 3;
-
-    if (w == 2) {
-      for (var i = 0; i < h; ++i) {
-        var py = y + i * dby + i * dbx;
-        var px1 = x;
-        var px2 = x + dax + day;
-        if ((i & 1) == 0) {
-          if (px1 >= 0 && px1 < maxWidth && py >= minY && py < maxY) result.Add((px1, py));
-          if (px2 >= 0 && px2 < maxWidth && py >= minY && py < maxY) result.Add((px2, py));
-        } else {
-          if (px2 >= 0 && px2 < maxWidth && py >= minY && py < maxY) result.Add((px2, py));
-          if (px1 >= 0 && px1 < maxWidth && py >= minY && py < maxY) result.Add((px1, py));
-        }
-      }
-      return;
-    }
-
-    if (h == 2) {
-      for (var i = 0; i < w; ++i) {
-        var px = x + i * dax + i * day;
-        var py1 = y;
-        var py2 = y + dbx + dby;
-        if ((i & 1) == 0) {
-          if (px >= 0 && px < maxWidth && py1 >= minY && py1 < maxY) result.Add((px, py1));
-          if (px >= 0 && px < maxWidth && py2 >= minY && py2 < maxY) result.Add((px, py2));
-        } else {
-          if (px >= 0 && px < maxWidth && py2 >= minY && py2 < maxY) result.Add((px, py2));
-          if (px >= 0 && px < maxWidth && py1 >= minY && py1 < maxY) result.Add((px, py1));
-        }
-      }
-      return;
-    }
-
-    _PeanoRecursive(result, x, y, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + bx2, y + by2, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + 2 * bx2, y + 2 * by2, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
-
-    _PeanoRecursive(result, x + ax2 + 2 * bx2, y + ay2 + 2 * by2, ax2, ay2, -bx2, -by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + ax2 + bx2, y + ay2 + by2, ax2, ay2, -bx2, -by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + ax2, y + ay2, ax2, ay2, -bx2, -by2, maxWidth, minY, maxY);
-
-    _PeanoRecursive(result, x + 2 * ax2, y + 2 * ay2, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + 2 * ax2 + bx2, y + 2 * ay2 + by2, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
-    _PeanoRecursive(result, x + 2 * ax2 + 2 * bx2, y + 2 * ay2 + 2 * by2, ax2, ay2, bx2, by2, maxWidth, minY, maxY);
+    var half = size >> 1;
+    _MortonRecursive(result, x, y, half, maxWidth, minY, maxY);
+    _MortonRecursive(result, x + half, y, half, maxWidth, minY, maxY);
+    _MortonRecursive(result, x, y + half, half, maxWidth, minY, maxY);
+    _MortonRecursive(result, x + half, y + half, half, maxWidth, minY, maxY);
   }
 
   #endregion
