@@ -2292,11 +2292,24 @@ Pure utility generators for 2D space-filling-curve traversal orders. Given a rec
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `MaxHilbertOrder` | `const int MaxHilbertOrder` | Largest Hilbert order we accept (2^7 = 128 covers most real images). |
-| `MaxPeanoOrder` | `const int MaxPeanoOrder` | Largest Peano order we accept (3^5 = 243 covers most real images). |
+| `MaxCoilOrder` | `const int MaxCoilOrder` | Largest Coil order we accept. |
+| `MaxHalfCoilOrder` | `const int MaxHalfCoilOrder` | Largest Half-coil order we accept. |
+| `MaxHilbertOrder` | `const int MaxHilbertOrder` | Largest explicitly requested Hilbert order (2^7 = 128 pixels per side). |
+| `MaxMeurtheOrder` | `const int MaxMeurtheOrder` | Largest Meurthe order we accept. |
+| `MaxMooreOrder` | `const int MaxMooreOrder` | Largest explicitly requested Moore order (2^7 = 128 pixels per side). |
+| `MaxMortonOrder` | `const int MaxMortonOrder` | Largest explicitly requested Morton order (2^7 = 128 pixels per side). |
+| `MaxPeanoOrder` | `const int MaxPeanoOrder` | Largest Peano-family order we accept (3^5 = 243 pixels per side). |
+| `Coil` | `static List<ValueTuple<int, int>> Coil(int width, int height, int startY = 0, int? order = null)` | Generates Haverkort's Coil traversal, a continuous 3×3 Peano-family curve that swaps the coordinate axes in every recursive subcell. |
+| `DiagonalSerpentine` | `static List<ValueTuple<int, int>> DiagonalSerpentine(int width, int height, int startY = 0)` | Generates a zig-zag traversal over successive `x + y` diagonals. This reduces horizontal scan bias but uses diagonal steps within each diagonal. |
+| `Gilbert` | `static List<ValueTuple<int, int>> Gilbert(int width, int height, int startY = 0)` | Generates a generalized Hilbert ("Gilbert") traversal that directly fills an arbitrary rectangular raster instead of generating a square and clipping it. |
+| `HalfCoil` | `static List<ValueTuple<int, int>> HalfCoil(int width, int height, int startY = 0, int? order = null)` | Generates Haverkort's Half-coil traversal, alternating between Peano-like and Coil-like recursive orientation according to the subcell rank. |
 | `Hilbert` | `static List<ValueTuple<int, int>> Hilbert(int width, int height, int startY = 0, int? order = null)` | Generates a Hilbert-curve traversal of a `width` × `height` region starting at row `startY`. |
 | `LinearSerpentine` | `static List<ValueTuple<int, int>> LinearSerpentine(int width, int height, int startY = 0)` | Generates a serpentine linear traversal (left-to-right on even rows, right-to-left on odd rows). Cheaper than Hilbert/Peano; still preserves row-to-row spatial locality. |
-| `Peano` | `static List<ValueTuple<int, int>> Peano(int width, int height, int startY = 0, int? order = null)` | Generates a Peano-curve traversal of a `width` × `height` region starting at row `startY`. |
+| `Meurthe` | `static List<ValueTuple<int, int>> Meurthe(int width, int height, int startY = 0, int? order = null)` | Generates Haverkort's Meurthe traversal, a continuous 3×3 curve with neutral orientation over recursive pieces. |
+| `Moore` | `static List<ValueTuple<int, int>> Moore(int width, int height, int startY = 0, int? order = null)` | Generates a Moore-curve traversal. Moore is the closed-loop relative of Hilbert: complete `2ⁿ × 2ⁿ` domains have unit Manhattan steps and the final point is adjacent to the first one. Rectangles are covered by clipping the enclosing Moore square. |
+| `Morton` | `static List<ValueTuple<int, int>> Morton(int width, int height, int startY = 0, int? order = null)` | Generates Morton/Z-order by recursively visiting quadtree cells in bit-interleaving order. Hierarchical locality is preserved, but consecutive points are not guaranteed to be neighbors. |
+| `Peano` | `static List<ValueTuple<int, int>> Peano(int width, int height, int startY = 0, int? order = null)` | Generates the classical Peano traversal using recursive 3×3 subdivision. |
+| `Spiral` | `static List<ValueTuple<int, int>> Spiral(int width, int height, int startY = 0)` | Generates a clockwise inward spiral over an arbitrary rectangle. Every consecutive pixel is 4-connected. |
 
 ### Namespace `Hawkynt.ColorProcessing.Blending`
 
@@ -4277,22 +4290,32 @@ Implements `IDitherer`.
 
 #### `RiemersmaDitherer`
 
-Riemersma dithering using space-filling curves (Hilbert, Peano, or linear).
+Riemersma dithering using configurable space-filling or locality-oriented traversals.
 
 Implements `IDitherer`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `RiemersmaDitherer` | `RiemersmaDitherer(int historySize = 16, SpaceFillingCurve curveType = 0, int? curveOrder = null)` | Creates a Riemersma ditherer with specified curve type. |
+| `RiemersmaDitherer` | `RiemersmaDitherer(int historySize = 16, SpaceFillingCurve curveType = 0, int? curveOrder = null)` | Creates a Riemersma ditherer with the specified traversal. |
 | `RiemersmaDitherer` | `RiemersmaDitherer(int historySize, bool useHilbertCurve)` | Creates a Riemersma ditherer (legacy constructor for backwards compatibility). |
-| `MaxHilbertOrder` | `const int MaxHilbertOrder` | Maximum order for Hilbert curve (2^7 = 128 pixels per side). |
-| `MaxPeanoOrder` | `const int MaxPeanoOrder` | Maximum order for Peano curve (3^5 = 243 pixels per side). |
+| `MaxHilbertOrder` | `const int MaxHilbertOrder` | Maximum explicitly requested Hilbert order. |
+| `MaxMooreOrder` | `const int MaxMooreOrder` | Maximum explicitly requested Moore order. |
+| `MaxMortonOrder` | `const int MaxMortonOrder` | Maximum explicitly requested Morton order. |
+| `MaxPeanoOrder` | `const int MaxPeanoOrder` | Maximum Peano-family order. |
+| `Coil` | `static RiemersmaDitherer Coil { get; }` | Pre-configured instance with Coil traversal. |
 | `Default` | `static RiemersmaDitherer Default { get; }` | Pre-configured instance with 16-entry history and Hilbert curve (auto order). |
+| `DiagonalScan` | `static RiemersmaDitherer DiagonalScan { get; }` | Pre-configured instance with diagonal serpentine traversal. |
+| `Gilbert` | `static RiemersmaDitherer Gilbert { get; }` | Pre-configured instance with generalized Hilbert traversal for arbitrary rectangles. |
+| `HalfCoil` | `static RiemersmaDitherer HalfCoil { get; }` | Pre-configured instance with Half-coil traversal. |
 | `Large` | `static RiemersmaDitherer Large { get; }` | Pre-configured instance with 32-entry history (slower, higher quality). |
-| `LinearScan` | `static RiemersmaDitherer LinearScan { get; }` | Pre-configured instance with linear (serpentine) traversal instead of space-filling curve. |
-| `Peano` | `static RiemersmaDitherer Peano { get; }` | Pre-configured instance with Peano curve traversal (3×3 subdivision). |
+| `LinearScan` | `static RiemersmaDitherer LinearScan { get; }` | Pre-configured instance with linear serpentine traversal. |
+| `Meurthe` | `static RiemersmaDitherer Meurthe { get; }` | Pre-configured instance with Meurthe traversal. |
+| `Moore` | `static RiemersmaDitherer Moore { get; }` | Pre-configured instance with Moore traversal. |
+| `Morton` | `static RiemersmaDitherer Morton { get; }` | Pre-configured instance with Morton/Z-order traversal. |
+| `Peano` | `static RiemersmaDitherer Peano { get; }` | Pre-configured instance with Peano traversal. |
 | `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
 | `Small` | `static RiemersmaDitherer Small { get; }` | Pre-configured instance with 8-entry history (faster, lower quality). |
+| `SpiralScan` | `static RiemersmaDitherer SpiralScan { get; }` | Pre-configured instance with clockwise inward spiral traversal. |
 | `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
 
 #### `RisographDitherer`
@@ -4371,13 +4394,21 @@ Configuration for smart dithering strategies.
 
 #### `SpaceFillingCurve`
 
-Types of space-filling curves for image traversal.
+Types of space-filling and locality-oriented curves for image traversal.
 
 | Value | Numeric | Summary |
 | --- | --- | --- |
-| `Hilbert` | `0` | Hilbert curve - subdivides space into 4 quadrants recursively. Order range: 1-7. Each order doubles the resolution (order n covers 2^n × 2^n). |
-| `Peano` | `1` | Peano curve - subdivides space into 9 parts recursively (3×3 grid). Order range: 1-5. Each order triples the resolution (order n covers 3^n × 3^n). |
-| `Linear` | `2` | Simple serpentine (boustrophedon) scan - alternating left-to-right and right-to-left rows. No order parameter needed. |
+| `Hilbert` | `0` | Hilbert curve - subdivides space into 4 quadrants recursively. Order range: 1-7 when explicitly specified. Order n covers 2^n × 2^n. |
+| `Peano` | `1` | Peano curve - subdivides space into a recursively transformed 3×3 grid. Order range: 1-5. Order n covers 3^n × 3^n. |
+| `Linear` | `2` | Simple serpentine (boustrophedon) scan - alternating left-to-right and right-to-left rows. |
+| `Moore` | `3` | Moore curve - closed-loop Hilbert relative. Complete 2^n × 2^n domains are 4-connected and the final point is adjacent to the first one. |
+| `Gilbert` | `4` | Generalized Hilbert (Gilbert) traversal for arbitrary rectangular dimensions. The curve order parameter is ignored. |
+| `Coil` | `5` | Coil curve - continuous 3×3 Peano-family traversal that swaps axes in every recursive subcell. |
+| `HalfCoil` | `6` | Half-coil curve - continuous 3×3 Peano-family traversal alternating Peano and Coil orientations. |
+| `Meurthe` | `7` | Meurthe curve - continuous 3×3 Peano-family traversal with neutral recursive orientation. |
+| `Morton` | `8` | Morton/Z-order traversal. Preserves hierarchical locality but may jump between consecutive pixels. |
+| `Spiral` | `9` | Clockwise inward rectangular spiral. Supports arbitrary dimensions and remains 4-connected. |
+| `DiagonalSerpentine` | `10` | Zig-zag traversal over successive x+y diagonals. Supports arbitrary dimensions and includes diagonal steps. |
 
 #### `StippleDitherer`
 
