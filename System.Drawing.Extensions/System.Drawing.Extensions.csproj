@@ -9,6 +9,9 @@
     <PackageTags>Framework;Extensions;Hawkynt</PackageTags>
     <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <!-- The package README's API reference takes its summaries and <example> blocks from this. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/System.Drawing.Extensions</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Description>Extensions to System.Drawing</Description>
@@ -101,4 +104,5 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
+
 </Project>

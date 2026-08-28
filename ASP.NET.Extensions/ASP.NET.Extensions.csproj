@@ -2,6 +2,9 @@
   <PropertyGroup>
     <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <!-- The package README's API reference takes its summaries and <example> blocks from this. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/ASP.NET.Extensions</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageId>FrameworkExtensions.ASP.NET</PackageId>
@@ -31,4 +34,10 @@
     <Reference Condition="$(IsNetFramework)" Include="System.Web" />
   </ItemGroup>
   
+
+  <ItemGroup>
+    <!-- PackageReadmeFile names the README inside the package; it does not put it there. -->
+    <None Include="Readme.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>
