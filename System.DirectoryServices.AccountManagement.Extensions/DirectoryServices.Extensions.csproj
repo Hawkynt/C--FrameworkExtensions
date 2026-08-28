@@ -74,10 +74,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Readme.md" Pack="True" PackagePath=".">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

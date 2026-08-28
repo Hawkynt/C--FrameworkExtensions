@@ -75,9 +75,6 @@
     <None Include="Readme.md" Pack="True" PackagePath=".">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-    <None Include="Readme.md" Pack="True" PackagePath=".">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
     <None Update="System\Drawing\Image.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Image.cs</LastGenOutput>
