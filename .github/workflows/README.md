@@ -5,22 +5,22 @@ in `scripts/`.
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `ci.yml` | push + PR on `master` + `workflow_call` | Build cross-platform packages on Linux; run the test suite on Windows |
+| `ci.yml` | push + PR on `main` + `workflow_call` | Build cross-platform packages on Linux; run the test suite on Windows |
 | `release.yml` | **manual dispatch** | Run CI, pack + **push** packages to NuGet, then cut the dated `vyyyyMMdd` Release |
-| `nightly.yml` | successful CI on `master` + manual | Publish `nightly-yyyyMMdd` prerelease (no NuGet push) and prune old ones |
+| `nightly.yml` | successful CI on `main` + manual | Publish `nightly-yyyyMMdd` prerelease (no NuGet push) and prune old ones |
 | `_build.yml` | `workflow_call` (internal) | Pack the 6 publishable packages; optionally push to NuGet |
 | `scripts/version.pl` | invoked by workflows | Stamp each package's own `<Version>` + commit count into its csproj (`--stamp`) |
 | `scripts/update-changelog.mjs` | invoked by workflows | Bucketise commits into `CHANGELOG.md` |
 | `scripts/prune-nightlies.mjs` | invoked by workflows | GFS retention: 7 daily + 4 weekly + 3 monthly |
 
 ```
-        push / PR (master)
+        push / PR (main)
               │
               ▼
         ┌───────────┐   build on ubuntu (6 cross-platform packages)
         │  ci.yml   │   + test on windows (multi-SDK x cfg x arch)
         └─────┬─────┘
- dispatch ───┤────────── on success on master
+ dispatch ───┤────────── on success on main
         ▼     │           ▼
   ┌──────────┐│      ┌───────────┐
   │ release  ││      │ nightly   │

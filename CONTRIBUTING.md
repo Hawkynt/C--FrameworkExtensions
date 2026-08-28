@@ -573,7 +573,7 @@ public static void DoRandomStuff(this string @this, int startAt, int count) {
 * throw [ArgumentOutOfRangeException](https://learn.microsoft.com/en-us/dotnet/api/system.argumentoutofrangeexception) when an indexer, number or count is simply not within a valid range
 * throw [InvalidOperationException](https://learn.microsoft.com/en-us/dotnet/api/system.invalidoperationexception) when an argument might be valid but the object is currently in a state where that value is not accepted
 * throw [NotSupportedException](https://learn.microsoft.com/en-us/dotnet/api/system.notsupportedexception) when an argument is technically valid, but the code to handle it was not (yet) implemented
-* use [Guard](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.cs)-clauses instead of checking yourself (they are already tuned for performance in most cases)
+* use [Guard](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/Corlib.Extensions/Guard/Against.cs)-clauses instead of checking yourself (they are already tuned for performance in most cases)
 
 ``` cs
 public static void DoSomething(this string @this, string other, int count) {
@@ -635,7 +635,7 @@ private static void _DoSpecificStuff(string @this) {
 }
 ```
 
-* use throw-helpers if possible from the [AlwaysThrow](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/AlwaysThrow.cs)-class
+* use throw-helpers if possible from the [AlwaysThrow](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/Corlib.Extensions/Guard/AlwaysThrow.cs)-class
 
 ``` cs
 public static void DoSomething<T>(this IEnumerable<T> @this) {
@@ -670,7 +670,7 @@ public static void EarlyMornings(DateTime date) {
 public static void NoCokeYetException() => throw new NoCokeYetException();
 ```
 
-* when adding specific stuff for numbers use the [Against.T4.tt](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Corlib.Extensions/Guard/Against.T4.tt) to avoid writing nearly identical code for each number type
+* when adding specific stuff for numbers use the [Against.T4.tt](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/Corlib.Extensions/Guard/Against.T4.tt) to avoid writing nearly identical code for each number type
 
 ``` cs
 <#foreach (var type in new[]{"sbyte", "short", "int", "long", "float", "double", "decimal"}) {#>

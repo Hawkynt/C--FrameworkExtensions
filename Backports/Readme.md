@@ -2,10 +2,9 @@
 
 > Polyfills that let one codebase use modern C# and BCL features while still targeting old frameworks, from .NET 2.0 upwards.
 
-[![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml)
-[![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
+[![CI](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml)
 
-[![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/master/Backports)
+[![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=main)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/main/Backports)
 [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.Backports)](https://www.nuget.org/packages/FrameworkExtensions.Backports/)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
@@ -1720,7 +1719,7 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository.
 2. Create a new branch with a descriptive name.
 3. Make your changes.
-4. __Remember__: Everything *public* in here should polyfill existing Microsoft functionality and thus should be mentioned in the [Readme](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/Backports/Readme.md) with a link to its original documentation. Don't expose public members not part of Microsoft's API.
+4. __Remember__: Everything *public* in here should polyfill existing Microsoft functionality and thus should be mentioned in the [Readme](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/Backports/Readme.md) with a link to its original documentation. Don't expose public members not part of Microsoft's API.
 5. Submit a pull request.
 
 ## Alternatives
@@ -2188,4 +2187,4 @@ If this project saves you time or money, consider supporting its development:
 
 ## 📜 License
 
-Licensed under LGPL-3.0-or-later — see the repository [LICENSE](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE).
+Licensed under LGPL-3.0-or-later — see the repository [LICENSE](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/LICENSE).
