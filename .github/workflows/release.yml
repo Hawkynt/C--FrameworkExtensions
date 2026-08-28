@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 # Force JavaScript-based actions to run on Node 24 instead of the deprecated Node 20 ahead of
 # the 2026-06-16 hard cutover, until we bump each action to a Node-24-native major version.
@@ -78,16 +79,38 @@ jobs:
           node-version: '22'
       - name: Update changelog + generate release notes (bucketed by + - * # !)
         run: node ".github/workflows/scripts/update-changelog.mjs" --release "$REL" --notes RELEASE_NOTES.md
-      - name: Commit changelog (if it changed)
+      # main takes changes through pull requests only, so the changelog is proposed rather than
+      # pushed. The release is therefore tagged at the commit the packages were actually built and
+      # published from, which it should have been all along — it used to move to the changelog
+      # commit, a commit containing none of the released code.
+      #
+      # CHANGELOG_PR_TOKEN is optional and only affects whether CI runs on the proposed change.
+      # Anything done with GITHUB_TOKEN cannot trigger another workflow, so a pull request opened
+      # with it arrives with no checks and cannot satisfy a required-checks rule.
+      - name: Propose the changelog (if it changed)
+        env:
+          GH_TOKEN: ${{ secrets.CHANGELOG_PR_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          if ! git diff --quiet -- CHANGELOG.md; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add CHANGELOG.md
-            git commit -m "* update changelog for $REL [skip ci]"
-            git push
+          rel_sha=$(git rev-parse HEAD)
+          echo "REL_SHA=$rel_sha" >> "$GITHUB_ENV"
+          if git diff --quiet -- CHANGELOG.md; then
+            echo "The changelog is already current."
+            exit 0
           fi
-          echo "REL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          branch="bot/changelog-$REL"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add CHANGELOG.md
+          git commit -m "* update changelog for $REL"
+          git push --force origin "$branch"
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "The open pull request for $branch now carries the current changelog."
+            exit 0
+          fi
+          gh pr create --base main --head "$branch" \
+            --title "* update changelog for $REL" \
+            --body "The commit-message changelog for release $REL, cut from $rel_sha."
       - name: Create GitHub Release (dated marker; tags vyyyyMMdd at the changelog commit)
         uses: softprops/action-gh-release@v2
         with:
