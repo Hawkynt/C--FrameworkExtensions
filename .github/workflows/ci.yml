@@ -48,6 +48,53 @@ jobs:
             echo "::endgroup::"
           done
 
+  # The package READMEs must follow the house template, and their API reference must still match
+  # the assemblies. Windows, not ubuntu: PresentationCore, System.Drawing and Windows.Forms target
+  # -windows TFMs whose types cannot be resolved without the WindowsDesktop framework, and the
+  # reference must not depend on which runner produced it.
+  #
+  # ASP.NET, Microsoft.Office and Microsoft.Win32 are absent because CI does not build them, and
+  # DirectoryServices because reading its signatures needs System.DirectoryServices.AccountManagement
+  # in the output. Each of those READMEs says so under its API reference heading.
+  package-readmes:
+    name: package READMEs
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.x
+            10.x
+
+      - name: Build the documented packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for p in Backports/Backports.csproj \
+                   Corlib.Extensions/Corlib.Extensions.csproj \
+                   PresentationCore.Extensions/PresentationCore.Extensions.csproj \
+                   System.Drawing.Extensions/System.Drawing.Extensions.csproj \
+                   System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj; do
+            tfm=$(sed -n 's/.*<TargetFrameworks*>\([^<]*\).*/\1/p' "$p" | head -1 | tr ';' '\n' | tail -1)
+            echo "::group::build $p ($tfm)"
+            dotnet build "$p" --configuration Release -p:TargetFramework="$tfm"
+            echo "::endgroup::"
+          done
+
+      - name: Check package READMEs
+        uses: Hawkynt/RepositoryTemplate/package-readme@v1
+        with:
+          project: |
+            Backports/Backports.csproj
+            Corlib.Extensions/Corlib.Extensions.csproj
+            PresentationCore.Extensions/PresentationCore.Extensions.csproj
+            System.Drawing.Extensions/System.Drawing.Extensions.csproj
+            System.Windows.Forms.Extensions/System.Windows.Forms.Extensions.csproj
+
   # NB: tests run on WINDOWS ONLY — the test runner misbehaves on ubuntu (not
   # our code). Preserved verbatim from the original Tests.yml, including the
   # multi-SDK install and the Debug/Release x AnyCPU/x86/x64 matrix.

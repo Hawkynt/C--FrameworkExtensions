@@ -1,4 +1,4 @@
-# Extensions to DirectoryServices
+# FrameworkExtensions.DirectoryServices
 
 [![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml)
 [![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
@@ -7,7 +7,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.DirectoryServices)](https://www.nuget.org/packages/FrameworkExtensions.DirectoryServices/)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
-Extension methods for Active Directory account management and Windows impersonation, part of [Hawkynt's .NET Framework Extensions](https://github.com/Hawkynt/C--FrameworkExtensions).
+> Extension methods for Active Directory account management, for querying principals and their properties without dropping to raw directory entries.
 
 | Property              | Value                                                                      |
 | --------------------- | -------------------------------------------------------------------------- |
@@ -17,14 +17,18 @@ Extension methods for Active Directory account management and Windows impersonat
 
 ---
 
-## Overview
+## 📦 Installation
 
+```bash
+dotnet add package FrameworkExtensions.DirectoryServices
+```
+
+## ✨ Features
 This library provides extension methods for `GroupPrincipal`, `UserPrincipal`, and `Principal` that simplify common Active Directory operations such as resolving group memberships (including nested groups), looking up users by various identity attributes, querying LDAP group properties, and performing Windows user impersonation. Results are cached using thread-safe concurrent dictionaries for high-performance repeated lookups. On .NET 5+ all AD-related classes are annotated with `[SupportedOSPlatform("windows")]`.
 
 ---
 
-## API Reference
-
+## 🧭 Extension methods by type
 ### GroupPrincipal Extensions (`System.DirectoryServices.AccountManagement.GroupPrincipal`)
 
 **Static class:** `GroupPrincipalExtensions`
@@ -139,8 +143,7 @@ An `IDisposable` class that performs Windows user impersonation via the Win32 `L
 
 ---
 
-## Usage Examples
-
+## 🚀 Quick start
 ### Resolving all members of a group (including nested)
 
 ```csharp
@@ -208,25 +211,29 @@ using (new Impersonation("MYDOMAIN", "admin", "p@ssw0rd", Impersonation.LogonTyp
 // Original identity is automatically restored
 ```
 
----
+## 📚 API reference
 
-## Installation
+The generated reference is omitted for this package: its types derive from `System.DirectoryServices.AccountManagement`, which is not present in the build output, so the signatures cannot be read reliably. The members are catalogued above.
 
-```bash
-dotnet add package FrameworkExtensions.DirectoryServices
-```
-
----
-
-## Dependencies
+## 🔌 Dependencies
 
 - `Backports` (project reference)
 - `Corlib.Extensions` (project reference)
 - `System.DirectoryServices` (framework reference / NuGet)
 - `System.DirectoryServices.AccountManagement` (framework reference / NuGet)
 
----
+## ⚠️ Limitations
 
-## License
+- Needs a reachable directory service and adequate rights; behaviour depends on the domain schema and policy.
+- Inherits the platform limits of `System.DirectoryServices.AccountManagement`.
 
-LGPL 3.0 or later - See [LICENSE](../LICENSE) for details
+## ❤️ Support
+
+If this project saves you time or money, consider supporting its development:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub-Sponsor-EA4AAA?logo=githubsponsors)](https://github.com/sponsors/Hawkynt)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?logo=paypal)](https://www.paypal.me/hawkynt)
+
+## 📜 License
+
+Licensed under LGPL-3.0-or-later — see the repository [LICENSE](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE).
