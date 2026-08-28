@@ -5,7 +5,7 @@ in `scripts/`.
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `ci.yml` | push + PR on `main` + `workflow_call` | Build cross-platform packages on Linux; run the test suite on Windows |
+| `ci.yml` | push + PR on `main` + `workflow_call` | Build cross-platform packages on Linux; run the test suite on Windows; verify the package READMEs against the house template and the built assemblies |
 | `release.yml` | **manual dispatch** | Run CI, pack + **push** packages to NuGet, then cut the dated `vyyyyMMdd` Release |
 | `nightly.yml` | successful CI on `main` + manual | Publish `nightly-yyyyMMdd` prerelease (no NuGet push) and prune old ones |
 | `_build.yml` | `workflow_call` (internal) | Pack the 6 publishable packages; optionally push to NuGet |
