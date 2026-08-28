@@ -111,7 +111,7 @@ jobs:
           gh pr create --base main --head "$branch" \
             --title "* update changelog for $REL" \
             --body "The commit-message changelog for release $REL, cut from $rel_sha."
-      - name: Create GitHub Release (dated marker; tags vyyyyMMdd at the changelog commit)
+      - name: Create GitHub Release (dated marker; tags vyyyyMMdd at the released commit)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.REL }}
