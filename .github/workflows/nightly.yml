@@ -3,10 +3,8 @@ name: Nightly
 # After CI succeeds on main, publish a dated prerelease with the packed
 # packages, then prune old nightlies on a GFS schedule. Does NOT push to NuGet.
 on:
-  workflow_run:
-    workflows: [CI]
+  push:
     branches: [main]
-    types: [completed]
   workflow_dispatch: {}
 
 # Force JavaScript-based actions to run on Node 24 instead of the deprecated Node 20 ahead of
@@ -16,7 +14,6 @@ env:
 
 jobs:
   nightly:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -63,7 +60,7 @@ jobs:
         with:
           tag_name: ${{ env.NIGHTLY_TAG }}
           name: ${{ env.NIGHTLY_TAG }}
-          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
+          target_commitish: ${{ github.sha }}
           prerelease: true
           files: artifacts/*.nupkg
           body_path: RELEASE_NOTES.md           # commit-message changelog, not GitHub's PR notes
