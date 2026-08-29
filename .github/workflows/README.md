@@ -51,16 +51,10 @@ in `scripts/`.
 - **`version.pl` is identical in every repo.** For a non-.NET repo (no csproj) it
   falls back to a root `VERSION` file — the only place that file is ever used.
 - **Changelogs are automatic:** nightlies and releases generate their notes from
-  commits; `release.yml` also refreshes `CHANGELOG.md` and proposes it as a pull
-  request on `bot/changelog`, because `main` takes changes through pull requests
-  only. One long-lived branch, so there is one open changelog pull request rather
-  than one per release. The dated tag stays on the commit the packages were built
-  from. The commit is made through the contents API by
-  `RepositoryTemplate/publish-generated-file`, because a commit made by `git` on a
-  runner is unsigned and would fail the signature rule forever.
-- **`secrets.CHANGELOG_PR_TOKEN`** is optional. Without it the changelog pull
-  request is opened with `GITHUB_TOKEN`, which cannot trigger another workflow, so
-  that pull request arrives with no checks and cannot satisfy a required-checks
-  rule. A PAT with contents + pull-requests write makes it behave like any other.
+  commits. `release.yml` also refreshes `CHANGELOG.md` and uploads it as the `changelog`
+  artifact — the dated Release already states the notes in full, so the committed copy is
+  refreshed when you want it rather than by a bot. `main` takes changes through pull requests
+  only, and a bot's pull request cannot satisfy the signature and check rules without a
+  personal access token.
 - **Manual vs automatic:** stable releases (NuGet packaging + publish) are cut on
   demand via dispatch; nightlies and changelog notes happen automatically.
