@@ -51,6 +51,10 @@ in `scripts/`.
 - **`version.pl` is identical in every repo.** For a non-.NET repo (no csproj) it
   falls back to a root `VERSION` file — the only place that file is ever used.
 - **Changelogs are automatic:** nightlies and releases generate their notes from
-  commits; `release.yml` also refreshes and commits `CHANGELOG.md`.
+  commits. `release.yml` also refreshes `CHANGELOG.md` and uploads it as the `changelog`
+  artifact — the dated Release already states the notes in full, so the committed copy is
+  refreshed when you want it rather than by a bot. `main` takes changes through pull requests
+  only, and a bot's pull request cannot satisfy the signature and check rules without a
+  personal access token.
 - **Manual vs automatic:** stable releases (NuGet packaging + publish) are cut on
   demand via dispatch; nightlies and changelog notes happen automatically.

@@ -78,17 +78,26 @@ jobs:
           node-version: '22'
       - name: Update changelog + generate release notes (bucketed by + - * # !)
         run: node ".github/workflows/scripts/update-changelog.mjs" --release "$REL" --notes RELEASE_NOTES.md
-      - name: Commit changelog (if it changed)
-        run: |
-          if ! git diff --quiet -- CHANGELOG.md; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add CHANGELOG.md
-            git commit -m "* update changelog for $REL [skip ci]"
-            git push
-          fi
-          echo "REL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-      - name: Create GitHub Release (dated marker; tags vyyyyMMdd at the changelog commit)
+      # The release is tagged at the commit the packages were actually built and published from,
+      # which it should have been all along — it used to move to the changelog commit, a commit
+      # containing none of the released code. It cannot move there any more in any case, because
+      # the changelog is now proposed rather than pushed.
+      - name: Record the commit the release is cut from
+        run: echo "REL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      # Neither pushed nor proposed. A release-time changelog cannot be a pull-request check —
+      # nothing generates it until a release is cut — and a bot pull request carrying it would need
+      # a signed commit to be mergeable and a personal access token before its own checks would run,
+      # for a file the GitHub Release already states in full. It is uploaded; commit it when you
+      # want the committed copy refreshed.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: changelog
+          path: CHANGELOG.md
+          if-no-files-found: warn
+
+      - name: Create GitHub Release (dated marker; tags vyyyyMMdd at the released commit)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.REL }}
