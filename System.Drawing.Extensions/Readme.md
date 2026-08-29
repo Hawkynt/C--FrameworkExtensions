@@ -8,10 +8,9 @@ dotnet add package FrameworkExtensions.System.Drawing
 
 > Extension methods for System.Drawing — bitmap access, colour arithmetic and image manipulation that avoids the per-pixel `GetPixel` trap.
 
-[![Build](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/NewBuild.yml)
-[![Tests](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml/badge.svg)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/Tests.yml)
+[![CI](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hawkynt/C--FrameworkExtensions/actions/workflows/ci.yml)
 
-[![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=master)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/master/System.Drawing.Extensions)
+[![Last Commit](https://img.shields.io/github/last-commit/Hawkynt/C--FrameworkExtensions?branch=main)](https://github.com/Hawkynt/C--FrameworkExtensions/commits/main/System.Drawing.Extensions)
 [![NuGet Version](https://img.shields.io/nuget/v/FrameworkExtensions.System.Drawing)](https://www.nuget.org/packages/FrameworkExtensions.System.Drawing/)
 [![License](https://img.shields.io/badge/License-LGPL_3.0-blue)](https://licenses.nuget.org/LGPL-3.0-or-later)
 
@@ -880,7 +879,7 @@ Error diffusion dithering distributes quantization error to neighboring pixels f
 | Ditherer                                                                                      | Author                               | Year | Neighbors | Reference                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------- | ------------------------------------ | ---- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`Atkinson`](https://en.wikipedia.org/wiki/Atkinson_dithering)                                | Bill Atkinson                        | 1984 | 6         | [Apple MacPaint](https://en.wikipedia.org/wiki/MacPaint), 75% error diffusion. [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)   |
-| [`JarvisJudiceNinke`](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/System.Drawing.Extensions/<https://doi.org/10.1016/S0146-664X%2876%2980003-2>)                    | J.F. Jarvis, C.N. Judice, W.H. Ninke | 1976 | 12        | [CGIP vol. 5](https://doi.org/10.1016/S0146-664X%2876%2980003-2). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)                |
+| [`JarvisJudiceNinke`](https://doi.org/10.1016/S0146-664X%2876%2980003-2)                                                                                                          | J.F. Jarvis, C.N. Judice, W.H. Ninke | 1976 | 12        | [CGIP vol. 5](https://doi.org/10.1016/S0146-664X%2876%2980003-2). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)                |
 | [`Pigeon`](https://hbfs.wordpress.com/2013/12/31/dithering/)                                  | Steven Pigeon                        | 2013 | 7         | [Blog post with analysis](https://hbfs.wordpress.com/2013/12/31/dithering/). [Ref](https://github.com/stevenpigeon/DitherBenchmark)                                 |
 | [`ShiauFan`](https://patents.google.com/patent/US5353127A)                                    | J.N. Shiau, Z. Fan                   | 1993 | 4         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)             |
 | [`ShiauFan2`](https://patents.google.com/patent/US5353127A)                                   | J.N. Shiau, Z. Fan                   | 1993 | 5         | [US Patent 5,353,127](https://patents.google.com/patent/US5353127A). [Ref](https://github.com/ImageMagick/ImageMagick/blob/main/MagickCore/threshold.c)             |
@@ -16661,4 +16660,4 @@ If this project saves you time or money, consider supporting its development:
 
 ## 📜 License
 
-Licensed under LGPL-3.0-or-later — see the repository [LICENSE](https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE).
+Licensed under LGPL-3.0-or-later — see the repository [LICENSE](https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/LICENSE).

@@ -1,6 +1,6 @@
 name: Nightly
 
-# After CI succeeds on master, publish a dated prerelease with the packed
+# After CI succeeds on main, publish a dated prerelease with the packed
 # packages, then prune old nightlies on a GFS schedule. Does NOT push to NuGet.
 on:
   workflow_run:

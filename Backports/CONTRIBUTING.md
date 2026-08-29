@@ -661,7 +661,7 @@ Every file must include the license header:
 //
 // You should have received a copy of the License along with Hawkynt's
 // .NET Framework extensions. If not, see
-// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/master/LICENSE>.
+// <https://github.com/Hawkynt/C--FrameworkExtensions/blob/main/LICENSE>.
 
 #endregion
 ```
