@@ -3,6 +3,8 @@
   <PropertyGroup>
     <PackageId>FrameworkExtensions.Microsoft.Office</PackageId>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/Hawkynt/C--FrameworkExtensions</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Hawkynt/C--FrameworkExtensions/tree/master/Microsoft.Office.Extensions</RepositoryUrl>
     <!-- The package README's API reference takes its summaries and <example> blocks from this. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
