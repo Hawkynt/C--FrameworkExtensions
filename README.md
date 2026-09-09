@@ -14,9 +14,49 @@
 
 [![NuGet](https://img.shields.io/badge/packages-NuGet.org-004880?logo=nuget)](https://www.nuget.org/profiles/Hawkynt)
 
-> The .NET base class libraries of [.NET Framework](https://en.wikipedia.org/wiki/.NET_Framework) and [.Net Core](https://en.wikipedia.org/wiki/.NET) leaves gaps — handy methods missing from existing types and whole types you end up rewriting in every project — and these extensions fill both, enriching the BCL types and adding the ones it lacks (with the Backports package also letting the same code use modern [C#](https://en.wikipedia.org/wiki/C_Sharp_%28programming_language%29) on older runtimes).
+> The .NET base class libraries leave gaps — methods that obviously belong on a type and are not there, and whole types you end up rewriting in every project. These packages fill both, and **Backports** lets the same code use modern C# on runtimes that never had it.
 
-## 🧩 Packages
+## 🧭 Vision
+
+The .NET base class libraries are missing things in two different ways: methods that obviously belong
+on a type and are not there, and whole types you end up writing again in every project. These packages
+fill both, and the Backports package adds a third — letting code written against modern C# compile and
+run on runtimes that predate it.
+
+The aim is that reaching for an extension should feel like reaching for the BCL: the method is where
+you would have looked for it, named what you would have called it, and available on the oldest target
+you still have to support.
+
+## ✨ Features
+
+- Extension methods on the BCL types, placed where you would look for them
+- The types the BCL lacks, rather than a copy of them per project
+- **Backports** — modern C# language and library features on runtimes that never had them
+- Split per assembly surface (Corlib, WinForms, WPF, `System.Drawing`, ASP.NET, Win32, DirectoryServices, Office) so a project takes only what it uses
+- Multi-targeted from .NET Framework through current .NET
+
+## 📦 Installation
+
+```bash
+dotnet add package FrameworkExtensions.Corlib
+```
+
+Every package is listed in the [package table](#-packages) below; take only the ones matching the
+assemblies your project already references.
+
+## 🚀 Quick start
+
+```csharp
+using System;
+
+// Methods that should have been on the type in the first place.
+"a,b,,c".Split(',').Where(i => !string.IsNullOrEmpty(i)).ForEach(Console.WriteLine);
+```
+
+The complete surface of each package is generated into its own `REFERENCE.md`, linked from the
+package's README on nuget.org.
+
+## 📚 Packages
 
 | Package | Description | Version | Downloads |
 | --- | --- | --- | --- |
