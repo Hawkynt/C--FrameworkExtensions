@@ -6376,8 +6376,8 @@ Inherits `DiagramRenderer`.
 | `ActivityDiagramRenderer` | `ActivityDiagramRenderer()` |  |
 | `ActivityHeight` | `float ActivityHeight { get; set; }` | Activity node height. |
 | `ActivityWidth` | `float ActivityWidth { get; set; }` | Activity node width. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `ArcDiagramRenderer`
 
@@ -6388,8 +6388,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ArcDiagramRenderer` | `ArcDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `BPMNDiagramRenderer`
 
@@ -6400,8 +6400,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BPMNDiagramRenderer` | `BPMNDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `BlockDiagramRenderer`
 
@@ -6412,8 +6412,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BlockDiagramRenderer` | `BlockDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `ByteFieldDiagramRenderer`
 
@@ -6424,8 +6424,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ByteFieldDiagramRenderer` | `ByteFieldDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `C4ComponentDiagramRenderer`
 
@@ -6436,8 +6436,8 @@ Inherits `C4DiagramRendererBase`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `C4ComponentDiagramRenderer` | `C4ComponentDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `C4ContainerDiagramRenderer`
 
@@ -6448,8 +6448,8 @@ Inherits `C4DiagramRendererBase`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `C4ContainerDiagramRenderer` | `C4ContainerDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `C4ContextDiagramRenderer`
 
@@ -6460,8 +6460,8 @@ Inherits `C4DiagramRendererBase`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `C4ContextDiagramRenderer` | `C4ContextDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `C4DeploymentDiagramRenderer`
 
@@ -6472,8 +6472,8 @@ Inherits `C4DiagramRendererBase`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `C4DeploymentDiagramRenderer` | `C4DeploymentDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `C4DiagramRendererBase`
 
@@ -6498,9 +6498,9 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ChordDiagramRenderer` | `ChordDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `GroupGap` | `float GroupGap { get; set; }` | Gap between groups in degrees. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `CirclePackingDiagramRenderer`
 
@@ -6511,8 +6511,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CirclePackingDiagramRenderer` | `CirclePackingDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `ClassDiagramRenderer`
 
@@ -6524,10 +6524,10 @@ Inherits `DiagramRenderer`.
 | --- | --- | --- |
 | `ClassDiagramRenderer` | `ClassDiagramRenderer()` |  |
 | `ClassWidth` | `float ClassWidth { get; set; }` | Class box width. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `HeaderHeight` | `float HeaderHeight { get; set; }` | Compartment height for header. |
 | `MemberLineHeight` | `float MemberLineHeight { get; set; }` | Line height for members. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `CommunicationDiagramRenderer`
 
@@ -6538,8 +6538,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CommunicationDiagramRenderer` | `CommunicationDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `ComponentDiagramRenderer`
 
@@ -6552,8 +6552,8 @@ Inherits `DiagramRenderer`.
 | `ComponentDiagramRenderer` | `ComponentDiagramRenderer()` |  |
 | `ComponentHeight` | `float ComponentHeight { get; set; }` | Component box height. |
 | `ComponentWidth` | `float ComponentWidth { get; set; }` | Component box width. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `DataFlowDiagramRenderer`
 
@@ -6564,8 +6564,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DataFlowDiagramRenderer` | `DataFlowDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `DecisionTreeDiagramRenderer`
 
@@ -6577,11 +6577,11 @@ Inherits `DiagramRenderer`.
 | --- | --- | --- |
 | `DecisionTreeDiagramRenderer` | `DecisionTreeDiagramRenderer()` |  |
 | `DecisionSize` | `float DecisionSize { get; set; }` | Decision node size. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `OutcomeHeight` | `float OutcomeHeight { get; set; }` | Outcome node height. |
 | `OutcomeWidth` | `float OutcomeWidth { get; set; }` | Outcome node width. |
 | `VerticalSpacing` | `float VerticalSpacing { get; set; }` | Vertical spacing. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `DendrogramDiagramRenderer`
 
@@ -6592,8 +6592,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DendrogramDiagramRenderer` | `DendrogramDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `DeploymentDiagramRenderer`
 
@@ -6604,10 +6604,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DeploymentDiagramRenderer` | `DeploymentDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `NodeHeight` | `float NodeHeight { get; set; }` | Node box height. |
 | `NodeWidth` | `float NodeWidth { get; set; }` | Node box width. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `EntityRelationshipDiagramRenderer`
 
@@ -6618,8 +6618,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `EntityRelationshipDiagramRenderer` | `EntityRelationshipDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `FishboneDiagramRenderer`
 
@@ -6631,8 +6631,8 @@ Inherits `DiagramRenderer`.
 | --- | --- | --- |
 | `FishboneDiagramRenderer` | `FishboneDiagramRenderer()` |  |
 | `BoneAngle` | `float BoneAngle { get; set; }` | Bone angle in degrees. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `FlowChartDiagramRenderer`
 
@@ -6643,8 +6643,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `FlowChartDiagramRenderer` | `FlowChartDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `GitgraphDiagramRenderer`
 
@@ -6655,8 +6655,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `GitgraphDiagramRenderer` | `GitgraphDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `InteractionOverviewDiagramRenderer`
 
@@ -6667,8 +6667,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `InteractionOverviewDiagramRenderer` | `InteractionOverviewDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `JourneyMapDiagramRenderer`
 
@@ -6679,8 +6679,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `JourneyMapDiagramRenderer` | `JourneyMapDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `KanbanDiagramRenderer`
 
@@ -6691,8 +6691,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `KanbanDiagramRenderer` | `KanbanDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `MatrixDiagramRenderer`
 
@@ -6703,8 +6703,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `MatrixDiagramRenderer` | `MatrixDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `MindMapDiagramRenderer`
 
@@ -6715,10 +6715,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `MindMapDiagramRenderer` | `MindMapDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `MinRadius` | `float MinRadius { get; set; }` | Minimum distance from center. |
 | `RadiusIncrement` | `float RadiusIncrement { get; set; }` | Distance increment per level. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `NetworkDiagramRenderer`
 
@@ -6729,10 +6729,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `NetworkDiagramRenderer` | `NetworkDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `MaxNodeSize` | `float MaxNodeSize { get; set; }` | Maximum node size. |
 | `MinNodeSize` | `float MinNodeSize { get; set; }` | Minimum node size. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `NetworkTopologyDiagramRenderer`
 
@@ -6743,9 +6743,9 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `NetworkTopologyDiagramRenderer` | `NetworkTopologyDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `Layout` | `NetworkLayout Layout { get; set; }` | Gets or sets the network layout type. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `ObjectDiagramRenderer`
 
@@ -6756,8 +6756,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ObjectDiagramRenderer` | `ObjectDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `OrgChartDiagramRenderer`
 
@@ -6768,12 +6768,12 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `OrgChartDiagramRenderer` | `OrgChartDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `LevelSpacing` | `float LevelSpacing { get; set; }` | Vertical spacing between levels. |
 | `NodeHeight` | `float NodeHeight { get; set; }` | Node card height. |
 | `NodeWidth` | `float NodeWidth { get; set; }` | Node card width. |
 | `SiblingSpacing` | `float SiblingSpacing { get; set; }` | Horizontal spacing between siblings. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `PackageDiagramRenderer`
 
@@ -6784,10 +6784,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PackageDiagramRenderer` | `PackageDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `PackageHeight` | `float PackageHeight { get; set; }` | Package height. |
 | `PackageWidth` | `float PackageWidth { get; set; }` | Package width. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `PacketDiagramRenderer`
 
@@ -6798,8 +6798,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PacketDiagramRenderer` | `PacketDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `RackDiagramRenderer`
 
@@ -6810,8 +6810,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RackDiagramRenderer` | `RackDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `RequirementDiagramRenderer`
 
@@ -6822,8 +6822,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RequirementDiagramRenderer` | `RequirementDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `SWOTDiagramRenderer`
 
@@ -6834,8 +6834,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SWOTDiagramRenderer` | `SWOTDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `SankeyDiagramRenderer`
 
@@ -6846,10 +6846,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SankeyDiagramRenderer` | `SankeyDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `NodePadding` | `float NodePadding { get; set; }` | Padding between nodes. |
 | `NodeWidth` | `float NodeWidth { get; set; }` | Node width. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `SequenceDiagramRenderer`
 
@@ -6861,11 +6861,11 @@ Inherits `DiagramRenderer`.
 | --- | --- | --- |
 | `SequenceDiagramRenderer` | `SequenceDiagramRenderer()` |  |
 | `ActivationWidth` | `float ActivationWidth { get; set; }` | Activation box width. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `HeaderHeight` | `float HeaderHeight { get; set; }` | Lifeline header height. |
 | `LifelineSpacing` | `float LifelineSpacing { get; set; }` | Lifeline spacing. |
 | `MessageSpacing` | `float MessageSpacing { get; set; }` | Message vertical spacing. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `StateDiagramRenderer`
 
@@ -6876,10 +6876,10 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StateDiagramRenderer` | `StateDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `StateHeight` | `float StateHeight { get; set; }` | State height. |
 | `StateWidth` | `float StateWidth { get; set; }` | State width. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `TimingDiagramRenderer`
 
@@ -6890,9 +6890,9 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `TimingDiagramRenderer` | `TimingDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `RowHeight` | `float RowHeight { get; set; }` | Row height per lifeline. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `TreeDiagramRenderer`
 
@@ -6903,9 +6903,9 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `TreeDiagramRenderer` | `TreeDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `Orientation` | `TreeOrientation Orientation { get; set; }` | Orientation of the tree. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `UseCaseDiagramRenderer`
 
@@ -6917,10 +6917,10 @@ Inherits `DiagramRenderer`.
 | --- | --- | --- |
 | `UseCaseDiagramRenderer` | `UseCaseDiagramRenderer()` |  |
 | `ActorSize` | `float ActorSize { get; set; }` | Actor size. |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `UseCaseHeight` | `float UseCaseHeight { get; set; }` | Use case oval height. |
 | `UseCaseWidth` | `float UseCaseWidth { get; set; }` | Use case oval width. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `VennDiagramRenderer`
 
@@ -6931,8 +6931,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `VennDiagramRenderer` | `VennDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `WBSDiagramRenderer`
 
@@ -6943,12 +6943,12 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `WBSDiagramRenderer` | `WBSDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
 | `HorizontalSpacing` | `float HorizontalSpacing { get; set; }` | Horizontal spacing. |
 | `NodeHeight` | `float NodeHeight { get; set; }` | Node height. |
 | `NodeWidth` | `float NodeWidth { get; set; }` | Node width. |
 | `VerticalSpacing` | `float VerticalSpacing { get; set; }` | Vertical spacing. |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 #### `WaveformDiagramRenderer`
 
@@ -6959,8 +6959,8 @@ Inherits `DiagramRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `WaveformDiagramRenderer` | `WaveformDiagramRenderer()` |  |
-| `DiagramType` | `override DiagramType DiagramType { get; }` |  |
-| `Render` | `override void Render(DiagramRenderContext context)` |  |
+| `DiagramType` | `override DiagramType DiagramType { get; }` | Gets the diagram type this renderer handles. |
+| `Render` | `override void Render(DiagramRenderContext context)` | Renders the diagram to the specified graphics context. |
 
 ### Namespace `System.Windows.Forms.Charting.Renderers`
 
@@ -6975,9 +6975,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `AreaChartRenderer` | `AreaChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `BarChartRenderer`
 
@@ -6988,9 +6988,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BarChartRenderer` | `BarChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `BarcodeChartRenderer`
 
@@ -7015,9 +7015,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BeeswarmRenderer` | `BeeswarmRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `BoxPlotRenderer`
 
@@ -7028,8 +7028,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BoxPlotRenderer` | `BoxPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `BubbleChartRenderer`
 
@@ -7040,9 +7040,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BubbleChartRenderer` | `BubbleChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `BubbleMapRenderer`
 
@@ -7066,10 +7066,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BulletChartRenderer` | `BulletChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `BumpAreaRenderer`
 
@@ -7093,9 +7093,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BumpChartRenderer` | `BumpChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `CalendarHeatmapRenderer`
 
@@ -7106,12 +7106,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CalendarHeatmapRenderer` | `CalendarHeatmapRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `ColorSteps` | `int ColorSteps { get; set; }` | Number of color gradation steps. |
 | `HighColor` | `Color HighColor { get; set; }` | High value color (hot). |
 | `LowColor` | `Color LowColor { get; set; }` | Low value color (cold). |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `CandlestickRenderer`
 
@@ -7124,9 +7124,9 @@ Inherits `ChartRenderer`.
 | `CandlestickRenderer` | `CandlestickRenderer()` |  |
 | `BearishColor` | `Color BearishColor { get; set; }` | Color for bearish (down) candles. |
 | `BullishColor` | `Color BullishColor { get; set; }` | Color for bullish (up) candles. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `CategoricalScatterRenderer`
 
@@ -7163,9 +7163,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CircularGaugeRenderer` | `CircularGaugeRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `CircularTreemapRenderer`
 
@@ -7176,9 +7176,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CircularTreemapRenderer` | `CircularTreemapRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `ColumnChartRenderer`
 
@@ -7189,8 +7189,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ColumnChartRenderer` | `ColumnChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `ConnectedScatterRenderer`
 
@@ -7201,9 +7201,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ConnectedScatterRenderer` | `ConnectedScatterRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `ConnectionMapRenderer`
 
@@ -7240,9 +7240,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ConvexTreemapRenderer` | `ConvexTreemapRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `CorrelogramRenderer`
 
@@ -7266,9 +7266,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `CumulativeRenderer` | `CumulativeRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `DensityPlotRenderer`
 
@@ -7279,9 +7279,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DensityPlotRenderer` | `DensityPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `DivergingStackedBarRenderer`
 
@@ -7305,11 +7305,11 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DonutChartRenderer` | `DonutChartRenderer(float holeRatio = 0.5)` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `GetLegendItems` | `override IList<LegendItem> GetLegendItems(AdvancedChart chart)` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `GetLegendItems` | `override IList<LegendItem> GetLegendItems(AdvancedChart chart)` | Gets legend items for this chart. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `DotMapRenderer`
 
@@ -7333,9 +7333,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `DotPlotRenderer` | `DotPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `DumbbellChartRenderer`
 
@@ -7360,9 +7360,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `EulerDiagramRenderer` | `EulerDiagramRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `FunnelChartRenderer`
 
@@ -7373,12 +7373,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `FunnelChartRenderer` | `FunnelChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `NeckHeight` | `float NeckHeight { get; set; }` | Neck height as percentage of total height. |
 | `NeckWidth` | `float NeckWidth { get; set; }` | Neck width as percentage of total width. |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `GanttChartRenderer`
 
@@ -7389,13 +7389,13 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `GanttChartRenderer` | `GanttChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `CompletedColor` | `Color CompletedColor { get; set; }` | Color for completed portion of tasks. |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
 | `RemainingColor` | `Color RemainingColor { get; set; }` | Color for remaining portion of tasks. |
 | `ShowDependencies` | `bool ShowDependencies { get; set; }` | Whether to draw dependency arrows. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `GaugeChartRenderer`
 
@@ -7407,12 +7407,12 @@ Inherits `ChartRenderer`.
 | --- | --- | --- |
 | `GaugeChartRenderer` | `GaugeChartRenderer()` |  |
 | `ArcThickness` | `float ArcThickness { get; set; }` | Arc thickness as percentage of radius. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `StartAngle` | `float StartAngle { get; set; }` | Start angle in degrees (0 = right, 90 = bottom). |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
 | `SweepAngle` | `float SweepAngle { get; set; }` | Sweep angle in degrees. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `GeographicHeatmapRenderer`
 
@@ -7436,9 +7436,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `GroupedBarRenderer` | `GroupedBarRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `GroupedColumnRenderer`
 
@@ -7449,8 +7449,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `GroupedColumnRenderer` | `GroupedColumnRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `HeatmapRenderer`
 
@@ -7462,11 +7462,11 @@ Inherits `ChartRenderer`.
 | --- | --- | --- |
 | `HeatmapRenderer` | `HeatmapRenderer()` |  |
 | `CellPadding` | `int CellPadding { get; set; }` | Cell padding. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `HighColor` | `Color HighColor { get; set; }` | High value color. |
 | `LowColor` | `Color LowColor { get; set; }` | Low value color. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `HexbinRenderer`
 
@@ -7490,10 +7490,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `HistogramRenderer` | `HistogramRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `HorizonChartRenderer`
 
@@ -7517,9 +7517,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `IcicleChartRenderer` | `IcicleChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `IconArrayRenderer`
 
@@ -7530,12 +7530,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `IconArrayRenderer` | `IconArrayRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `IconsPerRow` | `int IconsPerRow { get; set; }` | Number of icons per row. |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
 | `TotalIcons` | `int TotalIcons { get; set; }` | Total number of icons. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `JitterPlotRenderer`
 
@@ -7559,12 +7559,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `KagiChartRenderer` | `KagiChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `ReversalAmount` | `double ReversalAmount { get; set; }` | Reversal amount (percentage or absolute). |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
 | `YangColor` | `Color YangColor { get; set; }` | Color for yang (thick/bullish) lines. |
 | `YinColor` | `Color YinColor { get; set; }` | Color for yin (thin/bearish) lines. |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `LineChartRenderer`
 
@@ -7575,10 +7575,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `LineChartRenderer` | `LineChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `HitTest` | `override ChartHitTestResult HitTest(ChartRenderContext context, PointF point)` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `HitTest` | `override ChartHitTestResult HitTest(ChartRenderContext context, PointF point)` | Performs hit testing for data points. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `LollipopChartRenderer`
 
@@ -7589,8 +7589,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `LollipopChartRenderer` | `LollipopChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `MatrixChartRenderer`
 
@@ -7614,9 +7614,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `MosaicChartRenderer` | `MosaicChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `NestedDonutRenderer`
 
@@ -7627,9 +7627,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `NestedDonutRenderer` | `NestedDonutRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `NightingaleChartRenderer`
 
@@ -7656,9 +7656,9 @@ Inherits `ChartRenderer`.
 | `OHLCRenderer` | `OHLCRenderer()` |  |
 | `BearishColor` | `Color BearishColor { get; set; }` | Color for bearish (down) bars. |
 | `BullishColor` | `Color BullishColor { get; set; }` | Color for bullish (up) bars. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `OneDimensionalHeatmapRenderer`
 
@@ -7683,10 +7683,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `OrderedBarRenderer` | `OrderedBarRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `ParallelCoordinatesRenderer`
 
@@ -7697,9 +7697,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ParallelCoordinatesRenderer` | `ParallelCoordinatesRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `ParliamentChartRenderer`
 
@@ -7710,9 +7710,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ParliamentChartRenderer` | `ParliamentChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PictogramRenderer`
 
@@ -7723,10 +7723,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PictogramRenderer` | `PictogramRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `IconsPerRow` | `int IconsPerRow { get; set; }` | Number of icons per row. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PieChartRenderer`
 
@@ -7737,11 +7737,11 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PieChartRenderer` | `PieChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `GetLegendItems` | `override IList<LegendItem> GetLegendItems(AdvancedChart chart)` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `GetLegendItems` | `override IList<LegendItem> GetLegendItems(AdvancedChart chart)` | Gets legend items for this chart. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PointFigureRenderer`
 
@@ -7753,12 +7753,12 @@ Inherits `ChartRenderer`.
 | --- | --- | --- |
 | `PointFigureRenderer` | `PointFigureRenderer()` |  |
 | `BoxSize` | `double BoxSize { get; set; }` | Box size (price unit per box). |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `OColor` | `Color OColor { get; set; }` | Color for O marks (bearish). |
 | `ReversalBoxes` | `int ReversalBoxes { get; set; }` | Reversal amount (number of boxes needed for reversal). |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
 | `XColor` | `Color XColor { get; set; }` | Color for X marks (bullish). |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PolarAreaRenderer`
 
@@ -7769,10 +7769,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PolarAreaRenderer` | `PolarAreaRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PopulationPyramidRenderer`
 
@@ -7783,9 +7783,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PopulationPyramidRenderer` | `PopulationPyramidRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `PyramidChartRenderer`
 
@@ -7796,10 +7796,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `PyramidChartRenderer` | `PyramidChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `QuadrantChartRenderer`
 
@@ -7823,10 +7823,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RadarChartRenderer` | `RadarChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `RadialBarRenderer`
 
@@ -7837,10 +7837,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RadialBarRenderer` | `RadialBarRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `RadialHistogramRenderer`
 
@@ -7864,9 +7864,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RangeAreaRenderer` | `RangeAreaRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `RangePlotRenderer`
 
@@ -7893,9 +7893,9 @@ Inherits `ChartRenderer`.
 | `BearishColor` | `Color BearishColor { get; set; }` | Color for bearish (down) bricks. |
 | `BrickSize` | `double BrickSize { get; set; }` | Brick size (price movement needed to create a new brick). |
 | `BullishColor` | `Color BullishColor { get; set; }` | Color for bullish (up) bricks. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `RidgelineRenderer`
 
@@ -7906,9 +7906,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `RidgelineRenderer` | `RidgelineRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `ScatterChartRenderer`
 
@@ -7919,10 +7919,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ScatterChartRenderer` | `ScatterChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `HitTest` | `override ChartHitTestResult HitTest(ChartRenderContext context, PointF point)` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `HitTest` | `override ChartHitTestResult HitTest(ChartRenderContext context, PointF point)` | Performs hit testing for data points. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `ScatterMatrixRenderer`
 
@@ -7946,10 +7946,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SeasonalChartRenderer` | `SeasonalChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `Period` | `SeasonalPeriod Period { get; set; }` | Period type for seasonal analysis. |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `SeasonalPeriod`
 
@@ -7984,9 +7984,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SlopeChartRenderer` | `SlopeChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `SmallMultiplesRenderer`
 
@@ -8024,10 +8024,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SpiralPlotRenderer` | `SpiralPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `Turns` | `int Turns { get; set; }` | Number of turns in the spiral. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `SplineChartRenderer`
 
@@ -8038,9 +8038,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SplineChartRenderer` | `SplineChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `StackedAreaRenderer`
 
@@ -8051,9 +8051,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StackedAreaRenderer` | `StackedAreaRenderer(bool percentage = false)` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `StackedBarRenderer`
 
@@ -8064,9 +8064,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StackedBarRenderer` | `StackedBarRenderer(bool percentage = false)` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `DefaultOrientation` | `override ChartOrientation DefaultOrientation { get; }` | Gets the default orientation for this chart type. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `StackedColumnRenderer`
 
@@ -8077,8 +8077,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StackedColumnRenderer` | `StackedColumnRenderer(bool percentage = false)` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `StepAreaRenderer`
 
@@ -8089,9 +8089,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StepAreaRenderer` | `StepAreaRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `StepChartRenderer`
 
@@ -8102,9 +8102,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StepChartRenderer` | `StepChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `StreamGraphRenderer`
 
@@ -8128,9 +8128,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `StripPlotRenderer` | `StripPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
-| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
+| `_GetSymbolType` | `protected override LegendSymbolType _GetSymbolType()` | Gets the symbol type for legend items. |
 
 #### `SunburstRenderer`
 
@@ -8141,10 +8141,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `SunburstRenderer` | `SunburstRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `TableChartRenderer`
 
@@ -8168,11 +8168,11 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `TableHeatmapRenderer` | `TableHeatmapRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `HighColor` | `Color HighColor { get; set; }` | High value color. |
 | `LowColor` | `Color LowColor { get; set; }` | Low value color. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `TileMapRenderer`
 
@@ -8198,9 +8198,9 @@ Inherits `ChartRenderer`.
 | `TimelineChartRenderer` | `TimelineChartRenderer()` |  |
 | `AlternatePosition` | `bool AlternatePosition { get; set; }` | Whether to alternate events above and below the timeline. |
 | `AxisColor` | `Color AxisColor { get; set; }` | Color for the timeline axis. |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `TreemapRenderer`
 
@@ -8211,11 +8211,11 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `TreemapRenderer` | `TreemapRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `Padding` | `int Padding { get; set; }` | Padding between rectangles. |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `UnitChartRenderer`
 
@@ -8226,10 +8226,10 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `UnitChartRenderer` | `UnitChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `UnitsPerRow` | `int UnitsPerRow { get; set; }` | Number of units per row. |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `VennDiagramRenderer`
 
@@ -8240,9 +8240,9 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `VennDiagramRenderer` | `VennDiagramRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `ViolinPlotRenderer`
 
@@ -8253,8 +8253,8 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ViolinPlotRenderer` | `ViolinPlotRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `WaffleChartRenderer`
 
@@ -8265,11 +8265,11 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `WaffleChartRenderer` | `WaffleChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `GridSize` | `int GridSize { get; set; }` | Grid size (cells per row/column). |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `WaterfallChartRenderer`
 
@@ -8280,12 +8280,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `WaterfallChartRenderer` | `WaterfallChartRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `NegativeColor` | `Color NegativeColor { get; set; }` | Color for negative values. |
 | `PositiveColor` | `Color PositiveColor { get; set; }` | Color for positive values. |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
 | `TotalColor` | `Color TotalColor { get; set; }` | Color for total/subtotal bars. |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 #### `WordCloudRenderer`
 
@@ -8296,12 +8296,12 @@ Inherits `ChartRenderer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `WordCloudRenderer` | `WordCloudRenderer()` |  |
-| `ChartType` | `override AdvancedChartType ChartType { get; }` |  |
+| `ChartType` | `override AdvancedChartType ChartType { get; }` | Gets the chart type this renderer handles. |
 | `MaxFontSize` | `float MaxFontSize { get; set; }` | Maximum font size. |
 | `MinFontSize` | `float MinFontSize { get; set; }` | Minimum font size. |
-| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` |  |
-| `UsesAxes` | `override bool UsesAxes { get; }` |  |
-| `Render` | `override void Render(ChartRenderContext context)` |  |
+| `SupportsMultipleSeries` | `override bool SupportsMultipleSeries { get; }` | Gets whether this chart type supports multiple series. |
+| `UsesAxes` | `override bool UsesAxes { get; }` | Gets whether this chart type uses axes. |
+| `Render` | `override void Render(ChartRenderContext context)` | Renders the chart to the specified graphics context. |
 
 ### Namespace `System.Windows.Threading`
 

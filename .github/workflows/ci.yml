@@ -138,3 +138,13 @@ jobs:
       - name: Test (advisory — Performance, never blocks)
         continue-on-error: true
         run: dotnet test "Tests/Corlib.Tests/Corlib.Tests.csproj" --configuration ${{ matrix.configuration }} --arch ${{ matrix.architecture }} --filter "TestCategory=Performance" --verbosity normal /p:TreatWarningsAsErrors=false /p:NoWarn=1591;1584;1658;1573;1574;8619;8620
+
+  # A text lint over README.md against the house convention — no build, no toolchain — so it
+  # runs beside the rest rather than inside it and cannot mask them.
+  repo-readme:
+    name: repo README
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: Hawkynt/RepositoryTemplate/repo-readme@v1

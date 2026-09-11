@@ -15,9 +15,9 @@
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Clear` | `static void Clear(Array array)` |  |
-| `FindLastIndex` | `static int FindLastIndex<T>(T[] array, Predicate<T> match)` |  |
-| `FindLast` | `static T FindLast<T>(T[] array, Predicate<T> match)` |  |
+| `Clear` | `static void Clear(Array array)` | Clears the contents of an array. |
+| `FindLastIndex` | `static int FindLastIndex<T>(T[] array, Predicate<T> match)` | Searches for an element that matches the conditions defined by the specified predicate, and returns the zero-based index of the last occurrence within the entire `Array`. |
+| `FindLast` | `static T FindLast<T>(T[] array, Predicate<T> match)` | Searches for an element that matches the conditions defined by the specified predicate, and returns the last occurrence within the entire `Array`. |
 
 #### `BitConverterPolyfills`
 
@@ -29,9 +29,9 @@ _No public or protected members._
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ToHexStringLower` | `static string ToHexStringLower(ReadOnlySpan<byte> bytes)` |  |
-| `ToHexStringLower` | `static string ToHexStringLower(byte[] inArray)` |  |
-| `ToHexStringLower` | `static string ToHexStringLower(byte[] inArray, int offset, int length)` |  |
+| `ToHexStringLower` | `static string ToHexStringLower(ReadOnlySpan<byte> bytes)` | Converts a span of 8-bit unsigned integers to its equivalent string representation that is encoded with lowercase hexadecimal characters. |
+| `ToHexStringLower` | `static string ToHexStringLower(byte[] inArray)` | Converts an array of 8-bit unsigned integers to its equivalent string representation that is encoded with lowercase hexadecimal characters. |
+| `ToHexStringLower` | `static string ToHexStringLower(byte[] inArray, int offset, int length)` | Converts a subset of an array of 8-bit unsigned integers to its equivalent string representation that is encoded with lowercase hexadecimal characters. |
 
 #### `DateTimePolyfills`
 
@@ -45,15 +45,15 @@ _No public or protected members._
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Clamp` | `static Half Clamp(Half value, Half min, Half max)` |  |
+| `Clamp` | `static Half Clamp(Half value, Half min, Half max)` | Returns value clamped to the inclusive range of min and max. |
 
 #### `RandomPolyfills`
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `GetHexString` | `static string GetHexString(this Random @this, int length, bool lowercase = false)` |  |
-| `GetHexString` | `static void GetHexString(this Random @this, Span<char> destination, bool lowercase = false)` |  |
-| `GetString` | `static string GetString(this Random @this, ReadOnlySpan<char> choices, int length)` |  |
+| `GetHexString` | `static string GetHexString(this Random @this, int length, bool lowercase = false)` | Creates a string filled with random hexadecimal characters. |
+| `GetHexString` | `static void GetHexString(this Random @this, Span<char> destination, bool lowercase = false)` | Fills the specified span with random hexadecimal characters. |
+| `GetString` | `static string GetString(this Random @this, ReadOnlySpan<char> choices, int length)` | Creates a string filled with random characters chosen from the specified set of choices. |
 
 #### `SinglePolyfills`
 
@@ -63,7 +63,7 @@ _No public or protected members._
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Replace` | `static string Replace(this string @this, string oldValue, string newValue, StringComparison comparisonType)` |  |
+| `Replace` | `static string Replace(this string @this, string oldValue, string newValue, StringComparison comparisonType)` | Returns a new string in which all occurrences of a specified string in the current instance are replaced with another specified string, using the provided comparison type. |
 
 ### Namespace `System.Collections.Generic`
 
@@ -73,15 +73,15 @@ _No public or protected members._
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `AddRange` | `static void AddRange<T>(this List<T> @this, ReadOnlySpan<T> source)` |  |
-| `CopyTo` | `static void CopyTo<T>(this List<T> @this, Span<T> destination)` |  |
-| `InsertRange` | `static void InsertRange<T>(this List<T> @this, int index, ReadOnlySpan<T> source)` |  |
+| `AddRange` | `static void AddRange<T>(this List<T> @this, ReadOnlySpan<T> source)` | Adds the elements of the specified span to the end of the `List`. |
+| `CopyTo` | `static void CopyTo<T>(this List<T> @this, Span<T> destination)` | Copies the elements of the `List` to a span. |
+| `InsertRange` | `static void InsertRange<T>(this List<T> @this, int index, ReadOnlySpan<T> source)` | Inserts the elements of a span into the `List` at the specified index. |
 
 #### `PriorityQueuePolyfills`
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `get_Capacity` | `static int get_Capacity<TElement, TPriority>(PriorityQueue<TElement, TPriority> @this)` |  |
+| `get_Capacity` | `static int get_Capacity<TElement, TPriority>(PriorityQueue<TElement, TPriority> @this)` | Gets the number of elements that the `PriorityQueue` can hold without having to increase its capacity. |
 
 ### Namespace `System.Collections.ObjectModel`
 
@@ -122,15 +122,15 @@ Provides extension methods for `BinaryReader` ReadExactly methods added in .NET 
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ReadExactly` | `static byte[] ReadExactly(this BinaryReader @this, int count)` |  |
-| `ReadExactly` | `static void ReadExactly(this BinaryReader @this, Span<byte> buffer)` |  |
+| `ReadExactly` | `static byte[] ReadExactly(this BinaryReader @this, int count)` | Reads the specified number of bytes from the current stream into a byte array. |
+| `ReadExactly` | `static void ReadExactly(this BinaryReader @this, Span<byte> buffer)` | Reads bytes from the current stream into the provided span until the span is filled. |
 
 #### `PathPolyfills`
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `IsPathFullyQualified` | `static bool IsPathFullyQualified(ReadOnlySpan<char> path)` |  |
-| `IsPathFullyQualified` | `static bool IsPathFullyQualified(string path)` |  |
+| `IsPathFullyQualified` | `static bool IsPathFullyQualified(ReadOnlySpan<char> path)` | Returns a value that indicates whether a file path is fully qualified. |
+| `IsPathFullyQualified` | `static bool IsPathFullyQualified(string path)` | Returns a value that indicates whether a file path is fully qualified. |
 
 ### Namespace `System.Linq`
 
@@ -140,18 +140,18 @@ Provides extension methods for `BinaryReader` ReadExactly methods added in .NET 
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ElementAtOrDefault` | `static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> @this, Index index)` |  |
-| `ElementAt` | `static TSource ElementAt<TSource>(this IEnumerable<TSource> @this, Index index)` |  |
-| `InfiniteSequence` | `static IEnumerable<TSource> InfiniteSequence<TSource>(TSource start, TSource step)` |  |
-| `LeftJoin` | `static IEnumerable<TResult> LeftJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector)` |  |
-| `LeftJoin` | `static IEnumerable<TResult> LeftJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer)` |  |
-| `Reverse` | `static IEnumerable<TSource> Reverse<TSource>(this TSource[] @this)` |  |
-| `RightJoin` | `static IEnumerable<TResult> RightJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector)` |  |
-| `RightJoin` | `static IEnumerable<TResult> RightJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer)` |  |
-| `Sequence` | `static IEnumerable<TSource> Sequence<TSource>(TSource start, TSource endInclusive, TSource step)` |  |
-| `Shuffle` | `static IEnumerable<TSource> Shuffle<TSource>(this IEnumerable<TSource> @this)` |  |
-| `Zip` | `static IEnumerable<ValueTuple<TFirst, TSecond, TThird>> Zip<TFirst, TSecond, TThird>(this IEnumerable<TFirst> @this, IEnumerable<TSecond> second, IEnumerable<TThird> third)` |  |
-| `Zip` | `static IEnumerable<ValueTuple<TFirst, TSecond>> Zip<TFirst, TSecond>(this IEnumerable<TFirst> @this, IEnumerable<TSecond> second)` |  |
+| `ElementAtOrDefault` | `static TSource ElementAtOrDefault<TSource>(this IEnumerable<TSource> @this, Index index)` | Returns the element at a specified index in a sequence or a default value if the index is out of range. |
+| `ElementAt` | `static TSource ElementAt<TSource>(this IEnumerable<TSource> @this, Index index)` | Returns the element at a specified index in a sequence. |
+| `InfiniteSequence` | `static IEnumerable<TSource> InfiniteSequence<TSource>(TSource start, TSource step)` | Generates an infinite sequence of values starting at a specified value with a specified step. |
+| `LeftJoin` | `static IEnumerable<TResult> LeftJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector)` | Performs a left outer join on two sequences based on matching keys. |
+| `LeftJoin` | `static IEnumerable<TResult> LeftJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer)` | Performs a left outer join on two sequences based on matching keys. |
+| `Reverse` | `static IEnumerable<TSource> Reverse<TSource>(this TSource[] @this)` | Inverts the order of the elements in a sequence. |
+| `RightJoin` | `static IEnumerable<TResult> RightJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector)` | Performs a right outer join on two sequences based on matching keys. |
+| `RightJoin` | `static IEnumerable<TResult> RightJoin<TSource, TInner, TKey, TResult>(this IEnumerable<TSource> @this, IEnumerable<TInner> inner, Func<TSource, TKey> outerKeySelector, Func<TInner, TKey> innerKeySelector, Func<TSource, TInner, TResult> resultSelector, IEqualityComparer<TKey> comparer)` | Performs a right outer join on two sequences based on matching keys. |
+| `Sequence` | `static IEnumerable<TSource> Sequence<TSource>(TSource start, TSource endInclusive, TSource step)` | Generates a finite sequence of values from a start value to an end value (inclusive) with a specified step. |
+| `Shuffle` | `static IEnumerable<TSource> Shuffle<TSource>(this IEnumerable<TSource> @this)` | Returns a new sequence with the elements in random order. |
+| `Zip` | `static IEnumerable<ValueTuple<TFirst, TSecond, TThird>> Zip<TFirst, TSecond, TThird>(this IEnumerable<TFirst> @this, IEnumerable<TSecond> second, IEnumerable<TThird> third)` | Produces a sequence of tuples with elements from the three specified sequences. |
+| `Zip` | `static IEnumerable<ValueTuple<TFirst, TSecond>> Zip<TFirst, TSecond>(this IEnumerable<TFirst> @this, IEnumerable<TSecond> second)` | Produces a sequence of tuples with elements from the two specified sequences. |
 
 ### Namespace `System.Numerics`
 
@@ -163,18 +163,18 @@ Polyfills for Matrix3x2 factory methods and row accessors added in .NET 10.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Create` | `static Matrix3x2 Create(Vector2 value)` |  |
-| `Create` | `static Matrix3x2 Create(Vector2 x, Vector2 y, Vector2 z)` |  |
-| `Create` | `static Matrix3x2 Create(float m11, float m12, float m21, float m22, float m31, float m32)` |  |
-| `Create` | `static Matrix3x2 Create(float value)` |  |
-| `GetRow` | `static Vector2 GetRow(this Matrix3x2 @this, int index)` |  |
-| `WithRow` | `static Matrix3x2 WithRow(this Matrix3x2 @this, int index, Vector2 value)` |  |
-| `WithX` | `static Matrix3x2 WithX(this Matrix3x2 @this, Vector2 value)` |  |
-| `WithY` | `static Matrix3x2 WithY(this Matrix3x2 @this, Vector2 value)` |  |
-| `WithZ` | `static Matrix3x2 WithZ(this Matrix3x2 @this, Vector2 value)` |  |
-| `get_X` | `static Vector2 get_X(Matrix3x2 @this)` |  |
-| `get_Y` | `static Vector2 get_Y(Matrix3x2 @this)` |  |
-| `get_Z` | `static Vector2 get_Z(Matrix3x2 @this)` |  |
+| `Create` | `static Matrix3x2 Create(Vector2 value)` | Creates a Matrix3x2 with all elements initialized from a Vector2. The X component is used for even columns, Y for odd columns. |
+| `Create` | `static Matrix3x2 Create(Vector2 x, Vector2 y, Vector2 z)` | Creates a Matrix3x2 from three row vectors. |
+| `Create` | `static Matrix3x2 Create(float m11, float m12, float m21, float m22, float m31, float m32)` | Creates a Matrix3x2 from the specified components. |
+| `Create` | `static Matrix3x2 Create(float value)` | Creates a Matrix3x2 with all elements initialized to the specified value. |
+| `GetRow` | `static Vector2 GetRow(this Matrix3x2 @this, int index)` | Gets the specified row of the matrix as a Vector2. |
+| `WithRow` | `static Matrix3x2 WithRow(this Matrix3x2 @this, int index, Vector2 value)` | Creates a new Matrix3x2 with the specified row replaced. |
+| `WithX` | `static Matrix3x2 WithX(this Matrix3x2 @this, Vector2 value)` | Creates a new Matrix3x2 with the first row replaced. |
+| `WithY` | `static Matrix3x2 WithY(this Matrix3x2 @this, Vector2 value)` | Creates a new Matrix3x2 with the second row replaced. |
+| `WithZ` | `static Matrix3x2 WithZ(this Matrix3x2 @this, Vector2 value)` | Creates a new Matrix3x2 with the third row replaced. |
+| `get_X` | `static Vector2 get_X(Matrix3x2 @this)` | Gets or sets the first row of the matrix. |
+| `get_Y` | `static Vector2 get_Y(Matrix3x2 @this)` | Gets or sets the second row of the matrix. |
+| `get_Z` | `static Vector2 get_Z(Matrix3x2 @this)` | Gets or sets the third row of the matrix. |
 
 #### `Matrix4x4Polyfills`
 
@@ -182,23 +182,23 @@ Polyfills for Matrix4x4 factory methods and row accessors added in .NET 10.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `CreateBillboardLeftHanded` | `static Matrix4x4 CreateBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 cameraUpVector, Vector3 cameraForwardVector)` |  |
-| `CreateConstrainedBillboardLeftHanded` | `static Matrix4x4 CreateConstrainedBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 rotateAxis, Vector3 cameraForwardVector, Vector3 objectForwardVector)` |  |
-| `Create` | `static Matrix4x4 Create(Matrix3x2 value)` |  |
-| `Create` | `static Matrix4x4 Create(Vector4 value)` |  |
-| `Create` | `static Matrix4x4 Create(Vector4 x, Vector4 y, Vector4 z, Vector4 w)` |  |
-| `Create` | `static Matrix4x4 Create(float m11, float m12, float m13, float m14, float m21, float m22, float m23, float m24, float m31, float m32, float m33, float m34, float m41, float m42, float m43, float m44)` |  |
-| `Create` | `static Matrix4x4 Create(float value)` |  |
-| `GetRow` | `static Vector4 GetRow(this Matrix4x4 @this, int index)` |  |
-| `WithRow` | `static Matrix4x4 WithRow(this Matrix4x4 @this, int index, Vector4 value)` |  |
-| `WithW` | `static Matrix4x4 WithW(this Matrix4x4 @this, Vector4 value)` |  |
-| `WithX` | `static Matrix4x4 WithX(this Matrix4x4 @this, Vector4 value)` |  |
-| `WithY` | `static Matrix4x4 WithY(this Matrix4x4 @this, Vector4 value)` |  |
-| `WithZ` | `static Matrix4x4 WithZ(this Matrix4x4 @this, Vector4 value)` |  |
-| `get_W` | `static Vector4 get_W(Matrix4x4 @this)` |  |
-| `get_X` | `static Vector4 get_X(Matrix4x4 @this)` |  |
-| `get_Y` | `static Vector4 get_Y(Matrix4x4 @this)` |  |
-| `get_Z` | `static Vector4 get_Z(Matrix4x4 @this)` |  |
+| `CreateBillboardLeftHanded` | `static Matrix4x4 CreateBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 cameraUpVector, Vector3 cameraForwardVector)` | Creates a left-handed billboard matrix. |
+| `CreateConstrainedBillboardLeftHanded` | `static Matrix4x4 CreateConstrainedBillboardLeftHanded(Vector3 objectPosition, Vector3 cameraPosition, Vector3 rotateAxis, Vector3 cameraForwardVector, Vector3 objectForwardVector)` | Creates a left-handed constrained billboard matrix. |
+| `Create` | `static Matrix4x4 Create(Matrix3x2 value)` | Creates a Matrix4x4 from a Matrix3x2. |
+| `Create` | `static Matrix4x4 Create(Vector4 value)` | Creates a Matrix4x4 from a Vector4 (broadcast to all rows). |
+| `Create` | `static Matrix4x4 Create(Vector4 x, Vector4 y, Vector4 z, Vector4 w)` | Creates a Matrix4x4 from four row vectors. |
+| `Create` | `static Matrix4x4 Create(float m11, float m12, float m13, float m14, float m21, float m22, float m23, float m24, float m31, float m32, float m33, float m34, float m41, float m42, float m43, float m44)` | Creates a Matrix4x4 from the specified components. |
+| `Create` | `static Matrix4x4 Create(float value)` | Creates a Matrix4x4 with all elements initialized to the specified value. |
+| `GetRow` | `static Vector4 GetRow(this Matrix4x4 @this, int index)` | Gets the specified row of the matrix as a Vector4. |
+| `WithRow` | `static Matrix4x4 WithRow(this Matrix4x4 @this, int index, Vector4 value)` | Creates a new Matrix4x4 with the specified row replaced. |
+| `WithW` | `static Matrix4x4 WithW(this Matrix4x4 @this, Vector4 value)` | Creates a new Matrix4x4 with the fourth row replaced. |
+| `WithX` | `static Matrix4x4 WithX(this Matrix4x4 @this, Vector4 value)` | Creates a new Matrix4x4 with the first row replaced. |
+| `WithY` | `static Matrix4x4 WithY(this Matrix4x4 @this, Vector4 value)` | Creates a new Matrix4x4 with the second row replaced. |
+| `WithZ` | `static Matrix4x4 WithZ(this Matrix4x4 @this, Vector4 value)` | Creates a new Matrix4x4 with the third row replaced. |
+| `get_W` | `static Vector4 get_W(Matrix4x4 @this)` | Gets or sets the fourth row of the matrix. |
+| `get_X` | `static Vector4 get_X(Matrix4x4 @this)` | Gets or sets the first row of the matrix. |
+| `get_Y` | `static Vector4 get_Y(Matrix4x4 @this)` | Gets or sets the second row of the matrix. |
+| `get_Z` | `static Vector4 get_Z(Matrix4x4 @this)` | Gets or sets the third row of the matrix. |
 
 #### `PlanePolyfills`
 
@@ -206,9 +206,9 @@ Polyfills for Plane factory methods added in .NET 10.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Create` | `static Plane Create(Vector3 normal, float d)` |  |
-| `Create` | `static Plane Create(Vector4 value)` |  |
-| `Create` | `static Plane Create(float x, float y, float z, float d)` |  |
+| `Create` | `static Plane Create(Vector3 normal, float d)` | Creates a Plane from a normal vector and distance. |
+| `Create` | `static Plane Create(Vector4 value)` | Creates a Plane from a Vector4. |
+| `Create` | `static Plane Create(float x, float y, float z, float d)` | Creates a Plane from the specified components. |
 
 #### `QuaternionPolyfills`
 
@@ -216,8 +216,8 @@ Polyfills for Quaternion factory methods added in .NET 10.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Create` | `static Quaternion Create(Vector3 vectorPart, float scalarPart)` |  |
-| `Create` | `static Quaternion Create(float x, float y, float z, float w)` |  |
+| `Create` | `static Quaternion Create(Vector3 vectorPart, float scalarPart)` | Creates a Quaternion from a vector part and scalar part. |
+| `Create` | `static Quaternion Create(float x, float y, float z, float w)` | Creates a Quaternion from the specified components. |
 
 ### Namespace `System.Text`
 
@@ -237,7 +237,7 @@ Supports iteration over the chunks of a `StringBuilder`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `GetChunks` | `static ChunkEnumerator GetChunks(this StringBuilder @this)` |  |
+| `GetChunks` | `static ChunkEnumerator GetChunks(this StringBuilder @this)` | Returns an object that can be used to iterate through the chunks of characters represented in a `ReadOnlyMemory` created from this `StringBuilder` object. |
 
 ### Namespace `System.Web`
 

@@ -656,7 +656,7 @@ Implements `IBatchDecode<TPixel, TWork>`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BatchDecodeAdapter` | `BatchDecodeAdapter(in TDecode decoder)` | Initialises the adapter with a per-pixel decoder. |
-| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<TPixel> source, Span<TWork> destination)` |  |
+| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<TPixel> source, Span<TWork> destination)` | Decodes a contiguous run of source pixels into a contiguous run of working colours. |
 
 #### `IBatchDecode<TPixel, TWork>`
 
@@ -698,8 +698,8 @@ Implements `IBatchDecode<TPixel, TPixel>`, `IDecode<TPixel, TPixel>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<TPixel> source, Span<TPixel> destination)` |  |
-| `Decode` | `TPixel Decode(in TPixel pixel)` |  |
+| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<TPixel> source, Span<TPixel> destination)` | Decodes a contiguous run of source pixels into a contiguous run of working colours. |
+| `Decode` | `TPixel Decode(in TPixel pixel)` | Decodes a storage pixel to working space. |
 
 #### `IdentityEncode<TPixel>`
 
@@ -709,7 +709,7 @@ Implements `IEncode<TPixel, TPixel>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Encode` | `TPixel Encode(in TPixel color)` |  |
+| `Encode` | `TPixel Encode(in TPixel color)` | Encodes a working space color to storage pixel. |
 
 #### `IdentityProject<TPixel>`
 
@@ -719,7 +719,7 @@ Implements `IProject<TPixel, TPixel>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Project` | `TPixel Project(in TPixel color)` |  |
+| `Project` | `TPixel Project(in TPixel color)` | Projects a working space color to key space. |
 
 #### `IdentityProjectColor<TColor>`
 
@@ -729,7 +729,7 @@ Implements `IProject<TColor, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Project` | `TColor Project(in TColor color)` |  |
+| `Project` | `TColor Project(in TColor color)` | Projects a working space color to key space. |
 
 #### `LinearRgbFToRgb24`
 
@@ -769,7 +769,7 @@ Implements `IBatchDecode<Bgr888, LinearRgbF>`, `IDecode<Bgr888, LinearRgbF>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgr888> source, Span<LinearRgbF> destination)` |  |
+| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgr888> source, Span<LinearRgbF> destination)` | Decodes a contiguous run of source pixels into a contiguous run of working colours. |
 | `Decode` | `LinearRgbF Decode(in Bgr888 pixel)` | Decodes sRGB pixel to linear working space. |
 
 #### `Srgb32ToLinearRgbaF`
@@ -780,7 +780,7 @@ Implements `IBatchDecode<Bgra8888, LinearRgbaF>`, `IDecode<Bgra8888, LinearRgbaF
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<LinearRgbaF> destination)` |  |
+| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<LinearRgbaF> destination)` | Decodes a contiguous run of source pixels into a contiguous run of working colours. |
 | `Decode` | `LinearRgbaF Decode(in Bgra8888 pixel)` | Decodes sRGB pixel to linear working space. |
 
 #### `Srgb32ToOklabaF`
@@ -791,7 +791,7 @@ Implements `IBatchDecode<Bgra8888, OklabaF>`, `IDecode<Bgra8888, OklabaF>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<OklabaF> destination)` |  |
+| `DecodeBatch` | `void DecodeBatch(ReadOnlySpan<Bgra8888> source, Span<OklabaF> destination)` | Decodes a contiguous run of source pixels into a contiguous run of working colours. |
 | `Decode` | `OklabaF Decode(in Bgra8888 pixel)` | Decodes sRGB pixel to OkLab working space. |
 
 ### Namespace `Hawkynt.ColorProcessing.ColorMath`
@@ -806,10 +806,10 @@ Implements `IAccum<Accum3B<TColor>, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum3F<TColor>`
 
@@ -819,10 +819,10 @@ Implements `IAccum<Accum3F<TColor>, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum3I<TColor>`
 
@@ -832,10 +832,10 @@ Implements `IAccum<Accum3I<TColor>, TColor>`, `IAccumInt<Accum3I<TColor>, TColor
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weights: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum4B<TColor>`
 
@@ -845,10 +845,10 @@ Implements `IAccum<Accum4B<TColor>, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum4F<TColor>`
 
@@ -859,10 +859,10 @@ Implements `IAccum<Accum4F<TColor>, TColor>`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `HasContribution` | `bool HasContribution { get; }` | True if at least one tap has been accumulated. Kernels can use this to detect "no support" at the current sample point and fall back to nearest-neighbor. |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum4I<TColor>`
 
@@ -872,10 +872,10 @@ Implements `IAccum<Accum4I<TColor>, TColor>`, `IAccumInt<Accum4I<TColor>, TColor
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weights: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum5B<TColor>`
 
@@ -885,10 +885,10 @@ Implements `IAccum<Accum5B<TColor>, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum5F<TColor>`
 
@@ -898,10 +898,10 @@ Implements `IAccum<Accum5F<TColor>, TColor>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weight: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Accum5I<TColor>`
 
@@ -911,10 +911,10 @@ Implements `IAccum<Accum5I<TColor>, TColor>`, `IAccumInt<Accum5I<TColor>, TColor
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Result` | `TColor Result { get; }` |  |
-| `AddMul` | `void AddMul(in TColor color, float weight)` |  |
-| `AddMul` | `void AddMul(in TColor color, int weight)` |  |
-| `Add` | `void Add(in TColor color)` |  |
+| `Result` | `TColor Result { get; }` | Finalizes the accumulation and returns the result color. |
+| `AddMul` | `void AddMul(in TColor color, float weight)` | Adds a weighted color to this accumulator: acc += color * weight. |
+| `AddMul` | `void AddMul(in TColor color, int weight)` | Adds a weighted color to this accumulator using integer weights: acc += color * weight. |
+| `Add` | `void Add(in TColor color)` | Adds a color with weight 1 to this accumulator: acc += color. |
 
 #### `Cat16`
 
@@ -934,8 +934,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color3FLerp<TWork>`
 
@@ -945,8 +945,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color3UnormLerp<TWork>`
 
@@ -956,8 +956,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color4BLerpInt<TWork>`
 
@@ -967,8 +967,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color4FLerp<TWork>`
 
@@ -978,8 +978,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color4UnormLerp<TWork>`
 
@@ -989,8 +989,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color5BLerpInt<TWork>`
 
@@ -1000,8 +1000,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color5FLerp<TWork>`
 
@@ -1011,8 +1011,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `Color5UnormLerp<TWork>`
 
@@ -1022,8 +1022,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `ColorConverter`
 
@@ -1103,8 +1103,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 #### `NoLerpInt<TWork>`
 
@@ -1114,8 +1114,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` |  |
-| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` |  |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
+| `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
 ### Namespace `Hawkynt.ColorProcessing.Constants`
 
@@ -1360,9 +1360,9 @@ Implements `IDitherer`.
 | `Balanced` | `static AdaptiveDitherer Balanced { get; }` | Pre-configured instance with balanced settings. |
 | `PerformanceOptimized` | `static AdaptiveDitherer PerformanceOptimized { get; }` | Pre-configured instance optimized for performance. |
 | `QualityOptimized` | `static AdaptiveDitherer QualityOptimized { get; }` | Pre-configured instance optimized for quality. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `SmartSelection` | `static AdaptiveDitherer SmartSelection { get; }` | Pre-configured instance using smart algorithm selection. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `AdaptiveDitherer.AdaptiveStrategy`
 
@@ -1417,8 +1417,8 @@ Implements `IDitherer`.
 | `Aggressive` | `static AdaptiveMatrixDitherer Aggressive { get; }` | Pre-configured instance with aggressive settings. |
 | `Conservative` | `static AdaptiveMatrixDitherer Conservative { get; }` | Pre-configured instance with conservative settings. |
 | `Default` | `static AdaptiveMatrixDitherer Default { get; }` | Pre-configured instance with default settings. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `AdaptiveVarianceDiffusionDitherer`
 
@@ -1429,8 +1429,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static AdaptiveVarianceDiffusionDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `AmstradCpcMode0Ditherer`
 
@@ -1441,8 +1441,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static AmstradCpcMode0Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `AnalyticFourierScreenDitherer`
 
@@ -1453,8 +1453,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static AnalyticFourierScreenDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `Atari2600PlayfieldDitherer`
 
@@ -1465,8 +1465,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static Atari2600PlayfieldDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `AverageDitherer`
 
@@ -1481,9 +1481,9 @@ Implements `IDitherer`.
 | `Default` | `static AverageDitherer Default { get; }` | Default instance with 4x4 regions. |
 | `Fine` | `static AverageDitherer Fine { get; }` | Fine instance with 2x2 regions (more adaptive). |
 | `RegionSize` | `int RegionSize { get; }` | The size of the region to compute averages over. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strength` | `float Strength { get; }` | The threshold adjustment strength (default 16/255). |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithRegionSize` | `AverageDitherer WithRegionSize(int regionSize)` | Returns this ditherer with specified region size. |
 | `WithStrength` | `AverageDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
@@ -1499,8 +1499,8 @@ Implements `IDitherer`.
 | `Bayer2x2` | `static BarycentricDitherer Bayer2x2 { get; }` | Pre-configured instance with 2x2 Bayer matrix. |
 | `Bayer4x4` | `static BarycentricDitherer Bayer4x4 { get; }` | Pre-configured instance with 4x4 Bayer matrix. |
 | `Bayer8x8` | `static BarycentricDitherer Bayer8x8 { get; }` | Pre-configured instance with 8x8 Bayer matrix. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `Bayer32x32Ditherer`
 
@@ -1511,8 +1511,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static Bayer32x32Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `BlueNoiseDitherer`
 
@@ -1523,11 +1523,11 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `BlueNoiseDitherer` | `BlueNoiseDitherer(int matrixSize = 8)` | Creates a blue noise ditherer with the specified matrix size. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Size128x128` | `static BlueNoiseDitherer Size128x128 { get; }` | Pre-configured instance with 128x128 noise matrix (higher quality). |
 | `Size64x64` | `static BlueNoiseDitherer Size64x64 { get; }` | Pre-configured instance with 64x64 noise matrix. |
 | `Size8x8` | `static BlueNoiseDitherer Size8x8 { get; }` | Pre-configured instance with 8x8 noise matrix (default size). |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `CgaMode4Ditherer`
 
@@ -1538,8 +1538,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static CgaMode4Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `ClusterDot6x6Ditherer`
 
@@ -1550,8 +1550,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static ClusterDot6x6Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `ClusterDotDitherer`
 
@@ -1567,9 +1567,9 @@ Implements `IDitherer`.
 | `ClusterDot8x8` | `static ClusterDotDitherer ClusterDot8x8 { get; }` | Clustered-dot 8×8 dithering pattern (newspaper-style halftone screen). Threshold values 0..63 each appear exactly once and grow outward in a spiral from cluster centres, producing the characteristic dot-clustering of offset printing. |
 | `Default` | `static ClusterDotDitherer Default { get; }` | Default cluster dot ditherer (4x4 pattern). |
 | `MatrixSize` | `int MatrixSize { get; }` | Size of the threshold matrix. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strength` | `float Strength { get; }` | Dithering strength (0-1). Higher values produce more visible patterns. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithStrength` | `ClusterDotDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
 #### `ContentStrategy`
@@ -1597,8 +1597,8 @@ Implements `IDitherer`.
 | `Best` | `static DbsDitherer Best { get; }` | Pre-configured instance with 10 iterations (best quality, slow). |
 | `Fast` | `static DbsDitherer Fast { get; }` | Pre-configured instance with 1 iteration (fast). |
 | `Quality` | `static DbsDitherer Quality { get; }` | Pre-configured instance with 5 iterations (quality). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `DebandingDitherer`
 
@@ -1611,9 +1611,9 @@ Implements `IDitherer`.
 | `DebandingDitherer` | `DebandingDitherer(float gradientThreshold = 0.08, float ditherStrength = 1, int kernelSize = 3)` | Creates a debanding ditherer with the specified settings. |
 | `Default` | `static DebandingDitherer Default { get; }` | Pre-configured instance with default settings. |
 | `Gentle` | `static DebandingDitherer Gentle { get; }` | Pre-configured instance with gentle debanding. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strong` | `static DebandingDitherer Strong { get; }` | Pre-configured instance with strong debanding. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `DithererAttribute`
 
@@ -1697,8 +1697,8 @@ Implements `IDitherer`.
 | `Default` | `static DizzyDitherer Default { get; }` | Pre-configured instance with default settings. |
 | `Fast` | `static DizzyDitherer Fast { get; }` | Pre-configured instance with fast settings. |
 | `HighQuality` | `static DizzyDitherer HighQuality { get; }` | Pre-configured instance with high quality settings. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `ErrorDiffusion`
 
@@ -1728,7 +1728,7 @@ Implements `IDitherer`.
 | `KnuthWitten` | `static ErrorDiffusion KnuthWitten { get; }` | Knuth-Witten (1987): Fast 3-neighbour error diffusion with asymmetric weights. Quality: 6/10 |
 | `KolpatzikBouman` | `static ErrorDiffusion KolpatzikBouman { get; }` | Kolpatzik-Bouman (1992): HVS-weighted three-row variant of Floyd-Steinberg. Quality: 8/10 |
 | `Pigeon` | `static ErrorDiffusion Pigeon { get; }` | Pigeon: Steven Pigeon's algorithm. Quality: 7/10 |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `RowCount` | `int RowCount { get; }` | Number of rows in the diffusion matrix. |
 | `Serpentine` | `ErrorDiffusionSerpentine Serpentine { get; }` | Returns a serpentine-scanning ditherer (alternates direction per row). |
 | `ShiauFan2` | `static ErrorDiffusion ShiauFan2 { get; }` | Shiau-Fan 2 (1993): Extended variant. Quality: 7/10 |
@@ -1745,7 +1745,7 @@ Implements `IDitherer`.
 | `TwoRowSierra` | `static ErrorDiffusion TwoRowSierra { get; }` | Two-Row Sierra (1990): Faster 7-neighbor variant. Quality: 7/10 |
 | `UlichneyDiagonalFS` | `static ErrorDiffusion UlichneyDiagonalFS { get; }` | Ulichney Diagonal FS (1987): Diagonal-weighted Floyd-Steinberg that suppresses curdling on ramps. Quality: 8/10 |
 | `VerticalDiamond` | `static ErrorDiffusion VerticalDiamond { get; }` | Vertical Diamond: Diamond pattern, vertical bias. Quality: 6/10 |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithStrength` | `ErrorDiffusion WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
 #### `ErrorDiffusionSerpentine`
@@ -1760,11 +1760,11 @@ Implements `IDitherer`.
 | `ColumnCount` | `int ColumnCount { get; }` | Number of columns in the diffusion matrix. |
 | `Divisor` | `int Divisor { get; }` | Divisor used to normalize the matrix weights. |
 | `Linear` | `ErrorDiffusion Linear { get; }` | Returns a linear-scanning ditherer (always left-to-right). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `RowCount` | `int RowCount { get; }` | Number of rows in the diffusion matrix. |
 | `Shift` | `int Shift { get; }` | Column offset to the current pixel position. |
 | `Strength` | `float Strength { get; }` | Error diffusion strength (0-1). Default is 1. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithStrength` | `ErrorDiffusionSerpentine WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
 #### `GameBoyDitherer`
@@ -1776,8 +1776,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static GameBoyDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `GoldNoiseDitherer`
 
@@ -1789,8 +1789,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `GoldNoiseDitherer` | `GoldNoiseDitherer(float strength = 1, int seed = 42)` | Creates a gold-noise ditherer. |
 | `Instance` | `static GoldNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `GoldNoiseDitherer WithSeed(int seed)` | Returns this ditherer with specified seed. |
 | `WithStrength` | `GoldNoiseDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
@@ -1804,10 +1804,10 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `GradientAwareDitherer` | `GradientAwareDitherer(float edgeThreshold = 0.1, float gradientStrength = 1)` | Creates a gradient-aware ditherer with the specified settings. |
 | `Default` | `static GradientAwareDitherer Default { get; }` | Pre-configured instance with default settings. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Soft` | `static GradientAwareDitherer Soft { get; }` | Pre-configured instance with soft settings. |
 | `Strong` | `static GradientAwareDitherer Strong { get; }` | Pre-configured instance with strong settings. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `HilbertCurveDiffusionDitherer`
 
@@ -1818,8 +1818,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static HilbertCurveDiffusionDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `HilbertNoiseDitherer`
 
@@ -1831,8 +1831,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `HilbertNoiseDitherer` | `HilbertNoiseDitherer(float strength = 1, int seed = 42)` | Creates a Hilbert-curve noise ditherer. |
 | `Instance` | `static HilbertNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `HilbertNoiseDitherer WithSeed(int seed)` | Returns this ditherer with specified seed. |
 | `WithStrength` | `HilbertNoiseDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
@@ -1846,8 +1846,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `HoshinoNishikawaDitherer` | `HoshinoNishikawaDitherer(float strength = 1, float jitterAmplitude = 1, int seed = 42)` | Creates a Hoshino-Nishikawa ditherer. |
 | `Instance` | `static HoshinoNishikawaDitherer Instance { get; }` | Default instance (strength 1.0, full sub-quantum jitter, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithJitterAmplitude` | `HoshinoNishikawaDitherer WithJitterAmplitude(float jitterAmplitude)` | Returns this ditherer with the specified jitter amplitude. |
 | `WithSeed` | `HoshinoNishikawaDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `HoshinoNishikawaDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
@@ -1863,9 +1863,9 @@ Implements `IDitherer`.
 | `InterleavedGradientNoiseDitherer` | `InterleavedGradientNoiseDitherer(float intensity = 0.5)` | Creates an IGN ditherer with the specified intensity. |
 | `Instance` | `static InterleavedGradientNoiseDitherer Instance { get; }` | Pre-configured instance with standard intensity (0.5). |
 | `Light` | `static InterleavedGradientNoiseDitherer Light { get; }` | Pre-configured instance with light intensity (0.3). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strong` | `static InterleavedGradientNoiseDitherer Strong { get; }` | Pre-configured instance with strong intensity (0.7). |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `KnollDitherer`
 
@@ -1880,8 +1880,8 @@ Implements `IDitherer`.
 | `Default` | `static KnollDitherer Default { get; }` | Pre-configured instance with 4x4 Bayer matrix (default). |
 | `Fast` | `static KnollDitherer Fast { get; }` | Pre-configured instance for fast processing (smaller matrix, fewer candidates). |
 | `HighQuality` | `static KnollDitherer HighQuality { get; }` | Pre-configured instance for high quality (more candidates, higher error multiplier). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `KruskalVoidClusterDitherer`
 
@@ -1892,8 +1892,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static KruskalVoidClusterDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `LatinSquareDitherer`
 
@@ -1904,8 +1904,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static LatinSquareDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `MagicSquare4x4Ditherer`
 
@@ -1916,8 +1916,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static MagicSquare4x4Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `MagicSquare8x8Ditherer`
 
@@ -1928,8 +1928,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static MagicSquare8x8Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `MetallicInkDitherer`
 
@@ -1941,8 +1941,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `MetallicInkDitherer` | `MetallicInkDitherer(float strength = 0.5, int seed = 42)` | Creates a metallic-ink ditherer. |
 | `Instance` | `static MetallicInkDitherer Instance { get; }` | Default instance (strength 0.5, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `MetallicInkDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `MetallicInkDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
 
@@ -1955,8 +1955,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static MitchellCheckerboardDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `MsxScreen2Ditherer`
 
@@ -1967,8 +1967,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static MsxScreen2Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `MultiScaleHybridDitherer`
 
@@ -1980,8 +1980,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `MultiScaleHybridDitherer` | `MultiScaleHybridDitherer(float preBiasStrength = 0.3)` | Creates a multi-scale hybrid ditherer. |
 | `Instance` | `static MultiScaleHybridDitherer Instance { get; }` | Default instance (pre-bias strength 0.3). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithPreBiasStrength` | `MultiScaleHybridDitherer WithPreBiasStrength(float strength)` | Returns this ditherer with the specified pre-bias strength. |
 
 #### `NClosestDitherer`
@@ -1996,10 +1996,10 @@ Implements `IDitherer`.
 | `BlueNoise4` | `static NClosestDitherer BlueNoise4 { get; }` | Pre-configured instance with blue noise selection from 4 closest. |
 | `Default` | `static NClosestDitherer Default { get; }` | Pre-configured instance with random selection from 3 closest. |
 | `Luminance6` | `static NClosestDitherer Luminance6 { get; }` | Pre-configured instance with luminance-based selection from 6 closest. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `RoundRobin4` | `static NClosestDitherer RoundRobin4 { get; }` | Pre-configured instance with round robin selection from 4 closest. |
 | `WeightedRandom5` | `static NClosestDitherer WeightedRandom5 { get; }` | Pre-configured instance with weighted random selection from 5 closest. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NClosestDitherer.SelectionStrategy`
 
@@ -2024,10 +2024,10 @@ Implements `IDitherer`.
 | `NConvexDitherer` | `NConvexDitherer(int n = 4, ConvexStrategy strategy = 0, int seed = 42)` | Creates an N-Convex ditherer with the specified settings. |
 | `Default` | `static NConvexDitherer Default { get; }` | Pre-configured instance with barycentric selection from 4 closest. |
 | `Projection6` | `static NConvexDitherer Projection6 { get; }` | Pre-configured instance with projection selection from 6 closest. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `SpatialPattern3` | `static NConvexDitherer SpatialPattern3 { get; }` | Pre-configured instance with spatial pattern selection from 3 closest. |
 | `WeightedRandom5` | `static NConvexDitherer WeightedRandom5 { get; }` | Pre-configured instance with weighted random selection from 5 closest. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NConvexDitherer.ConvexStrategy`
 
@@ -2049,8 +2049,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static NasanenDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NaturalNeighbourDitherer`
 
@@ -2064,8 +2064,8 @@ Implements `IDitherer`.
 | `Bayer2x2` | `static NaturalNeighbourDitherer Bayer2x2 { get; }` | Pre-configured instance with 2x2 Bayer matrix. |
 | `Bayer4x4` | `static NaturalNeighbourDitherer Bayer4x4 { get; }` | Pre-configured instance with 4x4 Bayer matrix. |
 | `Bayer8x8` | `static NaturalNeighbourDitherer Bayer8x8 { get; }` | Pre-configured instance with 8x8 Bayer matrix. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NesPaletteDitherer`
 
@@ -2076,8 +2076,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static NesPaletteDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NoDithering`
 
@@ -2088,8 +2088,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static NoDithering Instance { get; }` | Default instance of no-dithering quantizer. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `NoiseDitherer`
 
@@ -2110,14 +2110,14 @@ Implements `IDitherer`.
 | `NoiseType` | `NoiseType NoiseType { get; }` | The type of noise used. |
 | `PinkNoiseAdditive` | `static NoiseDitherer PinkNoiseAdditive { get; }` | Pink-noise additive dithering: source color perturbed then nearest-neighbor lookup. |
 | `PinkNoise` | `static NoiseDitherer PinkNoise { get; }` | Pink noise dithering (1/f): equal energy per octave, more natural-looking than white noise. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Seed` | `int Seed { get; }` | Random seed for reproducible results. |
 | `Strength` | `float Strength { get; }` | Dithering strength (0-1). Higher values produce more visible noise. |
 | `VioletNoiseAdditive` | `static NoiseDitherer VioletNoiseAdditive { get; }` | Violet-noise additive dithering: source color perturbed then nearest-neighbor lookup. |
 | `VioletNoise` | `static NoiseDitherer VioletNoise { get; }` | Violet noise dithering (f): high-frequency emphasis, sharp textured appearance. |
 | `WhiteNoiseAdditive` | `static NoiseDitherer WhiteNoiseAdditive { get; }` | White-noise additive dithering: source color perturbed then nearest-neighbor lookup. |
 | `WhiteNoise` | `static NoiseDitherer WhiteNoise { get; }` | White noise dithering: uniform random threshold with equal energy at all frequencies. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithMode` | `NoiseDitherer WithMode(NoiseMode mode)` | Returns this ditherer with the specified noise-application mode. |
 | `WithSeed` | `NoiseDitherer WithSeed(int seed)` | Returns this ditherer with specified seed for reproducible results. |
 | `WithStrength` | `NoiseDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
@@ -2163,9 +2163,9 @@ Implements `IDitherer`.
 | `Halftone4x4` | `static OrderedDitherer Halftone4x4 { get; }` | Halftone 4x4: Simulates halftone printing pattern. |
 | `Halftone8x8` | `static OrderedDitherer Halftone8x8 { get; }` | Halftone 8x8: Larger halftone pattern. |
 | `MatrixSize` | `int MatrixSize { get; }` | Size of the threshold matrix. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strength` | `float Strength { get; }` | Dithering strength (0-1). Higher values produce more visible patterns. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `GenerateBayer` | `static float[,] GenerateBayer(int size)` | Generates a Bayer threshold matrix of the specified size. |
 | `WithStrength` | `OrderedDitherer WithStrength(float strength)` | Returns this ditherer with specified strength. |
 
@@ -2180,9 +2180,9 @@ Implements `IDitherer`.
 | `OstromoukhovDitherer` | `OstromoukhovDitherer(bool useSerpentine = true)` | Creates an Ostromoukhov ditherer. |
 | `Instance` | `static OstromoukhovDitherer Instance { get; }` | Pre-configured instance with serpentine scanning (recommended). |
 | `Linear` | `static OstromoukhovDitherer Linear { get; }` | Pre-configured instance without serpentine scanning. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Serpentine` | `OstromoukhovDitherer Serpentine { get; }` | Returns this ditherer with serpentine scan enabled. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `PatternDependentThresholdDitherer`
 
@@ -2194,8 +2194,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `PatternDependentThresholdDitherer` | `PatternDependentThresholdDitherer(float strength = 1, float pdtGain = 0.0625)` | Creates a PDT ditherer. |
 | `Instance` | `static PatternDependentThresholdDitherer Instance { get; }` | Default instance (strength 1.0, PDT gain 0.0625 = 1/16 of screen range). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithPdtGain` | `PatternDependentThresholdDitherer WithPdtGain(float pdtGain)` | Returns this ditherer with the specified PDT gain. |
 | `WithStrength` | `PatternDependentThresholdDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
 
@@ -2209,8 +2209,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `PerlinNoiseDitherer` | `PerlinNoiseDitherer(float strength = 1, int seed = 42, int latticeScale = 8)` | Creates a Perlin-noise ditherer. |
 | `Instance` | `static PerlinNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42, 8-pixel lattice). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithLatticeScale` | `PerlinNoiseDitherer WithLatticeScale(int latticeScale)` | Returns this ditherer with the specified lattice scale. |
 | `WithSeed` | `PerlinNoiseDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `PerlinNoiseDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
@@ -2224,8 +2224,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static Pico8Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `PigmentDitherer`
 
@@ -2237,8 +2237,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `PigmentDitherer` | `PigmentDitherer(float viscosity = 0.5, int seed = 42)` | Creates a pigment ditherer. |
 | `Instance` | `static PigmentDitherer Instance { get; }` | Default instance (viscosity 0.5, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `PigmentDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithViscosity` | `PigmentDitherer WithViscosity(float viscosity)` | Returns this ditherer with the specified viscosity. |
 
@@ -2252,8 +2252,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `PoissonDiscNoiseDitherer` | `PoissonDiscNoiseDitherer(float strength = 1, int seed = 42)` | Creates a Poisson-disc noise ditherer. |
 | `Instance` | `static PoissonDiscNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `PoissonDiscNoiseDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `PoissonDiscNoiseDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
 
@@ -2268,9 +2268,9 @@ Implements `IDitherer`.
 | `RandomDitherer` | `RandomDitherer(float intensity = 0.5, int seed = 42)` | Creates a random ditherer with the specified intensity. |
 | `Instance` | `static RandomDitherer Instance { get; }` | Pre-configured instance with standard intensity (0.5). |
 | `Light` | `static RandomDitherer Light { get; }` | Pre-configured instance with light intensity (0.3). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Strong` | `static RandomDitherer Strong { get; }` | Pre-configured instance with strong intensity (0.7). |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `RiemersmaDitherer`
 
@@ -2297,10 +2297,10 @@ Implements `IDitherer`.
 | `Moore` | `static RiemersmaDitherer Moore { get; }` | Pre-configured instance with Moore traversal. |
 | `Morton` | `static RiemersmaDitherer Morton { get; }` | Pre-configured instance with Morton/Z-order traversal. |
 | `Peano` | `static RiemersmaDitherer Peano { get; }` | Pre-configured instance with Peano traversal. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Small` | `static RiemersmaDitherer Small { get; }` | Pre-configured instance with 8-entry history (faster, lower quality). |
 | `SpiralScan` | `static RiemersmaDitherer SpiralScan { get; }` | Pre-configured instance with clockwise inward spiral traversal. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `RisographDitherer`
 
@@ -2312,8 +2312,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `RisographDitherer` | `RisographDitherer(float strength = 1, float streakWeight = 0.65, float scatterWeight = 0.35, int seed = 42)` | Creates a Risograph ditherer. |
 | `Instance` | `static RisographDitherer Instance { get; }` | Default instance (strength 1.0, streak 0.65, scatter 0.35, seed 42). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithSeed` | `RisographDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `RisographDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
 
@@ -2326,8 +2326,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static RotatedBayer8x8Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `SimplexNoiseDitherer`
 
@@ -2339,8 +2339,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `SimplexNoiseDitherer` | `SimplexNoiseDitherer(float strength = 1, int seed = 42, int latticeScale = 8)` | Creates a Simplex-noise ditherer. |
 | `Instance` | `static SimplexNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42, 8-pixel lattice). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithLatticeScale` | `SimplexNoiseDitherer WithLatticeScale(int latticeScale)` | Returns this ditherer with the specified lattice scale. |
 | `WithSeed` | `SimplexNoiseDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `SimplexNoiseDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
@@ -2357,8 +2357,8 @@ Implements `IDitherer`.
 | `Default` | `static SmartDitherer Default { get; }` | Pre-configured instance with default settings. |
 | `Fast` | `static SmartDitherer Fast { get; }` | Pre-configured instance with fast settings. |
 | `HighQuality` | `static SmartDitherer HighQuality { get; }` | Pre-configured instance with high quality settings. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `SmartDitheringConfig`
 
@@ -2403,8 +2403,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static StippleDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `StructureAwareDitherer`
 
@@ -2418,8 +2418,8 @@ Implements `IDitherer`.
 | `Default` | `static StructureAwareDitherer Default { get; }` | Pre-configured instance with default settings. |
 | `Large` | `static StructureAwareDitherer Large { get; }` | Pre-configured instance with larger kernel radius. |
 | `Priority` | `static StructureAwareDitherer Priority { get; }` | Pre-configured instance with priority-based error distribution. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `Threshold50Ditherer`
 
@@ -2430,8 +2430,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static Threshold50Ditherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `TinDitherer`
 
@@ -2445,8 +2445,8 @@ Implements `IDitherer`.
 | `Bayer2x2` | `static TinDitherer Bayer2x2 { get; }` | Pre-configured instance with 2x2 Bayer matrix. |
 | `Bayer4x4` | `static TinDitherer Bayer4x4 { get; }` | Pre-configured instance with 4x4 Bayer matrix. |
 | `Bayer8x8` | `static TinDitherer Bayer8x8 { get; }` | Pre-configured instance with 8x8 Bayer matrix. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `UlichneyDiffusionDotDitherer`
 
@@ -2457,8 +2457,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static UlichneyDiffusionDotDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `UniformDitherer`
 
@@ -2469,8 +2469,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static UniformDitherer Default { get; }` | Pre-configured Uniform ditherer (threshold at 0.5). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `VoidAndClusterDitherer`
 
@@ -2481,12 +2481,12 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `VoidAndClusterDitherer` | `VoidAndClusterDitherer(int matrixSize = 4)` | Creates a Void and Cluster ditherer with the specified matrix size. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `Size16x16` | `static VoidAndClusterDitherer Size16x16 { get; }` | Pre-configured instance with 16x16 matrix. |
 | `Size32x32` | `static VoidAndClusterDitherer Size32x32 { get; }` | Pre-configured instance with 32x32 matrix. |
 | `Size4x4` | `static VoidAndClusterDitherer Size4x4 { get; }` | Pre-configured instance with 4x4 matrix (default size). |
 | `Size8x8` | `static VoidAndClusterDitherer Size8x8 { get; }` | Pre-configured instance with 8x8 matrix. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `WorleyNoiseDitherer`
 
@@ -2498,8 +2498,8 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `WorleyNoiseDitherer` | `WorleyNoiseDitherer(float strength = 1, int seed = 42, int latticeScale = 8)` | Creates a Worley-noise ditherer. |
 | `Instance` | `static WorleyNoiseDitherer Instance { get; }` | Default instance (strength 1.0, seed 42, 8-pixel lattice). |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 | `WithLatticeScale` | `WorleyNoiseDitherer WithLatticeScale(int latticeScale)` | Returns this ditherer with the specified lattice scale. |
 | `WithSeed` | `WorleyNoiseDitherer WithSeed(int seed)` | Returns this ditherer with the specified seed. |
 | `WithStrength` | `WorleyNoiseDitherer WithStrength(float strength)` | Returns this ditherer with the specified strength. |
@@ -2513,8 +2513,8 @@ Implements `IDitherer`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Instance` | `static WovenDitherer Instance { get; }` | Default instance. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `XYArithmeticDitherer`
 
@@ -2526,9 +2526,9 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `XYArithmeticDitherer` | `XYArithmeticDitherer(bool useChannels = false)` | Creates an XY Arithmetic ditherer. |
 | `Default` | `static XYArithmeticDitherer Default { get; }` | Pre-configured XY Arithmetic ditherer. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `WithChannel` | `static XYArithmeticDitherer WithChannel { get; }` | Pre-configured XY Arithmetic ditherer with per-channel variation. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `XorY149Ditherer`
 
@@ -2540,9 +2540,9 @@ Implements `IDitherer`.
 | --- | --- | --- |
 | `XorY149Ditherer` | `XorY149Ditherer(bool useChannels = false)` | Creates an XOR Y×149 ditherer. |
 | `Default` | `static XorY149Ditherer Default { get; }` | Pre-configured XOR Y×149 ditherer. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
 | `WithChannel` | `static XorY149Ditherer WithChannel { get; }` | Pre-configured XOR Y×149 ditherer with per-channel variation. |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 #### `YliluomaDitherer`
 
@@ -2557,8 +2557,8 @@ Implements `IDitherer`.
 | `Algorithm2` | `static YliluomaDitherer Algorithm2 { get; }` | Algorithm 2: Multi-color candidate generation with threshold matrix. |
 | `Algorithm3Full` | `static YliluomaDitherer Algorithm3Full { get; }` | Algorithm 3 Full: Complete iterative subdivision for highest quality. |
 | `Algorithm3` | `static YliluomaDitherer Algorithm3 { get; }` | Algorithm 3: Simplified iterative splitting refinement. |
-| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` |  |
-| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` |  |
+| `RequiresSequentialProcessing` | `bool RequiresSequentialProcessing { get; }` | Gets whether this ditherer requires sequential pixel processing. |
+| `Dither` | `void Dither<TWork, TMetric>(TWork* source, byte* indices, int width, int height, int sourceStride, int targetStride, int startY, in TMetric metric, TWork[] palette)` | Dithers pre-decoded source pixels to palette indices. |
 
 ### Namespace `Hawkynt.ColorProcessing.Filtering`
 
@@ -2682,9 +2682,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `AccentedEdges` | `AccentedEdges()` |  |
 | `AccentedEdges` | `AccentedEdges(float edgeWidth = 1, float brightness = 0.5, float smoothness = 0.5)` |  |
 | `Default` | `static AccentedEdges Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `AddNoise`
 
@@ -2697,9 +2697,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `AddNoise` | `AddNoise()` |  |
 | `AddNoise` | `AddNoise(float amount, bool monochromatic = false, int seed = 0)` | Adds positional hash-based noise to the image. Supports monochromatic and per-channel noise modes. |
 | `Default` | `static AddNoise Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `AngledStrokes`
 
@@ -2711,9 +2711,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `AngledStrokes` | `AngledStrokes(float angle = 45, int strokeLength = 15, float sharpness = 0.5)` | Directional brush strokes at a configurable angle. Averages pixels along a line through each pixel at the given angle, then blends with the original by sharpness. Always uses frame-level random access. |
 | `Default` | `static AngledStrokes Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `AnisotropicDiffusion`
 
@@ -2726,8 +2726,8 @@ Implements `IMultiPassFilter`, `IPixelFilter`.
 | `AnisotropicDiffusion` | `AnisotropicDiffusion()` |  |
 | `AnisotropicDiffusion` | `AnisotropicDiffusion(int iterations, float lambda, float kappa)` | Initializes a new Perona–Malik anisotropic diffusion filter. |
 | `Default` | `static AnisotropicDiffusion Default { get; }` | Gets the default filter (10 iterations, λ=0.1, κ=0.15). |
-| `PassCount` | `int PassCount { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `PassCount` | `int PassCount { get; }` | Gets the number of times the kernel should be applied. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `AutoLevels`
 
@@ -2739,9 +2739,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `AutoLevels` | `AutoLevels(int radius = 10)` | Local auto-levels contrast stretching — Photoshop-style per-channel histogram stretch. |
 | `Default` | `static AutoLevels Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BasRelief`
 
@@ -2753,9 +2753,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `BasRelief` | `BasRelief(float detail = 13, float smoothness = 3, float angle = 135)` | Bas-relief sculptural shading — uses Sobel edge detection with directional lighting to produce a carved stone or metal appearance from the image's luminance gradients. |
 | `Default` | `static BasRelief Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BilateralFilter`
 
@@ -2768,9 +2768,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `BilateralFilter` | `BilateralFilter()` |  |
 | `BilateralFilter` | `BilateralFilter(int radius, float spatialSigma = 3, float rangeSigma = 0.1)` | Bilateral filter — edge-preserving smoothing (Tomasi & Manduchi 1998). |
 | `Default` | `static BilateralFilter Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BleachBypass`
 
@@ -2782,7 +2782,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `BleachBypass` | `BleachBypass(float intensity = 1)` | Simulates bleach bypass film processing: desaturated, high-contrast, muted colors. |
 | `Default` | `static BleachBypass Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Bloom`
 
@@ -2795,9 +2795,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Bloom` | `Bloom()` |  |
 | `Bloom` | `Bloom(float threshold = 0.7, float intensity = 1, int radius = 3)` | Bloom — soft radial glow around bright areas (light-bleed effect). |
 | `Default` | `static Bloom Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Blur`
 
@@ -2809,7 +2809,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Blur` | `Blur(float strength = 0.5)` | 3x3 weighted blur filter. |
 | `Default` | `static Blur Default { get; }` | Gets the default Blur filter (0.5 strength). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BokehBlur`
 
@@ -2821,9 +2821,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `BokehBlur` | `BokehBlur(int radius = 5, float threshold = 0.5, int bladeCount = 6)` | Disc-shaped blur that emphasizes bright spots in the image. Pixels within a circular neighborhood are weighted by luminance, creating the characteristic bokeh look of out-of-focus highlights. |
 | `Default` | `static BokehBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BottomHat`
 
@@ -2835,9 +2835,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `BottomHat` | `BottomHat(int radius = 1)` | Black bottom-hat transform: morphological closing minus original. Highlights dark details and thin structures on a bright background. Always uses frame-level random access due to the composed operation requiring double radius. |
 | `Default` | `static BottomHat Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BoxBlur`
 
@@ -2850,9 +2850,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `BoxBlur` | `BoxBlur()` |  |
 | `BoxBlur` | `BoxBlur(int radiusX, int radiusY)` |  |
 | `Default` | `static BoxBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Brightness`
 
@@ -2864,7 +2864,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Brightness` | `Brightness(float amount = 0)` | Adjusts image brightness by adding a constant offset to all color channels. |
 | `Default` | `static Brightness Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `BrightnessContrast`
 
@@ -2876,7 +2876,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `BrightnessContrast` | `BrightnessContrast(float brightness = 0, float contrast = 0)` | Combined brightness and contrast adjustment in a single pass. |
 | `Default` | `static BrightnessContrast Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Bulge`
 
@@ -2888,9 +2888,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Bulge` | `Bulge(float amount = 0.5)` | Bulge distortion — applies a radial bulge or pinch effect from the image center using a power-curve remap. |
 | `Default` | `static Bulge Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `CannyEdge`
 
@@ -2902,9 +2902,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `CannyEdge` | `CannyEdge(float lowThreshold = 0.1, float highThreshold = 0.3)` | Canny edge detection — multi-stage edge detector (J. Canny 1986). |
 | `Default` | `static CannyEdge Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Cartoon`
 
@@ -2917,9 +2917,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Cartoon` | `Cartoon()` |  |
 | `Cartoon` | `Cartoon(int levels, float edgeThreshold, int blurRadius = 1)` | Cartoon effect combining color quantization with edge darkening. Quantizes each channel to a configurable number of levels and darkens pixels where Sobel edge magnitude exceeds the threshold. Always uses frame-level random access due to configurable blur radius. |
 | `Default` | `static Cartoon Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ChalkAndCharcoal`
 
@@ -2931,9 +2931,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `ChalkAndCharcoal` | `ChalkAndCharcoal(float chalkAmount = 0.5, float charcoalAmount = 0.5)` | Chalk and charcoal sketch on gray paper. Bright areas receive chalk highlights, dark areas get charcoal darkening, and midtones map to neutral paper gray. |
 | `Default` | `static ChalkAndCharcoal Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ChannelExtraction`
 
@@ -2945,7 +2945,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `ChannelExtraction` | `ChannelExtraction(ColorChannel channel = 0)` | Extracts a single color channel as a grayscale image. |
 | `Default` | `static ChannelExtraction Default { get; }` | Gets the default Channel Extraction filter (Red channel). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ChannelMixer`
 
@@ -2958,7 +2958,7 @@ Implements `IPixelFilter`.
 | `ChannelMixer` | `ChannelMixer()` |  |
 | `ChannelMixer` | `ChannelMixer(float rr = 1, float rg = 0, float rb = 0, float gr = 0, float gg = 1, float gb = 0, float br = 0, float bg = 0, float bb = 1)` | Recombines R/G/B channels with arbitrary coefficients. |
 | `Default` | `static ChannelMixer Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Charcoal`
 
@@ -2970,9 +2970,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Charcoal` | `Charcoal(float thickness = 1, float detail = 0.5)` | Charcoal sketch effect using Sobel edge detection. Inverts edge magnitude and modulates with luminance to produce a black-and-white charcoal drawing appearance. |
 | `Default` | `static Charcoal Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ChromaticAberration`
 
@@ -2985,9 +2985,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `ChromaticAberration` | `ChromaticAberration()` |  |
 | `ChromaticAberration` | `ChromaticAberration(float strength)` | Chromatic aberration — simulates transverse-CA lens artefacts via radial RGB channel shifting (red samples inward, blue outward). |
 | `Default` | `static ChromaticAberration Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Clahe`
 
@@ -3000,9 +3000,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Clahe` | `Clahe()` |  |
 | `Clahe` | `Clahe(int tileSize = 8, float clipLimit = 4)` |  |
 | `Default` | `static Clahe Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Clarity`
 
@@ -3015,9 +3015,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Clarity` | `Clarity()` |  |
 | `Clarity` | `Clarity(float amount = 0.5, int radius = 3)` | Local contrast enhancement targeting midtones (like Lightroom's Clarity slider). Computes a local mean over a configurable radius and applies a midtone-weighted unsharp mask to boost local contrast without affecting highlights and shadows. |
 | `Default` | `static Clarity Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Closing`
 
@@ -3029,9 +3029,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Closing` | `Closing(int radius = 1)` | Morphological closing (dilation followed by erosion). Fills small dark holes while preserving overall shape. Always uses frame-level random access due to the composed operation requiring double radius. |
 | `Default` | `static Closing Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Clouds`
 
@@ -3044,9 +3044,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Clouds` | `Clouds()` |  |
 | `Clouds` | `Clouds(float scale = 0.05, float blend = 0.5, int seed = 0)` | Procedural value noise clouds blended with source image. Uses multi-octave value noise (4 octaves) with configurable scale and blend factor. |
 | `Default` | `static Clouds Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `CoherenceEnhancingDiffusion`
 
@@ -3059,8 +3059,8 @@ Implements `IMultiPassFilter`, `IPixelFilter`.
 | `CoherenceEnhancingDiffusion` | `CoherenceEnhancingDiffusion()` | Default: 8 iterations, λ = 0.15, α = 0.001 (Weickert's nominal values). |
 | `CoherenceEnhancingDiffusion` | `CoherenceEnhancingDiffusion(int iterations, float lambda, float alpha)` | Creates a CED filter with custom parameters. |
 | `Default` | `static CoherenceEnhancingDiffusion Default { get; }` | Default configuration. |
-| `PassCount` | `int PassCount { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `PassCount` | `int PassCount { get; }` | Gets the number of times the kernel should be applied. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ColorBalance`
 
@@ -3073,7 +3073,7 @@ Implements `IPixelFilter`.
 | `ColorBalance` | `ColorBalance()` |  |
 | `ColorBalance` | `ColorBalance(float shadowsCyanRed = 0, float shadowsMagentaGreen = 0, float shadowsYellowBlue = 0, float midtonesCyanRed = 0, float midtonesMagentaGreen = 0, float midtonesYellowBlue = 0, float highlightsCyanRed = 0, float highlightsMagentaGreen = 0, float highlightsYellowBlue = 0)` | Adjusts color balance in shadows, midtones, and highlights independently. |
 | `Default` | `static ColorBalance Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ColorHalftone`
 
@@ -3086,9 +3086,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `ColorHalftone` | `ColorHalftone()` |  |
 | `ColorHalftone` | `ColorHalftone(int maxRadius = 4, float cAngle = 108, float mAngle = 162, float yAngle = 90, float kAngle = 45)` |  |
 | `Default` | `static ColorHalftone Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ColorTemperature`
 
@@ -3100,7 +3100,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `ColorTemperature` | `ColorTemperature(float temperature = 0)` | Adjusts color temperature — positive values warm (boost red, reduce blue), negative values cool. |
 | `Default` | `static ColorTemperature Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ColorTint`
 
@@ -3112,7 +3112,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `ColorTint` | `ColorTint(float tint = 0)` | Adjusts color tint — negative values shift toward green, positive toward magenta. |
 | `Default` | `static ColorTint Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ColoredPencil`
 
@@ -3125,9 +3125,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `ColoredPencil` | `ColoredPencil()` |  |
 | `ColoredPencil` | `ColoredPencil(float edgeStrength, int pencilWidth = 1)` | Colored pencil sketch effect preserving the original hue. Converts to HSL, computes Sobel edge magnitude, modulates lightness by edge strength, and converts back to RGB. Always uses frame-level random access due to configurable pencil width. |
 | `Default` | `static ColoredPencil Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ConteCrayon`
 
@@ -3139,9 +3139,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `ConteCrayon` | `ConteCrayon(float foreground = 0.5, float background = 0.5)` | Conte crayon effect with foreground/background mapping. Combines Sobel edge detection with luminance to map dark regions to a foreground tone and light regions to a background tone. |
 | `Default` | `static ConteCrayon Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Contrast`
 
@@ -3153,7 +3153,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Contrast` | `Contrast(float amount = 0)` | Adjusts image contrast by scaling RGB channels around the midpoint. |
 | `Default` | `static Contrast Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Craquelure`
 
@@ -3165,9 +3165,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Craquelure` | `Craquelure(int crackSpacing = 15, int crackDepth = 6, float crackBrightness = 9, int seed = 0)` | Surface crack texture overlay — generates a procedural craquelure pattern using positional hash noise to displace grid lines, darkening pixels that fall on crack positions. |
 | `Default` | `static Craquelure Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `CrossProcess`
 
@@ -3179,7 +3179,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `CrossProcess` | `CrossProcess(float intensity = 1)` | Simulates cross-processed film (E6 film in C41 chemistry) with shifted color curves and boosted saturation. |
 | `Default` | `static CrossProcess Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Crosshatch`
 
@@ -3192,9 +3192,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Crosshatch` | `Crosshatch()` |  |
 | `Crosshatch` | `Crosshatch(float threshold1, float threshold2, float threshold3, int spacing = 4)` | Multi-angle crosshatch drawing effect based on luminance bands. Draws 45-degree, -45-degree, and horizontal hatch lines depending on how dark the pixel luminance is relative to configurable thresholds. Always uses frame-level random access. |
 | `Default` | `static Crosshatch Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Crystallize`
 
@@ -3207,9 +3207,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Crystallize` | `Crystallize()` |  |
 | `Crystallize` | `Crystallize(int cellSize, int seed = 0)` | Crystallize — Voronoi-tessellation stylisation (Photoshop-style "Crystallize"). |
 | `Default` | `static Crystallize Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Curves`
 
@@ -3224,7 +3224,7 @@ Implements `IPixelFilter`.
 | `Identity` | `static Curves Identity { get; }` | Identity curve: no change. |
 | `LiftShadows` | `static Curves LiftShadows { get; }` | Brightens shadows while keeping highlights mostly intact. |
 | `SCurve` | `static Curves SCurve { get; }` | Classic S-curve: increases contrast by lifting highlights and dropping shadows. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Cutout`
 
@@ -3237,9 +3237,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Cutout` | `Cutout()` |  |
 | `Cutout` | `Cutout(int levels, int edgeSimplicity = 4)` | Paper cutout effect — smooths the image with a box average then posterizes each channel. Produces simplified, flat-colored shapes reminiscent of paper collage art. |
 | `Default` | `static Cutout Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DarkStrokes`
 
@@ -3251,9 +3251,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `DarkStrokes` | `DarkStrokes(float balance = 0.5, float intensity = 0.5)` | Dark stroke effect emphasizing shadows. Finds the darkest neighbor in a radius-2 window and blends it with the center pixel, then applies an intensity-based darkening pass. Always uses frame-level random access. |
 | `Default` | `static DarkStrokes Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Dehaze`
 
@@ -3266,9 +3266,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Dehaze` | `Dehaze()` |  |
 | `Dehaze` | `Dehaze(float strength, int radius = 7)` | He et al. 2009 "Single Image Haze Removal Using Dark Channel Prior" (CVPR), with the simplifying assumption A = (1, 1, 1) for atmospheric light. |
 | `Default` | `static Dehaze Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Dents`
 
@@ -3280,9 +3280,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Dents` | `Dents(float amount = 5, float scale = 0.05, int seed = 0)` | Dents distortion — displaces pixels using hash-based noise to simulate a dented surface. |
 | `Default` | `static Dents Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Despeckle`
 
@@ -3295,9 +3295,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Despeckle` | `Despeckle()` |  |
 | `Despeckle` | `Despeckle(int radius)` | Hybrid median (Despeckle) — edge-preserving median variant. |
 | `Default` | `static Despeckle Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DifferenceClouds`
 
@@ -3310,9 +3310,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `DifferenceClouds` | `DifferenceClouds()` |  |
 | `DifferenceClouds` | `DifferenceClouds(float scale = 0.05, int seed = 0)` | Difference blend of procedural multi-octave value noise with source image. Each channel is blended via absolute difference: `\|channel - noise\|`. |
 | `Default` | `static DifferenceClouds Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DifferenceOfGaussians`
 
@@ -3323,7 +3323,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static DifferenceOfGaussians Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Diffuse`
 
@@ -3335,9 +3335,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Diffuse` | `Diffuse(int amount = 3)` | Random positional displacement noise using a deterministic hash for reproducible results. |
 | `Default` | `static Diffuse Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DiffuseGlow`
 
@@ -3350,9 +3350,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `DiffuseGlow` | `DiffuseGlow()` |  |
 | `DiffuseGlow` | `DiffuseGlow(float graininess, float glowAmount = 0.5, float clearAmount = 0.5)` | Diffuse glow effect that creates a soft luminance-weighted bloom with optional grain. Averages a small neighborhood for the glow component, then blends it with the original pixel weighted by luminance. Optionally adds deterministic grain noise. Always uses frame-level random access for neighborhood scanning. |
 | `Default` | `static DiffuseGlow Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Dilate`
 
@@ -3365,9 +3365,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Dilate` | `Dilate()` |  |
 | `Dilate` | `Dilate(int radius)` | Morphological dilation with configurable radius. Outputs the brightest pixel (by luminance) in the neighborhood. For radii 0-2, uses the efficient 5x5 NeighborWindow. For larger radii, uses frame-level random access. |
 | `Default` | `static Dilate Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DryBrush`
 
@@ -3380,9 +3380,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `DryBrush` | `DryBrush()` |  |
 | `DryBrush` | `DryBrush(int brushSize, int levels = 8)` | Dry brush painting effect using luminance-binned color averaging. Simplified oil painting variant with configurable brush size and fewer luminance bins. Groups neighborhood pixels by luminance bins and outputs the mean of the most-populated bin. Always uses frame-level random access due to configurable brush size. |
 | `Default` | `static DryBrush Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Duotone`
 
@@ -3394,7 +3394,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Duotone` | `Duotone(float shadowR = 0, float shadowG = 0, float shadowB = 0.2, float highlightR = 1, float highlightG = 0.9, float highlightB = 0.6)` | Maps luminance to a two-color gradient between shadow and highlight colors. |
 | `Default` | `static Duotone Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `DustAndScratches`
 
@@ -3407,9 +3407,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `DustAndScratches` | `DustAndScratches()` |  |
 | `DustAndScratches` | `DustAndScratches(int radius = 2, float threshold = 0.1)` |  |
 | `Default` | `static DustAndScratches Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Emboss`
 
@@ -3420,7 +3420,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Emboss Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Engrave`
 
@@ -3433,9 +3433,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Engrave` | `Engrave()` |  |
 | `Engrave` | `Engrave(int lineSpacing = 3, float angle = 0)` |  |
 | `Default` | `static Engrave Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Equalize`
 
@@ -3447,9 +3447,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Equalize` | `Equalize(int radius = 10)` | Local histogram equalisation — adaptive contrast enhancement. |
 | `Default` | `static Equalize Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Erode`
 
@@ -3462,9 +3462,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Erode` | `Erode()` |  |
 | `Erode` | `Erode(int radius)` | Morphological erosion with configurable radius. Outputs the darkest pixel (by luminance) in the neighborhood. For radii 0-2, uses the efficient 5x5 NeighborWindow. For larger radii, uses frame-level random access. |
 | `Default` | `static Erode Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Exposure`
 
@@ -3476,7 +3476,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Exposure` | `Exposure(float stops = 0)` | Adjusts exposure by multiplying RGB channels by a power-of-two factor. |
 | `Default` | `static Exposure Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Facet`
 
@@ -3488,9 +3488,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Facet` | `Facet(int radius = 2)` | Weighted median color in neighborhood producing a faceted, paint-by-number appearance. Neighbors more similar to the center pixel receive higher weight. |
 | `Default` | `static Facet Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `FalseColor`
 
@@ -3502,7 +3502,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `FalseColor` | `FalseColor(float lowR = 0, float lowG = 0, float lowB = 1, float midR = 0, float midG = 1, float midB = 0, float highR = 1, float highG = 0, float highB = 0)` | Maps luminance to a three-stop color gradient (low → mid → high). |
 | `Default` | `static FalseColor Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Fibers`
 
@@ -3515,9 +3515,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Fibers` | `Fibers()` |  |
 | `Fibers` | `Fibers(float variance = 16, float strength = 0.5, int seed = 0)` | Vertical fiber texture blended with source image. Generates a sinusoidal fiber pattern modulated by positional hash noise. |
 | `Default` | `static Fibers Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `FindEdges`
 
@@ -3529,9 +3529,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `FindEdges` | `FindEdges()` | Simple edge detection that outputs white edges on a black background. Uses Sobel gradient magnitude on luminance to detect edges. |
 | `Default` | `static FindEdges Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Fisheye`
 
@@ -3544,9 +3544,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Fisheye` | `Fisheye()` |  |
 | `Fisheye` | `Fisheye(float strength)` |  |
 | `Default` | `static Fisheye Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Fragment`
 
@@ -3559,9 +3559,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Fragment` | `Fragment()` |  |
 | `Fragment` | `Fragment(int fragments, int distance = 5)` | Fragment effect — averages multiple rotated/offset copies of the image. Creates a ghostly multi-exposure look by sampling at evenly-spaced angular offsets. |
 | `Default` | `static Fragment Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `FreiChenEdge`
 
@@ -3572,7 +3572,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static FreiChenEdge Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Fresco`
 
@@ -3584,9 +3584,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Fresco` | `Fresco(int brushSize = 2, float textureAmount = 0.5)` | Fresco painting effect with textured surface. Short-stroke oil painting using 3 luminance bins, with hash-based texture noise added. Always uses frame-level random access. |
 | `Default` | `static Fresco Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `FrostedGlass`
 
@@ -3599,9 +3599,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `FrostedGlass` | `FrostedGlass()` |  |
 | `FrostedGlass` | `FrostedGlass(int spread, int seed = 0)` | Frosted glass distortion — reads from a random nearby offset using a positional hash for deterministic noise. |
 | `Default` | `static FrostedGlass Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Gamma`
 
@@ -3613,7 +3613,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Gamma` | `Gamma(float gamma = 1)` | Applies gamma correction to the image. |
 | `Default` | `static Gamma Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GaussianBlur`
 
@@ -3626,9 +3626,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `GaussianBlur` | `GaussianBlur()` |  |
 | `GaussianBlur` | `GaussianBlur(int radiusX, int radiusY)` |  |
 | `Default` | `static GaussianBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GlassTile`
 
@@ -3640,9 +3640,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `GlassTile` | `GlassTile(int tileWidth = 10, int tileHeight = 10)` | Glass tile distortion with lens effect — divides the image into rectangular tiles and applies a barrel-style lens distortion within each tile, pulling pixels toward the tile center. |
 | `Default` | `static GlassTile Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GlowingEdges`
 
@@ -3655,9 +3655,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `GlowingEdges` | `GlowingEdges()` |  |
 | `GlowingEdges` | `GlowingEdges(float edgeStrength, float glowIntensity = 2)` | Neon-colored glowing edges on a dark background. Combines Sobel edge detection with original color preservation and darkened non-edge areas. |
 | `Default` | `static GlowingEdges Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GradientMap`
 
@@ -3672,7 +3672,7 @@ Implements `IPixelFilter`.
 | `Default` | `static GradientMap Default { get; }` |  |
 | `Heatmap` | `static GradientMap Heatmap { get; }` | Heatmap: blue → red → yellow. |
 | `Sepia` | `static GradientMap Sepia { get; }` | Warm sepia tone: black → mid-sepia → warm cream. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Grain`
 
@@ -3685,9 +3685,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Grain` | `Grain()` |  |
 | `Grain` | `Grain(float amount, int seed = 0)` | Adds photographic film grain using deterministic positional noise. |
 | `Default` | `static Grain Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GraphicPen`
 
@@ -3700,9 +3700,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `GraphicPen` | `GraphicPen()` |  |
 | `GraphicPen` | `GraphicPen(float strokeWidth = 1, float lightDarkBalance = 0.5, float angle = 45)` |  |
 | `Default` | `static GraphicPen Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Grayscale`
 
@@ -3713,7 +3713,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Grayscale Default { get; }` | Gets the default Grayscale filter. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `GuidedFilter`
 
@@ -3726,9 +3726,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `GuidedFilter` | `GuidedFilter()` |  |
 | `GuidedFilter` | `GuidedFilter(int radius, float epsilon)` |  |
 | `Default` | `static GuidedFilter Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `HDRToneMap`
 
@@ -3741,7 +3741,7 @@ Implements `IPixelFilter`.
 | `HDRToneMap` | `HDRToneMap()` |  |
 | `HDRToneMap` | `HDRToneMap(float exposure, float whitePoint = 4)` |  |
 | `Default` | `static HDRToneMap Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Halftone`
 
@@ -3754,9 +3754,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Halftone` | `Halftone()` |  |
 | `Halftone` | `Halftone(int dotSize = 6, float angle = 45)` |  |
 | `Default` | `static Halftone Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `HalftonePattern`
 
@@ -3768,9 +3768,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `HalftonePattern` | `HalftonePattern(int patternSize = 4, int patternType = 0)` | Ordered dither halftone pattern producing black-and-white output based on luminance thresholds. Supports dot (0), line (1), and cross (2) pattern types. |
 | `Default` | `static HalftonePattern Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `HighPass`
 
@@ -3783,9 +3783,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `HighPass` | `HighPass()` |  |
 | `HighPass` | `HighPass(int radiusX = 1, int radiusY = 1)` |  |
 | `Default` | `static HighPass Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `HueSaturation`
 
@@ -3797,7 +3797,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `HueSaturation` | `HueSaturation(float hueShift = 0, float saturation = 0, float lightness = 0)` | Adjusts hue, saturation, and lightness in HSL color space. |
 | `Default` | `static HueSaturation Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `InkOutlines`
 
@@ -3810,9 +3810,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `InkOutlines` | `InkOutlines()` |  |
 | `InkOutlines` | `InkOutlines(float intensity, int radius = 1)` | Ink outlines effect that darkens pixels proportional to Sobel edge magnitude. Preserves the original color while multiplying by (1 - intensity * edgeMag), producing dark ink-like outlines at edges. Always uses frame-level random access due to configurable radius. |
 | `Default` | `static InkOutlines Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Invert`
 
@@ -3823,7 +3823,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Invert Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Kaleidoscope`
 
@@ -3836,9 +3836,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Kaleidoscope` | `Kaleidoscope()` |  |
 | `Kaleidoscope` | `Kaleidoscope(int segments, float offsetDegrees = 0)` | Kaleidoscope distortion — reflects a single wedge of the source image around the centre to create an N-fold rotationally symmetric pattern. |
 | `Default` | `static Kaleidoscope Default { get; }` | Gets the default 6-segment kaleidoscope. |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Kuwahara`
 
@@ -3851,9 +3851,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Kuwahara` | `Kuwahara()` |  |
 | `Kuwahara` | `Kuwahara(int radius)` | Kuwahara filter — edge-preserving painterly smoothing (Kuwahara et al. 1976). |
 | `Default` | `static Kuwahara Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `L0Smoothing`
 
@@ -3867,8 +3867,8 @@ Implements `IMultiPassFilter`, `IPixelFilter`.
 | `L0Smoothing` | `L0Smoothing(int iterations, float lambda)` | Creates an L0Smoothing filter with custom parameters. |
 | `Default` | `static L0Smoothing Default { get; }` | Default configuration. |
 | `Lambda` | `float Lambda { get; }` | Gets the L0 smoothing strength λ (used by the FFT-HQS solver). |
-| `PassCount` | `int PassCount { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `PassCount` | `int PassCount { get; }` | Gets the number of times the kernel should be applied. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LaplacianEdge`
 
@@ -3879,7 +3879,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static LaplacianEdge Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LaplacianOfGaussian`
 
@@ -3892,9 +3892,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `LaplacianOfGaussian` | `LaplacianOfGaussian()` |  |
 | `LaplacianOfGaussian` | `LaplacianOfGaussian(float sigma, float gain = 1)` | Initializes a new Laplacian-of-Gaussian filter. |
 | `Default` | `static LaplacianOfGaussian Default { get; }` | Gets the default LoG filter with σ = 1.4. |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LaplacianSharpen`
 
@@ -3907,7 +3907,7 @@ Implements `IPixelFilter`.
 | `LaplacianSharpen` | `LaplacianSharpen()` |  |
 | `LaplacianSharpen` | `LaplacianSharpen(float amount)` |  |
 | `Default` | `static LaplacianSharpen Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LensDistortion`
 
@@ -3920,9 +3920,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `LensDistortion` | `LensDistortion()` |  |
 | `LensDistortion` | `LensDistortion(float k1, float k2 = 0)` | Lens distortion — Brown-Conrady barrel / pincushion radial-distortion model. |
 | `Default` | `static LensDistortion Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LensFlare`
 
@@ -3935,9 +3935,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `LensFlare` | `LensFlare()` |  |
 | `LensFlare` | `LensFlare(float brightness, float positionX = 0.5, float positionY = 0.3)` | Procedural lens flare effect with bright glow falloff and angle-based ray modulation. Computes distance from each pixel to a configurable flare center and adds an additive glow based on inverse-square falloff, producing a camera lens flare look. Always uses frame-level random access for position information. |
 | `Default` | `static LensFlare Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Levels`
 
@@ -3949,7 +3949,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Levels` | `Levels(float inBlack = 0, float inWhite = 1, float outBlack = 0, float outWhite = 1, float midtone = 1)` | Levels — Photoshop-style input/output level remapping with midtone gamma. |
 | `Default` | `static Levels Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LightingEffects`
 
@@ -3962,9 +3962,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `LightingEffects` | `LightingEffects()` |  |
 | `LightingEffects` | `LightingEffects(float angle, float elevation = 45, float intensity = 1, float ambientLight = 0.2)` | Phong-like lighting effect using luminance as a height map. Computes Sobel gradients on luminance to derive surface normals, then applies directional diffuse lighting from a configurable angle and elevation. Always uses frame-level random access for Sobel neighborhood. |
 | `Default` | `static LightingEffects Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MarrHildrethEdge`
 
@@ -3975,7 +3975,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static MarrHildrethEdge Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MedianFilter`
 
@@ -3988,9 +3988,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `MedianFilter` | `MedianFilter()` |  |
 | `MedianFilter` | `MedianFilter(int radius)` | Median filter — non-linear noise reduction by neighbourhood median selection. |
 | `Default` | `static MedianFilter Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Mezzotint`
 
@@ -4003,9 +4003,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Mezzotint` | `Mezzotint()` |  |
 | `Mezzotint` | `Mezzotint(int dotSize, int seed = 0)` | Stochastic mezzotint screen pattern. Produces random dot patterns where dot density is proportional to the local luminance of the source image. |
 | `Default` | `static Mezzotint Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MorphologicalGradient`
 
@@ -4018,9 +4018,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `MorphologicalGradient` | `MorphologicalGradient()` |  |
 | `MorphologicalGradient` | `MorphologicalGradient(int radius)` | Morphological gradient — edge detection via dilate minus erode. Highlights region boundaries by computing max luminance minus min luminance in the neighborhood and outputting the difference as grayscale. Dual-path: uses NeighborWindow for radii <= 2, frame access for larger radii. |
 | `Default` | `static MorphologicalGradient Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Mosaic`
 
@@ -4033,9 +4033,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Mosaic` | `Mosaic()` |  |
 | `Mosaic` | `Mosaic(int tileSize, int groutWidth = 2)` | Mosaic tile effect — like Pixelate but with dark grout lines between tiles. Divides the image into uniform rectangular tiles separated by visible grout. |
 | `Default` | `static Mosaic Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MotionBlur`
 
@@ -4048,9 +4048,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `MotionBlur` | `MotionBlur()` |  |
 | `MotionBlur` | `MotionBlur(int length, float angle)` | Motion blur simulating camera or object movement along a configurable direction. Samples pixels along a line at the given angle and averages their colors. Always uses frame-level random access for directional sampling. |
 | `Default` | `static MotionBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Neon`
 
@@ -4063,9 +4063,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Neon` | `Neon()` |  |
 | `Neon` | `Neon(float strength, float glowSize = 2)` | Neon glow effect with per-channel Sobel edge detection and glow spread. Computes edge magnitude for each RGB channel separately, multiplies by strength, and averages nearby edge values to create a soft glow around edges. Always uses frame-level random access due to configurable glow size. |
 | `Default` | `static Neon Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `NightVision`
 
@@ -4077,7 +4077,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `NightVision` | `NightVision(float amplification = 2)` | Simulates night-vision goggles: green monochrome with amplified brightness. |
 | `Default` | `static NightVision Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `NonLocalMeans`
 
@@ -4090,9 +4090,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `NonLocalMeans` | `NonLocalMeans()` | Default: search radius 5 (11×11), patch radius 1 (3×3), filtering h = 0.05. |
 | `NonLocalMeans` | `NonLocalMeans(int searchRadius, int patchRadius, float h)` | Creates an NLM filter with custom parameters. |
 | `Default` | `static NonLocalMeans Default { get; }` | Default configuration. |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `NotePaper`
 
@@ -4104,9 +4104,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `NotePaper` | `NotePaper(float imageBalance = 25, float graininess = 10, float relief = 11, int seed = 0)` | Note paper sketch effect combining luminance, Sobel relief, and hash-based grain to produce a warm-tinted paper appearance. |
 | `Default` | `static NotePaper Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `OceanRipple`
 
@@ -4118,9 +4118,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `OceanRipple` | `OceanRipple(float amplitudeX = 5, float amplitudeY = 5, int sizeX = 15, int sizeY = 15)` | OceanRipple distortion — applies dual-axis sinusoidal displacement simulating ocean surface ripples. |
 | `Default` | `static OceanRipple Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Offset`
 
@@ -4132,9 +4132,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Offset` | `Offset(int offsetX = 0, int offsetY = 0)` | Wrap-around pixel offset displacement filter. Shifts the entire image by a configurable X/Y offset with wrapping at boundaries. |
 | `Default` | `static Offset Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `OilPainting`
 
@@ -4147,9 +4147,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `OilPainting` | `OilPainting()` |  |
 | `OilPainting` | `OilPainting(int radius, int levels = 20)` | Oil painting effect using luminance-binned color averaging. Groups neighborhood pixels by luminance bins, outputs the mean of the most-populated bin. Always uses frame-level random access. |
 | `Default` | `static OilPainting Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `OldPhoto`
 
@@ -4161,7 +4161,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `OldPhoto` | `OldPhoto(float intensity = 1)` | Combined vintage photograph effect: sepia tone, reduced contrast, and warm color shift. |
 | `Default` | `static OldPhoto Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Opening`
 
@@ -4173,9 +4173,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Opening` | `Opening(int radius = 1)` | Morphological opening (erosion followed by dilation). Removes small bright spots while preserving overall shape. Always uses frame-level random access due to the composed operation requiring double radius. |
 | `Default` | `static Opening Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PaletteKnife`
 
@@ -4188,9 +4188,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `PaletteKnife` | `PaletteKnife()` |  |
 | `PaletteKnife` | `PaletteKnife(int strokeSize, float softness = 0.5)` | Palette knife painting effect using directional smoothing along edges. Computes Sobel gradients on luminance to find edge direction, then averages pixels along the edge (perpendicular to gradient) with Gaussian weighting to simulate paint strokes made by a palette knife. Always uses frame-level random access for directional sampling. |
 | `Default` | `static PaletteKnife Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Patchwork`
 
@@ -4202,9 +4202,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Patchwork` | `Patchwork(int squareSize = 5, float relief = 0.5)` | Patchwork quilt effect — divides the image into square blocks, averages their color, and adds emboss-style relief at block edges for a quilted appearance. |
 | `Default` | `static Patchwork Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PencilSketch`
 
@@ -4217,9 +4217,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `PencilSketch` | `PencilSketch()` |  |
 | `PencilSketch` | `PencilSketch(float edgeStrength, int blurRadius = 1)` | Pencil sketch effect combining edge detection with grayscale. Computes Sobel edge magnitude, inverts it, and blends with the grayscale value of the center pixel to produce a hand-drawn sketch appearance. Always uses frame-level random access due to configurable blur radius. |
 | `Default` | `static PencilSketch Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Photocopy`
 
@@ -4231,9 +4231,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Photocopy` | `Photocopy(float detail = 7, float darkness = 8)` | Photocopy effect with adjustable detail and darkness. Applies Sobel edge detection scaled by the detail parameter and thresholds by the inverse darkness to produce high-contrast B&W output. |
 | `Default` | `static Photocopy Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Pinch`
 
@@ -4246,9 +4246,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Pinch` | `Pinch()` |  |
 | `Pinch` | `Pinch(float amount, float radius = 0.5)` | Pinch distortion — radially compresses or expands pixels within a given radius around the center. |
 | `Default` | `static Pinch Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Pixelate`
 
@@ -4261,9 +4261,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Pixelate` | `Pixelate()` |  |
 | `Pixelate` | `Pixelate(int blockSize)` | Mosaic pixelation effect — replaces blocks of pixels with their average color. Always uses frame-level random access for block neighborhood averaging. |
 | `Default` | `static Pixelate Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PlasmaTexture`
 
@@ -4276,9 +4276,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `PlasmaTexture` | `PlasmaTexture()` |  |
 | `PlasmaTexture` | `PlasmaTexture(float scale = 0.02, float blend = 0.5, int seed = 0)` | Multi-octave plasma noise blended with source image. Uses separate noise seeds per channel for colorful plasma patterns. |
 | `Default` | `static PlasmaTexture Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PlasticWrap`
 
@@ -4290,9 +4290,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `PlasticWrap` | `PlasticWrap(float highlightStrength = 15, float detail = 9, float smoothness = 7)` | Plastic wrap effect with specular highlights from edges. Uses Sobel edge detection to compute edge magnitude, then adds specular highlights controlled by highlight strength, detail, and smoothness parameters. Always uses frame-level random access. |
 | `Default` | `static PlasticWrap Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Pointillize`
 
@@ -4305,9 +4305,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Pointillize` | `Pointillize()` |  |
 | `Pointillize` | `Pointillize(int dotSize, int seed = 0)` | Pointillize — pointillist painting stylisation (Photoshop-style "Pointillize"). |
 | `Default` | `static Pointillize Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PolarCoordinates`
 
@@ -4320,9 +4320,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `PolarCoordinates` | `PolarCoordinates()` |  |
 | `PolarCoordinates` | `PolarCoordinates(bool toPolar)` | Polar coordinates distortion — converts between rectangular and polar coordinate systems. |
 | `Default` | `static PolarCoordinates Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PosterEdges`
 
@@ -4335,9 +4335,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `PosterEdges` | `PosterEdges()` |  |
 | `PosterEdges` | `PosterEdges(int levels, float edgeStrength = 0.5)` | Posterize with edge darkening effect. Quantizes each channel to a configurable number of levels and then darkens pixels proportional to Sobel edge magnitude. Always uses frame-level random access. |
 | `Default` | `static PosterEdges Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Posterize`
 
@@ -4349,7 +4349,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Posterize` | `Posterize(int levels = 4)` | Reduces the number of distinct color levels per channel. |
 | `Default` | `static Posterize Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `PrewittEdge`
 
@@ -4360,7 +4360,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static PrewittEdge Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `RadialBlur`
 
@@ -4373,9 +4373,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `RadialBlur` | `RadialBlur()` |  |
 | `RadialBlur` | `RadialBlur(float strength, float centerX, float centerY)` | Radial blur effect emanating from a configurable center point. Samples pixels along the radial direction from center and averages their colors. Always uses frame-level random access for radial sampling. |
 | `Default` | `static RadialBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ReduceNoise`
 
@@ -4388,9 +4388,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `ReduceNoise` | `ReduceNoise()` |  |
 | `ReduceNoise` | `ReduceNoise(float strength = 0.5, int radius = 2)` |  |
 | `Default` | `static ReduceNoise Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Relief`
 
@@ -4403,7 +4403,7 @@ Implements `IPixelFilter`.
 | `Relief` | `Relief()` |  |
 | `Relief` | `Relief(float angle = 315, float depth = 1)` |  |
 | `Default` | `static Relief Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Reticulation`
 
@@ -4415,9 +4415,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Reticulation` | `Reticulation(float density = 12, float foregroundLevel = 0.5, float backgroundLevel = 0.5, int seed = 0)` | Film grain reticulation with density control. Adds positional hash noise scaled differently for foreground (dark) and background (light) regions to simulate photographic film reticulation. |
 | `Default` | `static Reticulation Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Ripple`
 
@@ -4430,9 +4430,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Ripple` | `Ripple()` |  |
 | `Ripple` | `Ripple(float amplitude, float wavelength = 20, float angle = 0)` | Ripple distortion — displaces pixels along a sinusoidal wave perpendicular to a given angle. |
 | `Default` | `static Ripple Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `RobertsCross`
 
@@ -4441,7 +4441,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static RobertsCross Default { get; }` | Gets the default Roberts Cross filter. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `RoughPastels`
 
@@ -4453,9 +4453,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `RoughPastels` | `RoughPastels(int strokeLength = 6, float detail = 4, float textureAmount = 0.5, int seed = 0)` | Rough pastel strokes with canvas texture — averages pixels along a horizontal stroke direction, adds procedural canvas texture noise, and applies a detail contrast factor for a hand-drawn pastel appearance. |
 | `Default` | `static RoughPastels Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ScharrEdge`
 
@@ -4466,7 +4466,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScharrEdge Default { get; }` | Gets the default Scharr edge filter. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SelectiveDesaturation`
 
@@ -4479,7 +4479,7 @@ Implements `IPixelFilter`.
 | `SelectiveDesaturation` | `SelectiveDesaturation()` |  |
 | `SelectiveDesaturation` | `SelectiveDesaturation(float targetHue, float hueRange = 30, float strength = 1)` | Desaturates all colors except a chosen hue range, producing a "grayscale with selective coloring" effect. |
 | `Default` | `static SelectiveDesaturation Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Sepia`
 
@@ -4491,7 +4491,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Sepia` | `Sepia(float intensity = 1)` | Sepia tone — vintage photographic warm-brown colour cast via Microsoft's standard 3×3 sepia transform matrix. |
 | `Default` | `static Sepia Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Sharpen`
 
@@ -4503,7 +4503,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Sharpen` | `Sharpen(float strength = 0.5)` | Sharpen — fixed 3×3 cardinal-neighbour unsharp variant. |
 | `Default` | `static Sharpen Default { get; }` | Gets the default Sharpen filter (0.5 strength). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Shear`
 
@@ -4515,9 +4515,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Shear` | `Shear(float amount = 10, bool horizontal = true)` | Shear distortion — linearly displaces pixels along one axis based on position along the other axis. |
 | `Default` | `static Shear Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SigmoidContrast`
 
@@ -4529,9 +4529,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `SigmoidContrast` | `SigmoidContrast(float contrast = 5, float midpoint = 0.5)` | Sigmoid contrast — ImageMagick-compatible S-curve contrast (logistic sigmoid). |
 | `Default` | `static SigmoidContrast Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SmartBlur`
 
@@ -4543,9 +4543,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `SmartBlur` | `SmartBlur(int radius = 3, float threshold = 0.2)` | Edge-preserving blur that only averages neighbors within a hard color threshold. Pixels whose color difference from the center exceeds the threshold are excluded, preserving sharp edges while smoothing uniform regions. |
 | `Default` | `static SmartBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SmartSharpen`
 
@@ -4557,9 +4557,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `SmartSharpen` | `SmartSharpen(float amount = 1, int radius = 1, float threshold = 0)` | Deconvolution-style sharpening that applies sharpening selectively based on local edge magnitude. Areas with edge magnitude below the threshold are left unchanged, while detected edges receive the full sharpening amount. |
 | `Default` | `static SmartSharpen Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SmudgeStick`
 
@@ -4571,9 +4571,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `SmudgeStick` | `SmudgeStick(int strokeLength = 2, float highlightArea = 0.5, float intensity = 0.5)` | Smudge stick painting with highlight brightening. Averages neighborhood pixels and brightens areas where the center luminance exceeds the highlight threshold. Always uses frame-level random access. |
 | `Default` | `static SmudgeStick Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SobelEdge`
 
@@ -4584,7 +4584,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static SobelEdge Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SoftGlow`
 
@@ -4596,9 +4596,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `SoftGlow` | `SoftGlow(float glowRadius = 3, float glowBrightness = 0.5, float sharpness = 0.5)` | Soft glow effect using screen blend of blurred highlights. Computes a local average, extracts bright areas, and screen-blends them back. |
 | `Default` | `static SoftGlow Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Solarize`
 
@@ -4610,7 +4610,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Solarize` | `Solarize(float threshold = 0.5)` | Solarizes the image by inverting channels that exceed a threshold. |
 | `Default` | `static Solarize Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Spatter`
 
@@ -4622,9 +4622,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Spatter` | `Spatter(int sprayRadius = 10, float smoothness = 5, int seed = 0)` | Paint spatter displacement effect. Displaces each pixel by a hash-based offset, then smooths the result by averaging a small neighborhood. Always uses frame-level random access. |
 | `Default` | `static Spatter Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Spherize`
 
@@ -4637,9 +4637,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Spherize` | `Spherize()` |  |
 | `Spherize` | `Spherize(float amount)` | Spherize distortion — applies spherical refraction to the image, creating a bulge or pinch effect. |
 | `Default` | `static Spherize Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SpinBlur`
 
@@ -4652,9 +4652,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `SpinBlur` | `SpinBlur()` |  |
 | `SpinBlur` | `SpinBlur(float angleDegrees, float centerX, float centerY)` | Spin blur (rotational blur) around a configurable center point. Samples along a circular arc at the same radius from center and averages their colors. Always uses frame-level random access for angular sampling. |
 | `Default` | `static SpinBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Sponge`
 
@@ -4666,9 +4666,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Sponge` | `Sponge(int brushSize = 2, float definition = 5, float smoothness = 5)` | Sponge texture with high-contrast color bins. Like oil painting but with fewer luminance bins and additional contrast enhancement. Always uses frame-level random access. |
 | `Default` | `static Sponge Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Spread`
 
@@ -4681,9 +4681,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Spread` | `Spread()` |  |
 | `Spread` | `Spread(int amount, int seed = 0)` | Spread distortion — randomly displaces each pixel within a configurable range using a positional hash. |
 | `Default` | `static Spread Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `StainedGlass`
 
@@ -4696,9 +4696,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `StainedGlass` | `StainedGlass()` |  |
 | `StainedGlass` | `StainedGlass(int cellSize, int borderWidth = 1, int seed = 0)` | Stained glass effect — Voronoi tessellation with dark lead borders between cells. Similar to Crystallize but adds dark borders where cell boundaries meet. |
 | `Default` | `static StainedGlass Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Stamp`
 
@@ -4710,9 +4710,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Stamp` | `Stamp(float lightDarkBalance = 0.5, float smoothness = 5)` | Rubber stamp effect with threshold. Averages luminance within a configurable neighborhood radius and thresholds to produce a clean black-and-white stamp appearance. |
 | `Default` | `static Stamp Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Supernova`
 
@@ -4725,9 +4725,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Supernova` | `Supernova()` |  |
 | `Supernova` | `Supernova(float brightness = 0.7, int spokes = 20, float posX = 0.5, float posY = 0.5, int seed = 0)` | Radial starburst light rays added to source image. Computes exponential falloff from a configurable center with spoke-based angular modulation. |
 | `Default` | `static Supernova Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SurfaceBlur`
 
@@ -4740,9 +4740,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `SurfaceBlur` | `SurfaceBlur()` |  |
 | `SurfaceBlur` | `SurfaceBlur(int radius, float threshold)` | Surface blur — Photoshop-style edge-preserving smoothing via colour-distance threshold. |
 | `Default` | `static SurfaceBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Texturizer`
 
@@ -4754,9 +4754,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Texturizer` | `Texturizer(int textureType = 0, float scaling = 1, float relief = 4)` | Procedural texture overlay with relief — generates one of four texture patterns (brick, burlap, canvas, sandstone) and blends it with the source pixel using a configurable relief amount. |
 | `Default` | `static Texturizer Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Thermal`
 
@@ -4768,7 +4768,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Thermal` | `Thermal(float intensity = 1)` | False-color thermal/infrared mapping. Maps luminance to a cold-to-hot color ramp (black → blue → red → yellow → white). |
 | `Default` | `static Thermal Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Threshold`
 
@@ -4780,7 +4780,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Threshold` | `Threshold(float level = 0.5)` | Binary threshold filter that converts pixels to black or white based on luminance. |
 | `Default` | `static Threshold Default { get; }` | Gets the default Threshold filter (0.5 level). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Tiles`
 
@@ -4792,9 +4792,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Tiles` | `Tiles(int tileSize = 20, int gapWidth = 3, float gapBrightness = 0.1)` | Offset tile blocks with dark gaps between them. Each tile is randomly offset using a positional hash per tile cell. |
 | `Default` | `static Tiles Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `TiltShift`
 
@@ -4807,9 +4807,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `TiltShift` | `TiltShift()` |  |
 | `TiltShift` | `TiltShift(float focusPosition, float focusWidth = 0.2, int blurRadius = 3)` | Tilt-shift miniature effect with selective focus band. Applies position-dependent selective blur: a sharp horizontal band in the center with progressively blurred areas above and below. Always uses frame-level random access for position-dependent blur radius. |
 | `Default` | `static TiltShift Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `TopHat`
 
@@ -4821,9 +4821,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `TopHat` | `TopHat(int radius = 1)` | White top-hat transform: original minus morphological opening. Highlights bright details and thin structures on a dark background. Always uses frame-level random access due to the composed operation requiring double radius. |
 | `Default` | `static TopHat Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `TornEdges`
 
@@ -4835,9 +4835,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `TornEdges` | `TornEdges(float imageBalance = 0.5, float smoothness = 11, float contrast = 17, int seed = 0)` | Stamp effect with noisy torn edges. Averages luminance in a neighborhood, adds positional hash noise scaled by inverse contrast, then thresholds against the image balance to produce irregular black-and-white edges. |
 | `Default` | `static TornEdges Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `TraceContour`
 
@@ -4850,9 +4850,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `TraceContour` | `TraceContour()` |  |
 | `TraceContour` | `TraceContour(float threshold = 0.5)` |  |
 | `Default` | `static TraceContour Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Turbulence`
 
@@ -4865,9 +4865,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Turbulence` | `Turbulence()` |  |
 | `Turbulence` | `Turbulence(float strength, float scale = 0.05, int octaves = 4, int seed = 0)` | Turbulence distortion — displaces pixels using fractal value noise with configurable octaves. |
 | `Default` | `static Turbulence Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Twirl`
 
@@ -4880,9 +4880,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Twirl` | `Twirl()` |  |
 | `Twirl` | `Twirl(float angle, float radius = 0.5)` | Twirl distortion — spirals pixels around the image center with decreasing rotation toward the edge. |
 | `Default` | `static Twirl Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Underpainting`
 
@@ -4894,9 +4894,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `Underpainting` | `Underpainting(int brushSize = 4, float textureAmount = 0.5)` | Underpainting effect with large brush and texture. Oil painting style using 5 luminance bins and a large brush radius, with hash-based texture noise applied to the result. Always uses frame-level random access. |
 | `Default` | `static Underpainting Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `UnsharpMask`
 
@@ -4909,9 +4909,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `UnsharpMask` | `UnsharpMask()` |  |
 | `UnsharpMask` | `UnsharpMask(float amount = 1, float threshold = 0, int radiusX = 1, int radiusY = 1)` |  |
 | `Default` | `static UnsharpMask Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Vibrance`
 
@@ -4923,7 +4923,7 @@ Implements `IPixelFilter`.
 | --- | --- | --- |
 | `Vibrance` | `Vibrance(float amount = 0)` | Vibrance — Adobe-style smart saturation that targets desaturated pixels. |
 | `Default` | `static Vibrance Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Vignette`
 
@@ -4936,9 +4936,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Vignette` | `Vignette()` |  |
 | `Vignette` | `Vignette(float strength, float radius = 0.75)` | Vignette filter — darkens image edges with smooth radial falloff. Position-dependent; always uses frame-level random access for position information. |
 | `Default` | `static Vignette Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `VonKries`
 
@@ -4949,7 +4949,7 @@ Implements `IPixelFilter`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static VonKries Default { get; }` | Gets the default Von Kries filter. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `WaterPaper`
 
@@ -4961,9 +4961,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `WaterPaper` | `WaterPaper(int fiberLength = 15, float brightness = 60, float contrast = 80, int seed = 0)` | Water paper texture effect combining horizontal directional blur with fiber grain. Produces a grayscale output with adjustable brightness and contrast. |
 | `Default` | `static WaterPaper Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Watercolor`
 
@@ -4976,9 +4976,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Watercolor` | `Watercolor()` |  |
 | `Watercolor` | `Watercolor(int radius, int levels = 6)` | Watercolor painting simulation. Computes a box-averaged color in the neighborhood for soft edges and color bleeding, then quantizes each channel to reduce color complexity, producing a painterly watercolor effect. Always uses frame-level random access. |
 | `Default` | `static Watercolor Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Wave`
 
@@ -4991,9 +4991,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Wave` | `Wave()` |  |
 | `Wave` | `Wave(float ampX, float wlX = 30, float ampY = 5, float wlY = 30)` | Wave distortion — applies independent sinusoidal displacement in X and Y axes. |
 | `Default` | `static Wave Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Wind`
 
@@ -5006,9 +5006,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Wind` | `Wind()` |  |
 | `Wind` | `Wind(int strength, float angle = 0)` | Wind distortion — creates directional pixel streaks at bright edges simulating wind blur. |
 | `Default` | `static Wind Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ZigZag`
 
@@ -5020,9 +5020,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | --- | --- | --- |
 | `ZigZag` | `ZigZag(float amount = 5, int ridges = 5)` | ZigZag distortion — displaces pixels radially from the center along sinusoidal ridges. |
 | `Default` | `static ZigZag Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ZoomBlur`
 
@@ -5035,9 +5035,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `ZoomBlur` | `ZoomBlur()` |  |
 | `ZoomBlur` | `ZoomBlur(float strength, float centerX, float centerY)` | Zoom blur simulating a camera zoom during exposure. Samples along the line from center through the pixel and averages their colors. Always uses frame-level random access for zoom-direction sampling. |
 | `Default` | `static ZoomBlur Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 ### Namespace `Hawkynt.ColorProcessing.Filtering.Filters.ToneMap`
 
@@ -5054,7 +5054,7 @@ Implements `IPixelFilter`.
 | `Aces` | `Aces()` |  |
 | `Aces` | `Aces(float exposure)` |  |
 | `Default` | `static Aces Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Drago`
 
@@ -5067,9 +5067,9 @@ Implements `IFrameFilter`, `IPixelFilter`.
 | `Drago` | `Drago()` |  |
 | `Drago` | `Drago(float bias = 0.85, float exposure = 1)` |  |
 | `Default` | `static Drago Default { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Hable`
 
@@ -5082,7 +5082,7 @@ Implements `IPixelFilter`.
 | `Hable` | `Hable()` |  |
 | `Hable` | `Hable(float exposure = 2, float linearWhite = 11.2)` |  |
 | `Default` | `static Hable Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Lottes`
 
@@ -5096,7 +5096,7 @@ Implements `IPixelFilter`.
 | `Lottes` | `Lottes(float exposure = 1, float contrast = 1.6)` |  |
 | `Lottes` | `Lottes(float exposure, float contrast, float shoulder, float midIn, float midOut, float hdrMax, float hdrOut)` |  |
 | `Default` | `static Lottes Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Mantiuk`
 
@@ -5109,10 +5109,10 @@ Implements `IFrameFilter`, `IMultiPassFilter`, `IPixelFilter`.
 | `Mantiuk` | `Mantiuk()` |  |
 | `Mantiuk` | `Mantiuk(float contrast = 0.5, float saturation = 1)` |  |
 | `Default` | `static Mantiuk Default { get; }` |  |
-| `PassCount` | `int PassCount { get; }` |  |
-| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` |  |
-| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `PassCount` | `int PassCount { get; }` | Gets the number of times the kernel should be applied. |
+| `UsesFrameAccess` | `bool UsesFrameAccess { get; }` | Gets whether this filter instance requires frame-level access. When `true`, `InvokeFrameKernel` is used instead of the standard 5×5 kernel path. |
+| `InvokeFrameKernel` | `TResult InvokeFrameKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight)` | Invokes a callback with a concrete resample kernel for frame-level filtering. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Reinhard`
 
@@ -5125,7 +5125,7 @@ Implements `IPixelFilter`.
 | `Reinhard` | `Reinhard()` |  |
 | `Reinhard` | `Reinhard(float exposure)` |  |
 | `Default` | `static Reinhard Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `ReinhardExtended`
 
@@ -5138,7 +5138,7 @@ Implements `IPixelFilter`.
 | `ReinhardExtended` | `ReinhardExtended()` |  |
 | `ReinhardExtended` | `ReinhardExtended(float exposure = 1, float whitePoint = 4)` |  |
 | `Default` | `static ReinhardExtended Default { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 ### Namespace `Hawkynt.ColorProcessing.FrequencyDomain`
 
@@ -5392,7 +5392,7 @@ Implements `IPixelFilter`.
 | `Lut3DFilter` | `Lut3DFilter()` | Default constructor (identity LUT — no-op). |
 | `Lut3DFilter` | `Lut3DFilter(Lut3D lut, Lut3DInterpolation interpolation = 1)` | Creates a filter that applies the given LUT. |
 | `Default` | `static Lut3DFilter Default { get; }` | Identity LUT default — useful as a no-op fallback. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Lut3DInterpolation`
 
@@ -5562,7 +5562,7 @@ Implements `IColorEquality<TKey>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `IBatchDistance<TKey>`
 
@@ -5646,7 +5646,7 @@ Implements `IColorEquality<TKey>`.
 | --- | --- | --- |
 | `NormalizedThresholdEquality` | `NormalizedThresholdEquality(UNorm32 threshold, TMetric metric = null)` | Creates a normalized threshold-based equality comparer with UNorm32 threshold. |
 | `NormalizedThresholdEquality` | `NormalizedThresholdEquality(float threshold, TMetric metric = null)` | Creates a normalized threshold-based equality comparer. |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `ThresholdEquality3<TKey>`
 
@@ -5662,7 +5662,7 @@ Implements `IColorEquality<TKey>`.
 | `ThresholdEquality3` | `ThresholdEquality3(byte threshold)` | Creates with a single byte threshold for all components. |
 | `ThresholdEquality3` | `ThresholdEquality3(float d1, float d2, float d3)` | Creates with per-component float thresholds (0.0-1.0). |
 | `ThresholdEquality3` | `ThresholdEquality3(float threshold)` | Creates with a single float threshold for all components. |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `ThresholdEquality4<TKey>`
 
@@ -5678,7 +5678,7 @@ Implements `IColorEquality<TKey>`.
 | `ThresholdEquality4` | `ThresholdEquality4(byte threshold)` | Creates with a single byte threshold for all components. |
 | `ThresholdEquality4` | `ThresholdEquality4(float d1, float d2, float d3, float dA)` | Creates with per-component float thresholds (0.0-1.0). |
 | `ThresholdEquality4` | `ThresholdEquality4(float threshold)` | Creates with a single float threshold for all components. |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `ThresholdEquality5<TKey>`
 
@@ -5694,7 +5694,7 @@ Implements `IColorEquality<TKey>`.
 | `ThresholdEquality5` | `ThresholdEquality5(byte threshold)` | Creates with a single byte threshold for all components. |
 | `ThresholdEquality5` | `ThresholdEquality5(float d1, float d2, float d3, float d4, float dA)` | Creates with per-component float thresholds (0.0-1.0). |
 | `ThresholdEquality5` | `ThresholdEquality5(float threshold)` | Creates with a single float threshold for all components. |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `ThresholdEquality<TKey, TMetric>`
 
@@ -5706,7 +5706,7 @@ Implements `IColorEquality<TKey>`.
 | --- | --- | --- |
 | `ThresholdEquality` | `ThresholdEquality(UNorm32 threshold, TMetric metric = null)` | Creates a threshold-based equality comparer with UNorm32 threshold. |
 | `ThresholdEquality` | `ThresholdEquality(float threshold, TMetric metric = null)` | Creates a threshold-based equality comparer. |
-| `Equals` | `bool Equals(in TKey a, in TKey b)` |  |
+| `Equals` | `bool Equals(in TKey a, in TKey b)` | Determines whether two colors are equal. |
 
 #### `UNorm32`
 
@@ -7717,13 +7717,13 @@ Implements `IDownscaler`, `IScalerInfo`.
 | `Ratio3` | `static AdaptiveDownscale Ratio3 { get; }` | Gets an adaptive downscaler at 1/3 scale. |
 | `Ratio4` | `static AdaptiveDownscale Ratio4 { get; }` | Gets an adaptive downscaler at 1/4 scale. |
 | `Ratio5` | `static AdaptiveDownscale Ratio5 { get; }` | Gets an adaptive downscaler at 1/5 scale. |
-| `RatioX` | `int RatioX { get; }` |  |
-| `RatioY` | `int RatioY { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `RatioX` | `int RatioX { get; }` | Gets the horizontal downscale ratio (2 means source width / 2). |
+| `RatioY` | `int RatioY { get; }` | Gets the vertical downscale ratio (2 means source height / 2). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Smooth` | `static AdaptiveDownscale Smooth { get; }` | Gets a configuration with low edge sensitivity for smoother results. |
 | `SupportedRatios` | `static int[] SupportedRatios { get; }` | Gets the list of commonly used downscale ratios. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates common target dimensions for AdaptiveDownscale. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsRatio` | `static bool SupportsRatio(int ratio)` | Determines whether AdaptiveDownscale supports the specified ratio. |
 
 #### `BoxDownscale`
@@ -7741,12 +7741,12 @@ Implements `IDownscaler`, `IScalerInfo`.
 | `Ratio3` | `static BoxDownscale Ratio3 { get; }` | Gets a box downscaler at 1/3 scale (3x3 blocks). |
 | `Ratio4` | `static BoxDownscale Ratio4 { get; }` | Gets a box downscaler at 1/4 scale (4x4 blocks). |
 | `Ratio5` | `static BoxDownscale Ratio5 { get; }` | Gets a box downscaler at 1/5 scale (5x5 blocks). |
-| `RatioX` | `int RatioX { get; }` |  |
-| `RatioY` | `int RatioY { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `RatioX` | `int RatioX { get; }` | Gets the horizontal downscale ratio (2 means source width / 2). |
+| `RatioY` | `int RatioY { get; }` | Gets the vertical downscale ratio (2 means source height / 2). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedRatios` | `static int[] SupportedRatios { get; }` | Gets the list of commonly used downscale ratios. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates common target dimensions for BoxDownscale. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsRatio` | `static bool SupportsRatio(int ratio)` | Determines whether BoxDownscale supports the specified ratio. |
 
 #### `DpidDownscale`
@@ -7765,13 +7765,13 @@ Implements `IDownscaler`, `IScalerInfo`.
 | `Ratio3` | `static DpidDownscale Ratio3 { get; }` | Gets a DPID downscaler at 1/3 scale. |
 | `Ratio4` | `static DpidDownscale Ratio4 { get; }` | Gets a DPID downscaler at 1/4 scale. |
 | `Ratio5` | `static DpidDownscale Ratio5 { get; }` | Gets a DPID downscaler at 1/5 scale. |
-| `RatioX` | `int RatioX { get; }` |  |
-| `RatioY` | `int RatioY { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `RatioX` | `int RatioX { get; }` | Gets the horizontal downscale ratio (2 means source width / 2). |
+| `RatioY` | `int RatioY { get; }` | Gets the vertical downscale ratio (2 means source height / 2). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Smooth` | `static DpidDownscale Smooth { get; }` | Gets a configuration with low detail preservation for smoother results. |
 | `SupportedRatios` | `static int[] SupportedRatios { get; }` | Gets the list of commonly used downscale ratios. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates common target dimensions for DPID. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsRatio` | `static bool SupportsRatio(int ratio)` | Determines whether DPID supports the specified ratio. |
 
 #### `SsimDownscale`
@@ -7789,14 +7789,14 @@ Implements `IDownscaler`, `IScalerInfo`.
 | `Ratio3` | `static SsimDownscale Ratio3 { get; }` | Gets an SSIM downscaler at 1/3 scale. |
 | `Ratio4` | `static SsimDownscale Ratio4 { get; }` | Gets an SSIM downscaler at 1/4 scale. |
 | `Ratio5` | `static SsimDownscale Ratio5 { get; }` | Gets an SSIM downscaler at 1/5 scale. |
-| `RatioX` | `int RatioX { get; }` |  |
-| `RatioY` | `int RatioY { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `RatioX` | `int RatioX { get; }` | Gets the horizontal downscale ratio (2 means source width / 2). |
+| `RatioY` | `int RatioY { get; }` | Gets the vertical downscale ratio (2 means source height / 2). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sharp` | `static SsimDownscale Sharp { get; }` | Gets a configuration optimized for sharp detail preservation. |
 | `Smooth` | `static SsimDownscale Smooth { get; }` | Gets a configuration optimized for smooth results. |
 | `SupportedRatios` | `static int[] SupportedRatios { get; }` | Gets the list of commonly used downscale ratios. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates common target dimensions for SsimDownscale. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TEncode, TResult>(IDownscaleKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsRatio` | `static bool SupportsRatio(int ratio)` | Determines whether SsimDownscale supports the specified ratio. |
 
 ### Namespace `Hawkynt.ColorProcessing.Resizing.Resamplers`
@@ -7812,10 +7812,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static AdvancedAa Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Anime4K`
 
@@ -7831,13 +7831,13 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultPushStrength` | `const float DefaultPushStrength` | Default push strength (0.6 — moderate edge thinning). |
 | `Default` | `static Anime4K Default { get; }` | Gets the default configuration. |
 | `EdgeThreshold` | `float EdgeThreshold { get; }` | Gets the edge threshold. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
 | `PushStrength` | `float PushStrength { get; }` | Gets the push strength. |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Soft` | `static Anime4K Soft { get; }` | Gets a softer configuration (lower push strength). |
 | `Strong` | `static Anime4K Strong { get; }` | Gets a stronger configuration (higher push strength). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Area`
 
@@ -7848,11 +7848,11 @@ Implements `IResampler`, `IResamplerWithSafePath`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Area Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline`
 
@@ -7863,12 +7863,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline11`
 
@@ -7879,12 +7879,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline11 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline2`
 
@@ -7895,12 +7895,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline2 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline4`
 
@@ -7911,12 +7911,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline4 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline5`
 
@@ -7927,12 +7927,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline5 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline7`
 
@@ -7943,12 +7943,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline7 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BSpline9`
 
@@ -7959,12 +7959,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BSpline9 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Bartlett`
 
@@ -7977,12 +7977,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Bartlett` | `Bartlett()` | Creates a Bartlett resampler with radius 3 (default). |
 | `Bartlett` | `Bartlett(int radius)` | Creates a Bartlett resampler with custom radius. |
 | `Default` | `static Bartlett Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BartlettHann`
 
@@ -7995,12 +7995,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `BartlettHann` | `BartlettHann()` | Creates a Bartlett-Hann resampler with radius 3 (default). |
 | `BartlettHann` | `BartlettHann(int radius)` | Creates a Bartlett-Hann resampler with custom radius. |
 | `Default` | `static BartlettHann Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Bedi`
 
@@ -8013,10 +8013,10 @@ Implements `IResampler`, `IScalerInfo`.
 | `Bedi` | `Bedi()` | Creates a BEDI resampler with default edge threshold. |
 | `Bedi` | `Bedi(float edgeThreshold)` | Creates a BEDI resampler with custom edge threshold. |
 | `Default` | `static Bedi Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Bicubic`
 
@@ -8029,12 +8029,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Bicubic` | `Bicubic()` | Creates a Bicubic resampler with default parameter (a=-0.5). |
 | `Bicubic` | `Bicubic(float a)` | Creates a Bicubic resampler with custom parameter. |
 | `Default` | `static Bicubic Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BilateralResampler`
 
@@ -8051,14 +8051,14 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultRangeSigma` | `const float DefaultRangeSigma` | Default range σ on normalised luminance (0.1 ≈ 25/255). |
 | `DefaultSpatialSigma` | `const float DefaultSpatialSigma` | Default spatial σ in pixels (1.5). |
 | `Default` | `static BilateralResampler Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
 | `RangeSigma` | `float RangeSigma { get; }` | Gets the range Gaussian σ. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SpatialSigma` | `float SpatialSigma { get; }` | Gets the spatial Gaussian σ. |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Bilinear`
 
@@ -8069,12 +8069,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Bilinear Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Blackman`
 
@@ -8087,12 +8087,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Blackman` | `Blackman()` | Creates a Blackman resampler with radius 3 (default). |
 | `Blackman` | `Blackman(int radius)` | Creates a Blackman resampler with custom radius. |
 | `Default` | `static Blackman Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BlackmanHarris`
 
@@ -8105,12 +8105,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `BlackmanHarris` | `BlackmanHarris()` | Creates a Blackman-Harris resampler with radius 3 (default). |
 | `BlackmanHarris` | `BlackmanHarris(int radius)` | Creates a Blackman-Harris resampler with custom radius. |
 | `Default` | `static BlackmanHarris Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `BlackmanNuttal`
 
@@ -8123,12 +8123,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `BlackmanNuttal` | `BlackmanNuttal()` | Creates a Blackman-Nuttal resampler with radius 3 (default). |
 | `BlackmanNuttal` | `BlackmanNuttal(int radius)` | Creates a Blackman-Nuttal resampler with custom radius. |
 | `Default` | `static BlackmanNuttal Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Bohman`
 
@@ -8141,12 +8141,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Bohman` | `Bohman()` | Creates a Bohman resampler with radius 3 (default). |
 | `Bohman` | `Bohman(int radius)` | Creates a Bohman resampler with custom radius. |
 | `Default` | `static Bohman Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Box`
 
@@ -8159,12 +8159,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Box` | `Box()` | Creates a Box resampler with radius 1 (default, 2x2 kernel). |
 | `Box` | `Box(int radius)` | Creates a Box resampler with custom radius. |
 | `Default` | `static Box Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `CatmullRom`
 
@@ -8175,12 +8175,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static CatmullRom Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Cauchy`
 
@@ -8196,12 +8196,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter. |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static Cauchy Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Cosine`
 
@@ -8214,12 +8214,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Cosine` | `Cosine()` | Creates a Cosine resampler with radius 3 (default). |
 | `Cosine` | `Cosine(int radius)` | Creates a Cosine resampler with custom radius. |
 | `Default` | `static Cosine Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `CosineInterpolation`
 
@@ -8230,12 +8230,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static CosineInterpolation Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Dcci`
 
@@ -8248,12 +8248,12 @@ Implements `IResampler`, `IScalerInfo`.
 | `Dcci` | `Dcci()` | Creates a DCCI resampler with default parameters. |
 | `Dcci` | `Dcci(float cubicA, float coherenceThreshold)` | Creates a DCCI resampler with custom parameters. |
 | `Default` | `static Dcci Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sharp` | `static Dcci Sharp { get; }` | Gets a sharper configuration with more aggressive edge detection. |
 | `Smooth` | `static Dcci Smooth { get; }` | Gets a smoother configuration with reduced ringing. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Eedi2`
 
@@ -8268,10 +8268,10 @@ Implements `IResampler`, `IScalerInfo`.
 | `Default` | `static Eedi2 Default { get; }` | Gets the default configuration. |
 | `Fast` | `static Eedi2 Fast { get; }` | Gets a fast configuration with fewer directions. |
 | `HighQuality` | `static Eedi2 HighQuality { get; }` | Gets a high-quality configuration with more directions. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Eedi3`
 
@@ -8287,11 +8287,11 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultThreshold` | `const float DefaultThreshold` | Default contrast threshold (0.12 ≈ 30/255). |
 | `CurvaturePenalty` | `float CurvaturePenalty { get; }` | Gets the curvature penalty weight. |
 | `Default` | `static Eedi3 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Threshold` | `float Threshold { get; }` | Gets the contrast threshold. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `EwaHanning`
 
@@ -8304,12 +8304,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `EwaHanning` | `EwaHanning()` | Creates an EWA Hanning resampler with radius 3 (default). |
 | `EwaHanning` | `EwaHanning(int radius)` | Creates an EWA Hanning resampler with custom radius. |
 | `Default` | `static EwaHanning Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `EwaLanczos`
 
@@ -8322,12 +8322,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `EwaLanczos` | `EwaLanczos()` | Creates an EWA Lanczos resampler with radius 3 (default). |
 | `EwaLanczos` | `EwaLanczos(int radius)` | Creates an EWA Lanczos resampler with custom radius. |
 | `Default` | `static EwaLanczos Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Fcbi`
 
@@ -8342,10 +8342,10 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultEdgeStrength` | `const float DefaultEdgeStrength` | Default edge strength scaling (0.7). |
 | `Default` | `static Fcbi Default { get; }` | Gets the default configuration. |
 | `EdgeStrength` | `float EdgeStrength { get; }` | Gets the edge-strength scaling. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `FlatTop`
 
@@ -8358,12 +8358,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `FlatTop` | `FlatTop()` | Creates a FlatTop resampler with radius 3 (default). |
 | `FlatTop` | `FlatTop(int radius)` | Creates a FlatTop resampler with custom radius. |
 | `Default` | `static FlatTop Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Fsr`
 
@@ -8376,12 +8376,12 @@ Implements `IResampler`, `IScalerInfo`.
 | `Fsr` | `Fsr()` | Creates an FSR resampler with default sharpness. |
 | `Fsr` | `Fsr(float sharpness)` | Creates an FSR resampler with custom sharpness. |
 | `Default` | `static Fsr Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sharp` | `static Fsr Sharp { get; }` | Gets a sharper configuration. |
 | `Soft` | `static Fsr Soft { get; }` | Gets a softer configuration with reduced artifacts. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Gaussian`
 
@@ -8395,12 +8395,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Gaussian` | `Gaussian(float sigma)` | Creates a Gaussian resampler with custom sigma and default radius. |
 | `Gaussian` | `Gaussian(float sigma, int radius)` | Creates a Gaussian resampler with custom sigma and radius. |
 | `Default` | `static Gaussian Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Ginseng`
 
@@ -8413,12 +8413,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Ginseng` | `Ginseng()` | Creates a Ginseng resampler with radius 3 (default). |
 | `Ginseng` | `Ginseng(int radius)` | Creates a Ginseng resampler with custom radius. |
 | `Default` | `static Ginseng Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `GlasnerSelfSimilarity`
 
@@ -8432,13 +8432,13 @@ Implements `IResampler`, `IScalerInfo`.
 | `GlasnerSelfSimilarity` | `GlasnerSelfSimilarity(float strength)` | Creates a Glasner resampler with custom blend strength. |
 | `DefaultStrength` | `const float DefaultStrength` | Default similarity strength ∈ [0, 1] (0.5 = balanced bilinear/patch). |
 | `Default` | `static GlasnerSelfSimilarity Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Soft` | `static GlasnerSelfSimilarity Soft { get; }` | Gets a softer configuration (less patch influence). |
 | `Strength` | `float Strength { get; }` | Gets the blend strength. |
 | `Strong` | `static GlasnerSelfSimilarity Strong { get; }` | Gets a stronger configuration (more patch influence). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Hamming`
 
@@ -8451,12 +8451,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Hamming` | `Hamming()` | Creates a Hamming resampler with radius 3 (default). |
 | `Hamming` | `Hamming(int radius)` | Creates a Hamming resampler with custom radius. |
 | `Default` | `static Hamming Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Hann`
 
@@ -8469,12 +8469,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Hann` | `Hann()` | Creates a Hann resampler with radius 3 (default). |
 | `Hann` | `Hann(int radius)` | Creates a Hann resampler with custom radius. |
 | `Default` | `static Hann Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `HanningPoisson`
 
@@ -8490,12 +8490,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter. |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static HanningPoisson Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Hermite`
 
@@ -8506,12 +8506,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Hermite Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Hyperbolic`
 
@@ -8527,12 +8527,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter (2.0). |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static Hyperbolic Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Icbi`
 
@@ -8545,10 +8545,10 @@ Implements `IResampler`, `IScalerInfo`.
 | `Icbi` | `Icbi()` | Creates an ICBI resampler with default parameters. |
 | `Icbi` | `Icbi(float coherenceThreshold, float correctionFactor)` | Creates an ICBI resampler with custom parameters. |
 | `Default` | `static Icbi Default { get; }` | Gets the default configuration (standard correction). |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `IcbiFast`
 
@@ -8559,10 +8559,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static IcbiFast Default { get; }` | Gets the default Fast ICBI configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `IcbiHq`
 
@@ -8573,10 +8573,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static IcbiHq Default { get; }` | Gets the default HQ ICBI configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `IterativeBackProjection`
 
@@ -8592,13 +8592,13 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultStepSize` | `const float DefaultStepSize` | Default step size per iteration (0.25). |
 | `Default` | `static IterativeBackProjection Default { get; }` | Gets the default configuration (4 iterations, 0.25 step). |
 | `Iterations` | `int Iterations { get; }` | Gets the iteration count. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Soft` | `static IterativeBackProjection Soft { get; }` | Gets a softer configuration (2 iterations, 0.25 step). |
 | `StepSize` | `float StepSize { get; }` | Gets the step size. |
 | `Strong` | `static IterativeBackProjection Strong { get; }` | Gets a stronger configuration (8 iterations, 0.2 step). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Jinc`
 
@@ -8611,12 +8611,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Jinc` | `Jinc()` | Creates a Jinc resampler with radius 3 (default). |
 | `Jinc` | `Jinc(int radius)` | Creates a Jinc resampler with custom radius. |
 | `Default` | `static Jinc Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Kaiser`
 
@@ -8632,12 +8632,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultBeta` | `const float DefaultBeta` | Default β parameter (8.6 gives excellent sidelobe suppression). |
 | `Beta` | `float Beta { get; }` | Gets the β parameter. |
 | `Default` | `static Kaiser Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `KopfLischinski`
 
@@ -8648,10 +8648,10 @@ Implements `IEdgeAwareResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static KopfLischinski Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TEquality, TResult>(IEdgeAwareResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TEquality, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, TEquality equality = null, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius for neighborhood sampling. |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TEquality, TResult>(IEdgeAwareResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TEquality, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, TEquality equality = null, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `KrigBilateral`
 
@@ -8665,11 +8665,11 @@ Implements `IResampler`, `IScalerInfo`.
 | `KrigBilateral` | `KrigBilateral(float spatialSigma, float rangeSigma)` | Creates a KrigBilateral resampler with custom parameters. |
 | `Default` | `static KrigBilateral Default { get; }` | Gets the default configuration. |
 | `EdgePreserving` | `static KrigBilateral EdgePreserving { get; }` | Gets a configuration optimized for edge preservation. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Smooth` | `static KrigBilateral Smooth { get; }` | Gets a configuration optimized for smooth results. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Lagrange3`
 
@@ -8680,12 +8680,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lagrange3 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lagrange5`
 
@@ -8696,12 +8696,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lagrange5 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lagrange7`
 
@@ -8712,12 +8712,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lagrange7 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lanczos`
 
@@ -8730,12 +8730,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Lanczos` | `Lanczos()` | Creates a Lanczos resampler with a=3 (default). |
 | `Lanczos` | `Lanczos(int a)` | Creates a Lanczos resampler with custom window size. |
 | `Default` | `static Lanczos Default { get; }` | Gets the default configuration (a=3). |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lanczos2`
 
@@ -8746,12 +8746,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lanczos2 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lanczos3`
 
@@ -8762,12 +8762,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lanczos3 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lanczos4`
 
@@ -8778,12 +8778,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lanczos4 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Lanczos5`
 
@@ -8794,12 +8794,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Lanczos5 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `LoHalo`
 
@@ -8810,10 +8810,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static LoHalo Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `LucyRichardson`
 
@@ -8830,12 +8830,12 @@ Implements `IResampler`, `IScalerInfo`.
 | `Damping` | `float Damping { get; }` | Gets the damping factor. |
 | `Default` | `static LucyRichardson Default { get; }` | Gets the default configuration (4 iterations, 0.5 damping). |
 | `Iterations` | `int Iterations { get; }` | Gets the iteration count. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Soft` | `static LucyRichardson Soft { get; }` | Gets a softer configuration (2 iterations, 0.5 damping). |
 | `Strong` | `static LucyRichardson Strong { get; }` | Gets a stronger configuration (8 iterations, 0.4 damping). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MagicKernelSharp`
 
@@ -8846,10 +8846,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static MagicKernelSharp Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MedianResampler`
 
@@ -8864,12 +8864,12 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultStrength` | `const float DefaultStrength` | Default median-blend strength (0.6 — moderate non-linear influence). |
 | `Default` | `static MedianResampler Default { get; }` | Gets the default configuration. |
 | `Mild` | `static MedianResampler Mild { get; }` | Mild configuration (strong bilinear, light median). |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
 | `Pure` | `static MedianResampler Pure { get; }` | Pure-median configuration (no bilinear blend). |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Strength` | `float Strength { get; }` | Gets the blend strength. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `MitchellNetravali`
 
@@ -8882,12 +8882,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `MitchellNetravali` | `MitchellNetravali()` | Creates a Mitchell-Netravali resampler with default parameters (B=C=1/3). |
 | `MitchellNetravali` | `MitchellNetravali(float b, float c)` | Creates a Mitchell-Netravali resampler with custom B and C parameters. |
 | `Default` | `static MitchellNetravali Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Mobius`
 
@@ -8903,12 +8903,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter (2.0 — slightly more concentrated than Hann). |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static Mobius Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `NearestNeighbor`
 
@@ -8919,12 +8919,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static NearestNeighbor Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `NediResampler`
 
@@ -8939,10 +8939,10 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultEdgeStrength` | `const float DefaultEdgeStrength` | Default edge sensitivity (0.5 — moderate diagonal preference). |
 | `Default` | `static NediResampler Default { get; }` | Gets the default configuration. |
 | `EdgeStrength` | `float EdgeStrength { get; }` | Gets the edge strength. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `NoHalo`
 
@@ -8953,10 +8953,10 @@ Implements `IResampler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static NoHalo Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Nuttal`
 
@@ -8969,12 +8969,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Nuttal` | `Nuttal()` | Creates a Nuttal resampler with radius 3 (default). |
 | `Nuttal` | `Nuttal(int radius)` | Creates a Nuttal resampler with custom radius. |
 | `Default` | `static Nuttal Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `OMoms3`
 
@@ -8985,12 +8985,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static OMoms3 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `OMoms5`
 
@@ -9001,12 +9001,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static OMoms5 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `OMoms7`
 
@@ -9017,12 +9017,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static OMoms7 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Poisson`
 
@@ -9038,12 +9038,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultDecay` | `const float DefaultDecay` | Default decay parameter (d=60 gives ~0 at edges). |
 | `Decay` | `float Decay { get; }` | Gets the decay parameter. |
 | `Default` | `static Poisson Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `PowerOfCosine`
 
@@ -9059,12 +9059,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter. |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static PowerOfCosine Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `QuadraticSinc`
 
@@ -9077,12 +9077,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `QuadraticSinc` | `QuadraticSinc()` | Creates a QuadraticSinc resampler with radius 3 (default). |
 | `QuadraticSinc` | `QuadraticSinc(int radius)` | Creates a QuadraticSinc resampler with custom radius. |
 | `Default` | `static QuadraticSinc Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Ravu`
 
@@ -9095,12 +9095,12 @@ Implements `IResampler`, `IScalerInfo`.
 | `Ravu` | `Ravu()` | Creates a RAVU resampler with default parameters. |
 | `Ravu` | `Ravu(float sharpness, float antiRinging)` | Creates a RAVU resampler with custom parameters. |
 | `Default` | `static Ravu Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sharp` | `static Ravu Sharp { get; }` | Gets a sharp configuration. |
 | `Soft` | `static Ravu Soft { get; }` | Gets a soft configuration with strong anti-ringing. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Rectangular`
 
@@ -9113,12 +9113,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Rectangular` | `Rectangular()` | Creates a Rectangular resampler with radius 3 (default). |
 | `Rectangular` | `Rectangular(int radius)` | Creates a Rectangular resampler with custom radius. |
 | `Default` | `static Rectangular Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Robidoux`
 
@@ -9131,12 +9131,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `B` | `const float B` | B parameter value. |
 | `C` | `const float C` | C parameter value. |
 | `Default` | `static Robidoux Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `RobidouxSharp`
 
@@ -9149,12 +9149,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `B` | `const float B` | B parameter value. |
 | `C` | `const float C` | C parameter value. |
 | `Default` | `static RobidouxSharp Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `RobidouxSoft`
 
@@ -9167,12 +9167,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `B` | `const float B` | B parameter value. |
 | `C` | `const float C` | C parameter value. |
 | `Default` | `static RobidouxSoft Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Schaum2`
 
@@ -9183,12 +9183,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Schaum2 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Schaum3`
 
@@ -9199,12 +9199,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Schaum3 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `SeamCarving`
 
@@ -9218,9 +9218,9 @@ Implements `IContentAwareResampler`, `IScalerInfo`.
 | `SeamCarving` | `SeamCarving(SeamCarvingEnergyMode energyMode)` | Creates a SeamCarving resampler with the specified energy mode. |
 | `Default` | `static SeamCarving Default { get; }` | Gets the default configuration (Gradient energy mode). |
 | `Forward` | `static SeamCarving Forward { get; }` | Gets a configuration using Forward energy (best quality). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sobel` | `static SeamCarving Sobel { get; }` | Gets a configuration using Sobel energy (better edge detection). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TMetric, TLerp, TResult>(IContentAwareKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TMetric, TLerp, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TMetric, TLerp, TResult>(IContentAwareKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TMetric, TLerp, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `SeamCarvingEnergyMode`
 
@@ -9246,12 +9246,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter (0.5 — half-tapered). |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static SineTaper Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Smoothstep`
 
@@ -9264,13 +9264,13 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Smoothstep` | `Smoothstep()` | Creates a Smoothstep resampler with default mode. |
 | `Smoothstep` | `Smoothstep(SmoothstepMode mode)` | Creates a Smoothstep resampler with the specified mode. |
 | `Default` | `static Smoothstep Default { get; }` | Gets the default configuration (standard smoothstep). |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Smoothest` | `static Smoothstep Smoothest { get; }` | Gets the smoothest configuration (7th-degree polynomial). |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `SmoothstepMode`
 
@@ -9295,12 +9295,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter (2.0). |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static Sphinx Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Spline16`
 
@@ -9311,12 +9311,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Spline16 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Spline36`
 
@@ -9327,12 +9327,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Spline36 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Spline64`
 
@@ -9343,12 +9343,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Spline64 Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `TotalVariationResampler`
 
@@ -9364,13 +9364,13 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultThreshold` | `const float DefaultThreshold` | Default soft-threshold τ on luminance gradient (0.04 ≈ 10/255). |
 | `Default` | `static TotalVariationResampler Default { get; }` | Gets the default configuration. |
 | `Lambda` | `float Lambda { get; }` | Gets the regularisation strength λ. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Soft` | `static TotalVariationResampler Soft { get; }` | Gets a softer configuration (less smoothing). |
 | `Strong` | `static TotalVariationResampler Strong { get; }` | Gets a stronger configuration (more smoothing). |
 | `Threshold` | `float Threshold { get; }` | Gets the soft-threshold τ. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 #### `Trilinear`
 
@@ -9381,11 +9381,11 @@ Implements `IResampler`, `IResamplerWithSafePath`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Trilinear Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Tukey`
 
@@ -9401,12 +9401,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `DefaultAlpha` | `const float DefaultAlpha` | Default α parameter (0.5 = half tapered). |
 | `Alpha` | `float Alpha { get; }` | Gets the α parameter. |
 | `Default` | `static Tukey Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `Welch`
 
@@ -9419,12 +9419,12 @@ Implements `IKernelResampler`, `IResampler`, `IResamplerWithSafePath`, `IScalerI
 | `Welch` | `Welch()` | Creates a Welch resampler with radius 3 (default). |
 | `Welch` | `Welch(int radius)` | Creates a Welch resampler with custom radius. |
 | `Default` | `static Welch Default { get; }` | Gets the default configuration. |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
-| `EvaluateWeight` | `float EvaluateWeight(float distance)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
-| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `EvaluateWeight` | `float EvaluateWeight(float distance)` | Returns the 1-D kernel weight at the given distance from the sample centre. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `ResampleWithSafePath` | `Bitmap ResampleWithSafePath(Bitmap source, int targetWidth, int targetHeight, OutOfBoundsMode horizontalMode, OutOfBoundsMode verticalMode, Color canvasColor, bool useCenteredGrid)` | Resamples `source` to the target dimensions with full out-of-bounds control, canvas colour (for `FlatColor`), and grid centring. Internally routes through the safe-path pipeline: destination split into 4 edge bands + 1 safe interior, interior sampled without any OOB overhead. |
 
 #### `WienerDeconvolution`
 
@@ -9440,14 +9440,14 @@ Implements `IResampler`, `IScalerInfo`.
 | `DefaultSnr` | `const float DefaultSnr` | Default signal-to-noise ratio (100). |
 | `KernelRadius` | `const int KernelRadius` | Spatial convolution radius — half of the precomputed FFT grid. |
 | `Default` | `static WienerDeconvolution Default { get; }` | Gets the default configuration (σ=1.0, SNR=100). |
-| `Prefilter` | `PrefilterInfo? Prefilter { get; }` |  |
+| `Prefilter` | `PrefilterInfo? Prefilter { get; }` | Gets the prefilter parameters for this resampler, if any. |
 | `PsfSigma` | `float PsfSigma { get; }` | Gets the Gaussian PSF σ. |
-| `Radius` | `int Radius { get; }` |  |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Radius` | `int Radius { get; }` | Gets the kernel radius (e.g., 2 for Lanczos-2, 3 for Lanczos-3). |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Snr` | `float Snr { get; }` | Gets the signal-to-noise ratio. |
 | `Soft` | `static WienerDeconvolution Soft { get; }` | Softer sharpening (σ=0.7, SNR=50). |
 | `Strong` | `static WienerDeconvolution Strong { get; }` | Stronger sharpening (σ=1.5, SNR=200). |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult>(IResampleKernelCallback<TWork, TKey, TPixel, TDecode, TProject, TEncode, TResult> callback, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight, bool useCenteredGrid = true)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 
 ### Namespace `Hawkynt.ColorProcessing.Resizing.Rescalers`
 
@@ -9463,12 +9463,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Aann` | `Aann(int scale = 2)` | Creates an AANN scaler with the specified factor. |
 | `Default` | `static Aann Default { get; }` | Gets the default AANN scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Aann X2 { get; }` | Gets a 2x AANN scaler. |
 | `X3` | `static Aann X3 { get; }` | Gets a 3x AANN scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `AnimeLineEnhancer`
@@ -9481,12 +9481,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `AnimeLineEnhancer` | `AnimeLineEnhancer(int scale = 2)` | Creates an Anime Line Enhancer scaler with the specified factor. |
 | `Default` | `static AnimeLineEnhancer Default { get; }` | Gets the default Anime Line Enhancer scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static AnimeLineEnhancer X2 { get; }` | Gets a 2x Anime Line Enhancer scaler. |
 | `X3` | `static AnimeLineEnhancer X3 { get; }` | Gets a 3x Anime Line Enhancer scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Bilateral`
@@ -9499,7 +9499,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Bilateral` | `Bilateral(int scale = 2, BilateralVariant variant = 0)` | Creates a new Bilateral instance. |
 | `Default` | `static Bilateral Default { get; }` | Gets the default Bilateral scaler (2x standard). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2Sharp` | `static Bilateral X2Sharp { get; }` | Gets a 2x sharp Bilateral scaler (more edge preservation). |
 | `X2Soft` | `static Bilateral X2Soft { get; }` | Gets a 2x soft Bilateral scaler (more smoothing). |
@@ -9507,7 +9507,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `X3` | `static Bilateral X3 { get; }` | Gets a 3x Bilateral scaler with standard settings. |
 | `X4` | `static Bilateral X4 { get; }` | Gets a 4x Bilateral scaler with standard settings. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithVariant` | `Bilateral WithVariant(BilateralVariant variant)` | Creates a configuration with the specified variant. |
 
@@ -9530,10 +9530,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BilinearPlus Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `BilinearPlusOriginal`
@@ -9545,10 +9545,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static BilinearPlusOriginal Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CatmullRom`
@@ -9561,13 +9561,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CatmullRom` | `CatmullRom(int scale = 2)` | Creates a Catmull-Rom scaler with the specified factor. |
 | `Default` | `static CatmullRom Default { get; }` | Gets the default Catmull-Rom scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CatmullRom X2 { get; }` | Gets a 2x Catmull-Rom scaler. |
 | `X3` | `static CatmullRom X3 { get; }` | Gets a 3x Catmull-Rom scaler. |
 | `X4` | `static CatmullRom X4 { get; }` | Gets a 4x Catmull-Rom scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Clean`
@@ -9585,7 +9585,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale` | `ScaleFactor Scale { get; }` |  |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` |  |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` |  |
 
 #### `CrtCaligari`
@@ -9598,12 +9598,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtCaligari` | `CrtCaligari(int scale = 2)` | Creates a CRT-Caligari scaler with the specified factor. |
 | `Default` | `static CrtCaligari Default { get; }` | Gets the default CRT-Caligari scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtCaligari X2 { get; }` | Gets a 2x CRT-Caligari scaler. |
 | `X3` | `static CrtCaligari X3 { get; }` | Gets a 3x CRT-Caligari scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CrtEasymode`
@@ -9616,12 +9616,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtEasymode` | `CrtEasymode(int scale = 2)` | Creates a CRT-Easymode scaler with the specified factor. |
 | `Default` | `static CrtEasymode Default { get; }` | Gets the default CRT-Easymode scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtEasymode X2 { get; }` | Gets a 2x CRT-Easymode scaler. |
 | `X3` | `static CrtEasymode X3 { get; }` | Gets a 3x CRT-Easymode scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CrtGeom`
@@ -9634,12 +9634,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtGeom` | `CrtGeom(int scale = 2)` | Creates a CRT-Geom scaler with the specified factor. |
 | `Default` | `static CrtGeom Default { get; }` | Gets the default CRT-Geom scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtGeom X2 { get; }` | Gets a 2x CRT-Geom scaler. |
 | `X3` | `static CrtGeom X3 { get; }` | Gets a 3x CRT-Geom scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CrtHyllian`
@@ -9652,12 +9652,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtHyllian` | `CrtHyllian(int scale = 2)` | Creates a CRT-Hyllian scaler with the specified factor. |
 | `Default` | `static CrtHyllian Default { get; }` | Gets the default CRT-Hyllian scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtHyllian X2 { get; }` | Gets a 2x CRT-Hyllian scaler. |
 | `X3` | `static CrtHyllian X3 { get; }` | Gets a 3x CRT-Hyllian scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CrtLottes`
@@ -9670,12 +9670,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtLottes` | `CrtLottes(int scale = 2)` | Creates a CRT-Lottes scaler with the specified factor. |
 | `Default` | `static CrtLottes Default { get; }` | Gets the default CRT-Lottes scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtLottes X2 { get; }` | Gets a 2x CRT-Lottes scaler. |
 | `X3` | `static CrtLottes X3 { get; }` | Gets a 3x CRT-Lottes scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `CrtRoyale`
@@ -9688,12 +9688,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `CrtRoyale` | `CrtRoyale(int scale = 2)` | Creates a CRT-Royale scaler with the specified factor. |
 | `Default` | `static CrtRoyale Default { get; }` | Gets the default CRT-Royale scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static CrtRoyale X2 { get; }` | Gets a 2x CRT-Royale scaler. |
 | `X3` | `static CrtRoyale X3 { get; }` | Gets a 3x CRT-Royale scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Cut`
@@ -9706,13 +9706,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Cut` | `Cut(int scale = 2)` | Creates a CUT scaler with the specified factor. |
 | `Default` | `static Cut Default { get; }` | Gets the default CUT scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Cut X2 { get; }` | Gets a 2x CUT scaler. |
 | `X3` | `static Cut X3 { get; }` | Gets a 3x CUT scaler. |
 | `X4` | `static Cut X4 { get; }` | Gets a 4x CUT scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Ddt`
@@ -9727,11 +9727,11 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Basic` | `static Ddt Basic { get; }` | Gets the basic DDT scaler. |
 | `Default` | `static Ddt Default { get; }` | Gets the default DDT scaler (Basic). |
 | `Extended` | `static Ddt Extended { get; }` | Gets the extended DDT scaler with 16-pixel voting. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `Sharp` | `static Ddt Sharp { get; }` | Gets the sharp DDT scaler with weighted 4x4 analysis. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `DdtVariant`
@@ -9753,10 +9753,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Des Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Des2`
@@ -9768,10 +9768,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Des2 Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `DotMatrix`
@@ -9784,13 +9784,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `DotMatrix` | `DotMatrix(int scale = 2)` | Creates a DotMatrix scaler with the specified factor. |
 | `Default` | `static DotMatrix Default { get; }` | Gets the default DotMatrix scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static DotMatrix X2 { get; }` | Gets a 2x DotMatrix scaler. |
 | `X3` | `static DotMatrix X3 { get; }` | Gets a 3x DotMatrix scaler. |
 | `X4` | `static DotMatrix X4 { get; }` | Gets a 4x DotMatrix scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Eagle`
@@ -9802,10 +9802,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Eagle Default { get; }` | Gets the default Eagle configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by Eagle. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for Eagle. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether Eagle supports the specified scale factor. |
 
 #### `Eagle3x`
@@ -9817,10 +9817,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Eagle3x Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Eagle3xB`
@@ -9832,10 +9832,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Eagle3xB Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Edge`
@@ -9848,12 +9848,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Edge` | `Edge(int scale = 2)` | Creates an Edge scaler with the specified factor. |
 | `Default` | `static Edge Default { get; }` | Gets the default Edge scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Edge X2 { get; }` | Gets a 2x Edge scaler. |
 | `X3` | `static Edge X3 { get; }` | Gets a 3x Edge scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Epx`
@@ -9865,10 +9865,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Epx Default { get; }` | Gets the default EPX configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by EPX. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for EPX. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether EPX supports the specified scale factor. |
 
 #### `Epx3`
@@ -9880,10 +9880,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Epx3 Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `EpxB`
@@ -9895,10 +9895,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static EpxB Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `EpxC`
@@ -9910,10 +9910,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static EpxC Default { get; }` | Gets the default EPX-C configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by EPX-C. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for EPX-C. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether EPX-C supports the specified scale factor. |
 
 #### `Fxaa`
@@ -9929,10 +9929,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale2x` | `static Fxaa Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static Fxaa Scale3x { get; }` | Gets a 3x scale instance. |
 | `Scale4x` | `static Fxaa Scale4x { get; }` | Gets a 4x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `GameBoyShader`
@@ -9945,13 +9945,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `GameBoyShader` | `GameBoyShader(int scale = 2)` | Creates a GameBoy Shader scaler with the specified factor. |
 | `Default` | `static GameBoyShader Default { get; }` | Gets the default GameBoy Shader scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static GameBoyShader X2 { get; }` | Gets a 2x GameBoy Shader scaler. |
 | `X3` | `static GameBoyShader X3 { get; }` | Gets a 3x GameBoy Shader scaler. |
 | `X4` | `static GameBoyShader X4 { get; }` | Gets a 4x GameBoy Shader scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Gtu`
@@ -9964,12 +9964,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Gtu` | `Gtu(int scale = 2)` | Creates a GTU scaler with the specified factor. |
 | `Default` | `static Gtu Default { get; }` | Gets the default GTU scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Gtu X2 { get; }` | Gets a 2x GTU scaler. |
 | `X3` | `static Gtu X3 { get; }` | Gets a 3x GTU scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `HawkyntTv`
@@ -9984,10 +9984,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Default` | `static HawkyntTv Default { get; }` | Gets the default configuration (2x). |
 | `Scale2x` | `static HawkyntTv Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static HawkyntTv Scale3x { get; }` | Gets a 3x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Hq`
@@ -10008,7 +10008,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale` | `ScaleFactor Scale { get; }` |  |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` |  |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` |  |
 
 #### `HqLq`
@@ -10023,13 +10023,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Default` | `static HqLq Default { get; }` | Gets the default HQ/LQ configuration (HQ 2x Normal). |
 | `Mode` | `HqMode Mode { get; }` | Gets the filtering mode. |
 | `Quality` | `HqQuality Quality { get; }` | Gets the quality level. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by HQ/LQ. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for HQ/LQ. |
 | `Hq2x` | `static HqLq Hq2x(HqMode mode = 0)` | Gets an HQ 2x scaler. |
 | `Hq3x` | `static HqLq Hq3x(HqMode mode = 0)` | Gets an HQ 3x scaler. |
 | `Hq4x` | `static HqLq Hq4x(HqMode mode = 0)` | Gets an HQ 4x scaler. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `Lq2x` | `static HqLq Lq2x(HqMode mode = 0)` | Gets an LQ 2x scaler. |
 | `Lq3x` | `static HqLq Lq3x(HqMode mode = 0)` | Gets an LQ 3x scaler. |
 | `Lq4x` | `static HqLq Lq4x(HqMode mode = 0)` | Gets an LQ 4x scaler. |
@@ -10066,13 +10066,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `LcdGhosting` | `LcdGhosting(int scale = 2)` | Creates an LcdGhosting scaler with the specified factor. |
 | `Default` | `static LcdGhosting Default { get; }` | Gets the default LCD Ghosting scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static LcdGhosting X2 { get; }` | Gets a 2x LCD Ghosting scaler. |
 | `X3` | `static LcdGhosting X3 { get; }` | Gets a 3x LCD Ghosting scaler. |
 | `X4` | `static LcdGhosting X4 { get; }` | Gets a 4x LCD Ghosting scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `LcdGrid`
@@ -10085,13 +10085,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `LcdGrid` | `LcdGrid(int scale = 3)` | Creates an LcdGrid scaler with the specified factor. |
 | `Default` | `static LcdGrid Default { get; }` | Gets the default LcdGrid scaler (3x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static LcdGrid X2 { get; }` | Gets a 2x LcdGrid scaler. |
 | `X3` | `static LcdGrid X3 { get; }` | Gets a 3x LcdGrid scaler. |
 | `X4` | `static LcdGrid X4 { get; }` | Gets a 4x LcdGrid scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Lq`
@@ -10112,7 +10112,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale` | `ScaleFactor Scale { get; }` |  |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` |  |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` |  |
 
 #### `MameAdvInterp`
@@ -10127,10 +10127,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Default` | `static MameAdvInterp Default { get; }` | Gets the default configuration (2x). |
 | `Scale2x` | `static MameAdvInterp Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static MameAdvInterp Scale3x { get; }` | Gets a 3x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `MameRgb`
@@ -10145,10 +10145,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Default` | `static MameRgb Default { get; }` | Gets the default configuration (2x). |
 | `Scale2x` | `static MameRgb Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static MameRgb Scale3x { get; }` | Gets a 3x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `MameTv`
@@ -10167,10 +10167,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Gamma2` | `float Gamma2 { get; }` | Gets the gamma factor for the second darkened scanline (3x only). |
 | `Scale2x` | `static MameTv Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static MameTv Scale3x { get; }` | Gets a 3x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithGamma` | `MameTv WithGamma(float gamma1, float gamma2 = 0.3125)` | Creates a new MameTv with the specified gamma values. |
 
@@ -10190,11 +10190,11 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale2x` | `static Mlaa Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static Mlaa Scale3x { get; }` | Gets a 3x scale instance. |
 | `Scale4x` | `static Mlaa Scale4x { get; }` | Gets a 4x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `Threshold` | `float Threshold { get; }` | Gets the edge threshold based on variant. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithVariant` | `Mlaa WithVariant(MlaaVariant variant)` | Creates a new MLAA with the specified variant. |
 
@@ -10220,7 +10220,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale` | `ScaleFactor Scale { get; }` |  |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` |  |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` |  |
 
 #### `NearestNeighborPlus`
@@ -10233,13 +10233,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `NearestNeighborPlus` | `NearestNeighborPlus(int scale = 2)` | Creates a NN+ scaler with the specified factor. |
 | `Default` | `static NearestNeighborPlus Default { get; }` | Gets the default NN+ scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static NearestNeighborPlus X2 { get; }` | Gets a 2x NN+ scaler. |
 | `X3` | `static NearestNeighborPlus X3 { get; }` | Gets a 3x NN+ scaler. |
 | `X4` | `static NearestNeighborPlus X4 { get; }` | Gets a 4x NN+ scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Nedi`
@@ -10255,10 +10255,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale2x` | `static Nedi Scale2x { get; }` | Gets a 2x scale instance. |
 | `Scale3x` | `static Nedi Scale3x { get; }` | Gets a 3x scale instance. |
 | `Scale4x` | `static Nedi Scale4x { get; }` | Gets a 4x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Nis`
@@ -10271,12 +10271,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Nis` | `Nis(int scale = 2)` | Creates a NIS scaler with the specified factor. |
 | `Default` | `static Nis Default { get; }` | Gets the default NIS scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Nis X2 { get; }` | Gets a 2x NIS scaler. |
 | `X3` | `static Nis X3 { get; }` | Gets a 3x NIS scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Nnedi3`
@@ -10298,12 +10298,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale4xFast` | `static Nnedi3 Scale4xFast { get; }` | Gets a fast 4x scale instance (16 neurons). |
 | `Scale4xHq` | `static Nnedi3 Scale4xHq { get; }` | Gets a high quality 4x scale instance (64 neurons). |
 | `Scale4x` | `static Nnedi3 Scale4x { get; }` | Gets a standard 4x scale instance (32 neurons). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `AsFast` | `Nnedi3 AsFast()` | Creates a fast variant. |
 | `AsHighQuality` | `Nnedi3 AsHighQuality()` | Creates a high quality variant. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Nnedi3Quality`
@@ -10325,10 +10325,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Ntsc Default { get; }` | Gets the default NTSC scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Omniscale`
@@ -10349,7 +10349,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale` | `ScaleFactor Scale { get; }` |  |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` |  |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` |  |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` |  |
 | `WithEdgeThreshold` | `Omniscale WithEdgeThreshold(float threshold)` | Creates a new Omniscale with the specified edge threshold. |
 
@@ -10363,13 +10363,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Pixellate` | `Pixellate(int scale = 2)` | Creates a Pixellate scaler with the specified factor. |
 | `Default` | `static Pixellate Default { get; }` | Gets the default Pixellate scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Pixellate X2 { get; }` | Gets a 2x Pixellate scaler. |
 | `X3` | `static Pixellate X3 { get; }` | Gets a 3x Pixellate scaler. |
 | `X4` | `static Pixellate X4 { get; }` | Gets a 4x Pixellate scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Quilez`
@@ -10382,13 +10382,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Quilez` | `Quilez(int scale = 2)` | Creates a Quilez scaler with the specified factor. |
 | `Default` | `static Quilez Default { get; }` | Gets the default Quilez scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Quilez X2 { get; }` | Gets a 2x Quilez scaler. |
 | `X3` | `static Quilez X3 { get; }` | Gets a 3x Quilez scaler. |
 | `X4` | `static Quilez X4 { get; }` | Gets a 4x Quilez scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ReverseAa`
@@ -10400,10 +10400,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ReverseAa Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `RotSprite`
@@ -10437,10 +10437,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Saa5050 Default { get; }` | Gets the default SAA5050 scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Sabr`
@@ -10453,13 +10453,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Sabr` | `Sabr(int scale = 2, SabrVariant variant = 0)` | Creates a SABR scaler with specified scale factor and variant. |
 | `Default` | `static Sabr Default { get; }` | Gets the default SABR scaler (standard 2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Sabr X2 { get; }` | Gets a standard 2x SABR scaler. |
 | `X3` | `static Sabr X3 { get; }` | Gets a standard 3x SABR scaler. |
 | `X4` | `static Sabr X4 { get; }` | Gets a standard 4x SABR scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `SabrSharp`
@@ -10472,13 +10472,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `SabrSharp` | `SabrSharp(int scale = 2)` | Creates a Sharp SABR scaler with specified scale factor. |
 | `Default` | `static SabrSharp Default { get; }` | Gets the default Sharp SABR scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static SabrSharp X2 { get; }` | Gets a sharp 2x SABR scaler. |
 | `X3` | `static SabrSharp X3 { get; }` | Gets a sharp 3x SABR scaler. |
 | `X4` | `static SabrSharp X4 { get; }` | Gets a sharp 4x SABR scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `SabrSmooth`
@@ -10491,13 +10491,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `SabrSmooth` | `SabrSmooth(int scale = 2)` | Creates a Smooth SABR scaler with specified scale factor. |
 | `Default` | `static SabrSmooth Default { get; }` | Gets the default Smooth SABR scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static SabrSmooth X2 { get; }` | Gets a smooth 2x SABR scaler. |
 | `X3` | `static SabrSmooth X3 { get; }` | Gets a smooth 3x SABR scaler. |
 | `X4` | `static SabrSmooth X4 { get; }` | Gets a smooth 4x SABR scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `SabrVariant`
@@ -10519,10 +10519,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Sai2x Default { get; }` | Gets the default 2xSaI configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by 2xSaI. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for 2xSaI. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether 2xSaI supports the specified scale factor. |
 
 #### `Sal`
@@ -10536,10 +10536,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Sal` | `Sal(bool level2 = false)` | Creates a SaL scaler. |
 | `Default` | `static Sal Default { get; }` | Gets the default SaL scaler. |
 | `Level2` | `static Sal Level2 { get; }` | Gets the Level 2 SaL scaler with extended 12-point sampling. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Scale`
@@ -10556,7 +10556,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `X2` | `static Scale X2 { get; }` | Gets a 2x Scale scaler. |
 | `X3` | `static Scale X3 { get; }` | Gets a 3x Scale scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for Scale. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether Scale supports the specified scale factor. |
 
 #### `Scale.Mode`
@@ -10575,10 +10575,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScaleFx3x Default { get; }` | Gets the default ScaleFX 3x configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by ScaleFX 3x. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for ScaleFX 3x. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether ScaleFX 3x supports the specified scale factor. |
 
 #### `ScaleHq`
@@ -10591,12 +10591,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ScaleHq` | `ScaleHq(int scale = 2)` | Creates a ScaleHQ scaler with the specified factor. |
 | `Default` | `static ScaleHq Default { get; }` | Gets the default ScaleHQ scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static ScaleHq X2 { get; }` | Gets a 2x ScaleHQ scaler. |
 | `X4` | `static ScaleHq X4 { get; }` | Gets a 4x ScaleHQ scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScaleNxPlus`
@@ -10609,12 +10609,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ScaleNxPlus` | `ScaleNxPlus(int scale = 2)` | Creates a ScaleNxPlus scaler with the specified factor. |
 | `Default` | `static ScaleNxPlus Default { get; }` | Gets the default ScaleNxPlus scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static ScaleNxPlus X2 { get; }` | Gets a 2x ScaleNxPlus scaler. |
 | `X3` | `static ScaleNxPlus X3 { get; }` | Gets a 3x ScaleNxPlus scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScaleNxSfx`
@@ -10627,12 +10627,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ScaleNxSfx` | `ScaleNxSfx(int scale = 2)` | Creates a ScaleNxSFX scaler with the specified factor. |
 | `Default` | `static ScaleNxSfx Default { get; }` | Gets the default ScaleNxSFX scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static ScaleNxSfx X2 { get; }` | Gets a 2x ScaleNxSFX scaler. |
 | `X3` | `static ScaleNxSfx X3 { get; }` | Gets a 3x ScaleNxSFX scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScanlineHorizontal`
@@ -10645,10 +10645,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ScanlineHorizontal` | `ScanlineHorizontal(float brightness = 0.5)` | Creates a horizontal scanline scaler with the specified brightness factor. |
 | `Default` | `static ScanlineHorizontal Default { get; }` | Gets the default configuration (50% brightness for scanlines). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithBrightness` | `ScanlineHorizontal WithBrightness(float brightness)` | Creates a configuration with the specified brightness. |
 
@@ -10661,10 +10661,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScanlineHorizontalFullLight Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScanlineHorizontalHalfLight`
@@ -10676,10 +10676,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScanlineHorizontalHalfLight Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScanlineVertical`
@@ -10692,10 +10692,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ScanlineVertical` | `ScanlineVertical(float brightness = 0.5)` | Creates a vertical scanline scaler with the specified brightness factor. |
 | `Default` | `static ScanlineVertical Default { get; }` | Gets the default configuration (50% brightness for scanlines). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithBrightness` | `ScanlineVertical WithBrightness(float brightness)` | Creates a configuration with the specified brightness. |
 
@@ -10708,10 +10708,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScanlineVerticalFullLight Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `ScanlineVerticalHalfLight`
@@ -10723,10 +10723,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static ScanlineVerticalHalfLight Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Scl2x`
@@ -10738,10 +10738,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Scl2x Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Scl2xSuper`
@@ -10753,10 +10753,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Scl2xSuper Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Scl2xUltra`
@@ -10768,10 +10768,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Scl2xUltra Default { get; }` | Gets the default configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `SharpBilinear`
@@ -10784,13 +10784,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `SharpBilinear` | `SharpBilinear(int scale = 2)` | Creates a Sharp-Bilinear scaler with the specified factor. |
 | `Default` | `static SharpBilinear Default { get; }` | Gets the default Sharp-Bilinear scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static SharpBilinear X2 { get; }` | Gets a 2x Sharp-Bilinear scaler. |
 | `X3` | `static SharpBilinear X3 { get; }` | Gets a 3x Sharp-Bilinear scaler. |
 | `X4` | `static SharpBilinear X4 { get; }` | Gets a 4x Sharp-Bilinear scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Simple`
@@ -10803,13 +10803,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Simple` | `Simple(int scale = 2)` | Creates a Simple scaler with the specified factor. |
 | `Default` | `static Simple Default { get; }` | Gets the default Simple scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static Simple X2 { get; }` | Gets a 2x Simple scaler. |
 | `X3` | `static Simple X3 { get; }` | Gets a 3x Simple scaler. |
 | `X4` | `static Simple X4 { get; }` | Gets a 4x Simple scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Smaa`
@@ -10822,7 +10822,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `Smaa` | `Smaa(int scale = 2, SmaaQuality quality = 1)` | Creates a new SMAA instance. |
 | `Default` | `static Smaa Default { get; }` | Gets the default SMAA scaler (2x standard). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2High` | `static Smaa X2High { get; }` | Gets a 2x SMAA scaler with high quality. |
 | `X2Low` | `static Smaa X2Low { get; }` | Gets a 2x SMAA scaler with low quality (faster). |
@@ -10831,7 +10831,7 @@ Implements `IRescaler`, `IScalerInfo`.
 | `X3` | `static Smaa X3 { get; }` | Gets a 3x SMAA scaler with standard quality. |
 | `X4` | `static Smaa X4 { get; }` | Gets a 4x SMAA scaler with standard quality. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 | `WithQuality` | `Smaa WithQuality(SmaaQuality quality)` | Creates a configuration with the specified quality. |
 
@@ -10855,11 +10855,11 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Soft Default { get; }` | Gets the default Soft scaler (4x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X4` | `static Soft X4 { get; }` | Gets a 4x Soft scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `SoftSmart`
@@ -10872,13 +10872,13 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `SoftSmart` | `SoftSmart(int scale = 2)` | Creates a SoftSmart scaler with the specified factor. |
 | `Default` | `static SoftSmart Default { get; }` | Gets the default SoftSmart scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static SoftSmart X2 { get; }` | Gets a 2x SoftSmart scaler. |
 | `X3` | `static SoftSmart X3 { get; }` | Gets a 3x SoftSmart scaler. |
 | `X4` | `static SoftSmart X4 { get; }` | Gets a 4x SoftSmart scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Super2xSaI`
@@ -10890,10 +10890,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Super2xSaI Default { get; }` | Gets the default Super2xSaI configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by Super2xSaI. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for Super2xSaI. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether Super2xSaI supports the specified scale factor. |
 
 #### `SuperEagle`
@@ -10905,10 +10905,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static SuperEagle Default { get; }` | Gets the default SuperEagle configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by SuperEagle. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for SuperEagle. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether SuperEagle supports the specified scale factor. |
 
 #### `SuperXbr`
@@ -10923,11 +10923,11 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Default` | `static SuperXbr Default { get; }` | Gets the default configuration (2x). |
 | `Scale2xFast` | `static SuperXbr Scale2xFast { get; }` | Gets a fast 2x scale instance. |
 | `Scale2x` | `static SuperXbr Scale2x { get; }` | Gets a standard 2x scale instance. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `AsFast` | `SuperXbr AsFast()` | Creates a fast variant (single-pass). |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `TriplePoint`
@@ -10940,12 +10940,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `TriplePoint` | `TriplePoint(int scale = 2)` | Creates a TriplePoint scaler with the specified factor. |
 | `Default` | `static TriplePoint Default { get; }` | Gets the default TriplePoint scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static TriplePoint X2 { get; }` | Gets a 2x TriplePoint scaler. |
 | `X3` | `static TriplePoint X3 { get; }` | Gets a 3x TriplePoint scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `TwoXpm`
@@ -10957,10 +10957,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static TwoXpm Default { get; }` | Gets the default 2xPM scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 #### `Xbr`
@@ -10978,11 +10978,11 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale3x` | `static Xbr Scale3x { get; }` | Gets an XBR 3x scaler. |
 | `Scale4x` | `static Xbr Scale4x { get; }` | Gets an XBR 4x scaler. |
 | `Scale5x` | `static Xbr Scale5x { get; }` | Gets an XBR 5x scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by XBR. |
 | `UseOriginalImplementation` | `bool UseOriginalImplementation { get; }` | Gets whether the original 3x implementation variant is used. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for XBR. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether XBR supports the specified scale factor. |
 | `WithAlphaBlending` | `Xbr WithAlphaBlending(bool allow)` | Creates a new XBR with the specified alpha blending setting. |
 | `WithOriginalImplementation` | `Xbr WithOriginalImplementation(bool useOriginal)` | Creates a new XBR 3x with the original implementation variant. |
@@ -10996,10 +10996,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `Default` | `static Xbr3xOriginal Default { get; }` | Gets the default XBR 3x Original configuration. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by XBR 3x Original (3x only). |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for XBR 3x Original. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether XBR 3x Original supports the specified scale factor. |
 
 #### `XbrNoBlend`
@@ -11016,10 +11016,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale3x` | `static XbrNoBlend Scale3x { get; }` | Gets an XBR-NoBlend 3x scaler. |
 | `Scale4x` | `static XbrNoBlend Scale4x { get; }` | Gets an XBR-NoBlend 4x scaler. |
 | `Scale5x` | `static XbrNoBlend Scale5x { get; }` | Gets an XBR-NoBlend 5x scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by XBR NoBlend. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for XBR NoBlend. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether XBR NoBlend supports the specified scale factor. |
 
 #### `Xbrz`
@@ -11037,10 +11037,10 @@ Implements `IRescaler`, `IScalerInfo`.
 | `Scale4x` | `static Xbrz Scale4x { get; }` | Gets an xBRZ 4x scaler. |
 | `Scale5x` | `static Xbrz Scale5x { get; }` | Gets an xBRZ 5x scaler. |
 | `Scale6x` | `static Xbrz Scale6x { get; }` | Gets an xBRZ 6x scaler. |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by xBRZ. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for xBRZ. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether xBRZ supports the specified scale factor. |
 
 #### `ZfastCrt`
@@ -11053,12 +11053,12 @@ Implements `IRescaler`, `IScalerInfo`.
 | --- | --- | --- |
 | `ZfastCrt` | `ZfastCrt(int scale = 2)` | Creates a zfast-CRT scaler with the specified factor. |
 | `Default` | `static ZfastCrt Default { get; }` | Gets the default zfast-CRT scaler (2x). |
-| `Scale` | `ScaleFactor Scale { get; }` |  |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
 | `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported. |
 | `X2` | `static ZfastCrt X2 { get; }` | Gets a 2x zfast-CRT scaler. |
 | `X3` | `static ZfastCrt X3 { get; }` | Gets a 3x zfast-CRT scaler. |
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions. |
-| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` |  |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether the specified scale factor is supported. |
 
 ### Namespace `Hawkynt.ColorProcessing.Segmentation`
@@ -11192,7 +11192,7 @@ Implements `IColorSpace`, `IColorSpace5<CmykaF>`, `IColorSpace5F<CmykaF>`, `IEqu
 | `Create` | `static CmykaF Create(float c1, float c2, float c3, float c4, float a)` | Creates a new instance from component values. |
 | `FromNormalized` | `static CmykaF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 c4, UNorm32 a)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `CmykaFToCmykF`
 
@@ -11266,7 +11266,7 @@ Implements `IColorSpace`, `IColorSpace3<HsiF>`, `IColorSpace3F<HsiF>`, `IEquatab
 | `Create` | `static HsiF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HsiF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HsiFToLinearRgbF`
 
@@ -11296,7 +11296,7 @@ Implements `IColorSpace`, `IColorSpace3<HslF>`, `IColorSpace3F<HslF>`, `IEquatab
 | `Create` | `static HslF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HslF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HslFToLinearRgbF`
 
@@ -11326,7 +11326,7 @@ Implements `IColorSpace`, `IColorSpace3<HsvF>`, `IColorSpace3F<HsvF>`, `IEquatab
 | `Create` | `static HsvF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HsvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HsvFToLinearRgbF`
 
@@ -11356,7 +11356,7 @@ Implements `IColorSpace`, `IColorSpace3<HwbF>`, `IColorSpace3F<HwbF>`, `IEquatab
 | `Create` | `static HwbF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HwbF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HwbFToLinearRgbF`
 
@@ -11396,7 +11396,7 @@ Implements `IColorSpace`, `IColorSpace3<LchF>`, `IColorSpace3F<LchF>`, `IEquatab
 | `Create` | `static LchF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static LchF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LchFToLabF`
 
@@ -11436,7 +11436,7 @@ Implements `IColorSpace`, `IColorSpace3<LchUvF>`, `IColorSpace3F<LchUvF>`, `IEqu
 | `Create` | `static LchUvF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static LchUvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LchUvFToLinearRgbF`
 
@@ -11610,7 +11610,7 @@ Implements `IColorSpace`, `IColorSpace3<HlgF>`, `IColorSpace3F<HlgF>`, `IEquatab
 | `Create` | `static HlgF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HlgF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HlgFToLinearRgbF`
 
@@ -11640,7 +11640,7 @@ Implements `IColorSpace`, `IColorSpace3<ICtCpF>`, `IColorSpace3F<ICtCpF>`, `IEqu
 | `Create` | `static ICtCpF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static ICtCpF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `ICtCpFToLinearRgbF`
 
@@ -11670,7 +11670,7 @@ Implements `IColorSpace`, `IColorSpace3<JzAzBzF>`, `IColorSpace3F<JzAzBzF>`, `IE
 | `Create` | `static JzAzBzF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static JzAzBzF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `JzAzBzFToJzCzhzF`
 
@@ -11710,7 +11710,7 @@ Implements `IColorSpace`, `IColorSpace3<JzCzhzF>`, `IColorSpace3F<JzCzhzF>`, `IE
 | `Create` | `static JzCzhzF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static JzCzhzF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `JzCzhzFToJzAzBzF`
 
@@ -11870,7 +11870,7 @@ Implements `IColorSpace`, `IColorSpace3<XyYF>`, `IColorSpace3F<XyYF>`, `IEquatab
 | `Create` | `static XyYF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static XyYF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `XyYFToLinearRgbF`
 
@@ -11913,7 +11913,7 @@ Implements `IColorSpace`, `IColorSpace3<XyzF>`, `IColorSpace3F<XyzF>`, `IEquatab
 | `Create` | `static XyzF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static XyzF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `XyzFToLinearRgbF`
 
@@ -11959,7 +11959,7 @@ Implements `IColorSpace`, `IColorSpace4<Lab4F>`, `IColorSpace4F<Lab4F>`, `IEquat
 | `Create` | `static Lab4F Create(float c1, float c2, float c3, float a)` | Creates a new instance from component values. |
 | `FromNormalized` | `static Lab4F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `Lab4FToLinearRgbaF`
 
@@ -11989,7 +11989,7 @@ Implements `IColorSpace`, `IColorSpace3<LabF>`, `IColorSpace3F<LabF>`, `IEquatab
 | `Create` | `static LabF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static LabF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LabFToLinearRgbF`
 
@@ -12053,7 +12053,7 @@ Implements `IColorSpace`, `IColorSpace3<Cam16UcsF>`, `IColorSpace3F<Cam16UcsF>`,
 | `Create` | `static Cam16UcsF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static Cam16UcsF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0..255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `Cam16UcsFToLinearRgbF`
 
@@ -12083,7 +12083,7 @@ Implements `IColorSpace`, `IColorSpace3<Din99F>`, `IColorSpace3F<Din99F>`, `IEqu
 | `Create` | `static Din99F Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static Din99F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `Din99FToLabF`
 
@@ -12123,7 +12123,7 @@ Implements `IColorSpace`, `IColorSpace3<HunterLabF>`, `IColorSpace3F<HunterLabF>
 | `Create` | `static HunterLabF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static HunterLabF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `HunterLabFToLinearRgbF`
 
@@ -12373,7 +12373,7 @@ Implements `IColorSpace`, `IColorSpace3<LuvF>`, `IColorSpace3F<LuvF>`, `IEquatab
 | `Create` | `static LuvF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static LuvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LuvFToLinearRgbF`
 
@@ -12413,7 +12413,7 @@ Implements `IColorSpace`, `IColorSpace3<MunsellF>`, `IColorSpace3F<MunsellF>`, `
 | `Create` | `static MunsellF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static MunsellF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `MunsellFToLabF`
 
@@ -12463,7 +12463,7 @@ Implements `IColorSpace`, `IColorSpace3<OkhslF>`, `IColorSpace3F<OkhslF>`, `IEqu
 | `Create` | `static OkhslF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static OkhslF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `OkhslFToLinearRgbF`
 
@@ -12503,7 +12503,7 @@ Implements `IColorSpace`, `IColorSpace3<OkhsvF>`, `IColorSpace3F<OkhsvF>`, `IEqu
 | `Create` | `static OkhsvF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static OkhsvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `OkhsvFToLinearRgbF`
 
@@ -12545,7 +12545,7 @@ Implements `IColorSpace`, `IColorSpace4<Oklab4F>`, `IColorSpace4F<Oklab4F>`, `IE
 | `Create` | `static Oklab4F Create(float c1, float c2, float c3, float a)` | Creates a new instance from component values. |
 | `FromNormalized` | `static Oklab4F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `Oklab4FToLinearRgbaF`
 
@@ -12575,7 +12575,7 @@ Implements `IColorSpace`, `IColorSpace3<OklabF>`, `IColorSpace3F<OklabF>`, `IEqu
 | `Create` | `static OklabF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static OklabF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `OklabFToLinearRgbF`
 
@@ -12635,7 +12635,7 @@ Implements `IColorSpace`, `IColorSpace3<OklchF>`, `IColorSpace3F<OklchF>`, `IEqu
 | `Create` | `static OklchF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static OklchF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `OklchFToLinearRgbF`
 
@@ -12709,7 +12709,7 @@ Implements `IColorSpace`, `IColorSpace3<AcesCgF>`, `IColorSpace3F<AcesCgF>`, `IE
 | `Create` | `static AcesCgF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static AcesCgF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `AcesCgFToLinearRgbF`
 
@@ -12739,7 +12739,7 @@ Implements `IColorSpace`, `IColorSpace3<AdobeRgbF>`, `IColorSpace3F<AdobeRgbF>`,
 | `Create` | `static AdobeRgbF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static AdobeRgbF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `AdobeRgbFToLinearRgbF`
 
@@ -12769,7 +12769,7 @@ Implements `IColorSpace`, `IColorSpace3<DisplayP3F>`, `IColorSpace3F<DisplayP3F>
 | `Create` | `static DisplayP3F Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static DisplayP3F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `DisplayP3FToLinearRgbF`
 
@@ -12899,7 +12899,7 @@ Implements `IColorSpace`, `IColorSpace3<ProPhotoRgbF>`, `IColorSpace3F<ProPhotoR
 | `Create` | `static ProPhotoRgbF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static ProPhotoRgbF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `ProPhotoRgbFToLinearRgbF`
 
@@ -12929,7 +12929,7 @@ Implements `IColorSpace`, `IColorSpace3<Rec2020F>`, `IColorSpace3F<Rec2020F>`, `
 | `Create` | `static Rec2020F Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static Rec2020F FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `Rec2020FToLinearRgbF`
 
@@ -13123,7 +13123,7 @@ Implements `IColorSpace`, `IColorSpace3<YCbCrF>`, `IColorSpace3F<YCbCrF>`, `IEqu
 | `Create` | `static YCbCrF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static YCbCrF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `ToStudioRange` | `ValueTuple<byte, byte, byte> ToStudioRange()` | Returns components in studio video range (16-235 for Y, 16-240 for Cb/Cr). |
 
 #### `YDbDrF`
@@ -13144,7 +13144,7 @@ Implements `IColorSpace`, `IColorSpace3<YDbDrF>`, `IColorSpace3F<YDbDrF>`, `IEqu
 | `Create` | `static YDbDrF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static YDbDrF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `YDbDrFToLinearRgbF`
 
@@ -13174,7 +13174,7 @@ Implements `IColorSpace`, `IColorSpace3<YiqF>`, `IColorSpace3F<YiqF>`, `IEquatab
 | `Create` | `static YiqF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static YiqF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `YiqFToLinearRgbF`
 
@@ -13204,7 +13204,7 @@ Implements `IColorSpace`, `IColorSpace3<YuvF>`, `IColorSpace3F<YuvF>`, `IEquatab
 | `Create` | `static YuvF Create(float c1, float c2, float c3)` | Creates a new instance from component values. |
 | `FromNormalized` | `static YuvF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `YuvFToLinearRgbF`
 
@@ -13241,7 +13241,7 @@ Implements `IColorSpace`, `IColorSpace4<Argb1555>`, `IColorSpace4B<Argb1555>`, `
 | `FromNormalized` | `static Argb1555 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Argb1555 Lerp(Argb1555 c1, Argb1555 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Argb1555 left, Argb1555 right)` |  |
 | `operator ==` | `static bool operator ==(Argb1555 left, Argb1555 right)` |  |
 
@@ -13266,7 +13266,7 @@ Implements `IColorSpace`, `IColorSpace4<Argb4444>`, `IColorSpace4B<Argb4444>`, `
 | `FromNormalized` | `static Argb4444 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Argb4444 Lerp(Argb4444 c1, Argb4444 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Argb4444 left, Argb4444 right)` |  |
 | `operator ==` | `static bool operator ==(Argb4444 left, Argb4444 right)` |  |
 
@@ -13293,7 +13293,7 @@ Implements `IColorSpace`, `IColorSpace3<Bgr888>`, `IColorSpace3B<Bgr888>`, `IEqu
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Bgr888 Lerp(Bgr888 c1, Bgr888 c2)` | Linearly interpolates between two colors (50/50 blend). |
 | `Lerp` | `static Bgr888 Lerp(Bgr888 c1, Bgr888 c2, float factor)` | Linearly interpolates between two colors using a normalized factor (0.0-1.0). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Bgr888 left, Bgr888 right)` |  |
 | `operator ==` | `static bool operator ==(Bgr888 left, Bgr888 right)` |  |
 
@@ -13343,7 +13343,7 @@ Implements `IColorSpace`, `IColorSpace4<Bgra8888>`, `IColorSpace4B<Bgra8888>`, `
 | `Lerp` | `static Bgra8888 Lerp(Bgra8888 c1, Bgra8888 c2, float factor)` | Linearly interpolates between two colors using a normalized factor (0.0-1.0). |
 | `Lerp` | `static Bgra8888 Lerp(Bgra8888 c1, Bgra8888 c2, int w1, int w2)` | Linearly interpolates between two colors with weights. |
 | `ToColor` | `Color ToColor()` | Converts this color to a System.Drawing.Color. |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Bgra8888 left, Bgra8888 right)` |  |
 | `operator ==` | `static bool operator ==(Bgra8888 left, Bgra8888 right)` |  |
 
@@ -13374,7 +13374,7 @@ Implements `IColorSpace`, `IColorSpace5<Cmyka88888>`, `IColorSpace5B<Cmyka88888>
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Cmyka88888 Lerp(Cmyka88888 c1, Cmyka88888 c2)` | Linearly interpolates between two colors (50/50 blend). |
 | `Lerp` | `static Cmyka88888 Lerp(Cmyka88888 c1, Cmyka88888 c2, float factor)` | Linearly interpolates between two colors using a normalized factor (0.0-1.0). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Cmyka88888 left, Cmyka88888 right)` |  |
 | `operator ==` | `static bool operator ==(Cmyka88888 left, Cmyka88888 right)` |  |
 
@@ -13428,7 +13428,7 @@ Implements `IColorSpace`, `IColorSpace3<Rgb48>`, `IColorSpace3B<Rgb48>`, `IEquat
 | `FromNormalized` | `static Rgb48 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Rgb48 Lerp(Rgb48 c1, Rgb48 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Rgb48 left, Rgb48 right)` |  |
 | `operator ==` | `static bool operator ==(Rgb48 left, Rgb48 right)` |  |
 
@@ -13452,7 +13452,7 @@ Implements `IColorSpace`, `IColorSpace3<Rgb565>`, `IColorSpace3B<Rgb565>`, `IEqu
 | `FromNormalized` | `static Rgb565 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Rgb565 Lerp(Rgb565 c1, Rgb565 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Rgb565 left, Rgb565 right)` |  |
 | `operator ==` | `static bool operator ==(Rgb565 left, Rgb565 right)` |  |
 
@@ -13476,7 +13476,7 @@ Implements `IColorSpace`, `IColorSpace3<RgbX555>`, `IColorSpace3B<RgbX555>`, `IE
 | `FromNormalized` | `static RgbX555 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static RgbX555 Lerp(RgbX555 c1, RgbX555 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(RgbX555 left, RgbX555 right)` |  |
 | `operator ==` | `static bool operator ==(RgbX555 left, RgbX555 right)` |  |
 
@@ -13509,7 +13509,7 @@ Implements `IColorSpace`, `IColorSpace4<Rgba64>`, `IColorSpace4B<Rgba64>`, `IEqu
 | `FromNormalized` | `static Rgba64 FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `GetHashCode` | `override int GetHashCode()` |  |
 | `Lerp` | `static Rgba64 Lerp(Rgba64 c1, Rgba64 c2)` | Linearly interpolates between two colors (50/50 blend). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 | `operator !=` | `static bool operator !=(Rgba64 left, Rgba64 right)` |  |
 | `operator ==` | `static bool operator ==(Rgba64 left, Rgba64 right)` |  |
 
@@ -13543,7 +13543,7 @@ Implements `IColorSpace`, `IColorSpace5<CmykaF>`, `IColorSpace5F<CmykaF>`, `IEqu
 | `Lerp` | `static CmykaF Lerp(in CmykaF a, in CmykaF b, float t)` | Linearly interpolates between two colors. |
 | `Sub` | `static CmykaF Sub(in CmykaF a, in CmykaF b)` |  |
 | `ToBytes` | `ValueTuple<byte, byte, byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LinearRgbF`
 
@@ -13567,7 +13567,7 @@ Implements `IColorSpace`, `IColorSpace3<LinearRgbF>`, `IColorSpace3F<LinearRgbF>
 | `Lerp` | `static LinearRgbF Lerp(in LinearRgbF a, in LinearRgbF b, float t)` | Linearly interpolates between two colors. |
 | `Sub` | `static LinearRgbF Sub(in LinearRgbF a, in LinearRgbF b)` |  |
 | `ToBytes` | `ValueTuple<byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `LinearRgbaF`
 
@@ -13593,7 +13593,7 @@ Implements `IColorSpace`, `IColorSpace4<LinearRgbaF>`, `IColorSpace4F<LinearRgba
 | `Lerp` | `static LinearRgbaF Lerp(in LinearRgbaF a, in LinearRgbaF b, float t)` | Linearly interpolates between two colors. |
 | `Sub` | `static LinearRgbaF Sub(in LinearRgbaF a, in LinearRgbaF b)` |  |
 | `ToBytes` | `ValueTuple<byte, byte, byte, byte> ToBytes()` | Returns components as bytes (0-255). |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 #### `OklabaF`
 
@@ -13617,7 +13617,7 @@ Implements `IColorSpace`, `IColorSpace4<OklabaF>`, `IColorSpace4F<OklabaF>`, `IE
 | `Create` | `static OklabaF Create(float c1, float c2, float c3, float a)` | Creates a new instance from component values. |
 | `FromNormalized` | `static OklabaF FromNormalized(UNorm32 c1, UNorm32 c2, UNorm32 c3, UNorm32 a)` | Creates from normalized values. |
 | `Sub` | `static OklabaF Sub(in OklabaF a, in OklabaF b)` |  |
-| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` |  |
+| `ToNormalized` | `ValueTuple<UNorm32, UNorm32, UNorm32, UNorm32> ToNormalized()` | Returns components normalized to [0.0, 1.0]. |
 
 ### Namespace `Hawkynt.Drawing`
 
@@ -13629,12 +13629,12 @@ Provides extension methods for adapting System.Drawing.Bitmap to the color proce
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `FromWorkFrame` | `static void FromWorkFrame<TWork, TEncode>(this Bitmap @this, in WorkFrame<TWork> workFrame, TEncode encoder = null)` |  |
-| `LockRgb24` | `static IBitmapLocker LockRgb24(this Bitmap @this, ImageLockMode lockMode = 3)` |  |
-| `LockRgba32` | `static IBitmapLocker LockRgba32(this Bitmap @this, ImageLockMode lockMode = 3)` |  |
-| `Process` | `static void Process<TWork, TDecode, TEncode>(this Bitmap @this, Action<WorkFrame<TWork>> process, TDecode decoder = null, TEncode encoder = null)` |  |
+| `FromWorkFrame` | `static void FromWorkFrame<TWork, TEncode>(this Bitmap @this, in WorkFrame<TWork> workFrame, TEncode encoder = null)` | Encodes a working space frame back to a 32-bit ARGB bitmap. |
+| `LockRgb24` | `static IBitmapLocker LockRgb24(this Bitmap @this, ImageLockMode lockMode = 3)` | Locks a bitmap for span-based 24-bit RGB access. |
+| `LockRgba32` | `static IBitmapLocker LockRgba32(this Bitmap @this, ImageLockMode lockMode = 3)` | Locks a bitmap for span-based 32-bit ARGB access. |
+| `Process` | `static void Process<TWork, TDecode, TEncode>(this Bitmap @this, Action<WorkFrame<TWork>> process, TDecode decoder = null, TEncode encoder = null)` | Processes a bitmap through the color processing pipeline. |
 | `ToBitmap` | `static Bitmap ToBitmap<TWork, TEncode>(in WorkFrame<TWork> workFrame, TEncode encoder = null)` | Creates a new bitmap from a working space frame. |
-| `ToWorkFrame` | `static WorkFrame<TWork> ToWorkFrame<TWork, TDecode>(this Bitmap @this, TDecode decoder = null)` |  |
+| `ToWorkFrame` | `static WorkFrame<TWork> ToWorkFrame<TWork, TDecode>(this Bitmap @this, TDecode decoder = null)` | Decodes a 32-bit ARGB bitmap to a working space frame. |
 
 #### `BitmapBlendExtensions`
 
@@ -13642,10 +13642,10 @@ Provides extension methods for blending bitmaps using various blend modes.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `BlendInto` | `static void BlendInto<TMode>(this Bitmap @this, Bitmap overlay, float strength = 1, bool linear = false)` |  |
-| `BlendWith` | `static Bitmap BlendWith<TFilter>(this Bitmap @this, TFilter filter, float strength = 1, bool linear = false)` |  |
-| `BlendWith` | `static Bitmap BlendWith<TMode, TFilter>(this Bitmap @this, TFilter filter, float strength = 1, bool linear = false)` |  |
-| `BlendWith` | `static Bitmap BlendWith<TMode>(this Bitmap @this, Bitmap overlay, float strength = 1, bool linear = false)` |  |
+| `BlendInto` | `static void BlendInto<TMode>(this Bitmap @this, Bitmap overlay, float strength = 1, bool linear = false)` | Blends an overlay bitmap on top in-place using the specified blend mode. |
+| `BlendWith` | `static Bitmap BlendWith<TFilter>(this Bitmap @this, TFilter filter, float strength = 1, bool linear = false)` | Applies a pixel filter and blends the result using Normal blend mode (opacity fade). |
+| `BlendWith` | `static Bitmap BlendWith<TMode, TFilter>(this Bitmap @this, TFilter filter, float strength = 1, bool linear = false)` | Applies a pixel filter and blends the result using the specified blend mode. |
+| `BlendWith` | `static Bitmap BlendWith<TMode>(this Bitmap @this, Bitmap overlay, float strength = 1, bool linear = false)` | Blends an overlay bitmap on top using the specified blend mode. |
 
 #### `BitmapBoxBlurIntExtensions`
 
@@ -13653,7 +13653,7 @@ Integer-only Box blur — bypasses every float conversion that the standard `Box
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `BoxBlurInt` | `static Bitmap BoxBlurInt(this Bitmap @this, int radius)` |  |
+| `BoxBlurInt` | `static Bitmap BoxBlurInt(this Bitmap @this, int radius)` | Applies an integer-only box blur with the given radius. Output dimensions match input. Boundary handling: clamp-to-edge. |
 
 #### `BitmapDepixelExtensions`
 
@@ -13661,8 +13661,8 @@ Vector-pipeline depixelization extension methods. Builds a polygonal cell repres
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Depixelize` | `static Bitmap Depixelize(this Bitmap @this, int scaleFactor)` |  |
-| `Depixelize` | `static Bitmap Depixelize(this Bitmap @this, int targetWidth, int targetHeight)` |  |
+| `Depixelize` | `static Bitmap Depixelize(this Bitmap @this, int scaleFactor)` | Depixelizes `@this` at an integer scale factor. Output dimensions are `source × scaleFactor` on each axis. |
+| `Depixelize` | `static Bitmap Depixelize(this Bitmap @this, int targetWidth, int targetHeight)` | Depixelizes `@this` by building an internal vector polygon representation and rendering it to a raster of `targetWidth` × `targetHeight`. |
 
 #### `BitmapFilterExtensions`
 
@@ -13670,12 +13670,12 @@ Provides extension methods for applying 1:1 pixel filters to Bitmaps.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ApplyFilterWithEquality` | `static Bitmap ApplyFilterWithEquality<TFilter, TEquality>(this Bitmap @this, TFilter filter, TEquality equality)` |  |
-| `ApplyFilterWithLerp` | `static Bitmap ApplyFilterWithLerp<TFilter, TLerp>(this Bitmap @this, TFilter filter, TLerp lerp)` |  |
-| `ApplyFilterWithMetric` | `static Bitmap ApplyFilterWithMetric<TFilter, TMetric>(this Bitmap @this, TFilter filter)` |  |
-| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(this Bitmap @this, TFilter filter, TEquality equality = null, TLerp lerp = null)` |  |
-| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter>(this Bitmap @this, ScalerQuality quality = 0)` |  |
-| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter>(this Bitmap @this, TFilter filter, ScalerQuality quality = 0)` |  |
+| `ApplyFilterWithEquality` | `static Bitmap ApplyFilterWithEquality<TFilter, TEquality>(this Bitmap @this, TFilter filter, TEquality equality)` | Applies a filter with a custom equality predicate, keeping default Bgra8888 identity pipeline (no color-space conversion). Convenience for the common case of "same algorithm, different equality threshold". |
+| `ApplyFilterWithLerp` | `static Bitmap ApplyFilterWithLerp<TFilter, TLerp>(this Bitmap @this, TFilter filter, TLerp lerp)` | Applies a filter with a custom interpolator (used by filters that lerp adjacent pixel values, e.g. blur / unsharp / sharpen). Keeps default Bgra8888 identity. |
+| `ApplyFilterWithMetric` | `static Bitmap ApplyFilterWithMetric<TFilter, TMetric>(this Bitmap @this, TFilter filter)` | Applies a filter with a custom distance metric (used by filters that compute per-pixel similarity weights, e.g. bilateral / NLM / guided-filter). Keeps default Bgra8888 identity pipeline. |
+| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(this Bitmap @this, TFilter filter, TEquality equality = null, TLerp lerp = null)` | Applies a pixel filter with FULLY-CONFIGURABLE working/key/storage color spaces, metric, equality predicate, and interpolator. The user picks every type parameter; the JIT specialises the entire pipeline at the call site (zero per-pixel virtual dispatch). Use this when you need to tune e.g. the equality threshold or work in a non-default color space (Oklab vs Lab vs YCbCr vs ...). |
+| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter>(this Bitmap @this, ScalerQuality quality = 0)` | Applies a pixel filter to a bitmap using default configuration. |
+| `ApplyFilter` | `static Bitmap ApplyFilter<TFilter>(this Bitmap @this, TFilter filter, ScalerQuality quality = 0)` | Applies a pixel filter to a bitmap using the specified quality mode. |
 
 #### `BitmapFrequencyDomainExtensions`
 
@@ -13685,10 +13685,10 @@ Provides frequency domain extension methods for `Bitmap`.
 | --- | --- | --- |
 | `FromDctDomain` | `static Bitmap FromDctDomain(float[,] coefficients, int width, int height)` | Reconstructs a bitmap from DCT coefficients using inverse DCT. |
 | `FromFrequencyDomain` | `static Bitmap FromFrequencyDomain(Complex[,] spectrum, int width, int height)` | Reconstructs a bitmap from a complex frequency spectrum using inverse FFT. |
-| `GetMagnitudeSpectrum` | `static Bitmap GetMagnitudeSpectrum(this Bitmap @this)` |  |
-| `GetPhaseSpectrum` | `static Bitmap GetPhaseSpectrum(this Bitmap @this)` |  |
-| `ToDctDomain` | `static float[,] ToDctDomain(this Bitmap @this)` |  |
-| `ToFrequencyDomain` | `static Complex[,] ToFrequencyDomain(this Bitmap @this)` |  |
+| `GetMagnitudeSpectrum` | `static Bitmap GetMagnitudeSpectrum(this Bitmap @this)` | Visualizes the magnitude spectrum (log-scaled) of the bitmap's FFT. |
+| `GetPhaseSpectrum` | `static Bitmap GetPhaseSpectrum(this Bitmap @this)` | Visualizes the phase spectrum of the bitmap's FFT. |
+| `ToDctDomain` | `static float[,] ToDctDomain(this Bitmap @this)` | Converts a bitmap to DCT domain (grayscale). |
+| `ToFrequencyDomain` | `static Complex[,] ToFrequencyDomain(this Bitmap @this)` | Converts a bitmap to frequency domain using FFT (grayscale). |
 
 #### `BitmapGaussianBlurIntExtensions`
 
@@ -13696,7 +13696,7 @@ Integer-only Gaussian blur via three iterated `BoxBlurInt` passes. Three box pas
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `GaussianBlurInt` | `static Bitmap GaussianBlurInt(this Bitmap @this, double sigma)` |  |
+| `GaussianBlurInt` | `static Bitmap GaussianBlurInt(this Bitmap @this, double sigma)` | Applies an integer-only Gaussian blur with the given σ (standard deviation in pixels). σ ≤ 0 returns a clone. |
 
 #### `BitmapMedianFilterIntExtensions`
 
@@ -13704,7 +13704,7 @@ Integer-only Median filter with constant per-pixel cost regardless of kernel rad
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `MedianFilterInt` | `static Bitmap MedianFilterInt(this Bitmap @this, int radius)` |  |
+| `MedianFilterInt` | `static Bitmap MedianFilterInt(this Bitmap @this, int radius)` | Applies a constant-time integer Median filter over a square (2r+1)×(2r+1) kernel. Per-channel (B, G, R, A) median. |
 
 #### `BitmapMorphologyIntExtensions`
 
@@ -13712,8 +13712,8 @@ Integer-only morphological operations: `ErodeInt` (per-channel min over a square
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `DilateInt` | `static Bitmap DilateInt(this Bitmap @this, int radius)` |  |
-| `ErodeInt` | `static Bitmap ErodeInt(this Bitmap @this, int radius)` |  |
+| `DilateInt` | `static Bitmap DilateInt(this Bitmap @this, int radius)` | Dilate (per-channel maximum) over a square radius-`radius` kernel. Separable: horizontal pass then vertical pass. |
+| `ErodeInt` | `static Bitmap ErodeInt(this Bitmap @this, int radius)` | Erode (per-channel minimum) over a square radius-`radius` kernel. Separable: horizontal pass then vertical pass. |
 
 #### `BitmapMotionBlurIntExtensions`
 
@@ -13721,7 +13721,7 @@ Integer-only directional motion blur. For axis-aligned angles (0°, 90°, 180°,
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `MotionBlurInt` | `static Bitmap MotionBlurInt(this Bitmap @this, int length, double angleDegrees)` |  |
+| `MotionBlurInt` | `static Bitmap MotionBlurInt(this Bitmap @this, int length, double angleDegrees)` | Applies an integer-only directional motion blur. The blur kernel is a 1D line of length `length` rotated to the given angle. |
 
 #### `BitmapQuantizationExtensions`
 
@@ -13730,10 +13730,10 @@ Provides extension methods for color quantization and dithering of Bitmaps.
 | Member | Signature | Summary |
 | --- | --- | --- |
 | `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TDitherer ditherer, int colorCount = 256, bool isHighQuality = false)` |  |
-| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TQuantizer quantizer, TDitherer ditherer, int colorCount = 256, bool isHighQuality = false)` |  |
-| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TQuantizer quantizer, TDitherer ditherer, int colorCount, bool isHighQuality, bool allowFillingColors)` |  |
+| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TQuantizer quantizer, TDitherer ditherer, int colorCount = 256, bool isHighQuality = false)` | Reduces colors in a bitmap using Linear RGB color space for high-quality gamma-correct results. |
+| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TQuantizer quantizer, TDitherer ditherer, int colorCount, bool isHighQuality, bool allowFillingColors)` | Reduces colors in a bitmap with control over palette filling behavior. |
 | `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, TQuantizer quantizer, int colorCount = 256, bool isHighQuality = false)` |  |
-| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, int colorCount = 256, bool isHighQuality = false)` |  |
+| `ReduceColors` | `static Bitmap ReduceColors<TQuantizer, TDitherer>(this Bitmap @this, int colorCount = 256, bool isHighQuality = false)` | Reduces colors in a bitmap using default quantizer and ditherer instances. |
 
 #### `BitmapResampleFastExtensions`
 
@@ -13741,8 +13741,8 @@ Fast int-only Bgra8888 resampling. Bypasses the kernel-template pipeline entirel
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ResampleFast` | `static Bitmap ResampleFast(this Bitmap @this, Size targetSize, FastResampleMode mode = 1)` |  |
-| `ResampleFast` | `static Bitmap ResampleFast(this Bitmap @this, int targetWidth, int targetHeight, FastResampleMode mode = 1)` |  |
+| `ResampleFast` | `static Bitmap ResampleFast(this Bitmap @this, Size targetSize, FastResampleMode mode = 1)` | Convenience overload taking a `Size` for target dimensions. |
+| `ResampleFast` | `static Bitmap ResampleFast(this Bitmap @this, int targetWidth, int targetHeight, FastResampleMode mode = 1)` | Fast int-only resample to target dimensions. Operates directly on Bgra8888 with integer Q16/Q24 fixed-point weights — no float arithmetic, no codec round-trip. |
 
 #### `BitmapScalerExtensions`
 
@@ -13766,14 +13766,14 @@ Provides extension methods for pixel-art scaling of Bitmaps.
 | `Resample` | `static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ContentAwareResamplerTag<TResampler> _ = null)` | Resamples a bitmap using content-aware algorithm with default configuration. |
 | `Resample` | `static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __EdgeAwareResamplerTag<TResampler> _ = null)` | Resamples a bitmap using an edge-aware algorithm with default configuration. |
 | `Resample` | `static Bitmap Resample<TResampler>(this Bitmap source, int targetWidth, int targetHeight, __ResamplerTag<TResampler> _ = null)` | Resamples a bitmap to target dimensions using a resampler with default configuration. |
-| `UpscaleTo` | `static Bitmap UpscaleTo<TScaler>(this Bitmap @this, int targetWidth, int targetHeight, ScalerQuality quality = 0)` |  |
-| `UpscaleTo` | `static Bitmap UpscaleTo<TScaler>(this Bitmap @this, int targetWidth, int targetHeight, TScaler scaler = null, ScalerQuality quality = 0)` |  |
-| `UpscaleWithEquality` | `static Bitmap UpscaleWithEquality<TScaler, TEquality>(this Bitmap @this, TScaler scaler, TEquality equality)` |  |
-| `UpscaleWithLerp` | `static Bitmap UpscaleWithLerp<TScaler, TLerp>(this Bitmap @this, TScaler scaler, TLerp lerp)` |  |
-| `UpscaleWithMetric` | `static Bitmap UpscaleWithMetric<TScaler, TMetric>(this Bitmap @this, TScaler scaler)` |  |
-| `Upscale` | `static Bitmap Upscale<TScaler, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(this Bitmap @this, TScaler scaler, TEquality equality = null, TLerp lerp = null)` |  |
-| `Upscale` | `static Bitmap Upscale<TScaler>(this Bitmap @this, ScalerQuality quality = 0)` |  |
-| `Upscale` | `static Bitmap Upscale<TScaler>(this Bitmap @this, TScaler scaler, ScalerQuality quality = 0)` |  |
+| `UpscaleTo` | `static Bitmap UpscaleTo<TScaler>(this Bitmap @this, int targetWidth, int targetHeight, ScalerQuality quality = 0)` | Upscales a bitmap to a target resolution using repeated scaler applications. |
+| `UpscaleTo` | `static Bitmap UpscaleTo<TScaler>(this Bitmap @this, int targetWidth, int targetHeight, TScaler scaler = null, ScalerQuality quality = 0)` | Upscales a bitmap to a target resolution using repeated scaler applications. |
+| `UpscaleWithEquality` | `static Bitmap UpscaleWithEquality<TScaler, TEquality>(this Bitmap @this, TScaler scaler, TEquality equality)` | Upscales a bitmap with a custom equality comparer, using default metric/lerp. Uses Bgra8888 identity pipeline (no color space conversion). |
+| `UpscaleWithLerp` | `static Bitmap UpscaleWithLerp<TScaler, TLerp>(this Bitmap @this, TScaler scaler, TLerp lerp)` | Upscales a bitmap with a custom lerp, using default metric/equality. Uses Bgra8888 identity pipeline (no color space conversion). |
+| `UpscaleWithMetric` | `static Bitmap UpscaleWithMetric<TScaler, TMetric>(this Bitmap @this, TScaler scaler)` | Upscales a bitmap with a custom metric, using default equality/lerp. Uses Bgra8888 identity pipeline (no color space conversion). |
+| `Upscale` | `static Bitmap Upscale<TScaler, TWork, TKey, TDecode, TProject, TEncode, TMetric, TEquality, TLerp>(this Bitmap @this, TScaler scaler, TEquality equality = null, TLerp lerp = null)` | Upscales a bitmap with full control over color pipeline and comparison types. |
+| `Upscale` | `static Bitmap Upscale<TScaler>(this Bitmap @this, ScalerQuality quality = 0)` | Upscales a bitmap using a scaling algorithm with default configuration. |
+| `Upscale` | `static Bitmap Upscale<TScaler>(this Bitmap @this, TScaler scaler, ScalerQuality quality = 0)` | Upscales a bitmap using a pixel-art scaling algorithm. |
 
 #### `BitmapTransformExtensions`
 
@@ -13781,13 +13781,13 @@ Provides geometric transform extension methods for `Bitmap`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `AutoRotate` | `static Bitmap AutoRotate(this Bitmap @this)` |  |
-| `FlipHorizontal` | `static Bitmap FlipHorizontal(this Bitmap @this)` |  |
-| `FlipVertical` | `static Bitmap FlipVertical(this Bitmap @this)` |  |
-| `MirrorAlongAxis` | `static Bitmap MirrorAlongAxis(this Bitmap @this, PointF p1, PointF p2)` |  |
-| `Skew` | `static Bitmap Skew(this Bitmap @this, float angleX, float angleY)` |  |
-| `Straighten` | `static Bitmap Straighten(this Bitmap @this, float angle)` |  |
-| `ZoomToPoint` | `static Bitmap ZoomToPoint(this Bitmap @this, PointF center, float factor)` |  |
+| `AutoRotate` | `static Bitmap AutoRotate(this Bitmap @this)` | Reads the EXIF orientation tag and applies the correct rotation/flip to normalize the image. |
+| `FlipHorizontal` | `static Bitmap FlipHorizontal(this Bitmap @this)` | Flips the bitmap horizontally (mirrors left to right). |
+| `FlipVertical` | `static Bitmap FlipVertical(this Bitmap @this)` | Flips the bitmap vertically (mirrors top to bottom). |
+| `MirrorAlongAxis` | `static Bitmap MirrorAlongAxis(this Bitmap @this, PointF p1, PointF p2)` | Mirrors pixels across an arbitrary line defined by two points. |
+| `Skew` | `static Bitmap Skew(this Bitmap @this, float angleX, float angleY)` | Applies a shear/skew transformation to the bitmap. |
+| `Straighten` | `static Bitmap Straighten(this Bitmap @this, float angle)` | Deskews the image by rotating by the given angle and cropping to the largest inscribed axis-aligned rectangle. |
+| `ZoomToPoint` | `static Bitmap ZoomToPoint(this Bitmap @this, PointF center, float factor)` | Zooms into the image centered on a specific point. |
 
 #### `BitmapUnsharpMaskIntExtensions`
 
@@ -13795,7 +13795,7 @@ Integer-only Unsharp Mask sharpening: `output = original + amount · (original �
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `UnsharpMaskInt` | `static Bitmap UnsharpMaskInt(this Bitmap @this, double sigma = 1.5, double amount = 1, int threshold = 0)` |  |
+| `UnsharpMaskInt` | `static Bitmap UnsharpMaskInt(this Bitmap @this, double sigma = 1.5, double amount = 1, int threshold = 0)` | Applies an int-only Unsharp Mask sharpening pass. |
 
 #### `ColorAdapter`
 
@@ -13806,9 +13806,9 @@ Provides extension methods for adapting System.Drawing.Color to the color proces
 | `ToColor` | `static Color ToColor(this Bgr888 color)` | Converts Rgb24 to System.Drawing.Color. |
 | `ToColor` | `static Color ToColor(this Bgra8888 color)` | Converts Rgba32 to System.Drawing.Color. |
 | `ToColor` | `static Color ToColor(this LinearRgbaF color)` | Converts LinearRgbaF to System.Drawing.Color using sRGB gamma compression. |
-| `ToLinearRgbaF` | `static LinearRgbaF ToLinearRgbaF(this Color @this)` |  |
-| `ToRgb24` | `static Bgr888 ToRgb24(this Color @this)` |  |
-| `ToRgba32` | `static Bgra8888 ToRgba32(this Color @this)` |  |
+| `ToLinearRgbaF` | `static LinearRgbaF ToLinearRgbaF(this Color @this)` | Converts a System.Drawing.Color to LinearRgbaF using sRGB gamma expansion. |
+| `ToRgb24` | `static Bgr888 ToRgb24(this Color @this)` | Converts a System.Drawing.Color to Rgb24. |
+| `ToRgba32` | `static Bgra8888 ToRgba32(this Color @this)` | Converts a System.Drawing.Color to Rgba32. |
 
 #### `ColorSpaceAdapters`
 
@@ -14152,79 +14152,79 @@ Implements `IDisposable`.
 | `Lock` | `static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags)` |  |
 | `Lock` | `static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, ImageLockMode flags, PixelFormat format)` |  |
 | `Lock` | `static IBitmapLocker Lock(this Bitmap @this, Rectangle rect, PixelFormat format)` |  |
-| `Resize` | `static Bitmap Resize(this Bitmap @this, int width, int height, InterpolationMode mode = 4)` |  |
-| `RotateInplace` | `static void RotateInplace(this Bitmap @this, float angle, Point? center = null)` |  |
-| `RotateTo` | `static void RotateTo(this Bitmap @this, Bitmap target, float angle, Point? center = null)` |  |
-| `Rotated` | `static Bitmap Rotated(this Bitmap @this, float angle, Point? center = null)` |  |
+| `Resize` | `static Bitmap Resize(this Bitmap @this, int width, int height, InterpolationMode mode = 4)` | Resizes the current `Bitmap` to the specified `width` and `height` using the given `mode` for interpolation. |
+| `RotateInplace` | `static void RotateInplace(this Bitmap @this, float angle, Point? center = null)` | Rotates the given `Bitmap` in-place by the specified `angle`. |
+| `RotateTo` | `static void RotateTo(this Bitmap @this, Bitmap target, float angle, Point? center = null)` | Rotates the source `Bitmap` and draws the result into the specified `target` bitmap. |
+| `Rotated` | `static Bitmap Rotated(this Bitmap @this, float angle, Point? center = null)` | Returns a rotated copy of the specified `Bitmap` by the given `angle`. |
 
 #### `ColorPolyfills`
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `Add` | `static Color Add(this Color @this, int r, int g, int b)` |  |
-| `Add` | `static Color Add(this Color @this, int value)` |  |
+| `Add` | `static Color Add(this Color @this, int r, int g, int b)` | Adds values to the RGB components of a given color. |
+| `Add` | `static Color Add(this Color @this, int value)` | Adds a value to the RGB components of a given color. |
 | `BlendWith` | `static Color BlendWith(this Color @this, Color other, float current, float max)` |  |
-| `Darken` | `static Color Darken(this Color @this, byte amount)` |  |
-| `DistanceTo` | `static float DistanceTo(this Color @this, Color other)` |  |
-| `FromCmykBytes` | `static Color FromCmykBytes(byte c, byte m, byte y, byte k)` |  |
-| `FromCmykNormalized` | `static Color FromCmykNormalized(float c, float m, float y, float k)` |  |
-| `FromCmyk` | `static Color FromCmyk(float c, float m, float y, float k)` |  |
-| `FromDin99Bytes` | `static Color FromDin99Bytes(byte l, byte a, byte b)` |  |
-| `FromDin99Normalized` | `static Color FromDin99Normalized(float l, float a, float b)` |  |
-| `FromDin99` | `static Color FromDin99(float l, float a, float b)` |  |
-| `FromHslBytes` | `static Color FromHslBytes(byte h, byte s, byte l)` |  |
-| `FromHsl` | `static Color FromHsl(float h, float s, float l)` |  |
-| `FromHsvBytes` | `static Color FromHsvBytes(byte h, byte s, byte v)` |  |
-| `FromHsv` | `static Color FromHsv(float h, float s, float v)` |  |
-| `FromHwbBytes` | `static Color FromHwbBytes(byte h, byte w, byte b)` |  |
-| `FromHwbNormalized` | `static Color FromHwbNormalized(float h, float w, float b)` |  |
-| `FromHwb` | `static Color FromHwb(float h, float w, float b)` |  |
-| `FromLabBytes` | `static Color FromLabBytes(byte l, byte a, byte b)` |  |
-| `FromLabNormalized` | `static Color FromLabNormalized(float l, float a, float b)` |  |
-| `FromLab` | `static Color FromLab(float l, float a, float b)` |  |
-| `FromXyzBytes` | `static Color FromXyzBytes(byte x, byte y, byte z)` |  |
-| `FromXyzNormalized` | `static Color FromXyzNormalized(float x, float y, float z)` |  |
-| `FromXyz` | `static Color FromXyz(float x, float y, float z)` |  |
-| `FromYCbCrBytes` | `static Color FromYCbCrBytes(byte y, byte cb, byte cr)` |  |
-| `FromYCbCrNormalized` | `static Color FromYCbCrNormalized(float y, float cb, float cr)` |  |
-| `FromYCbCr` | `static Color FromYCbCr(float y, float cb, float cr)` |  |
-| `FromYuvBytes` | `static Color FromYuvBytes(byte y, byte u, byte v)` |  |
-| `FromYuvNormalized` | `static Color FromYuvNormalized(float y, float u, float v)` |  |
-| `FromYuv` | `static Color FromYuv(float y, float u, float v)` |  |
+| `Darken` | `static Color Darken(this Color @this, byte amount)` | Darkens the given color. |
+| `DistanceTo` | `static float DistanceTo(this Color @this, Color other)` | Calculates the CIE76 color distance to another color. |
+| `FromCmykBytes` | `static Color FromCmykBytes(byte c, byte m, byte y, byte k)` | Creates a color from CMYK bytes (0-255 range). |
+| `FromCmykNormalized` | `static Color FromCmykNormalized(float c, float m, float y, float k)` | Creates a color from CMYK normalized values (0.0-1.0 range). |
+| `FromCmyk` | `static Color FromCmyk(float c, float m, float y, float k)` | Creates a color from CMYK values (0-1 range). |
+| `FromDin99Bytes` | `static Color FromDin99Bytes(byte l, byte a, byte b)` | Creates a color from DIN99 bytes (0-255 range). |
+| `FromDin99Normalized` | `static Color FromDin99Normalized(float l, float a, float b)` | Creates a color from DIN99 normalized values (0.0-1.0 range). |
+| `FromDin99` | `static Color FromDin99(float l, float a, float b)` | Creates a color from DIN99 values (natural range). |
+| `FromHslBytes` | `static Color FromHslBytes(byte h, byte s, byte l)` | Creates a color from HSL bytes (0-255 range). |
+| `FromHsl` | `static Color FromHsl(float h, float s, float l)` | Creates a color from HSL values (0-1 range). |
+| `FromHsvBytes` | `static Color FromHsvBytes(byte h, byte s, byte v)` | Creates a color from HSV bytes (0-255 range). |
+| `FromHsv` | `static Color FromHsv(float h, float s, float v)` | Creates a color from HSV values (0-1 range). |
+| `FromHwbBytes` | `static Color FromHwbBytes(byte h, byte w, byte b)` | Creates a color from HWB bytes (0-255 range). |
+| `FromHwbNormalized` | `static Color FromHwbNormalized(float h, float w, float b)` | Creates a color from HWB normalized values (0.0-1.0 range). |
+| `FromHwb` | `static Color FromHwb(float h, float w, float b)` | Creates a color from HWB values (0-1 range). |
+| `FromLabBytes` | `static Color FromLabBytes(byte l, byte a, byte b)` | Creates a color from L*a*b* bytes (0-255 range). |
+| `FromLabNormalized` | `static Color FromLabNormalized(float l, float a, float b)` | Creates a color from L*a*b* normalized values (0.0-1.0 range). |
+| `FromLab` | `static Color FromLab(float l, float a, float b)` | Creates a color from L*a*b* values (natural range). |
+| `FromXyzBytes` | `static Color FromXyzBytes(byte x, byte y, byte z)` | Creates a color from XYZ bytes (0-255 range). |
+| `FromXyzNormalized` | `static Color FromXyzNormalized(float x, float y, float z)` | Creates a color from XYZ normalized values (0.0-1.0 range). |
+| `FromXyz` | `static Color FromXyz(float x, float y, float z)` | Creates a color from XYZ values (natural range). |
+| `FromYCbCrBytes` | `static Color FromYCbCrBytes(byte y, byte cb, byte cr)` | Creates a color from YCbCr bytes (0-255 range). |
+| `FromYCbCrNormalized` | `static Color FromYCbCrNormalized(float y, float cb, float cr)` | Creates a color from YCbCr normalized values (0.0-1.0 range). |
+| `FromYCbCr` | `static Color FromYCbCr(float y, float cb, float cr)` | Creates a color from YCbCr (BT.601) values (natural range). |
+| `FromYuvBytes` | `static Color FromYuvBytes(byte y, byte u, byte v)` | Creates a color from YUV bytes (0-255 range). |
+| `FromYuvNormalized` | `static Color FromYuvNormalized(float y, float u, float v)` | Creates a color from YUV normalized values (0.0-1.0 range). |
+| `FromYuv` | `static Color FromYuv(float y, float u, float v)` | Creates a color from YUV (BT.601) values (natural range). |
 | `GetChrominanceU` | `static byte GetChrominanceU(this Color @this)` |  |
 | `GetChrominanceV` | `static byte GetChrominanceV(this Color @this)` |  |
-| `GetComplementaryColor` | `static Color GetComplementaryColor(this Color @this)` |  |
+| `GetComplementaryColor` | `static Color GetComplementaryColor(this Color @this)` | Gets the complementary color. |
 | `GetLuminance` | `static byte GetLuminance(this Color @this)` |  |
-| `GetName` | `static string GetName(this Color @this)` |  |
+| `GetName` | `static string GetName(this Color @this)` | Gets the colors name. Note: Fixes the issue with colors that were generated instead of chosen directly by looking up the ARGB value. |
 | `InterpolateWith` | `static Color InterpolateWith(this Color @this, Color other, float factor = 1)` |  |
 | `IsLikeNaive` | `static bool IsLikeNaive(this Color @this, Color other, int tolerance = 2)` |  |
 | `IsLike` | `static bool IsLike(this Color @this, Color other, byte luminanceDelta = 24, byte chromaUDelta = 7, byte chromaVDelta = 6)` |  |
-| `Lighten` | `static Color Lighten(this Color @this, byte amount)` |  |
-| `Multiply` | `static Color Multiply(this Color @this, double r, double g, double b)` |  |
-| `Multiply` | `static Color Multiply(this Color @this, double value)` |  |
-| `PerceptualDistanceTo` | `static float PerceptualDistanceTo(this Color @this, Color other)` |  |
-| `ToHex` | `static string ToHex(this Color @this)` |  |
-| `get_CmykNormalized` | `static ValueTuple<float, float, float, float> get_CmykNormalized(Color @this)` |  |
-| `get_Cmyk` | `static ValueTuple<byte, byte, byte, byte> get_Cmyk(Color @this)` |  |
-| `get_ComplementaryColor` | `static Color get_ComplementaryColor(Color @this)` |  |
-| `get_Din99Normalized` | `static ValueTuple<float, float, float> get_Din99Normalized(Color @this)` |  |
-| `get_Din99` | `static ValueTuple<byte, byte, byte> get_Din99(Color @this)` |  |
-| `get_HslNormalized` | `static ValueTuple<float, float, float> get_HslNormalized(Color @this)` |  |
-| `get_Hsl` | `static ValueTuple<byte, byte, byte> get_Hsl(Color @this)` |  |
-| `get_HsvNormalized` | `static ValueTuple<float, float, float> get_HsvNormalized(Color @this)` |  |
-| `get_Hsv` | `static ValueTuple<byte, byte, byte> get_Hsv(Color @this)` |  |
-| `get_HwbNormalized` | `static ValueTuple<float, float, float> get_HwbNormalized(Color @this)` |  |
-| `get_Hwb` | `static ValueTuple<byte, byte, byte> get_Hwb(Color @this)` |  |
-| `get_LabNormalized` | `static ValueTuple<float, float, float> get_LabNormalized(Color @this)` |  |
-| `get_Lab` | `static ValueTuple<byte, byte, byte> get_Lab(Color @this)` |  |
-| `get_RgbNormalized` | `static ValueTuple<float, float, float> get_RgbNormalized(Color @this)` |  |
+| `Lighten` | `static Color Lighten(this Color @this, byte amount)` | Lightens the given color. |
+| `Multiply` | `static Color Multiply(this Color @this, double r, double g, double b)` | Multiplies values with the RGB components of a given color. |
+| `Multiply` | `static Color Multiply(this Color @this, double value)` | Multiplies the RGB components of a given color by a given value. |
+| `PerceptualDistanceTo` | `static float PerceptualDistanceTo(this Color @this, Color other)` | Calculates the CIEDE2000 perceptual color distance to another color. |
+| `ToHex` | `static string ToHex(this Color @this)` | Converts this color to its corresponding hex-string. |
+| `get_CmykNormalized` | `static ValueTuple<float, float, float, float> get_CmykNormalized(Color @this)` | Gets CMYK components normalized to 0.0-1.0 range. |
+| `get_Cmyk` | `static ValueTuple<byte, byte, byte, byte> get_Cmyk(Color @this)` | Gets CMYK components as bytes (0-255). |
+| `get_ComplementaryColor` | `static Color get_ComplementaryColor(Color @this)` | Gets the complementary color. |
+| `get_Din99Normalized` | `static ValueTuple<float, float, float> get_Din99Normalized(Color @this)` | Gets DIN99 components normalized to 0.0-1.0 range. |
+| `get_Din99` | `static ValueTuple<byte, byte, byte> get_Din99(Color @this)` | Gets DIN99 components as bytes (0-255). |
+| `get_HslNormalized` | `static ValueTuple<float, float, float> get_HslNormalized(Color @this)` | Gets HSL components normalized to 0.0-1.0 range. |
+| `get_Hsl` | `static ValueTuple<byte, byte, byte> get_Hsl(Color @this)` | Gets HSL components as bytes (0-255). |
+| `get_HsvNormalized` | `static ValueTuple<float, float, float> get_HsvNormalized(Color @this)` | Gets HSV components normalized to 0.0-1.0 range. |
+| `get_Hsv` | `static ValueTuple<byte, byte, byte> get_Hsv(Color @this)` | Gets HSV components as bytes (0-255). |
+| `get_HwbNormalized` | `static ValueTuple<float, float, float> get_HwbNormalized(Color @this)` | Gets HWB (Hue, Whiteness, Blackness) components normalized to 0.0-1.0 range. |
+| `get_Hwb` | `static ValueTuple<byte, byte, byte> get_Hwb(Color @this)` | Gets HWB (Hue, Whiteness, Blackness) components as bytes (0-255). |
+| `get_LabNormalized` | `static ValueTuple<float, float, float> get_LabNormalized(Color @this)` | Gets L*a*b* components normalized to 0.0-1.0 range. |
+| `get_Lab` | `static ValueTuple<byte, byte, byte> get_Lab(Color @this)` | Gets L*a*b* components as bytes (0-255). |
+| `get_RgbNormalized` | `static ValueTuple<float, float, float> get_RgbNormalized(Color @this)` | Gets RGB components normalized to 0.0-1.0 range. |
 | `get_Rgb` | `static ValueTuple<byte, byte, byte> get_Rgb(Color @this)` |  |
-| `get_XyzNormalized` | `static ValueTuple<float, float, float> get_XyzNormalized(Color @this)` |  |
-| `get_Xyz` | `static ValueTuple<byte, byte, byte> get_Xyz(Color @this)` |  |
-| `get_YCbCrNormalized` | `static ValueTuple<float, float, float> get_YCbCrNormalized(Color @this)` |  |
-| `get_YCbCr` | `static ValueTuple<byte, byte, byte> get_YCbCr(Color @this)` |  |
-| `get_YuvNormalized` | `static ValueTuple<float, float, float> get_YuvNormalized(Color @this)` |  |
-| `get_Yuv` | `static ValueTuple<byte, byte, byte> get_Yuv(Color @this)` |  |
+| `get_XyzNormalized` | `static ValueTuple<float, float, float> get_XyzNormalized(Color @this)` | Gets XYZ components normalized to 0.0-1.0 range. |
+| `get_Xyz` | `static ValueTuple<byte, byte, byte> get_Xyz(Color @this)` | Gets XYZ components as bytes (0-255). |
+| `get_YCbCrNormalized` | `static ValueTuple<float, float, float> get_YCbCrNormalized(Color @this)` | Gets YCbCr (BT.601) components normalized to 0.0-1.0 range. |
+| `get_YCbCr` | `static ValueTuple<byte, byte, byte> get_YCbCr(Color @this)` | Gets YCbCr (BT.601) components as bytes (0-255). |
+| `get_YuvNormalized` | `static ValueTuple<float, float, float> get_YuvNormalized(Color @this)` | Gets YUV (BT.601) components normalized to 0.0-1.0 range. |
+| `get_Yuv` | `static ValueTuple<byte, byte, byte> get_Yuv(Color @this)` | Gets YUV (BT.601) components as bytes (0-255). |
 
 #### `GraphicsExtensions`
 
@@ -14242,28 +14242,28 @@ Implements `IDisposable`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
-| `ApplyPixelProcessor` | `static Bitmap ApplyPixelProcessor(this Image @this, Func<Color, Color> processor)` |  |
+| `ApplyPixelProcessor` | `static Bitmap ApplyPixelProcessor(this Image @this, Func<Color, Color> processor)` | Applies a pixel processor to the image. |
 | `FromBase64DataUri` | `static Image FromBase64DataUri(this string @this)` | Gets an image from a BASE64-encoded data URI |
-| `GetPageAt` | `static Image GetPageAt(this Image @this, int page)` |  |
-| `GetPageCount` | `static int GetPageCount(this Image @this)` |  |
-| `GetRectangle` | `static Image GetRectangle(this Image @this, Rectangle rect)` |  |
-| `MakeGrayscale` | `static Bitmap MakeGrayscale(this Image @this)` |  |
-| `MirrorAlongX` | `static Image MirrorAlongX(this Image @this)` |  |
-| `MirrorAlongY` | `static Image MirrorAlongY(this Image @this)` |  |
-| `ReplaceColorWithTransparency` | `static Image ReplaceColorWithTransparency(this Image @this, Color color)` |  |
-| `Resize` | `static Bitmap Resize(this Image @this, int longSide)` |  |
-| `Resize` | `static Bitmap Resize(this Image @this, int longSide, Color fillColor)` |  |
-| `Resize` | `static Bitmap Resize(this Image @this, int width = -1, int height = -1, InterpolationMode interpolation = 0)` |  |
-| `Resize` | `static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null)` |  |
-| `Rotate` | `static Bitmap Rotate(this Image @this, float angle)` |  |
-| `SaveToJpeg` | `static void SaveToJpeg(this Image @this, Stream stream, double quality = 1)` |  |
-| `SaveToJpeg` | `static void SaveToJpeg(this Image @this, string fileName, double quality = 1)` |  |
-| `SaveToPng` | `static void SaveToPng(this Image @this, FileInfo file)` |  |
-| `SaveToPng` | `static void SaveToPng(this Image @this, string fileName)` |  |
-| `SaveToTiff` | `static void SaveToTiff(this Image @this, string fileName)` |  |
-| `Threshold` | `static Bitmap Threshold(this Image @this, byte threshold = 127)` |  |
-| `ToBase64DataUri` | `static string ToBase64DataUri(this Image @this)` |  |
-| `ToIcon` | `static Icon ToIcon(this Image @this, int targetRes = 0)` |  |
+| `GetPageAt` | `static Image GetPageAt(this Image @this, int page)` | Gets a single page of a multipage image. |
+| `GetPageCount` | `static int GetPageCount(this Image @this)` | Gets the number of pages of the given image. |
+| `GetRectangle` | `static Image GetRectangle(this Image @this, Rectangle rect)` | Gets a rectangular area of the image. |
+| `MakeGrayscale` | `static Bitmap MakeGrayscale(this Image @this)` | Converts image to grayscale. |
+| `MirrorAlongX` | `static Image MirrorAlongX(this Image @this)` | Mirrors the image along X. |
+| `MirrorAlongY` | `static Image MirrorAlongY(this Image @this)` | Mirrors the image along Y. |
+| `ReplaceColorWithTransparency` | `static Image ReplaceColorWithTransparency(this Image @this, Color color)` | Replaces the given color with transparency. |
+| `Resize` | `static Bitmap Resize(this Image @this, int longSide)` | Resizes the specified Image. |
+| `Resize` | `static Bitmap Resize(this Image @this, int longSide, Color fillColor)` | Resizes the specified Image. |
+| `Resize` | `static Bitmap Resize(this Image @this, int width = -1, int height = -1, InterpolationMode interpolation = 0)` | Resizes the specified Image. |
+| `Resize` | `static Bitmap Resize(this Image @this, int width, int height, bool keepAspect = true, Color? fillColor = null)` | Resizes the specified Image. |
+| `Rotate` | `static Bitmap Rotate(this Image @this, float angle)` | Rotates the specified image. |
+| `SaveToJpeg` | `static void SaveToJpeg(this Image @this, Stream stream, double quality = 1)` | Saves an image into a jpeg stream. |
+| `SaveToJpeg` | `static void SaveToJpeg(this Image @this, string fileName, double quality = 1)` | Saves an image into a jpeg file. |
+| `SaveToPng` | `static void SaveToPng(this Image @this, FileInfo file)` | Saves an image into a png file. |
+| `SaveToPng` | `static void SaveToPng(this Image @this, string fileName)` | Saves an image into a png file. |
+| `SaveToTiff` | `static void SaveToTiff(this Image @this, string fileName)` | Saves an image into a tif file. |
+| `Threshold` | `static Bitmap Threshold(this Image @this, byte threshold = 127)` | Converts image to black&white. |
+| `ToBase64DataUri` | `static string ToBase64DataUri(this Image @this)` | Saves an image into a BASE64-encoded data URI |
+| `ToIcon` | `static Icon ToIcon(this Image @this, int targetRes = 0)` | Converts a given image to an icon. |
 
 #### `PointExtensions`
 
