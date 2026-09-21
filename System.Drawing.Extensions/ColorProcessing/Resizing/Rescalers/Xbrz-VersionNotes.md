@@ -71,22 +71,62 @@ and anti-aliased edges come out marginally lighter and less biased downwards.
 `ColorLerpInt` currently truncates — `(a.C1 * w1 + b.C1 * w2) / total` — so this library matches
 pre-1.9 behaviour and a 1.9 variant needs a rounding blend.
 
-## What an implementation has to do
+## What was implemented
 
-1. Add a variant selector to `Xbrz` and thread it into the per-scale kernels.
-2. For the 1.9 variant use the `24` numerator in both steep/shallow comparisons.
-3. For the 1.9 variant round the weighted blend to nearest instead of truncating. `ILerp` is chosen
-   by the pipeline rather than by the scaler, so this needs a decision: either a rounding
-   counterpart to `Color3BLerpInt`/`Color4BLerpInt` that the 1.9 path selects, or a rounding
-   operation added to the kernels themselves.
-4. Register the variant as its own `[ScalerInfo]` entry, alongside `XBR` / `XBR NoBlend` /
-   `XBR 3x Original`, which already establish that graphically distinct variants get their own
-   names. Leave the existing `xBRZ` entry's name unchanged so existing scripts and settings keep
-   working.
+1. A variant is carried as a struct type parameter `TVariant` on each per-scale kernel, so both
+   knobs fold to constants when the kernel is specialised and the pre-1.9 path takes no branch.
+   `Xbrz` selects it through an internal constructor; its public constructor is unchanged.
+2. The 1.9 variant uses the `24` numerator in both steep/shallow comparisons, at all ten sites.
+3. The 1.9 variant rounds both the weighted and the 50/50 blend. See the decision below.
+4. `Xbrz19` is registered as `[ScalerInfo("xBRZ 1.9")]`, its own entry alongside `XBR` /
+   `XBR NoBlend` / `XBR 3x Original`. The existing `xBRZ` entry keeps its name and its pixels.
 
-## Checking it
+## The design decision, and why
 
-Neither change can be verified by eye alone. Both are exact and integer, so they can be pinned
-directly: the threshold change by inputs whose two accumulated distances straddle the 2.2 and 2.4
-ratios, and the rounding change by a blend whose weighted sum has a non-zero remainder against `N`.
-The existing variant must stay bit-identical, which a comparison against its current output pins.
+`ILerp` is picked by the pipeline, not by the scaler: `Color4BLerpInt<Bgra8888>` is hard-coded at
+every shared call site in `BitmapScalerExtensions` and `BitmapFilterExtensions`. Two options were
+considered in this document and both were rejected.
+
+A rounding counterpart *type* that the 1.9 path selects cannot work. `Xbrz.InvokeKernel` implements
+`IRescaler`, so its constraints are fixed by that interface and it receives whatever `TLerp` the
+call site chose; it also cannot substitute one itself, because `TWork` is generic there and it
+cannot know whether the 3-component or the 4-component rounding struct is the right one. Rounding
+inside the kernels was rejected too: it means not calling `lerp` at all and open-coding the channel
+arithmetic, discarding the colour-space abstraction the interface exists to provide.
+
+**What was done instead: `ILerp<T>` grew a rounding counterpart *method*, `LerpRounded`, in both
+overloads.** The kernels keep blending through the interface and simply call the member matching
+their variant.
+
+The members are declared, not defaulted. Default interface methods would have kept the interface
+source-compatible for outside implementors, but they need runtime support this package does not
+have: it targets down to net35, and net35 through net48 make the compiler reject them outright
+(CS8701). `BatchDistanceDefaults` already exists in this package for the same reason. All eleven
+shipped implementations implement the new members explicitly, which also keeps them off the boxing
+path — these are hot loops reached through a `struct` generic constraint. Implementations for which
+rounding is meaningless forward to the truncating member and say so in a comment: the float-based
+lerps, where the blend never truncated to a representable step, and the no-op lerps.
+
+Outside implementors of `ILerp<T>` must add the two members. That is a source break with no
+alternative on these target frameworks, and it is why the members are documented with the behaviour
+a forwarding implementation reproduces.
+
+## How it is checked
+
+`XbrzVersionTests` pins all three properties exactly, since all three are exact and integer.
+
+- **The existing entry does not move.** Its output at all five scales is pinned by SHA-256 against
+  hashes captured from the code *before* 1.9 support existed. Verified stable across net45, net48,
+  netcoreapp3.1 and net9.0, and across x86 and x64.
+- **The threshold.** A source whose accumulated distance ratios straddle 2.2 and 2.4, compared
+  between the 2.2 and 2.4 kernels with blending held at the truncating mode, so a difference can
+  only be the threshold's.
+- **The rounding.** Blends whose weighted sum leaves a non-zero remainder against the total weight,
+  covering both the weighted and the 50/50 path, plus a kernel-level comparison with the threshold
+  held at 2.2.
+
+The two single-change variants exist only for that attribution: asserting against the combined 1.9
+variant alone would let either change go missing unnoticed, because the other still produces a
+difference. Every assertion was confirmed to bite by perturbing what it tests — restoring a `22`,
+dropping a rounding term, and pointing the public entry at 1.9 — and checking the matching test
+fails.
