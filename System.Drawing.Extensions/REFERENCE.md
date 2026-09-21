@@ -934,6 +934,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -945,6 +947,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -956,6 +960,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -967,6 +973,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -978,6 +986,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -989,6 +999,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1000,6 +1012,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1011,6 +1025,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1022,6 +1038,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1081,6 +1099,8 @@ Provides linear interpolation between two colors.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `T LerpRounded(in T a, in T b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `T LerpRounded(in T a, in T b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `T Lerp(in T a, in T b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `T Lerp(in T a, in T b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1103,6 +1123,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -1114,6 +1136,8 @@ Implements `ILerp<TWork>`.
 
 | Member | Signature | Summary |
 | --- | --- | --- |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend), rounding to nearest. |
+| `LerpRounded` | `TWork LerpRounded(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights, rounding to nearest. |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b)` | Linearly interpolates between two colors at the midpoint (50/50 blend). |
 | `Lerp` | `TWork Lerp(in TWork a, in TWork b, int w1, int w2)` | Linearly interpolates between two colors with integer weights. |
 
@@ -9451,7 +9475,7 @@ Implements `IResampler`, `IScalerInfo`.
 
 ### Namespace `Hawkynt.ColorProcessing.Resizing.Rescalers`
 
-[`Aann`](#aann) · [`AnimeLineEnhancer`](#animelineenhancer) · [`Bilateral`](#bilateral) · [`BilateralVariant`](#bilateralvariant) · [`BilinearPlus`](#bilinearplus) · [`BilinearPlusOriginal`](#bilinearplusoriginal) · [`CatmullRom`](#catmullrom) · [`Clean`](#clean) · [`CrtCaligari`](#crtcaligari) · [`CrtEasymode`](#crteasymode) · [`CrtGeom`](#crtgeom) · [`CrtHyllian`](#crthyllian) · [`CrtLottes`](#crtlottes) · [`CrtRoyale`](#crtroyale) · [`Cut`](#cut) · [`Ddt`](#ddt) · [`DdtVariant`](#ddtvariant) · [`Des`](#des) · [`Des2`](#des2) · [`DotMatrix`](#dotmatrix) · [`Eagle`](#eagle) · [`Eagle3x`](#eagle3x) · [`Eagle3xB`](#eagle3xb) · [`Edge`](#edge) · [`Epx`](#epx) · [`Epx3`](#epx3) · [`EpxB`](#epxb) · [`EpxC`](#epxc) · [`Fxaa`](#fxaa) · [`GameBoyShader`](#gameboyshader) · [`Gtu`](#gtu) · [`HawkyntTv`](#hawkynttv) · [`Hq`](#hq) · [`HqLq`](#hqlq) · [`HqMode`](#hqmode) · [`HqQuality`](#hqquality) · [`LcdGhosting`](#lcdghosting) · [`LcdGrid`](#lcdgrid) · [`Lq`](#lq) · [`MameAdvInterp`](#mameadvinterp) · [`MameRgb`](#mamergb) · [`MameTv`](#mametv) · [`Mlaa`](#mlaa) · [`MlaaVariant`](#mlaavariant) · [`Mmpx2x`](#mmpx2x) · [`NearestNeighborPlus`](#nearestneighborplus) · [`Nedi`](#nedi) · [`Nis`](#nis) · [`Nnedi3`](#nnedi3) · [`Nnedi3Quality`](#nnedi3quality) · [`Ntsc`](#ntsc) · [`Omniscale`](#omniscale) · [`Pixellate`](#pixellate) · [`Quilez`](#quilez) · [`ReverseAa`](#reverseaa) · [`RotSprite`](#rotsprite) · [`Saa5050`](#saa5050) · [`Sabr`](#sabr) · [`SabrSharp`](#sabrsharp) · [`SabrSmooth`](#sabrsmooth) · [`SabrVariant`](#sabrvariant) · [`Sai2x`](#sai2x) · [`Sal`](#sal) · [`Scale`](#scale) · [`Scale.Mode`](#scalemode) · [`ScaleFx3x`](#scalefx3x) · [`ScaleHq`](#scalehq) · [`ScaleNxPlus`](#scalenxplus) · [`ScaleNxSfx`](#scalenxsfx) · [`ScanlineHorizontal`](#scanlinehorizontal) · [`ScanlineHorizontalFullLight`](#scanlinehorizontalfulllight) · [`ScanlineHorizontalHalfLight`](#scanlinehorizontalhalflight) · [`ScanlineVertical`](#scanlinevertical) · [`ScanlineVerticalFullLight`](#scanlineverticalfulllight) · [`ScanlineVerticalHalfLight`](#scanlineverticalhalflight) · [`Scl2x`](#scl2x) · [`Scl2xSuper`](#scl2xsuper) · [`Scl2xUltra`](#scl2xultra) · [`SharpBilinear`](#sharpbilinear) · [`Simple`](#simple) · [`Smaa`](#smaa) · [`SmaaQuality`](#smaaquality) · [`Soft`](#soft) · [`SoftSmart`](#softsmart) · [`Super2xSaI`](#super2xsai) · [`SuperEagle`](#supereagle) · [`SuperXbr`](#superxbr) · [`TriplePoint`](#triplepoint) · [`TwoXpm`](#twoxpm) · [`Xbr`](#xbr) · [`Xbr3xOriginal`](#xbr3xoriginal) · [`XbrNoBlend`](#xbrnoblend) · [`Xbrz`](#xbrz) · [`ZfastCrt`](#zfastcrt)
+[`Aann`](#aann) · [`AnimeLineEnhancer`](#animelineenhancer) · [`Bilateral`](#bilateral) · [`BilateralVariant`](#bilateralvariant) · [`BilinearPlus`](#bilinearplus) · [`BilinearPlusOriginal`](#bilinearplusoriginal) · [`CatmullRom`](#catmullrom) · [`Clean`](#clean) · [`CrtCaligari`](#crtcaligari) · [`CrtEasymode`](#crteasymode) · [`CrtGeom`](#crtgeom) · [`CrtHyllian`](#crthyllian) · [`CrtLottes`](#crtlottes) · [`CrtRoyale`](#crtroyale) · [`Cut`](#cut) · [`Ddt`](#ddt) · [`DdtVariant`](#ddtvariant) · [`Des`](#des) · [`Des2`](#des2) · [`DotMatrix`](#dotmatrix) · [`Eagle`](#eagle) · [`Eagle3x`](#eagle3x) · [`Eagle3xB`](#eagle3xb) · [`Edge`](#edge) · [`Epx`](#epx) · [`Epx3`](#epx3) · [`EpxB`](#epxb) · [`EpxC`](#epxc) · [`Fxaa`](#fxaa) · [`GameBoyShader`](#gameboyshader) · [`Gtu`](#gtu) · [`HawkyntTv`](#hawkynttv) · [`Hq`](#hq) · [`HqLq`](#hqlq) · [`HqMode`](#hqmode) · [`HqQuality`](#hqquality) · [`LcdGhosting`](#lcdghosting) · [`LcdGrid`](#lcdgrid) · [`Lq`](#lq) · [`MameAdvInterp`](#mameadvinterp) · [`MameRgb`](#mamergb) · [`MameTv`](#mametv) · [`Mlaa`](#mlaa) · [`MlaaVariant`](#mlaavariant) · [`Mmpx2x`](#mmpx2x) · [`NearestNeighborPlus`](#nearestneighborplus) · [`Nedi`](#nedi) · [`Nis`](#nis) · [`Nnedi3`](#nnedi3) · [`Nnedi3Quality`](#nnedi3quality) · [`Ntsc`](#ntsc) · [`Omniscale`](#omniscale) · [`Pixellate`](#pixellate) · [`Quilez`](#quilez) · [`ReverseAa`](#reverseaa) · [`RotSprite`](#rotsprite) · [`Saa5050`](#saa5050) · [`Sabr`](#sabr) · [`SabrSharp`](#sabrsharp) · [`SabrSmooth`](#sabrsmooth) · [`SabrVariant`](#sabrvariant) · [`Sai2x`](#sai2x) · [`Sal`](#sal) · [`Scale`](#scale) · [`Scale.Mode`](#scalemode) · [`ScaleFx3x`](#scalefx3x) · [`ScaleHq`](#scalehq) · [`ScaleNxPlus`](#scalenxplus) · [`ScaleNxSfx`](#scalenxsfx) · [`ScanlineHorizontal`](#scanlinehorizontal) · [`ScanlineHorizontalFullLight`](#scanlinehorizontalfulllight) · [`ScanlineHorizontalHalfLight`](#scanlinehorizontalhalflight) · [`ScanlineVertical`](#scanlinevertical) · [`ScanlineVerticalFullLight`](#scanlineverticalfulllight) · [`ScanlineVerticalHalfLight`](#scanlineverticalhalflight) · [`Scl2x`](#scl2x) · [`Scl2xSuper`](#scl2xsuper) · [`Scl2xUltra`](#scl2xultra) · [`SharpBilinear`](#sharpbilinear) · [`Simple`](#simple) · [`Smaa`](#smaa) · [`SmaaQuality`](#smaaquality) · [`Soft`](#soft) · [`SoftSmart`](#softsmart) · [`Super2xSaI`](#super2xsai) · [`SuperEagle`](#supereagle) · [`SuperXbr`](#superxbr) · [`TriplePoint`](#triplepoint) · [`TwoXpm`](#twoxpm) · [`Xbr`](#xbr) · [`Xbr3xOriginal`](#xbr3xoriginal) · [`XbrNoBlend`](#xbrnoblend) · [`Xbrz`](#xbrz) · [`Xbrz19`](#xbrz19) · [`ZfastCrt`](#zfastcrt)
 
 #### `Aann`
 
@@ -11042,6 +11066,27 @@ Implements `IRescaler`, `IScalerInfo`.
 | `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for xBRZ. |
 | `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
 | `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether xBRZ supports the specified scale factor. |
+
+#### `Xbrz19`
+
+xBRZ as released in 1.9 (2x, 3x, 4x, 5x, 6x).
+
+Implements `IRescaler`, `IScalerInfo`.
+
+| Member | Signature | Summary |
+| --- | --- | --- |
+| `Xbrz19` | `Xbrz19(int scale = 2)` | Creates an xBRZ 1.9 scaler with the specified scale factor. |
+| `Default` | `static Xbrz19 Default { get; }` | Gets the default xBRZ 1.9 configuration (2x). |
+| `Scale2x` | `static Xbrz19 Scale2x { get; }` | Gets an xBRZ 1.9 2x scaler. |
+| `Scale3x` | `static Xbrz19 Scale3x { get; }` | Gets an xBRZ 1.9 3x scaler. |
+| `Scale4x` | `static Xbrz19 Scale4x { get; }` | Gets an xBRZ 1.9 4x scaler. |
+| `Scale5x` | `static Xbrz19 Scale5x { get; }` | Gets an xBRZ 1.9 5x scaler. |
+| `Scale6x` | `static Xbrz19 Scale6x { get; }` | Gets an xBRZ 1.9 6x scaler. |
+| `Scale` | `ScaleFactor Scale { get; }` | Gets the scaling factor for this scaler instance. |
+| `SupportedScales` | `static ScaleFactor[] SupportedScales { get; }` | Gets the list of scale factors supported by xBRZ 1.9. |
+| `GetPossibleTargets` | `static IEnumerable<ValueTuple<int, int>> GetPossibleTargets(int sourceWidth, int sourceHeight)` | Enumerates all possible target dimensions for xBRZ 1.9. |
+| `InvokeKernel` | `TResult InvokeKernel<TWork, TKey, TPixel, TDistance, TEquality, TLerp, TEncode, TResult>(IKernelCallback<TWork, TKey, TPixel, TEncode, TResult> callback, TEquality equality = null, TLerp lerp = null)` | Invokes a callback with the concrete kernel type, enabling struct-constrained dispatch. |
+| `SupportsScale` | `static bool SupportsScale(ScaleFactor scale)` | Determines whether xBRZ 1.9 supports the specified scale factor. |
 
 #### `ZfastCrt`
 
