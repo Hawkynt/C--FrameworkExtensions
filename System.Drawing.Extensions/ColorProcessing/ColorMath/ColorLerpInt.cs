@@ -52,6 +52,27 @@ public readonly struct Color3BLerpInt<TWork> : ILerp<TWork> where TWork : unmana
     );
   }
 
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b)
+    => ColorFactory.Create3B<TWork>(
+      (byte)((a.C1 + b.C1 + 1) >> 1),
+      (byte)((a.C2 + b.C2 + 1) >> 1),
+      (byte)((a.C3 + b.C3 + 1) >> 1)
+    );
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var total = w1 + w2;
+    var half = total >> 1;
+    return ColorFactory.Create3B<TWork>(
+      (byte)((a.C1 * w1 + b.C1 * w2 + half) / total),
+      (byte)((a.C2 * w1 + b.C2 * w2 + half) / total),
+      (byte)((a.C3 * w1 + b.C3 * w2 + half) / total)
+    );
+  }
+
 }
 
 /// <summary>
@@ -81,6 +102,29 @@ public readonly struct Color4BLerpInt<TWork> : ILerp<TWork> where TWork : unmana
       (byte)((a.C2 * w1 + b.C2 * w2) / total),
       (byte)((a.C3 * w1 + b.C3 * w2) / total),
       (byte)((a.A * w1 + b.A * w2) / total)
+    );
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b)
+    => ColorFactory.Create4B<TWork>(
+      (byte)((a.C1 + b.C1 + 1) >> 1),
+      (byte)((a.C2 + b.C2 + 1) >> 1),
+      (byte)((a.C3 + b.C3 + 1) >> 1),
+      (byte)((a.A + b.A + 1) >> 1)
+    );
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var total = w1 + w2;
+    var half = total >> 1;
+    return ColorFactory.Create4B<TWork>(
+      (byte)((a.C1 * w1 + b.C1 * w2 + half) / total),
+      (byte)((a.C2 * w1 + b.C2 * w2 + half) / total),
+      (byte)((a.C3 * w1 + b.C3 * w2 + half) / total),
+      (byte)((a.A * w1 + b.A * w2 + half) / total)
     );
   }
 
@@ -115,6 +159,31 @@ public readonly struct Color5BLerpInt<TWork> : ILerp<TWork> where TWork : unmana
       (byte)((a.C3 * w1 + b.C3 * w2) / total),
       (byte)((a.C4 * w1 + b.C4 * w2) / total),
       (byte)((a.A * w1 + b.A * w2) / total)
+    );
+  }
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b)
+    => ColorFactory.Create5B<TWork>(
+      (byte)((a.C1 + b.C1 + 1) >> 1),
+      (byte)((a.C2 + b.C2 + 1) >> 1),
+      (byte)((a.C3 + b.C3 + 1) >> 1),
+      (byte)((a.C4 + b.C4 + 1) >> 1),
+      (byte)((a.A + b.A + 1) >> 1)
+    );
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var total = w1 + w2;
+    var half = total >> 1;
+    return ColorFactory.Create5B<TWork>(
+      (byte)((a.C1 * w1 + b.C1 * w2 + half) / total),
+      (byte)((a.C2 * w1 + b.C2 * w2 + half) / total),
+      (byte)((a.C3 * w1 + b.C3 * w2 + half) / total),
+      (byte)((a.C4 * w1 + b.C4 * w2 + half) / total),
+      (byte)((a.A * w1 + b.A * w2 + half) / total)
     );
   }
 
@@ -158,6 +227,29 @@ public readonly struct Color4UnormLerp<TWork> : ILerp<TWork> where TWork : unman
     );
   }
 
+  /// <inheritdoc />
+  /// <remarks>
+  /// <see cref="UNorm32.Midpoint"/> already rounds a half-step upwards, so the 50/50 blend is the
+  /// same operation in both modes and this simply forwards.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var (a1, a2, a3, aa) = a.ToNormalized();
+    var (b1, b2, b3, ba) = b.ToNormalized();
+    var total = (ulong)(w1 + w2);
+    var half = total >> 1;
+    return ColorFactory.FromNormalized_4<TWork>(
+      UNorm32.FromRaw((uint)(((ulong)a1.RawValue * (uint)w1 + (ulong)b1.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a2.RawValue * (uint)w1 + (ulong)b2.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a3.RawValue * (uint)w1 + (ulong)b3.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)aa.RawValue * (uint)w1 + (ulong)ba.RawValue * (uint)w2 + half) / total))
+    );
+  }
+
 }
 
 /// <summary>
@@ -193,6 +285,28 @@ public readonly struct Color3UnormLerp<TWork> : ILerp<TWork> where TWork : unman
       UNorm32.FromRaw((uint)(((ulong)a1.RawValue * (uint)w1 + (ulong)b1.RawValue * (uint)w2) / total)),
       UNorm32.FromRaw((uint)(((ulong)a2.RawValue * (uint)w1 + (ulong)b2.RawValue * (uint)w2) / total)),
       UNorm32.FromRaw((uint)(((ulong)a3.RawValue * (uint)w1 + (ulong)b3.RawValue * (uint)w2) / total))
+    );
+  }
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// <see cref="UNorm32.Midpoint"/> already rounds a half-step upwards, so the 50/50 blend is the
+  /// same operation in both modes and this simply forwards.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var (a1, a2, a3) = a.ToNormalized();
+    var (b1, b2, b3) = b.ToNormalized();
+    var total = (ulong)(w1 + w2);
+    var half = total >> 1;
+    return ColorFactory.FromNormalized_3<TWork>(
+      UNorm32.FromRaw((uint)(((ulong)a1.RawValue * (uint)w1 + (ulong)b1.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a2.RawValue * (uint)w1 + (ulong)b2.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a3.RawValue * (uint)w1 + (ulong)b3.RawValue * (uint)w2 + half) / total))
     );
   }
 
@@ -238,6 +352,30 @@ public readonly struct Color5UnormLerp<TWork> : ILerp<TWork> where TWork : unman
     );
   }
 
+  /// <inheritdoc />
+  /// <remarks>
+  /// <see cref="UNorm32.Midpoint"/> already rounds a half-step upwards, so the 50/50 blend is the
+  /// same operation in both modes and this simply forwards.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) {
+    var (a1, a2, a3, a4, aa) = a.ToNormalized();
+    var (b1, b2, b3, b4, ba) = b.ToNormalized();
+    var total = (ulong)(w1 + w2);
+    var half = total >> 1;
+    return ColorFactory.FromNormalized_5<TWork>(
+      UNorm32.FromRaw((uint)(((ulong)a1.RawValue * (uint)w1 + (ulong)b1.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a2.RawValue * (uint)w1 + (ulong)b2.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a3.RawValue * (uint)w1 + (ulong)b3.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)a4.RawValue * (uint)w1 + (ulong)b4.RawValue * (uint)w2 + half) / total)),
+      UNorm32.FromRaw((uint)(((ulong)aa.RawValue * (uint)w1 + (ulong)ba.RawValue * (uint)w2 + half) / total))
+    );
+  }
+
 }
 
 /// <summary>
@@ -257,4 +395,14 @@ public readonly struct NoLerpInt<TWork> : ILerp<TWork> where TWork : unmanaged {
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public TWork Lerp(in TWork a, in TWork b, int w1, int w2) => a;
+
+  /// <inheritdoc />
+  /// <remarks>Nothing is divided, so there is nothing to round.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => a;
+
+  /// <inheritdoc />
+  /// <remarks>Nothing is divided, so there is nothing to round.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) => a;
 }

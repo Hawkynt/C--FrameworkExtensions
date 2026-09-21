@@ -47,6 +47,24 @@ public readonly struct Color3FLerp<TWork> : ILerp<TWork> where TWork : unmanaged
     );
   }
 
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) => this.Lerp(a, b, w1, w2);
+
 }
 
 /// <summary>
@@ -75,6 +93,24 @@ public readonly struct Color4FLerp<TWork> : ILerp<TWork> where TWork : unmanaged
       (a.A * w1 + b.A * w2) * invTotal
     );
   }
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) => this.Lerp(a, b, w1, w2);
 
 }
 
@@ -107,6 +143,24 @@ public readonly struct Color5FLerp<TWork> : ILerp<TWork> where TWork : unmanaged
     );
   }
 
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => this.Lerp(a, b);
+
+  /// <inheritdoc />
+  /// <remarks>
+  /// The channels are floating point, so the blend never truncates to a representable step in the
+  /// first place and the rounded blend is literally the same operation. Forwarding keeps the two
+  /// modes from drifting apart.
+  /// </remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) => this.Lerp(a, b, w1, w2);
+
 }
 
 /// <summary>
@@ -126,4 +180,14 @@ public readonly struct NoLerp<TWork> : ILerp<TWork> where TWork : unmanaged {
   /// <inheritdoc />
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public TWork Lerp(in TWork a, in TWork b, int w1, int w2) => a;
+
+  /// <inheritdoc />
+  /// <remarks>Nothing is divided, so there is nothing to round.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b) => a;
+
+  /// <inheritdoc />
+  /// <remarks>Nothing is divided, so there is nothing to round.</remarks>
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public TWork LerpRounded(in TWork a, in TWork b, int w1, int w2) => a;
 }
